@@ -52,4 +52,13 @@ namespace SheetReader/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("getNumberOfSheets")) 
         }
 
+    pub def getSheetName(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, ix: Int32): Result[String, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheetName(Int32); 
+        try {
+            let ans = wb.getSheetName(ix);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getSheetName")) 
+        }
+
 }
