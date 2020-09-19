@@ -8,10 +8,11 @@ def main(): Unit & Impure =
     }
 
 def sheeetStats(sheetName: String): WbMonad[Unit] = 
-    use SheetReader/WbMonad.{flatMap, return, getSheet, sheetLastRowNum, liftAction};
+    use SheetReader/WbMonad.{flatMap, return, getSheet, sheetFirstRowNum, sheetLastRowNum, liftAction};
     let* s1     = getSheet(sheetName);
-    let* i      = sheetLastRowNum(s1);
-    liftAction(_ -> Console.printLine("${sheetName}: rows=" + Int32.toString(i)))
+    let* i1     = sheetFirstRowNum(s1);
+    let* i2     = sheetLastRowNum(s1);
+    liftAction(_ -> Console.printLine("${sheetName}: rows=${Int32.toString(i1)}..${Int32.toString(i2)}"))
 
 
 def test01(): WbMonad[Unit] = 

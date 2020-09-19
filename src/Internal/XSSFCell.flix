@@ -16,25 +16,24 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/XSSFSheet {
+namespace SheetReader/Internal/XSSFCell {
 
-    pub def getFirstRowNum(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getFirstRowNum(); 
+    pub def getStringCellValue(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[String, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFCell.getStringCellValue(); 
         try {
-            let ans = wb.getFirstRowNum();
+            let ans = cell.getStringCellValue();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getFirstRowNum")) 
+            case _: ##java.lang.Exception => Err(Generic("getStringCellValue")) 
         }
 
-    pub def getLastRowNum(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getLastRowNum(); 
+    pub def getNumericCellValue(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[Float64, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFCell.getNumericCellValue(); 
         try {
-            let ans = wb.getLastRowNum();
+            let ans = cell.getNumericCellValue();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
+            case _: ##java.lang.Exception => Err(Generic("getNumericCellValue")) 
         }
-
 
 }

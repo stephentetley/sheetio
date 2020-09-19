@@ -28,6 +28,8 @@ namespace SheetReader {
 
     pub opaque type Sheet = ##org.apache.poi.xssf.usermodel.XSSFSheet
 
+    pub opaque type Row = ##org.apache.poi.xssf.usermodel.XSSFRow
+
 }
 
 namespace SheetReader/WbMonad {
@@ -723,6 +725,10 @@ namespace SheetReader/WbMonad {
         use SheetReader/Internal/Prim.{getSheetAt};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheetAt(ix)))
 
+    pub def sheetFirstRowNum(x: Sheet): WbMonad[Int32] =
+        use SheetReader/Internal/XSSFSheet.{getFirstRowNum};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getFirstRowNum())
 
     pub def sheetLastRowNum(x: Sheet): WbMonad[Int32] =
         use SheetReader/Internal/XSSFSheet.{getLastRowNum};
