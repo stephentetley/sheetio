@@ -61,4 +61,24 @@ namespace SheetReader/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("getSheetName")) 
         }
 
+    pub def getSheet(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+                     name: String): Result[##org.apache.poi.xssf.usermodel.XSSFSheet, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheet(String); 
+        try {
+            let ans = wb.getSheet(name);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getSheet")) 
+        }
+
+    pub def getSheetAt(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+                       ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFSheet, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheetAt(Int32); 
+        try {
+            let ans = wb.getSheetAt(ix);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getSheetAt")) 
+        }        
+
 }

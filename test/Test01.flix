@@ -7,9 +7,16 @@ def main(): Unit & Impure =
         case Ok() => Console.printLine("[done]")
     }
 
+def sheeetStats(sheetName: String): WbMonad[Unit] = 
+    use SheetReader/WbMonad.{flatMap, return, getSheet, sheetLastRowNum, liftAction};
+    let* s1     = getSheet(sheetName);
+    let* i      = sheetLastRowNum(s1);
+    liftAction(_ -> Console.printLine("${sheetName}: rows=" + Int32.toString(i)))
+
+
 def test01(): WbMonad[Unit] = 
     use SheetReader/WbMonad.{flatMap, return, getSheetNames, mapX, liftAction};
     let* xs      = getSheetNames();
-    mapX(x -> liftAction(_ -> Console.printLine(x)), xs)
+    mapX(sheeetStats, xs)
 
 

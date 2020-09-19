@@ -16,12 +16,17 @@
 
 use System.Error.{Generic};
 
+use SheetReader.Sheet;
+use SheetReader.Sheet.{Sheet};
+
 use SheetReader.WbMonad;
 use SheetReader.WbMonad.{WbMonad};
 
 namespace SheetReader {
 
     pub opaque type WbMonad[a] = ##org.apache.poi.xssf.usermodel.XSSFWorkbook ~> Result[a, System.Error]
+
+    pub opaque type Sheet = ##org.apache.poi.xssf.usermodel.XSSFSheet
 
 }
 
@@ -709,6 +714,20 @@ namespace SheetReader/WbMonad {
         let* n  = getNumberOfSheets();
         let ixs = List.range(0,n);
         mapM(getSheetName, ixs)
+
+    pub def getSheet(name: String): WbMonad[Sheet] =
+        use SheetReader/Internal/Prim.{getSheet};
+        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
+
+    pub def getSheetAt(ix: Int32): WbMonad[Sheet] =
+        use SheetReader/Internal/Prim.{getSheetAt};
+        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheetAt(ix)))
+
+
+    pub def sheetLastRowNum(x: Sheet): WbMonad[Int32] =
+        use SheetReader/Internal/XSSFSheet.{getLastRowNum};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getLastRowNum())
 
 
 }
