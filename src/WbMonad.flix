@@ -16,6 +16,10 @@
 
 use System.Error.{Generic};
 
+use SheetReader.Row;
+use SheetReader.Row.{Row};
+use SheetReader.RowEvaluator;
+use SheetReader.RowEvaluator.{RowEvaluator};
 use SheetReader.Sheet;
 use SheetReader.Sheet.{Sheet};
 
@@ -734,6 +738,16 @@ namespace SheetReader/WbMonad {
         use SheetReader/Internal/XSSFSheet.{getLastRowNum};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getLastRowNum())
+
+    pub def getRowAt(x: Sheet, ix: Int32): WbMonad[Row] =
+        use SheetReader/Internal/XSSFSheet.{getRow};
+        let Sheet(x1) = x;
+        map(Row, liftActionResult(_ -> x1.getRow(ix)))
+
+    pub def rowEval(x: Row, eval: RowEvaluator[a]): WbMonad[a] =
+        let RowEvaluator(f) = eval;
+        let Row(x1) = x;
+        liftActionResult(_ -> f(x1))
 
 
 }

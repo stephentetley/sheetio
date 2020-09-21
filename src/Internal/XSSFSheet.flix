@@ -36,5 +36,14 @@ namespace SheetReader/Internal/XSSFSheet {
             case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
         }
 
+    pub def getRow(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet,
+                   ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFRow, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFSheet.getRow(Int32); 
+        try {
+            let ans = wb.getRow(ix);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getRow")) 
+        }
 
 }

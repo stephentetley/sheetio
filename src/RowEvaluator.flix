@@ -17,6 +17,9 @@
 use SheetReader.RowEvaluator;
 use SheetReader.RowEvaluator.{RowEvaluator};
 
+use SheetReader.CellType;
+
+
 namespace SheetReader {
 
     pub opaque type RowEvaluator[a] = ##org.apache.poi.xssf.usermodel.XSSFRow ~> Result[a, System.Error]
@@ -86,6 +89,10 @@ namespace SheetReader/RowEvaluator {
         use Result.{flatMap};
         let* cell =  SheetReader/Internal/XSSFRow.getCell(row, ix);
         f(cell)
+
+
+    pub def getCellType(ix: Int32): RowEvaluator[CellType] =
+        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getCellType)))
 
     
     pub def getString(ix: Int32): RowEvaluator[String] =

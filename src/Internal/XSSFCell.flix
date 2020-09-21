@@ -18,6 +18,17 @@ use System.Error.{Generic};
 
 namespace SheetReader/Internal/XSSFCell {
 
+
+    pub def getCellType(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[##org.apache.poi.ss.usermodel.CellType, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFCell.getCellType(); 
+        try {
+            let ans = cell.getCellType();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getCellType")) 
+        }
+
+
     pub def getStringCellValue(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[String, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFCell.getStringCellValue(); 
         try {
