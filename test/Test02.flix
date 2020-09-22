@@ -4,20 +4,21 @@ use SheetReader.WbMonad;
 def main(): Unit & Impure = 
     use SheetReader/WbMonad.{runWbMonad};
     match runWbMonad(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
-        case Err(_) => Console.printLine("err")
+        case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[done]")
     }
 
 
 def test01(): WbMonad[Unit] = 
-    use SheetReader/WbMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, sheetLastRowNum, rowsInRange};
+    use SheetReader/WbMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
+        sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
     let* s1     = getSheet("Sheet1");
     let* r0     = s1.getRowAt(0);
     let* hdrs   = rowEval(r0, evalHeaderRow());
     let* _      = liftAction(_ -> printHeaders(hdrs));
-    let* end    = sheetLastRowNum(s1);
+    let* end    = sheetPhysicalNumberOfRows(s1);
     let* _      = liftAction(_ -> Console.printLine("End=${Int32.toString(end)}"));
-    let* xs     = rowsInRange(s1, 1, 4, evalAibExportRow());
+    let* xs     = rowsInRange(s1, 1, 32, evalAibExportRow());
     let* _      = liftAction(_ -> List.foreach(printAibExportRow, xs));
     return()
 
@@ -44,12 +45,12 @@ def evalHeaderRow(): RowEvaluator[Headers] =
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalAibExportRow(): RowEvaluator[AibExportRow] = 
-    use SheetReader/RowEvaluator.{flatMap, return, getString, liftAction};
+    use SheetReader/RowEvaluator.{flatMap, return, getString, getCellType, liftAction, map, isNull};
     let* s0     = getString(0);
     let* s1     = getString(1);
     let* s2     = getString(2);
-    let* s3     = getString(3);
-    let* s4     = getString(4);
+    let* s3     = map(x -> if (x) "T" else "F", isNull(3));     // map(SheetReader/CellType.format, getCellType(3));
+    let* s4     = return("<>"); // map(SheetReader/CellType.format, getCellType(4));
     return( { change = s0
             , reference = s1
             , assetName = s2
@@ -61,4 +62,4 @@ def printHeaders(hdrs: Headers): Unit & Impure =
     Console.printLine(Array.formatWith(x -> x, ", ", hdrs))
 
 def printAibExportRow(row: AibExportRow): Unit & Impure = 
-    Console.printLine("{change=${row.change}, reference=${row.reference}}")
+    Console.printLine("{change=${row.change}, reference=${row.reference}, ${row.oldParentName}}")

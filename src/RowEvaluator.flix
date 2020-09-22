@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+use System.Error.{Generic};
+
 use SheetReader.RowEvaluator;
 use SheetReader.RowEvaluator.{RowEvaluator};
 
@@ -34,6 +36,10 @@ namespace SheetReader/RowEvaluator {
     def apply1(x: RowEvaluator[a], r: ##org.apache.poi.xssf.usermodel.XSSFRow): Result[a, System.Error] & Impure =
         let RowEvaluator(f) = x;
         f(r)
+
+    pub def throwError(msg: String): RowEvaluator[a] =
+        RowEvaluator(_ -> Err(System/Error.Generic(msg)) as & Impure)
+
 
     pub def map(f: a -> b & ef, x: RowEvaluator[a]): RowEvaluator[b] =
         RowEvaluator(r ->
@@ -90,6 +96,9 @@ namespace SheetReader/RowEvaluator {
         let* cell =  SheetReader/Internal/XSSFRow.getCell(row, ix);
         f(cell)
 
+    pub def getNull(ix: Int32): RowEvaluator[Unit] =
+        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic("getNull"))))
+
 
     pub def getCellType(ix: Int32): RowEvaluator[CellType] =
         map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getCellType)))
@@ -97,6 +106,9 @@ namespace SheetReader/RowEvaluator {
     
     pub def getString(ix: Int32): RowEvaluator[String] =
         liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getStringCellValue))
+
+    pub def isNull(ix: Int32): RowEvaluator[Bool] = 
+        liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
 
     // // See Javadocs for how a bool value is interpreted...
     // pub def getBool(ix: Int32): RowEvaluator[Bool] =

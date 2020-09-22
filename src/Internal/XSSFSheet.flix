@@ -36,6 +36,16 @@ namespace SheetReader/Internal/XSSFSheet {
             case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
         }
 
+    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.xssf.usermodel.XSSFSheet.getPhysicalNumberOfRows(); 
+        try {
+            let ans = ws.getPhysicalNumberOfRows();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getPhysicalNumberOfRows")) 
+        }
+
+
     pub def getRow(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet,
                    ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFRow, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFSheet.getRow(Int32); 

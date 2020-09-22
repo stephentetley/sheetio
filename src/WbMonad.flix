@@ -740,6 +740,13 @@ namespace SheetReader/WbMonad {
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getLastRowNum())
 
+
+    pub def sheetPhysicalNumberOfRows(x: Sheet): WbMonad[Int32] =
+        use SheetReader/Internal/XSSFSheet.{getPhysicalNumberOfRows};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getPhysicalNumberOfRows())
+
+
     pub def getRowAt(x: Sheet, ix: Int32): WbMonad[Row] =
         use SheetReader/Internal/XSSFSheet.{getRow};
         let Sheet(x1) = x;

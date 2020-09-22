@@ -112,4 +112,16 @@ namespace SheetReader/CellType {
 
     pub def compare(x: CellType, y: CellType): Int32 = Int32.compare(toInt32(x), toInt32(y))
 
+
+    pub def format (x: CellType): String = match x {
+        case TyNone     => "_NONE"
+        case TyBlank    => "BLANK"
+        case TyBoolean  => "BOOLEAN"
+        case TyError    => "ERROR"
+        case TyFormula  => "FORMULA"
+        case TyNumeric  => "NUMERIC"
+        case TyString   => "STRING"
+    }
+
+
 }
