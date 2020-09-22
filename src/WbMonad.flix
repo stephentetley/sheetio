@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+
 use System.Error.{Generic};
 
 use SheetReader.Row;
@@ -743,6 +744,37 @@ namespace SheetReader/WbMonad {
         use SheetReader/Internal/XSSFSheet.{getRow};
         let Sheet(x1) = x;
         map(Row, liftActionResult(_ -> x1.getRow(ix)))
+
+    pub def allRows(x: Sheet, eval: RowEvaluator[a]): WbMonad[List[a]] = 
+        let* b = sheetFirstRowNum(x);
+        let* e = map(i -> i + 1, sheetLastRowNum(x));
+        rowsInRange(x, b, e, eval)
+
+
+    pub def rowsInRange(x: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): WbMonad[List[a]] = 
+        let RowEvaluator(f) = eval;
+        let Sheet(x1) = x;
+        liftActionResult(_ -> rowsInRangeHelper(x1, f, b, e, err -> Err(err), xs -> Ok(xs)))
+
+
+    def rowsInRangeHelper(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet, 
+                          eval: ##org.apache.poi.xssf.usermodel.XSSFRow ~> Result[a, System.Error],
+                          ix: Int32, 
+                          endIx: Int32,
+                          fk: System.Error -> Result[List[a], System.Error],
+                          sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
+        use SheetReader/Internal/XSSFSheet.{getRow};                      
+        if (ix >= endIx) 
+            sk(Nil)
+        else {
+            match getRow(ws, ix) {
+                case Ok(row) => match eval(row) {
+                    case Ok(x) => rowsInRangeHelper(ws, eval, ix + 1, endIx, fk, ks -> sk(x :: ks))
+                    case Err(e) => fk(e)
+                }
+                case Err(e) => fk(e)
+            }
+        }
 
     pub def rowEval(x: Row, eval: RowEvaluator[a]): WbMonad[a] =
         let RowEvaluator(f) = eval;

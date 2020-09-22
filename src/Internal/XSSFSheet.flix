@@ -18,29 +18,29 @@ use System.Error.{Generic};
 
 namespace SheetReader/Internal/XSSFSheet {
 
-    pub def getFirstRowNum(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
+    pub def getFirstRowNum(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFSheet.getFirstRowNum(); 
         try {
-            let ans = wb.getFirstRowNum();
+            let ans = ws.getFirstRowNum();
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err(Generic("getFirstRowNum")) 
         }
 
-    pub def getLastRowNum(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
+    pub def getLastRowNum(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFSheet.getLastRowNum(); 
         try {
-            let ans = wb.getLastRowNum();
+            let ans = ws.getLastRowNum();
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
         }
 
-    pub def getRow(wb: ##org.apache.poi.xssf.usermodel.XSSFSheet,
+    pub def getRow(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet,
                    ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFRow, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFSheet.getRow(Int32); 
         try {
-            let ans = wb.getRow(ix);
+            let ans = ws.getRow(ix);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err(Generic("getRow")) 
