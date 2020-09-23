@@ -16,8 +16,8 @@
 
 use System.Error.{Generic};
 
-use SheetIO.CellType;
-use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+use SheetIO.SheetWriter;
+use SheetIO.SheetWriter.{SheetWriter};
 
 
 namespace SheetIO {
@@ -27,20 +27,23 @@ namespace SheetIO {
 }
 
 
-namespace SheetReader/SheetWriter {
+namespace SheetIO/SheetWriter {
 
-    // pub def runXlsx(ma: WbMonad[a], path: System.FilePath): Result[a, System.Error] & Impure = 
-    //     use SheetReader/Internal/Prim.{newXSSFWorkbook, closeXSSFWorkbook};
-    //     use Result.{flatMap};
-    //     let path1 = System/FilePath.toString(path);
-    //     match newXSSFWorkbook(path1) { 
-    //         case Err(e) => Err(e)
-    //         case Ok(wb) => {
-    //             let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
-    //             let* _ = closeXSSFWorkbook(wb);
-    //             ans         
-    //         }
-    //     }
+    pub def runXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+        use Result.{flatMap};
+        let outpath = System/FilePath.toString(path);
+        let* wb     = newXSSFWorkbook();
+        let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
+        let* _      = writeXSSFWorkbook(wb, outpath);
+        let* _      = closeXSSFWorkbook(wb);
+        Ok(ans)
 
-    
+    def apply1(ma: SheetWriter[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
+        let SheetWriter(x1) = ma;
+        x1(wb)
+
+    pub def return(x: a): SheetWriter[a] = 
+        SheetWriter(_ -> Ok(x) as & Impure)
+
 }
