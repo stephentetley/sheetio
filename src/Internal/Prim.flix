@@ -16,7 +16,7 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/Prim {
+namespace SheetIO/Internal/Prim {
 
 
     ///

@@ -16,7 +16,7 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/Cell {
+namespace SheetIO/Internal/Cell {
 
 
     pub def getCellType(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellType, System.Error] & Impure = 

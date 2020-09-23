@@ -16,19 +16,19 @@
 
 use System.Error.{Generic};
 
-use SheetReader.RowEvaluator;
-use SheetReader.RowEvaluator.{RowEvaluator};
+use SheetIO.RowEvaluator;
+use SheetIO.RowEvaluator.{RowEvaluator};
 
-use SheetReader.CellType;
+use SheetIO.CellType;
 
 
-namespace SheetReader {
+namespace SheetIO {
 
     pub opaque type RowEvaluator[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]
 
 }
 
-namespace SheetReader/RowEvaluator {
+namespace SheetIO/RowEvaluator {
 
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
@@ -93,7 +93,7 @@ namespace SheetReader/RowEvaluator {
                  ix: Int32, 
                  f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
         use Result.{flatMap};
-        let* cell = SheetReader/Internal/Row.getCell(row, ix);
+        let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
     
     pub def isNull(ix: Int32): RowEvaluator[Bool] = 
@@ -104,22 +104,22 @@ namespace SheetReader/RowEvaluator {
 
 
     pub def getCellType(ix: Int32): RowEvaluator[CellType] =
-        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getCellType)))
+        map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
     
     pub def getString(ix: Int32): RowEvaluator[String] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getStringCellValue))
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
 
     pub def getStringWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNull(ix);
         if (x) return(d) else getString(ix)
 
     pub def getBool(ix: Int32): RowEvaluator[Bool] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getBooleanCellValue))
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))
     
 
     pub def getNumeric(ix: Int32): RowEvaluator[Float64] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getNumericCellValue))
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
 
 
     // // See Javadocs for how a bool value is interpreted...

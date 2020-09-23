@@ -1,8 +1,8 @@
-use SheetReader.RowEvaluator;
-use SheetReader.WbMonad;
+use SheetIO.RowEvaluator;
+use SheetIO.SheetReader;
 
 def main(): Unit & Impure = 
-    use SheetReader/WbMonad.{runXlsx};
+    use SheetIO/SheetReader.{runXlsx};
     match runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[done]")
@@ -11,7 +11,7 @@ def main(): Unit & Impure =
 
 
 def temp01(): Unit & Impure =
-    use SheetReader/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, createSheet};
+    use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, createSheet};
     use Result.{flatMap}; 
     let step = () -> { 
         let* wb = newXSSFWorkbook();
@@ -25,8 +25,8 @@ def temp01(): Unit & Impure =
     }
 
 
-def test01(): WbMonad[Unit] = 
-    use SheetReader/WbMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
+def test01(): SheetReader[Unit] = 
+    use SheetIO/SheetReader.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
         sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
     let* _      = liftAction(_ -> Console.printLine("Running..."));        
     let* s1     = getSheet("Sheet1");
@@ -51,7 +51,7 @@ type alias AibExportRow =
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalHeaderRow(): RowEvaluator[Headers] = 
-    use SheetReader/RowEvaluator.{flatMap, return, getString, liftAction};
+    use SheetIO/RowEvaluator.{flatMap, return, getString, liftAction};
     let* s0     = getString(0);
     let* s1     = getString(1);
     let* s2     = getString(2);
@@ -62,7 +62,7 @@ def evalHeaderRow(): RowEvaluator[Headers] =
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalAibExportRow(): RowEvaluator[AibExportRow] = 
-    use SheetReader/RowEvaluator.{flatMap, return, getString, getStringWithDefault};
+    use SheetIO/RowEvaluator.{flatMap, return, getString, getStringWithDefault};
     let* s0     = getString(0);
     let* s1     = getString(1);
     let* s2     = getStringWithDefault(2, "");

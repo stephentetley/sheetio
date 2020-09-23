@@ -16,7 +16,7 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/Sheet {
+namespace SheetIO/Internal/Sheet {
 
     pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(); 

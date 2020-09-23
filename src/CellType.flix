@@ -16,11 +16,11 @@
 
 use System.Error.{Generic};
 
-use SheetReader.CellType;
-use SheetReader.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+use SheetIO.CellType;
+use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
 
-namespace SheetReader {
+namespace SheetIO {
 
     ///
     /// CellType
@@ -37,7 +37,7 @@ namespace SheetReader {
 
 }
 
-namespace SheetReader/CellType {
+namespace SheetIO/CellType {
 
     pub def marshal(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
         import flix.runtime.spt.sheetreader.Wrapper:get_NONE()      as get_NONE;
