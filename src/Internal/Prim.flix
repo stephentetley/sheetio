@@ -43,8 +43,8 @@ namespace SheetReader/Internal/Prim {
         }
 
 
-    pub def getNumberOfSheets(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getNumberOfSheets(); 
+    pub def getNumberOfSheets(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(); 
         try {
             let ans = wb.getNumberOfSheets();
             Ok(ans)
@@ -52,8 +52,8 @@ namespace SheetReader/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("getNumberOfSheets")) 
         }
 
-    pub def getSheetName(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, ix: Int32): Result[String, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheetName(Int32); 
+    pub def getSheetName(wb: ##org.apache.poi.ss.usermodel.Workbook, ix: Int32): Result[String, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32); 
         try {
             let ans = wb.getSheetName(ix);
             Ok(ans)
@@ -61,9 +61,9 @@ namespace SheetReader/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("getSheetName")) 
         }
 
-    pub def getSheet(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
-                     name: String): Result[##org.apache.poi.xssf.usermodel.XSSFSheet, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheet(String); 
+    pub def getSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                     name: String): Result[##org.apache.poi.ss.usermodel.Sheet, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.getSheet(String); 
         try {
             let ans = wb.getSheet(name);
             Ok(ans)
@@ -71,9 +71,9 @@ namespace SheetReader/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("getSheet")) 
         }
 
-    pub def getSheetAt(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
-                       ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFSheet, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFWorkbook.getSheetAt(Int32); 
+    pub def getSheetAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Sheet, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32); 
         try {
             let ans = wb.getSheetAt(ix);
             Ok(ans)

@@ -24,7 +24,7 @@ use SheetReader.CellType;
 
 namespace SheetReader {
 
-    pub opaque type RowEvaluator[a] = ##org.apache.poi.xssf.usermodel.XSSFRow ~> Result[a, System.Error]
+    pub opaque type RowEvaluator[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]
 
 }
 
@@ -33,7 +33,7 @@ namespace SheetReader/RowEvaluator {
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
 
-    def apply1(x: RowEvaluator[a], r: ##org.apache.poi.xssf.usermodel.XSSFRow): Result[a, System.Error] & Impure =
+    def apply1(x: RowEvaluator[a], r: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
         let RowEvaluator(f) = x;
         f(r)
 
@@ -75,7 +75,7 @@ namespace SheetReader/RowEvaluator {
 
     pub def flatMap(k: a -> RowEvaluator[b], x: RowEvaluator[a]): RowEvaluator[b] = bind(x, k)
 
-    def liftPrim(ask: ##org.apache.poi.xssf.usermodel.XSSFRow ~> Result[a, System.Error]): RowEvaluator[a] =
+    def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowEvaluator[a] =
         RowEvaluator(r -> ask(r))
 
 
@@ -89,12 +89,12 @@ namespace SheetReader/RowEvaluator {
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
     // // so FactIO's API indexes from 0.
 
-    def withCell(row: ##org.apache.poi.xssf.usermodel.XSSFRow,
+    def withCell(row: ##org.apache.poi.ss.usermodel.Row,
                  ix: Int32, 
                  f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
         use Result.{flatMap};
-        let* cell = SheetReader/Internal/XSSFRow.getCell(row, ix);
-        f(cell as ##org.apache.poi.ss.usermodel.Cell)
+        let* cell = SheetReader/Internal/Row.getCell(row, ix);
+        f(cell)
     
     pub def isNull(ix: Int32): RowEvaluator[Bool] = 
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
@@ -104,22 +104,22 @@ namespace SheetReader/RowEvaluator {
 
 
     pub def getCellType(ix: Int32): RowEvaluator[CellType] =
-        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getCellType)))
+        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getCellType)))
 
     
     pub def getString(ix: Int32): RowEvaluator[String] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getStringCellValue))
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getStringCellValue))
 
     pub def getStringWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNull(ix);
         if (x) return(d) else getString(ix)
 
     pub def getBool(ix: Int32): RowEvaluator[Bool] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getBooleanCellValue))
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getBooleanCellValue))
     
 
     pub def getNumeric(ix: Int32): RowEvaluator[Float64] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getNumericCellValue))
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/Cell.getNumericCellValue))
 
 
     // // See Javadocs for how a bool value is interpreted...

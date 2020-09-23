@@ -16,15 +16,15 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/XSSFRow {
+namespace SheetReader/Internal/Row {
 
-    pub def getRowNum(row: ##org.apache.poi.xssf.usermodel.XSSFRow): Int32 & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFRow.getRowNum(); 
+    pub def getRowNum(row: ##org.apache.poi.ss.usermodel.Row): Int32 & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getRowNum(); 
         row.getRowNum()
     
-    pub def getCell(row: ##org.apache.poi.xssf.usermodel.XSSFRow, 
-                    ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFCell, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFRow.getCell(Int32); 
+    pub def getCell(row: ##org.apache.poi.ss.usermodel.Row, 
+                    ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getCell(Int32); 
         try {
             let ans = row.getCell(ix);
             Ok(ans)

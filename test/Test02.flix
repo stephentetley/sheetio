@@ -2,8 +2,8 @@ use SheetReader.RowEvaluator;
 use SheetReader.WbMonad;
 
 def main(): Unit & Impure = 
-    use SheetReader/WbMonad.{runWbMonad};
-    match runWbMonad(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
+    use SheetReader/WbMonad.{runXlsx};
+    match runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[done]")
     }

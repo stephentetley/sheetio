@@ -29,30 +29,30 @@ use SheetReader.WbMonad.{WbMonad};
 
 namespace SheetReader {
 
-    pub opaque type WbMonad[a] = ##org.apache.poi.xssf.usermodel.XSSFWorkbook ~> Result[a, System.Error]
+    pub opaque type WbMonad[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]
 
-    pub opaque type Sheet = ##org.apache.poi.xssf.usermodel.XSSFSheet
+    pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
 
-    pub opaque type Row = ##org.apache.poi.xssf.usermodel.XSSFRow
+    pub opaque type Row = ##org.apache.poi.ss.usermodel.Row
 
 }
 
 namespace SheetReader/WbMonad {
 
-    pub def runWbMonad(ma: WbMonad[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runXlsx(ma: WbMonad[a], path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetReader/Internal/Prim.{newXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match newXSSFWorkbook(path1) { 
             case Err(e) => Err(e)
             case Ok(wb) => {
-                let ans = apply1(ma, wb);
+                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeXSSFWorkbook(wb);
                 ans         
             }
         }
         
-    def apply1(ma: WbMonad[a], wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook): Result[a, System.Error] & Impure = 
+    def apply1(ma: WbMonad[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
         let WbMonad(x1) = ma;
         x1(wb)
 
@@ -228,7 +228,7 @@ namespace SheetReader/WbMonad {
             case None => melse
         })
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.xssf.usermodel.XSSFWorkbook ~> Result[a, System.Error]): WbMonad[a] = 
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]): WbMonad[a] = 
         WbMonad(wb -> fn(wb))
 
     pub def liftAction(fn: Unit ~> a): WbMonad[a] = 
@@ -245,7 +245,7 @@ namespace SheetReader/WbMonad {
     ///
     /// Helper function for `mapM`.
     ///
-    def mapMHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def mapMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                    mf: a -> WbMonad[b], 
                    xs: List[a], 
                    fk: System.Error -> Result[List[b], System.Error], 
@@ -266,7 +266,7 @@ namespace SheetReader/WbMonad {
             mapXHelper(wb, mf, xs, e -> Err(e), _ -> Ok())
         )
 
-    def mapXHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def mapXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                    mf: a -> WbMonad[b], 
                    xs: List[a], 
                    fk: System.Error -> Result[Unit, System.Error], 
@@ -290,7 +290,7 @@ namespace SheetReader/WbMonad {
     ///
     /// Helper function for `mapM`.
     ///
-    def mapWithIndexMHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                             mf: (a, Int32) -> WbMonad[b], 
                             ix : Int32, 
                             xs: List[a], 
@@ -312,7 +312,7 @@ namespace SheetReader/WbMonad {
             mapWithIndexXHelper(wb, mf, 0, xs, e -> Err(e), _ -> Ok())
         )
 
-    def mapWithIndexXHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                             mf: (a, Int32) -> WbMonad[b],
                             ix: Int32, 
                             xs: List[a], 
@@ -338,7 +338,7 @@ namespace SheetReader/WbMonad {
     ///
     /// Helper function for `sequence`.
     ///
-    def sequenceHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                        xs: List[WbMonad[a]], 
                        fk: System.Error -> Result[List[a], System.Error], 
                        sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure =
@@ -379,7 +379,7 @@ namespace SheetReader/WbMonad {
             foldMHelper(wb, mf, start, xs, e -> Err(e), ac -> Ok(ac))
         )
 
-    def foldMHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+    def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                     mf: (b, a) -> WbMonad[b], 
                     acc: b, 
                     xs: List[a], 
@@ -401,7 +401,7 @@ namespace SheetReader/WbMonad {
             mapAccumMHelper(wb, mf, start, xs, e -> Err(e), (ac, ks) -> Ok((ac, ks)))
         )
 
-    def mapAccumMHelper(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook,
+    def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
                         mf: (ac, a) -> WbMonad[(ac, b)],
                         ac: ac,
                         xs: List[a],
@@ -731,24 +731,24 @@ namespace SheetReader/WbMonad {
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheetAt(ix)))
 
     pub def sheetFirstRowNum(x: Sheet): WbMonad[Int32] =
-        use SheetReader/Internal/XSSFSheet.{getFirstRowNum};
+        use SheetReader/Internal/Sheet.{getFirstRowNum};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getFirstRowNum())
 
     pub def sheetLastRowNum(x: Sheet): WbMonad[Int32] =
-        use SheetReader/Internal/XSSFSheet.{getLastRowNum};
+        use SheetReader/Internal/Sheet.{getLastRowNum};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getLastRowNum())
 
 
     pub def sheetPhysicalNumberOfRows(x: Sheet): WbMonad[Int32] =
-        use SheetReader/Internal/XSSFSheet.{getPhysicalNumberOfRows};
+        use SheetReader/Internal/Sheet.{getPhysicalNumberOfRows};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getPhysicalNumberOfRows())
 
 
     pub def getRowAt(x: Sheet, ix: Int32): WbMonad[Row] =
-        use SheetReader/Internal/XSSFSheet.{getRow};
+        use SheetReader/Internal/Sheet.{getRow};
         let Sheet(x1) = x;
         map(Row, liftActionResult(_ -> x1.getRow(ix)))
 
@@ -764,13 +764,13 @@ namespace SheetReader/WbMonad {
         liftActionResult(_ -> rowsInRangeHelper(x1, f, b, e, err -> Err(err), xs -> Ok(xs)))
 
 
-    def rowsInRangeHelper(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet, 
-                          eval: ##org.apache.poi.xssf.usermodel.XSSFRow ~> Result[a, System.Error],
+    def rowsInRangeHelper(ws: ##org.apache.poi.ss.usermodel.Sheet, 
+                          eval: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error],
                           ix: Int32, 
                           endIx: Int32,
                           fk: System.Error -> Result[List[a], System.Error],
                           sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
-        use SheetReader/Internal/XSSFSheet.{getRow};                      
+        use SheetReader/Internal/Sheet.{getRow};
         if (ix >= endIx) 
             sk(Nil)
         else {

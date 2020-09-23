@@ -16,10 +16,10 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/XSSFSheet {
+namespace SheetReader/Internal/Sheet {
 
-    pub def getFirstRowNum(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getFirstRowNum(); 
+    pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(); 
         try {
             let ans = ws.getFirstRowNum();
             Ok(ans)
@@ -27,8 +27,8 @@ namespace SheetReader/Internal/XSSFSheet {
             case _: ##java.lang.Exception => Err(Generic("getFirstRowNum")) 
         }
 
-    pub def getLastRowNum(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getLastRowNum(); 
+    pub def getLastRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(); 
         try {
             let ans = ws.getLastRowNum();
             Ok(ans)
@@ -36,8 +36,8 @@ namespace SheetReader/Internal/XSSFSheet {
             case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
         }
 
-    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet): Result[Int32, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getPhysicalNumberOfRows(); 
+    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(); 
         try {
             let ans = ws.getPhysicalNumberOfRows();
             Ok(ans)
@@ -46,9 +46,9 @@ namespace SheetReader/Internal/XSSFSheet {
         }
 
 
-    pub def getRow(ws: ##org.apache.poi.xssf.usermodel.XSSFSheet,
-                   ix: Int32): Result[##org.apache.poi.xssf.usermodel.XSSFRow, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFSheet.getRow(Int32); 
+    pub def getRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
+                   ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32); 
         try {
             let ans = ws.getRow(ix);
             Ok(ans)
