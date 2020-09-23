@@ -40,10 +40,10 @@ namespace SheetReader {
 namespace SheetReader/WbMonad {
 
     pub def runXlsx(ma: WbMonad[a], path: System.FilePath): Result[a, System.Error] & Impure = 
-        use SheetReader/Internal/Prim.{newXSSFWorkbook, closeXSSFWorkbook};
+        use SheetReader/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
-        match newXSSFWorkbook(path1) { 
+        match openXSSFWorkbook(path1) { 
             case Err(e) => Err(e)
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);

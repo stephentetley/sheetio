@@ -19,7 +19,23 @@ use System.Error.{Generic};
 namespace SheetReader/Internal/Prim {
 
 
-    pub def newXSSFWorkbook(path: String): Result[##org.apache.poi.xssf.usermodel.XSSFWorkbook, System.Error] & Impure = 
+    ///
+    /// Create new for writing.
+    ///
+    pub def newXSSFWorkbook(): Result[##org.apache.poi.xssf.usermodel.XSSFWorkbook, System.Error] & Impure = 
+        import new org.apache.poi.xssf.usermodel.XSSFWorkbook() as newXSSFWorkbook;
+        try {
+            let wb = newXSSFWorkbook();
+            Ok(wb)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("newXSSFWorkbook")) 
+        }
+
+
+    ///
+    /// Open for reading.
+    ///
+    pub def openXSSFWorkbook(path: String): Result[##org.apache.poi.xssf.usermodel.XSSFWorkbook, System.Error] & Impure = 
         import new java.io.File(String) as newFile;
         import new java.io.FileInputStream(##java.io.File) as newFileInputStream;
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream) as newXSSFWorkbook;
@@ -30,8 +46,29 @@ namespace SheetReader/Internal/Prim {
             let wb = newXSSFWorkbook(istream);
             Ok(wb)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("newXSSFWorkbook")) 
+            case _: ##java.lang.Exception => Err(Generic("openXSSFWorkbook")) 
         }
+
+
+    ///
+    /// Open for reading.
+    ///
+    pub def writeXSSFWorkbook(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
+                              path: String): Result[Unit, System.Error] & Impure = 
+        import new java.io.FileOutputStream(String) as newFileOutputStream;
+        import java.io.FileOutputStream.close();
+        import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream);
+        try {
+            let fostream = newFileOutputStream(path);
+            let fostream1 = fostream as ##java.io.OutputStream;
+            let wb1 = wb as ##org.apache.poi.ooxml.POIXMLDocument;
+            wb1.write(fostream1);
+            fostream.close();
+            Ok()
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("writeXSSFWorkbook")) 
+        }
+
 
     pub def closeXSSFWorkbook(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook): Result[Unit, System.Error] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(); 
@@ -40,6 +77,17 @@ namespace SheetReader/Internal/Prim {
             Ok()
         } catch {
             case _: ##java.lang.Exception => Err(Generic("closeXSSFWorkbook")) 
+        }
+
+
+    pub def createSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                        name: String): Result[##org.apache.poi.ss.usermodel.Sheet, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.createSheet(String); 
+        try {
+            let ans = wb.createSheet(name);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createSheet")) 
         }
 
 

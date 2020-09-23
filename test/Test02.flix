@@ -6,6 +6,22 @@ def main(): Unit & Impure =
     match runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[done]")
+    };
+    temp01()
+
+
+def temp01(): Unit & Impure =
+    use SheetReader/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, createSheet};
+    use Result.{flatMap}; 
+    let step = () -> { 
+        let* wb = newXSSFWorkbook();
+        let* _  = createSheet(wb as ##org.apache.poi.ss.usermodel.Workbook, "My_Sheet");
+        let* _  = writeXSSFWorkbook(wb, "E:/coding/flix/sheetreader/data/wb1.xlsx");
+        Ok()
+    };
+    match step(){ 
+        case Err(e) => Console.printLine(System/Error.toString(e))
+        case Ok() => Console.printLine("[write done]")
     }
 
 
