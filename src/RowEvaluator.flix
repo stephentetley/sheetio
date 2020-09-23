@@ -91,24 +91,36 @@ namespace SheetReader/RowEvaluator {
 
     def withCell(row: ##org.apache.poi.xssf.usermodel.XSSFRow,
                  ix: Int32, 
-                 f: ##org.apache.poi.xssf.usermodel.XSSFCell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
+                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
         use Result.{flatMap};
-        let* cell =  SheetReader/Internal/XSSFRow.getCell(row, ix);
-        f(cell)
+        let* cell = SheetReader/Internal/XSSFRow.getCell(row, ix);
+        f(cell as ##org.apache.poi.ss.usermodel.Cell)
+    
+    pub def isNull(ix: Int32): RowEvaluator[Bool] = 
+        liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
 
     pub def getNull(ix: Int32): RowEvaluator[Unit] =
         liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic("getNull"))))
 
 
     pub def getCellType(ix: Int32): RowEvaluator[CellType] =
-        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getCellType)))
+        map(SheetReader/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getCellType)))
 
     
     pub def getString(ix: Int32): RowEvaluator[String] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getStringCellValue))
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getStringCellValue))
 
-    pub def isNull(ix: Int32): RowEvaluator[Bool] = 
-        liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
+    pub def getStringWithDefault(ix: Int32, d: String): RowEvaluator[String] =
+        let* x = isNull(ix);
+        if (x) return(d) else getString(ix)
+
+    pub def getBool(ix: Int32): RowEvaluator[Bool] =
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getBooleanCellValue))
+    
+
+    pub def getNumeric(ix: Int32): RowEvaluator[Float64] =
+        liftPrim(x -> withCell(x, ix, SheetReader/Internal/SSCell.getNumericCellValue))
+
 
     // // See Javadocs for how a bool value is interpreted...
     // pub def getBool(ix: Int32): RowEvaluator[Bool] =
@@ -130,8 +142,7 @@ namespace SheetReader/RowEvaluator {
     //     liftPrim(x -> BasicDb/Internal/ResultSet.getFloat32(x, ix + 1))
     
 
-    pub def getFloat64(ix: Int32): RowEvaluator[Float64] =
-        liftPrim(x -> withCell(x, ix, SheetReader/Internal/XSSFCell.getNumericCellValue))
+    pub def getFloat64(ix: Int32): RowEvaluator[Float64] = getNumeric(ix)
 
 
     ///

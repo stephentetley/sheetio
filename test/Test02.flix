@@ -12,13 +12,14 @@ def main(): Unit & Impure =
 def test01(): WbMonad[Unit] = 
     use SheetReader/WbMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
         sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
+    let* _      = liftAction(_ -> Console.printLine("Running..."));        
     let* s1     = getSheet("Sheet1");
     let* r0     = s1.getRowAt(0);
     let* hdrs   = rowEval(r0, evalHeaderRow());
     let* _      = liftAction(_ -> printHeaders(hdrs));
     let* end    = sheetPhysicalNumberOfRows(s1);
     let* _      = liftAction(_ -> Console.printLine("End=${Int32.toString(end)}"));
-    let* xs     = rowsInRange(s1, 1, 32, evalAibExportRow());
+    let* xs     = rowsInRange(s1, 1, end, evalAibExportRow());
     let* _      = liftAction(_ -> List.foreach(printAibExportRow, xs));
     return()
 
@@ -45,12 +46,12 @@ def evalHeaderRow(): RowEvaluator[Headers] =
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalAibExportRow(): RowEvaluator[AibExportRow] = 
-    use SheetReader/RowEvaluator.{flatMap, return, getString, getCellType, liftAction, map, isNull};
+    use SheetReader/RowEvaluator.{flatMap, return, getString, getStringWithDefault};
     let* s0     = getString(0);
     let* s1     = getString(1);
-    let* s2     = getString(2);
-    let* s3     = map(x -> if (x) "T" else "F", isNull(3));     // map(SheetReader/CellType.format, getCellType(3));
-    let* s4     = return("<>"); // map(SheetReader/CellType.format, getCellType(4));
+    let* s2     = getStringWithDefault(2, "");
+    let* s3     = getStringWithDefault(3, "");
+    let* s4     = getStringWithDefault(4, "");
     return( { change = s0
             , reference = s1
             , assetName = s2
@@ -62,4 +63,4 @@ def printHeaders(hdrs: Headers): Unit & Impure =
     Console.printLine(Array.formatWith(x -> x, ", ", hdrs))
 
 def printAibExportRow(row: AibExportRow): Unit & Impure = 
-    Console.printLine("{change=${row.change}, reference=${row.reference}, ${row.oldParentName}}")
+    Console.printLine("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")

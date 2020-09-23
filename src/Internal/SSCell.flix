@@ -16,11 +16,11 @@
 
 use System.Error.{Generic};
 
-namespace SheetReader/Internal/XSSFCell {
+namespace SheetReader/Internal/SSCell {
 
 
-    pub def getCellType(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[##org.apache.poi.ss.usermodel.CellType, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFCell.getCellType(); 
+    pub def getCellType(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellType, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getCellType(); 
         try {
             let ans = cell.getCellType();
             Ok(ans)
@@ -28,9 +28,19 @@ namespace SheetReader/Internal/XSSFCell {
             case _: ##java.lang.Exception => Err(Generic("getCellType")) 
         }
 
+     
+    pub def getBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(); 
+        try {
+            let ans = cell.getBooleanCellValue();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getBooleanCellValue")) 
+        }
 
-    pub def getStringCellValue(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[String, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFCell.getStringCellValue(); 
+
+    pub def getStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getStringCellValue(); 
         try {
             let ans = cell.getStringCellValue();
             Ok(ans)
@@ -38,8 +48,8 @@ namespace SheetReader/Internal/XSSFCell {
             case _: ##java.lang.Exception => Err(Generic("getStringCellValue")) 
         }
 
-    pub def getNumericCellValue(cell: ##org.apache.poi.xssf.usermodel.XSSFCell): Result[Float64, System.Error] & Impure = 
-        import org.apache.poi.xssf.usermodel.XSSFCell.getNumericCellValue(); 
+    pub def getNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Float64, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(); 
         try {
             let ans = cell.getNumericCellValue();
             Ok(ans)
