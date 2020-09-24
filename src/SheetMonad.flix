@@ -24,70 +24,96 @@ use SheetIO.RowEvaluator.{RowEvaluator};
 use SheetIO.Sheet;
 use SheetIO.Sheet.{Sheet};
 
+use SheetIO.SheetMonad;
+use SheetIO.SheetMonad.{SheetMonad};
 use SheetIO.SheetReader;
-use SheetIO.SheetReader.{SheetReader};
+use SheetIO.SheetWriter;
+
 
 namespace SheetIO {
 
-    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]
+    /// TODO `mo` should just be a phantom type argument and not an actual parameter...
+    pub opaque type SheetMonad[mo, a] = mo -> ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]
 
     pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
 
     pub opaque type Row = ##org.apache.poi.ss.usermodel.Row
 
+
+    opaque type Reader = Unit
+
+    opaque type Writer = Unit
+
+    type alias SheetReader[a] = SheetMonad[Reader, a]
+    
+    type alias SheetWriter[a] = SheetMonad[Writer, a]
+
+
 }
 
-namespace SheetIO/SheetReader {
+namespace SheetIO/SheetMonad {
 
-    pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runSheetReaderXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
+        use SheetIO.Reader.{Reader};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match openXSSFWorkbook(path1) { 
             case Err(e) => Err(e)
             case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
+                let ans = apply1(ma, Reader(), wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeXSSFWorkbook(wb);
                 ans         
             }
         }
-        
-    def apply1(ma: SheetReader[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
-        let SheetReader(x1) = ma;
-        x1(wb)
+    
+    pub def runXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+        use SheetIO.Writer.{Writer};
+        use Result.{flatMap};
+        let outpath = System/FilePath.toString(path);
+        let* wb     = newXSSFWorkbook();
+        let* ans    = apply1(ma, Writer(), wb as ##org.apache.poi.ss.usermodel.Workbook);
+        let* _      = writeXSSFWorkbook(wb, outpath);
+        let* _      = closeXSSFWorkbook(wb);
+        Ok(ans)
 
-    pub def return(x: a): SheetReader[a] = 
-        SheetReader(_ -> Ok(x) as & Impure)
+    def apply1(ma: SheetMonad[mo, a], mode: mo, wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
+        let SheetMonad(x1) = ma;
+        x1(mode, wb)
 
-    pub def throwError(msg: String): SheetReader[a] =
-        SheetReader(_ -> Err(System/Error.Generic(msg)) as & Impure)
+    pub def return(x: a): SheetMonad[mo, a] = 
+        SheetMonad((_,_) -> Ok(x) as & Impure)
+
+    pub def throwError(msg: String): SheetMonad[mo, a] =
+        SheetMonad((_,_) -> Err(System/Error.Generic(msg)) as & Impure)
 
 
-    pub def catchError(ma: SheetReader[a], handle: System.Error -> SheetReader[a]): SheetReader[a] =
-        SheetReader(wb -> match apply1(ma, wb) { 
+    pub def catchError(ma: SheetMonad[mo, a], handle: System.Error -> SheetMonad[mo, a]): SheetMonad[mo, a] =
+        SheetMonad((mo, wb) -> match apply1(ma, mo, wb) { 
             case Ok(a) => Ok(a)
-            case Err(e) => apply1(handle(e), wb)
+            case Err(e) => apply1(handle(e), mo, wb)
         })
 
-    pub def mapError(f: System.Error -> System.Error, ma: SheetReader[a]): SheetReader[a] =
-        SheetReader(wb -> match apply1(ma, wb) { 
+    pub def mapError(f: System.Error -> System.Error, ma: SheetMonad[mo, a]): SheetMonad[mo, a] =
+        SheetMonad((mo, wb) -> match apply1(ma, mo, wb) { 
             case Ok(a) => Ok(a)
             case Err(e) => Err(f(e))
         })
 
     /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: SheetReader[a]): SheetReader[b] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
+    pub def map(fn: a -> b & ef, ma: SheetMonad[mo, a]): SheetMonad[mo, b] = 
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
                 case Ok(a) => { let ans = fn(a) as & Impure; Ok(ans) }
                 case Err(e) => Err(e)
             }
         )
 
-    pub def ap(mf: SheetReader[a -> b & ef], ma: SheetReader[a]): SheetReader[b] = 
-        SheetReader(wb -> 
-            match apply1(mf, wb) { 
-                case Ok(f) => match apply1(ma, wb) { 
+    pub def ap(mf: SheetMonad[mo, a -> b & ef], ma: SheetMonad[mo, a]): SheetMonad[mo, b] = 
+        SheetMonad((mo, wb) -> 
+            match apply1(mf, mo, wb) { 
+                case Ok(f) => match apply1(ma, mo, wb) { 
                     case Ok(a) => { let ans = f(a) as & Impure; Ok(ans) }
                     case Err(e) => Err(e)
                 }
@@ -95,10 +121,10 @@ namespace SheetIO/SheetReader {
             }
         )
 
-    pub def seqLeft(ma: SheetReader[a], mb: SheetReader[b]): SheetReader[a] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => match apply1(mb, wb) {
+    pub def seqLeft(ma: SheetMonad[mo, a], mb: SheetMonad[mo,b]): SheetMonad[mo, a] = 
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
+                case Ok(a) => match apply1(mb, mo, wb) {
                     case Ok(_) => Ok(a)
                     case Err(e) => Err(e)
                 }
@@ -106,54 +132,54 @@ namespace SheetIO/SheetReader {
             }
         )
 
-    pub def seqRight(ma: SheetReader[a], mb: SheetReader[b]): SheetReader[b] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(_) => apply1(mb, wb)
+    pub def seqRight(ma: SheetMonad[mo, a], mb: SheetMonad[mo, b]): SheetMonad[mo, b] = 
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
+                case Ok(_) => apply1(mb, mo, wb)
                 case Err(e) => Err(e)
             }
         )
 
 
-    pub def bind(ma: SheetReader[a], fn: a -> SheetReader[b]): SheetReader[b] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => apply1(fn(a), wb)
+    pub def bind(ma: SheetMonad[mo, a], fn: a -> SheetMonad[mo, b]): SheetMonad[mo, b] = 
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
+                case Ok(a) => apply1(fn(a), mo, wb)
                 case Err(e) => Err(e)
             }
         )
 
-    pub def flatMap(fn: a -> SheetReader[b], ma: SheetReader[a]): SheetReader[b] = bind(ma, fn)
+    pub def flatMap(fn: a -> SheetMonad[mo, b], ma: SheetMonad[mo, a]): SheetMonad[mo, b] = bind(ma, fn)
 
-    pub def kleisliLeft(f1: a -> SheetReader[b], f2: b -> SheetReader[c], x: a): SheetReader[c] =
-        SheetReader(wb -> 
-            match apply1(f1(x), wb) { 
-                case Ok(b) => apply1(f2(b), wb)
+    pub def kleisliLeft(f1: a -> SheetMonad[mo, b], f2: b -> SheetMonad[mo, c], x: a): SheetMonad[mo, c] =
+        SheetMonad((mo, wb) -> 
+            match apply1(f1(x), mo, wb) { 
+                case Ok(b) => apply1(f2(b), mo, wb)
                 case Err(e) => Err(e)
             }
         )
 
-    pub def kleisliRight(f1: b -> SheetReader[c], f2: a -> SheetReader[b], x: a): SheetReader[c] =
+    pub def kleisliRight(f1: b -> SheetMonad[mo, c], f2: a -> SheetMonad[mo, b], x: a): SheetMonad[mo, c] =
         kleisliLeft(f2, f1, x)
 
 
-    pub def alt(ma: SheetReader[a], mb: SheetReader[a]): SheetReader[a] =
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
+    pub def alt(ma: SheetMonad[mo, a], mb: SheetMonad[mo, a]): SheetMonad[mo, a] =
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
                 case Ok(a) => Ok(a)
-                case Err(_) => apply1(mb, wb)
+                case Err(_) => apply1(mb, mo, wb)
             }
         )
 
-    pub def optional(ma: SheetReader[a]): SheetReader[Option[a]] = 
+    pub def optional(ma: SheetMonad[mo, a]): SheetMonad[mo,Option[a]] = 
         alt(map(Some, ma), return(None))
 
-    pub def tryWithDefault(ma: SheetReader[a], d: a): SheetReader[a] = 
+    pub def tryWithDefault(ma: SheetMonad[mo, a], d: a): SheetMonad[mo, a] = 
         alt(ma, return(d))
 
-    pub def testM(ma: SheetReader[a]): SheetReader[Bool] =
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
+    pub def testM(ma: SheetMonad[mo, a]): SheetMonad[mo, Bool] =
+        SheetMonad((mo, wb) -> 
+            match apply1(ma, mo, wb) { 
                 case Ok(_) => Ok(true)
                 case Err(_) => Ok(false)
             }
@@ -164,89 +190,92 @@ namespace SheetIO/SheetReader {
     ///
     /// By definition this never fails.
     ///
-    pub def result(ma: SheetReader[a]): SheetReader[Result[a, System.Error]] = 
-        SheetReader(wb -> 
-            let ans = apply1(ma, wb);
+    pub def result(ma: SheetMonad[mo, a]): SheetMonad[mo, Result[a, System.Error]] = 
+        SheetMonad((mo, wb) -> 
+            let ans = apply1(ma, mo, wb);
             Ok(ans)
         )
 
-    pub def guard(x: Bool): SheetReader[Unit] = 
+    pub def guard(x: Bool): SheetMonad[mo, Unit] = 
         match x { 
             case true => return()
             case false => throwError("guard")
         }
 
-    pub def whenTrue(x: Bool, ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenTrue(x: Bool, ma: SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         match x { 
             case true => ma
             case false => return()
         }
 
-    pub def whenFalse(x: Bool, ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenFalse(x: Bool, ma: SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         match x { 
             case true => return()
             case false => ma
         }
 
-    pub def whenTrueM(mx: SheetReader[Bool], ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenTrueM(mx: SheetMonad[mo, Bool], ma: SheetMonad[mo, Unit]): SheetMonad[mo,Unit] = 
         bind(mx, x -> whenTrue(x, ma))
 
-    pub def whenFalseM(mx: SheetReader[Bool], ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenFalseM(mx: SheetMonad[mo, Bool], ma: SheetMonad[mo, Unit]): SheetMonad[mo,Unit] = 
         bind(mx, x -> whenFalse(x, ma))
 
 
-    pub def whenSome(x: Option[a], f: a -> SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenSome(x: Option[a], f: a -> SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         match x { 
             case Some(a) => f(a)
             case None => return()
         }
 
-    pub def whenNone(x: Option[a], ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenNone(x: Option[a], ma: SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         match x { 
             case Some(_) => return()
             case None => ma
         }
 
-    pub def whenSomeM(mx: SheetReader[Option[a]], f: a -> SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenSomeM(mx: SheetMonad[mo, Option[a]], f: a -> SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         bind(mx, x -> whenSome(x, f))
             
 
-    pub def whenNoneM(mx: SheetReader[Option[a]], ma: SheetReader[Unit]): SheetReader[Unit] = 
+    pub def whenNoneM(mx: SheetMonad[mo, Option[a]], ma: SheetMonad[mo, Unit]): SheetMonad[mo, Unit] = 
         bind(mx, x -> whenNone(x, ma))
 
 
-    pub def ifSomeM(mx: SheetReader[Option[a]], mthen: a -> SheetReader[b], melse: SheetReader[b]): SheetReader[b] = 
+    pub def ifSomeM(mx: SheetMonad[mo, Option[a]], mthen: a -> SheetMonad[mo, b], melse: SheetMonad[mo, b]): SheetMonad[mo, b] = 
         bind(mx, x -> match x { 
             case Some(a) => mthen(a)
             case None => melse
         })
             
 
-    pub def ifNoneM(mx: SheetReader[Option[a]], mthen: SheetReader[b], melse: SheetReader[b]): SheetReader[b] = 
+    pub def ifNoneM(mx: SheetMonad[mo, Option[a]], mthen: SheetMonad[mo, b], melse: SheetMonad[mo, b]): SheetMonad[mo, b] = 
         bind(mx, x -> match x { 
             case Some(_) => mthen
             case None => melse
         })
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]): SheetReader[a] = 
-        SheetReader(wb -> fn(wb))
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]): SheetMonad[mo, a] = 
+        SheetMonad((_, wb) -> fn(wb))
 
-    pub def liftAction(fn: Unit ~> a): SheetReader[a] = 
-        SheetReader(_ -> { let a = fn(); Ok(a) })
+    pub def liftAction(fn: Unit ~> a): SheetMonad[mo, a] = 
+        SheetMonad((_, _)-> { let a = fn(); Ok(a) })
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetReader[a] = 
-        SheetReader(_ -> fn())
+    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetMonad[mo, a] = 
+        SheetMonad((_, _) -> fn())
 
-  pub def mapM(mf: a -> SheetReader[b], xs: List[a]): SheetReader[List[b]] =
-        SheetReader(wb ->
-            mapMHelper(wb, mf, xs, e -> Err(e), ys -> Ok(ys))
+    
+    
+    pub def mapM(mf: a -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, List[b]] =
+        SheetMonad((mo, wb) ->
+            mapMHelper(mo, wb, mf, xs, e -> Err(e), ys -> Ok(ys))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
-    def mapMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   mf: a -> SheetReader[b], 
+    def mapMHelper(mo: mo, 
+                   wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                   mf: a -> SheetMonad[mo, b], 
                    xs: List[a], 
                    fk: System.Error -> Result[List[b], System.Error], 
                    sk: List[b] -> Result[List[b], System.Error]): Result[List[b], System.Error] & Impure =
@@ -254,20 +283,20 @@ namespace SheetIO/SheetReader {
             case Nil => sk(Nil)
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(wb, mf, rs, fk, ks -> sk(x1 :: ks))
+                    case Ok(x1) => mapMHelper(mo, wb, mf, rs, fk, ks -> sk(x1 :: ks))
                 }
             }
         }
 
-    pub def mapX(mf: a -> SheetReader[b], xs: List[a]): SheetReader[Unit] =
-        SheetReader(wb ->
-            mapXHelper(wb, mf, xs, e -> Err(e), _ -> Ok())
+    pub def mapX(mf: a -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, Unit] =
+        SheetMonad((mo, wb) ->
+            mapXHelper(mo, wb, mf, xs, e -> Err(e), _ -> Ok())
         )
 
-    def mapXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   mf: a -> SheetReader[b], 
+    def mapXHelper(mo: mo, wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                   mf: a -> SheetMonad[mo, b], 
                    xs: List[a], 
                    fk: System.Error -> Result[Unit, System.Error], 
                    sk: Unit -> Result[Unit, System.Error]): Result[Unit, System.Error] & Impure =
@@ -275,23 +304,24 @@ namespace SheetIO/SheetReader {
             case Nil => sk()
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok(_) => mapXHelper(wb, mf, rs, fk, sk)
+                    case Ok(_) => mapXHelper(mo, wb, mf, rs, fk, sk)
                 }
             }
         }
 
-    pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[b], xs: List[a]): SheetReader[List[b]] =
-        SheetReader(wb ->
-            mapWithIndexMHelper(wb, mf, 0, xs, e -> Err(e), ys -> Ok(ys))
+    pub def mapWithIndexM(mf: (a, Int32) -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, List[b]] =
+        SheetMonad((mo, wb) ->
+            mapWithIndexMHelper(mo, wb, mf, 0, xs, e -> Err(e), ys -> Ok(ys))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
-    def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            mf: (a, Int32) -> SheetReader[b], 
+    def mapWithIndexMHelper(mo: mo, 
+                            wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                            mf: (a, Int32) -> SheetMonad[mo, b], 
                             ix : Int32, 
                             xs: List[a], 
                             fk: System.Error -> Result[List[b], System.Error], 
@@ -300,20 +330,21 @@ namespace SheetIO/SheetReader {
             case Nil => sk(Nil)
             case x :: rs => {
                 let ma = mf(x, ix);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok(x1) => mapWithIndexMHelper(wb, mf, ix + 1, rs, fk, ks -> sk(x1 :: ks))
+                    case Ok(x1) => mapWithIndexMHelper(mo, wb, mf, ix + 1, rs, fk, ks -> sk(x1 :: ks))
                 }
             }
         }
 
-    pub def mapWithIndexX(mf: (a, Int32) -> SheetReader[b], xs: List[a]): SheetReader[Unit] =
-        SheetReader(wb ->
-            mapWithIndexXHelper(wb, mf, 0, xs, e -> Err(e), _ -> Ok())
+    pub def mapWithIndexX(mf: (a, Int32) -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, Unit] =
+        SheetMonad((mo, wb) ->
+            mapWithIndexXHelper(mo, wb, mf, 0, xs, e -> Err(e), _ -> Ok())
         )
 
-    def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            mf: (a, Int32) -> SheetReader[b],
+    def mapWithIndexXHelper(mo: mo, 
+                            wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                            mf: (a, Int32) -> SheetMonad[mo, b],
                             ix: Int32, 
                             xs: List[a], 
                             fk: System.Error -> Result[Unit, System.Error], 
@@ -322,31 +353,32 @@ namespace SheetIO/SheetReader {
             case Nil => sk()
             case x :: rs => {
                 let ma = mf(x, ix);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok(_) => mapWithIndexXHelper(wb, mf, ix + 1, rs, fk, sk)
+                    case Ok(_) => mapWithIndexXHelper(mo, wb, mf, ix + 1, rs, fk, sk)
                 }
             }
         }
 
 
-    pub def sequence(xs: List[SheetReader[a]]): SheetReader[List[a]] =
-        SheetReader(wb ->
-            sequenceHelper(wb, xs, e -> Err(e), ks -> Ok(ks))
+    pub def sequence(xs: List[SheetMonad[mo, a]]): SheetMonad[mo, List[a]] =
+        SheetMonad((mo, wb) ->
+            sequenceHelper(mo, wb, xs, e -> Err(e), ks -> Ok(ks))
         )
 
     ///
     /// Helper function for `sequence`.
     ///
-    def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                       xs: List[SheetReader[a]], 
+    def sequenceHelper(mo: mo, 
+                       wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                       xs: List[SheetMonad[mo, a]], 
                        fk: System.Error -> Result[List[a], System.Error], 
                        sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure =
         match xs {
             case Nil => sk(Nil)
-            case mx :: rs => match apply1(mx, wb) {
+            case mx :: rs => match apply1(mx, mo, wb) {
                 case Err(e) => fk(e)
-                case Ok(x) => sequenceHelper(wb, rs, fk, ks -> sk(x :: ks))
+                case Ok(x) => sequenceHelper(mo, wb, rs, fk, ks -> sk(x :: ks))
             }
         }
 
@@ -356,31 +388,32 @@ namespace SheetIO/SheetReader {
     ///
     /// `traverse` is a synonym for `mapM`.
     ///
-    pub def traverse(f: a -> SheetReader[b], xs: List[a]): SheetReader[List[b]] = mapM(f, xs)
+    pub def traverse(f: a -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, List[b]] = mapM(f, xs)
 
     ///
     /// `traverseX` is a synonym for `mapX`.
     ///
-    pub def traverseX(f: a -> SheetReader[b], xs: List[a]): SheetReader[Unit] = mapX(f, xs)
+    pub def traverseX(f: a -> SheetMonad[mo, b], xs: List[a]): SheetMonad[mo, Unit] = mapX(f, xs)
 
     ///
     /// `forM` is `mapM` with its arguments flipped.
     ///
-    pub def forM(xs: List[a], f: a -> SheetReader[b]): SheetReader[List[b]] = mapM(f, xs)
+    pub def forM(xs: List[a], f: a -> SheetMonad[mo, b]): SheetMonad[mo, List[b]] = mapM(f, xs)
 
     ///
     /// `forX` is `mapX` with its arguments flipped.
     ///
-    pub def forX(xs: List[a], f: a -> SheetReader[b]): SheetReader[Unit] = mapX(f, xs)
+    pub def forX(xs: List[a], f: a -> SheetMonad[mo, b]): SheetMonad[mo, Unit] = mapX(f, xs)
 
 
-    pub def foldM(mf: (b, a) -> SheetReader[b], start: b, xs: List[a]): SheetReader[b] =
-        SheetReader(wb ->
-            foldMHelper(wb, mf, start, xs, e -> Err(e), ac -> Ok(ac))
+    pub def foldM(mf: (b, a) -> SheetMonad[mo, b], start: b, xs: List[a]): SheetMonad[mo, b] =
+        SheetMonad((mo, wb) ->
+            foldMHelper(mo, wb, mf, start, xs, e -> Err(e), ac -> Ok(ac))
         )
 
-    def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                    mf: (b, a) -> SheetReader[b], 
+    def foldMHelper(mo: mo, 
+                    wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                    mf: (b, a) -> SheetMonad[mo, b], 
                     acc: b, 
                     xs: List[a], 
                     fk: System.Error -> Result[b, System.Error], 
@@ -389,20 +422,21 @@ namespace SheetIO/SheetReader {
             case Nil => sk(acc)
             case x :: rs => {
                 let ma = mf(acc, x);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok(acc1) => foldMHelper(wb, mf, acc1, rs, fk, sk)
+                    case Ok(acc1) => foldMHelper(mo, wb, mf, acc1, rs, fk, sk)
                 }
             }
         }
 
-    pub def mapAccumM(mf: (ac, a) -> SheetReader[(ac, b)], start: ac, xs: List[a]): SheetReader[(ac, List[b])] =
-        SheetReader(wb ->
-            mapAccumMHelper(wb, mf, start, xs, e -> Err(e), (ac, ks) -> Ok((ac, ks)))
+    pub def mapAccumM(mf: (ac, a) -> SheetMonad[mo, (ac, b)], start: ac, xs: List[a]): SheetMonad[mo, (ac, List[b])] =
+        SheetMonad((mo, wb) ->
+            mapAccumMHelper(mo, wb, mf, start, xs, e -> Err(e), (ac, ks) -> Ok((ac, ks)))
         )
 
-    def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
-                        mf: (ac, a) -> SheetReader[(ac, b)],
+    def mapAccumMHelper(mo: mo, 
+                        wb: ##org.apache.poi.ss.usermodel.Workbook,
+                        mf: (ac, a) -> SheetMonad[mo, (ac, b)],
                         ac: ac,
                         xs: List[a],
                         fk: System.Error -> Result[(ac, List[b]), System.Error],
@@ -411,9 +445,9 @@ namespace SheetIO/SheetReader {
             case Nil => sk(ac, Nil)
             case x :: rs => {
                 let ma = mf(ac, x);
-                match apply1(ma, wb) {
+                match apply1(ma, mo, wb) {
                     case Err(e) => fk(e)
-                    case Ok((ac1, x1)) => mapAccumMHelper(wb, mf, ac1, rs, fk, (ac2, ks) -> sk(ac2, x1 :: ks))
+                    case Ok((ac1, x1)) => mapAccumMHelper(mo, wb, mf, ac1, rs, fk, (ac2, ks) -> sk(ac2, x1 :: ks))
                 }
             }
         }
@@ -421,41 +455,41 @@ namespace SheetIO/SheetReader {
     ///
     /// `mapAccumX` is a synonym for `foldM`.
     ///
-    pub def mapAccumX(mf: (ac, a) -> SheetReader[ac], start: ac, xs: List[a]): SheetReader[ac] = foldM(mf, start, xs)
+    pub def mapAccumX(mf: (ac, a) -> SheetMonad[mo, ac], start: ac, xs: List[a]): SheetMonad[mo, ac] = foldM(mf, start, xs)
 
     /// Alias for `seqRight`
-    pub def *>(p1: SheetReader[a], p2: SheetReader[b]): SheetReader[b] = seqRight(p1, p2)
+    pub def *>(p1: SheetMonad[mo, a], p2: SheetMonad[mo, b]): SheetMonad[mo, b] = seqRight(p1, p2)
 
     /// Alias for `seqLeft`
-    pub def <*(p1: SheetReader[a], p2: SheetReader[b]): SheetReader[a] = seqLeft(p1, p2)
+    pub def <*(p1: SheetMonad[mo, a], p2: SheetMonad[mo, b]): SheetMonad[mo, a] = seqLeft(p1, p2)
 
     /// Haskell's <|>
-    pub def <!>(p1: SheetReader[a], p2: SheetReader[a]): SheetReader[a] =
+    pub def <!>(p1: SheetMonad[mo, a], p2: SheetMonad[mo, a]): SheetMonad[mo, a] =
         alt(p1, p2)
 
     // Haskell's <$>
-    pub def <&>(f: a -> b, p2: SheetReader[a]): SheetReader[b] =
+    pub def <&>(f: a -> b, p2: SheetMonad[mo, a]): SheetMonad[mo, b] =
         map(f, p2)
 
-    pub def <&(x: b, p2: SheetReader[a]): SheetReader[b] =
+    pub def <&(x: b, p2: SheetMonad[mo, a]): SheetMonad[mo, b] =
         p2 *> return(x)
 
     /// Alias for `bind`
-    pub def >>=(ma: SheetReader[a], k: a -> SheetReader[b]): SheetReader[b] = bind(ma, k)
+    pub def >>=(ma: SheetMonad[mo, a], k: a -> SheetMonad[mo, b]): SheetMonad[mo, b] = bind(ma, k)
 
     /// Alias for `flatMap` (flipped `bind`)
-    pub def =<<(k: a -> SheetReader[b], ma: SheetReader[a]): SheetReader[b] = flatMap(k, ma)
+    pub def =<<(k: a -> SheetMonad[mo, b], ma: SheetMonad[mo, a]): SheetMonad[mo, b] = flatMap(k, ma)
 
 
     // Haskell's ap <*>
-    pub def <*>(mf: SheetReader[a -> b], p2: SheetReader[a]): SheetReader[b] =
+    pub def <*>(mf: SheetMonad[mo, a -> b], p2: SheetMonad[mo, a]): SheetMonad[mo, b] =
         ap(mf, p2)
 
     /// Alias for `kleisliLeft`
-    pub def >=>(f1: a -> SheetReader[b], f2: b -> SheetReader[c]): a -> SheetReader[c] = x -> kleisliLeft(f1, f2, x)
+    pub def >=>(f1: a -> SheetMonad[mo, b], f2: b -> SheetMonad[mo, c]): a -> SheetMonad[mo, c] = x -> kleisliLeft(f1, f2, x)
 
     /// Alias for `kleisliRight`
-    pub def <=<(f1: b -> SheetReader[c], f2: a -> SheetReader[b]): a -> SheetReader[c] = x -> kleisliRight(f1, f2, x)
+    pub def <=<(f1: b -> SheetMonad[mo, c], f2: a -> SheetMonad[mo, b]): a -> SheetMonad[mo, c] = x -> kleisliRight(f1, f2, x)
 
 
     ///
@@ -464,8 +498,8 @@ namespace SheetIO/SheetReader {
     /// Returns an error if either `o1` or `o2` are errors.
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2]): SheetMonad[mo, u] =
         ap(map(f, o1), o2)
 
 
@@ -475,9 +509,9 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2` and `o3` are errors.
     ///
     pub def lift3(f: (t1, t2, t3) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3]): SheetMonad[mo, u] =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -486,10 +520,10 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, `o3` and `o4` are errors.
     ///
     pub def lift4(f: (t1, t2, t3, t4) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3], 
-                  o4: SheetReader[t4]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3], 
+                  o4: SheetMonad[mo, t4]): SheetMonad[mo, u] =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -498,11 +532,11 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o5` are errors.
     ///
     pub def lift5(f: (t1, t2, t3, t4, t5) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3], 
-                  o4: SheetReader[t4], 
-                  o5: SheetReader[t5]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3], 
+                  o4: SheetMonad[mo, t4], 
+                  o5: SheetMonad[mo, t5]): SheetMonad[mo, u] =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -511,12 +545,12 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o6` are errors.
     ///
     pub def lift6(f: (t1, t2, t3, t4, t5, t6) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3],
-                  o4: SheetReader[t4], 
-                  o5: SheetReader[t5], 
-                  o6: SheetReader[t6]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3],
+                  o4: SheetMonad[mo, t4], 
+                  o5: SheetMonad[mo, t5], 
+                  o6: SheetMonad[mo, t6]): SheetMonad[mo, u] =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -525,13 +559,13 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o7` are errors.
     ///
     pub def lift7(f: (t1, t2, t3, t4, t5, t6, t7) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3], 
-                  o4: SheetReader[t4], 
-                  o5: SheetReader[t5], 
-                  o6: SheetReader[t6], 
-                  o7: SheetReader[t7]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3], 
+                  o4: SheetMonad[mo, t4], 
+                  o5: SheetMonad[mo, t5], 
+                  o6: SheetMonad[mo, t6], 
+                  o7: SheetMonad[mo, t7]): SheetMonad[mo, u] =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -540,14 +574,14 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o8` are errors.
     ///
     pub def lift8(f: (t1, t2, t3, t4, t5, t6, t7, t8) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3], 
-                  o4: SheetReader[t4], 
-                  o5: SheetReader[t5], 
-                  o6: SheetReader[t6], 
-                  o7: SheetReader[t7], 
-                  o8: SheetReader[t8]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3], 
+                  o4: SheetMonad[mo, t4], 
+                  o5: SheetMonad[mo, t5], 
+                  o6: SheetMonad[mo, t6], 
+                  o7: SheetMonad[mo, t7], 
+                  o8: SheetMonad[mo, t8]): SheetMonad[mo, u] =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -556,15 +590,15 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o9` are errors.
     ///
     pub def lift9(f: (t1, t2, t3, t4, t5, t6, t7, t8, t9) -> u & ef, 
-                  o1: SheetReader[t1], 
-                  o2: SheetReader[t2], 
-                  o3: SheetReader[t3], 
-                  o4: SheetReader[t4], 
-                  o5: SheetReader[t5], 
-                  o6: SheetReader[t6], 
-                  o7: SheetReader[t7], 
-                  o8: SheetReader[t8], 
-                  o9: SheetReader[t9]): SheetReader[u] =
+                  o1: SheetMonad[mo, t1], 
+                  o2: SheetMonad[mo, t2], 
+                  o3: SheetMonad[mo, t3], 
+                  o4: SheetMonad[mo, t4], 
+                  o5: SheetMonad[mo, t5], 
+                  o6: SheetMonad[mo, t6], 
+                  o7: SheetMonad[mo, t7], 
+                  o8: SheetMonad[mo, t8], 
+                  o9: SheetMonad[mo, t9]): SheetMonad[mo, u] =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -573,16 +607,16 @@ namespace SheetIO/SheetReader {
     /// Returns an error if any of `o1`, `o2`, ... `o10` are errors.
     ///
     pub def lift10(f: (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10) -> u & ef, 
-                   o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5], 
-                   o6: SheetReader[t6], 
-                   o7: SheetReader[t7], 
-                   o8: SheetReader[t8], 
-                   o9: SheetReader[t9], 
-                   o10: SheetReader[t10]): SheetReader[u] =
+                   o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5], 
+                   o6: SheetMonad[mo, t6], 
+                   o7: SheetMonad[mo, t7], 
+                   o8: SheetMonad[mo, t8], 
+                   o9: SheetMonad[mo, t9], 
+                   o10: SheetMonad[mo, t10]): SheetMonad[mo, u] =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
@@ -591,7 +625,8 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating either `o1` or `o2` is an error.
     ///
-    pub def tuple2(o1: SheetReader[t1], o2: SheetReader[t2]): SheetReader[(t1, t2)] =
+    pub def tuple2(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2]): SheetMonad[mo, (t1, t2)] =
         lift2((x,y) -> (x,y), o1, o2)
 
     ///
@@ -599,9 +634,9 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2` and `o3` is an error.
     ///
-    pub def tuple3(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3]): SheetReader[(t1, t2, t3)] =
+    pub def tuple3(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3]): SheetMonad[mo, (t1, t2, t3)] =
         lift3((x1, x2, x3) -> (x1, x2, x3), o1, o2, o3)
 
     ///
@@ -609,10 +644,10 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, `o3` and `o4` is an error.
     ///
-    pub def tuple4(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4]): SheetReader[(t1, t2, t3, t4)]  =
+    pub def tuple4(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4]): SheetMonad[mo, (t1, t2, t3, t4)]  =
         lift4((x1, x2, x3, x4) -> (x1, x2, x3, x4), o1, o2, o3, o4)
 
     ///
@@ -620,11 +655,11 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o5` is an error.
     ///
-    pub def tuple5(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5]): SheetReader[(t1, t2, t3, t4, t5)]  =
+    pub def tuple5(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5]): SheetMonad[mo, (t1, t2, t3, t4, t5)]  =
         lift5((x1, x2, x3, x4, x5) -> (x1, x2, x3, x4, x5), o1, o2, o3, o4, o5)
 
     ///
@@ -632,12 +667,12 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o6` is an error.
     ///
-    pub def tuple6(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5], 
-                   o6: SheetReader[t6]): SheetReader[(t1, t2, t3, t4, t5, t6)]  =
+    pub def tuple6(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5], 
+                   o6: SheetMonad[mo, t6]): SheetMonad[mo, (t1, t2, t3, t4, t5, t6)]  =
         lift6((x1, x2, x3, x4, x5, x6) -> (x1, x2, x3, x4, x5, x6), o1, o2, o3, o4, o5, o6)
 
     ///
@@ -645,13 +680,13 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o7` is an error.
     ///
-    pub def tuple7(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5], 
-                   o6: SheetReader[t6], 
-                   o7: SheetReader[t7]): SheetReader[(t1, t2, t3, t4, t5, t6, t7)]  =
+    pub def tuple7(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5], 
+                   o6: SheetMonad[mo, t6], 
+                   o7: SheetMonad[mo, t7]): SheetMonad[mo, (t1, t2, t3, t4, t5, t6, t7)]  =
         lift7((x1, x2, x3, x4, x5, x6, x7) -> (x1, x2, x3, x4, x5, x6, x7), 
                 o1, o2, o3, o4, o5, o6, o7)
 
@@ -660,14 +695,14 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o8` is an error.
     ///
-    pub def tuple8(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5], 
-                   o6: SheetReader[t6], 
-                   o7: SheetReader[t7], 
-                   o8: SheetReader[t8]): SheetReader[(t1, t2, t3, t4, t5, t6, t7, t8)]  =
+    pub def tuple8(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5], 
+                   o6: SheetMonad[mo, t6], 
+                   o7: SheetMonad[mo, t7], 
+                   o8: SheetMonad[mo, t8]): SheetMonad[mo, (t1, t2, t3, t4, t5, t6, t7, t8)]  =
         lift8((x1, x2, x3, x4, x5, x6, x7, x8) -> (x1, x2, x3, x4, x5, x6, x7, x8), 
                 o1, o2, o3, o4, o5, o6, o7, o8)
 
@@ -676,15 +711,15 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o9` is an error.
     ///
-    pub def tuple9(o1: SheetReader[t1], 
-                   o2: SheetReader[t2], 
-                   o3: SheetReader[t3], 
-                   o4: SheetReader[t4], 
-                   o5: SheetReader[t5], 
-                   o6: SheetReader[t6], 
-                   o7: SheetReader[t7], 
-                   o8: SheetReader[t8], 
-                   o9: SheetReader[t9]): SheetReader[(t1, t2, t3, t4, t5, t6, t7, t8, t9)]  =
+    pub def tuple9(o1: SheetMonad[mo, t1], 
+                   o2: SheetMonad[mo, t2], 
+                   o3: SheetMonad[mo, t3], 
+                   o4: SheetMonad[mo, t4], 
+                   o5: SheetMonad[mo, t5], 
+                   o6: SheetMonad[mo, t6], 
+                   o7: SheetMonad[mo, t7], 
+                   o8: SheetMonad[mo, t8], 
+                   o9: SheetMonad[mo, t9]): SheetMonad[mo, (t1, t2, t3, t4, t5, t6, t7, t8, t9)]  =
         lift9((x1, x2, x3, x4, x5, x6, x7, x8, x9) -> (x1, x2, x3, x4, x5, x6, x7, x8, x9), 
                 o1, o2, o3, o4, o5, o6, o7, o8, o9)
 
@@ -693,16 +728,16 @@ namespace SheetIO/SheetReader {
     ///
     /// Returns an error if evaluating any of `o1`, `o2`, ... `o10` is an error.
     ///
-    pub def tuple10(o1: SheetReader[t1], 
-                    o2: SheetReader[t2], 
-                    o3: SheetReader[t3], 
-                    o4: SheetReader[t4], 
-                    o5: SheetReader[t5], 
-                    o6: SheetReader[t6], 
-                    o7: SheetReader[t7], 
-                    o8: SheetReader[t8], 
-                    o9: SheetReader[t9], 
-                    o10: SheetReader[t10]): SheetReader[(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10)]  =
+    pub def tuple10(o1: SheetMonad[mo, t1], 
+                    o2: SheetMonad[mo, t2], 
+                    o3: SheetMonad[mo, t3], 
+                    o4: SheetMonad[mo, t4], 
+                    o5: SheetMonad[mo, t5], 
+                    o6: SheetMonad[mo, t6], 
+                    o7: SheetMonad[mo, t7], 
+                    o8: SheetMonad[mo, t8], 
+                    o9: SheetMonad[mo, t9], 
+                    o10: SheetMonad[mo, t10]): SheetMonad[mo, (t1, t2, t3, t4, t5, t6, t7, t8, t9, t10)]  =
         lift10((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) -> (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), 
                 o1, o2, o3, o4, o5, o6, o7, o8, o9, o10)
 
@@ -750,7 +785,7 @@ namespace SheetIO/SheetReader {
     pub def getRowAt(x: Sheet, ix: Int32): SheetReader[Row] =
         use SheetIO/Internal/Sheet.{getRow};
         let Sheet(x1) = x;
-        map(Row, liftActionResult(_ -> x1.getRow(ix)))
+        liftActionResult(_ -> Result.map(Row,  x1.getRow(ix)))
 
     pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] = 
         let* b = sheetFirstRowNum(x);

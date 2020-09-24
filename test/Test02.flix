@@ -2,8 +2,8 @@ use SheetIO.RowEvaluator;
 use SheetIO.SheetReader;
 
 def main(): Unit & Impure = 
-    use SheetIO/SheetReader.{runXlsx};
-    match runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
+    use SheetIO/SheetMonad.{runSheetReaderXlsx};
+    match runSheetReaderXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[done]")
     };
@@ -26,7 +26,7 @@ def temp01(): Unit & Impure =
 
 
 def test01(): SheetReader[Unit] = 
-    use SheetIO/SheetReader.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
+    use SheetIO/SheetMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
         sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
     let* _      = liftAction(_ -> Console.printLine("Running..."));        
     let* s1     = getSheet("Sheet1");
