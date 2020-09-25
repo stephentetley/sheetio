@@ -1,14 +1,14 @@
 use SheetIO.SheetReader;
 
 def main(): Unit & Impure = 
-    use SheetIO/SheetMonad.{runSheetReaderXlsx};
-    match runSheetReaderXlsx(test01(), System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
+    use SheetIO/SheetReader.{runXlsx};
+    match runXlsx(test01(), System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
         case Err(_) => Console.printLine("err")
         case Ok() => Console.printLine("[done]")
     }
 
 def sheeetStats(sheetName: String): SheetReader[Unit] = 
-    use SheetIO/SheetMonad.{flatMap, return, getSheet, sheetFirstRowNum, sheetLastRowNum, liftAction};
+    use SheetIO/SheetReader.{flatMap, return, getSheet, sheetFirstRowNum, sheetLastRowNum, liftAction};
     let* s1     = getSheet(sheetName);
     let* i1     = sheetFirstRowNum(s1);
     let* i2     = sheetLastRowNum(s1);
@@ -16,7 +16,7 @@ def sheeetStats(sheetName: String): SheetReader[Unit] =
 
 
 def test01(): SheetReader[Unit] = 
-    use SheetIO/SheetMonad.{flatMap, return, getSheetNames, mapX, liftAction};
+    use SheetIO/SheetReader.{flatMap, return, getSheetNames, mapX, liftAction};
     let* xs      = getSheetNames();
     mapX(sheeetStats, xs)
 

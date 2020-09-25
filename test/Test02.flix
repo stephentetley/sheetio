@@ -4,12 +4,12 @@ use SheetIO.SheetReader;
 use SheetIO.SheetWriter;
 
 def main(): Unit & Impure = 
-    use SheetIO/SheetMonad.{runSheetReaderXlsx, runSheetWriterXlsx};
-    match runSheetReaderXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
+    
+    match SheetIO/SheetReader.runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
         case Ok() => Console.printLine("[reader done]")
     };
-    match runSheetWriterXlsx(test02(), System/FilePath.new("E:/coding/flix/sheetio/data/out1.xlsx")) { 
+    match SheetIO/SheetWriter.runXlsx(test02(), System/FilePath.new("E:/coding/flix/sheetio/data/out1.xlsx")) { 
         case Err(e) => Console.printLine("Error: " + System/Error.toString(e))
         case Ok() => Console.printLine("[writer done]")
     }
@@ -17,7 +17,7 @@ def main(): Unit & Impure =
 
 
 def test01(): SheetReader[Unit] = 
-    use SheetIO/SheetMonad.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
+    use SheetIO/SheetReader.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
         sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
     let* _      = liftAction(_ -> Console.printLine("Running..."));        
     let* s1     = getSheet("Sheet1");
@@ -73,16 +73,18 @@ def printAibExportRow(row: AibExportRow): Unit & Impure =
     Console.printLine("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")
 
 
-
+/// Writing rows with an explicit index is unpleasant...
 def test02(): SheetWriter[Unit] = 
-    use SheetIO/SheetMonad.{flatMap, return, createSheet, writeRow};
+    use SheetIO/SheetWriter.{flatMap, return, createSheet, writeRow};
     let* s1     = createSheet("My_Sheet");
-    let* _      = writeRow(s1, 0, setAibExportRow());
+    let* _      = writeRow(s1, 0, setRowOf2("Hello", "World!"));
+    let* _      = writeRow(s1, 1, setRowOf2("one", "two"));
+    let* _      = writeRow(s1, 2, setRowOf2("Red", "Green"));
     return()
     
 // Change,Reference,Asset Name,OldParentName,NewParentName
-def setAibExportRow(): RowSetter[Unit] = 
+def setRowOf2(a: String, b: String): RowSetter[Unit] = 
     use SheetIO/RowSetter.{flatMap, return, putString!};
-    let* _      = putString!(0, "Hello");
-    let* _      = putString!(1,  "World!");
+    let* _      = putString!(0, a);
+    let* _      = putString!(1, b);
     return()
