@@ -21,6 +21,8 @@ use SheetIO.Row;
 use SheetIO.Row.{Row};
 use SheetIO.RowEvaluator;
 use SheetIO.RowEvaluator.{RowEvaluator};
+use SheetIO.RowSetter;
+use SheetIO.RowSetter.{RowSetter};
 use SheetIO.Sheet;
 use SheetIO.Sheet.{Sheet};
 
@@ -67,7 +69,7 @@ namespace SheetIO/SheetMonad {
             }
         }
     
-    pub def runXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runSheetWriterXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use SheetIO.Writer.{Writer};
         use Result.{flatMap};
@@ -741,7 +743,7 @@ namespace SheetIO/SheetMonad {
         lift10((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) -> (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), 
                 o1, o2, o3, o4, o5, o6, o7, o8, o9, o10)
 
-
+    // SheetReader
 
 
     pub def getNumberOfSheets(): SheetReader[Int32] =
@@ -822,6 +824,26 @@ namespace SheetIO/SheetMonad {
         let RowEvaluator(f) = eval;
         let Row(x1) = x;
         liftActionResult(_ -> f(x1))
+
+    // SheetWriter
+
+    pub def createSheet(name: String): SheetWriter[Sheet] =
+        use SheetIO/Internal/Prim.{createSheet};
+        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
+
+
+    // createRow
+    pub def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =
+        use SheetIO/Internal/Sheet.{createRow};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> Result.map(Row, x1.createRow(ix)))
+
+    pub def writeRow(x: Sheet, ix: Int32, mx: RowSetter[a]): SheetWriter[Unit] =
+        let RowSetter(mf) = mx;
+        let* row        = createRow(x, ix);
+        let Row(row1)   = row;
+        let* _          = liftActionResult(_ -> mf(row1));
+        return()
 
 
 }

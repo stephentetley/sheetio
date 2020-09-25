@@ -56,4 +56,14 @@ namespace SheetIO/Internal/Sheet {
             case _: ##java.lang.Exception => Err(Generic("getRow")) 
         }
 
+    pub def createRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
+                      ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32); 
+        try {
+            let ans = ws.createRow(ix);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createRow")) 
+        }
+
 }

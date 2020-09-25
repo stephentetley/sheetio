@@ -32,4 +32,14 @@ namespace SheetIO/Internal/Row {
             case _: ##java.lang.Exception => Err(Generic("getCell")) 
         }
 
+    pub def createCell(row: ##org.apache.poi.ss.usermodel.Row, 
+                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.createCell(Int32); 
+        try {
+            let ans = row.createCell(ix);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createCell")) 
+        }
+
 }

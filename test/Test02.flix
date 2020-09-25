@@ -1,28 +1,19 @@
 use SheetIO.RowEvaluator;
+use SheetIO.RowSetter;
 use SheetIO.SheetReader;
+use SheetIO.SheetWriter;
 
 def main(): Unit & Impure = 
-    use SheetIO/SheetMonad.{runSheetReaderXlsx};
+    use SheetIO/SheetMonad.{runSheetReaderXlsx, runSheetWriterXlsx};
     match runSheetReaderXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
         case Err(e) => Console.printLine(System/Error.toString(e))
-        case Ok() => Console.printLine("[done]")
+        case Ok() => Console.printLine("[reader done]")
     };
-    temp01()
-
-
-def temp01(): Unit & Impure =
-    use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, createSheet};
-    use Result.{flatMap}; 
-    let step = () -> { 
-        let* wb = newXSSFWorkbook();
-        let* _  = createSheet(wb as ##org.apache.poi.ss.usermodel.Workbook, "My_Sheet");
-        let* _  = writeXSSFWorkbook(wb, "E:/coding/flix/sheetreader/data/wb1.xlsx");
-        Ok()
-    };
-    match step(){ 
-        case Err(e) => Console.printLine(System/Error.toString(e))
-        case Ok() => Console.printLine("[write done]")
+    match runSheetWriterXlsx(test02(), System/FilePath.new("E:/coding/flix/sheetio/data/out1.xlsx")) { 
+        case Err(e) => Console.printLine("Error: " + System/Error.toString(e))
+        case Ok() => Console.printLine("[writer done]")
     }
+
 
 
 def test01(): SheetReader[Unit] = 
@@ -80,3 +71,18 @@ def printHeaders(hdrs: Headers): Unit & Impure =
 
 def printAibExportRow(row: AibExportRow): Unit & Impure = 
     Console.printLine("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")
+
+
+
+def test02(): SheetWriter[Unit] = 
+    use SheetIO/SheetMonad.{flatMap, return, createSheet, writeRow};
+    let* s1     = createSheet("My_Sheet");
+    let* _      = writeRow(s1, 0, setAibExportRow());
+    return()
+    
+// Change,Reference,Asset Name,OldParentName,NewParentName
+def setAibExportRow(): RowSetter[Unit] = 
+    use SheetIO/RowSetter.{flatMap, return, putString!};
+    let* _      = putString!(0, "Hello");
+    let* _      = putString!(1,  "World!");
+    return()
