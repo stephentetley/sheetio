@@ -18,6 +18,15 @@ use System.Error.{Generic};
 
 namespace SheetIO/Internal/Sheet {
 
+    pub def getSheetName(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[String, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Sheet.getSheetName(); 
+        try {
+            let ans = ws.getSheetName();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getSheetName")) 
+        }
+
     pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(); 
         try {

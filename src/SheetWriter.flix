@@ -657,19 +657,32 @@ namespace SheetIO/SheetWriter {
 
     // SheetWriter
 
+    def getCursorAndIncr(sheetName: String): SheetWriter[Int32] = 
+        SheetWriter((_, st) -> match Map.get(sheetName, st) {
+            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, st), ix)) as & Impure
+            case None       => Ok((Map.insert(sheetName, 1, st), 0)) as & Impure
+        })
+
     pub def createSheet(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Prim.{createSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
 
+    def getSheetName(x: Sheet): SheetWriter[String] =
+        use SheetIO/Internal/Sheet.{getSheetName};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getSheetName())
+
 
     // createRow
-    pub def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =
+    def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =
         use SheetIO/Internal/Sheet.{createRow};
         let Sheet(x1) = x;
         liftActionResult(_ -> Result.map(Row, x1.createRow(ix)))
 
-    pub def writeRow(x: Sheet, ix: Int32, mx: RowSetter[a]): SheetWriter[Unit] =
+    pub def appendRow(x: Sheet, mx: RowSetter[a]): SheetWriter[Unit] =
         let RowSetter(mf) = mx;
+        let* name       = getSheetName(x);
+        let* ix         = getCursorAndIncr(name);
         let* row        = createRow(x, ix);
         let Row(row1)   = row;
         let* _          = liftActionResult(_ -> mf(row1));

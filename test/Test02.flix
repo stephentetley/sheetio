@@ -73,13 +73,14 @@ def printAibExportRow(row: AibExportRow): Unit & Impure =
     Console.printLine("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")
 
 
-/// Writing rows with an explicit index is unpleasant...
+
 def test02(): SheetWriter[Unit] = 
-    use SheetIO/SheetWriter.{flatMap, return, createSheet, writeRow};
+    use SheetIO/SheetWriter.{flatMap, return, createSheet, appendRow};
     let* s1     = createSheet("My_Sheet");
-    let* _      = writeRow(s1, 0, setRowOf2("Hello", "World!"));
-    let* _      = writeRow(s1, 1, setRowOf2("one", "two"));
-    let* _      = writeRow(s1, 2, setRowOf2("Red", "Green"));
+    let* _      = appendRow(s1, setRowOf2("Hello", "World!"));
+    let* _      = appendRow(s1, setRowOf2("one", "two"));
+    let* _      = appendRow(s1, setRowOf2("Red", "Green"));    
+    let* _      = appendRow(s1, setRowOf2("Old", "New"));
     return()
     
 // Change,Reference,Asset Name,OldParentName,NewParentName
