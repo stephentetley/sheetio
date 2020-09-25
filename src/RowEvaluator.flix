@@ -122,24 +122,28 @@ namespace SheetIO/RowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
 
 
-    // // See Javadocs for how a bool value is interpreted...
-    // pub def getBool(ix: Int32): RowEvaluator[Bool] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getBool(x, ix + 1))
+    def getNum(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[a] =
+        let* n = getNumeric(ix);
+        match conv(n) {
+            case Some(i) => return(i)
+            case None => throwError(errMsg)
+        }
 
-    // pub def getInt8(ix: Int32): RowEvaluator[Int8] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getInt8(x, ix + 1))
 
-    // pub def getInt16(ix: Int32): RowEvaluator[Int16] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getInt16(x, ix + 1))
+    pub def getInt8(ix: Int32): RowEvaluator[Int8] =
+        getNum(ix, Float64.tryToInt8, "getInt8")
 
-    // pub def getInt32(ix: Int32): RowEvaluator[Int32] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getInt32(x, ix + 1))
+    pub def getInt16(ix: Int32): RowEvaluator[Int16] =
+        getNum(ix, Float64.tryToInt16, "getInt16")
 
-    // pub def getInt64(ix: Int32): RowEvaluator[Int64] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getInt64(x, ix + 1))
+    pub def getInt32(ix: Int32): RowEvaluator[Int32] =
+        getNum(ix, Float64.tryToInt32, "getInt32")
 
-    // pub def getFloat32(ix: Int32): RowEvaluator[Float32] =
-    //     liftPrim(x -> BasicDb/Internal/ResultSet.getFloat32(x, ix + 1))
+    pub def getInt64(ix: Int32): RowEvaluator[Int64] =
+        getNum(ix, Float64.tryToInt64, "getInt64")
+
+    pub def getFloat32(ix: Int32): RowEvaluator[Float32] =
+        getNum(ix, Float64.tryToFloat32, "getFloat32")
     
 
     pub def getFloat64(ix: Int32): RowEvaluator[Float64] = getNumeric(ix)

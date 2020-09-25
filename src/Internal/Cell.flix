@@ -57,6 +57,24 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err(Generic("getNumericCellValue")) 
         }
 
+    pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool); 
+        try {
+            let ans = cell.setCellValue(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setBooleanCellValue")) 
+        }
+
+    pub def setNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Float64): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64); 
+        try {
+            let ans = cell.setCellValue(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setNumericCellValue")) 
+        }
+
     pub def setStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: String): Result[Unit, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(String); 
         try {

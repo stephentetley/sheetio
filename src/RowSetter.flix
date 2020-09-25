@@ -36,6 +36,14 @@ namespace SheetIO/RowSetter {
         let RowSetter(f) = x;
         f(r)
 
+
+    pub def mapError(f: System.Error -> System.Error, ma: RowSetter[a]): RowSetter[a] =
+        RowSetter(r -> match apply1(ma, r) { 
+            case Ok(p1) => Ok(p1)
+            case Err(e) => Err(f(e))
+        })
+
+
     pub def map(f: a -> b & ef, x: RowSetter[a]): RowSetter[b] =
         RowSetter(r ->
             match apply1(x, r) {
@@ -88,26 +96,41 @@ namespace SheetIO/RowSetter {
         };
         liftPrim(step)
 
-    // pub def putBool!(ix: Int32, b: Bool): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setBool!(x, ix + 1, b))
+    pub def putBool!(ix: Int32, value: Bool): RowSetter[Unit] =
+        use Result.flatMap;
+        let step = x -> {
+            let* cell   = SheetIO/Internal/Row.createCell(x, ix);
+            let* _      = SheetIO/Internal/Cell.setBooleanCellValue(cell, value);
+            Ok()
+        };
+        liftPrim(step)
 
-    // pub def putInt8!(ix: Int32, n: Int8): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setInt8!(x, ix + 1, n))
+    def putNumeric!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
+        use Result.flatMap;
+        let step = x -> {
+            let* cell   = SheetIO/Internal/Row.createCell(x, ix);
+            let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
+            Ok()
+        };
+        mapError(_ -> Generic(errMsg), liftPrim(step))
 
-    // pub def putInt16!(ix: Int32, n: Int16): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setInt16!(x, ix + 1, n))
+    pub def putInt8!(ix: Int32, n: Int8): RowSetter[Unit] =
+        putNumeric!(ix, "putInt8!", Int8.toFloat64(n))
 
-    // pub def putInt32!(ix: Int32, n: Int32): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setInt32!(x, ix + 1, n))
+    pub def putInt16!(ix: Int32, n: Int16): RowSetter[Unit] =
+        putNumeric!(ix, "putInt16!", Int16.toFloat64(n))
 
-    // pub def putInt64!(ix: Int32, n: Int64): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setInt64!(x, ix + 1, n))
+    pub def putInt32!(ix: Int32, n: Int32): RowSetter[Unit] =
+        putNumeric!(ix, "putInt32!", Int32.toFloat64(n))
 
-    // pub def putFloat32!(ix: Int32, n: Float32): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setFloat32!(x, ix + 1, n))
+    pub def putInt64!(ix: Int32, n: Int64): RowSetter[Unit] =
+        putNumeric!(ix, "putInt64!", Int64.toFloat64(n))
 
-    // pub def putFloat64!(ix: Int32, n: Float64): RowSetter[Unit] =
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setFloat64!(x, ix + 1, n))
+    pub def putFloat32!(ix: Int32, n: Float32): RowSetter[Unit] =
+        putNumeric!(ix, "putFloat32!", Float32.toFloat64(n))
+
+    pub def putFloat64!(ix: Int32, n: Float64): RowSetter[Unit] =
+        putNumeric!(ix, "putFloat64!", n)
 
 
 
