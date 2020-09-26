@@ -107,47 +107,69 @@ namespace SheetIO/RowEvaluator {
         map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
     
-    pub def getString(ix: Int32): RowEvaluator[String] =
+    pub def getStringAt(ix: Int32): RowEvaluator[String] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
 
-    pub def getStringWithDefault(ix: Int32, d: String): RowEvaluator[String] =
+    pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNull(ix);
-        if (x) return(d) else getString(ix)
+        if (x) return(d) else getStringAt(ix)
 
-    pub def getBool(ix: Int32): RowEvaluator[Bool] =
+    pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))
     
 
-    pub def getNumeric(ix: Int32): RowEvaluator[Float64] =
+    pub def getNumericAt(ix: Int32): RowEvaluator[Float64] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
 
 
     def getNum(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[a] =
-        let* n = getNumeric(ix);
+        let* n = getNumericAt(ix);
         match conv(n) {
             case Some(i) => return(i)
             case None => throwError(errMsg)
         }
 
 
-    pub def getInt8(ix: Int32): RowEvaluator[Int8] =
+    pub def getInt8At(ix: Int32): RowEvaluator[Int8] =
         getNum(ix, Float64.tryToInt8, "getInt8")
 
-    pub def getInt16(ix: Int32): RowEvaluator[Int16] =
+    pub def getInt16At(ix: Int32): RowEvaluator[Int16] =
         getNum(ix, Float64.tryToInt16, "getInt16")
 
-    pub def getInt32(ix: Int32): RowEvaluator[Int32] =
+    pub def getInt32At(ix: Int32): RowEvaluator[Int32] =
         getNum(ix, Float64.tryToInt32, "getInt32")
 
-    pub def getInt64(ix: Int32): RowEvaluator[Int64] =
+    pub def getInt64At(ix: Int32): RowEvaluator[Int64] =
         getNum(ix, Float64.tryToInt64, "getInt64")
 
-    pub def getFloat32(ix: Int32): RowEvaluator[Float32] =
+    pub def getFloat32At(ix: Int32): RowEvaluator[Float32] =
         getNum(ix, Float64.tryToFloat32, "getFloat32")
     
 
-    pub def getFloat64(ix: Int32): RowEvaluator[Float64] = getNumeric(ix)
+    pub def getFloat64At(ix: Int32): RowEvaluator[Float64] = 
+        getNum(ix, Some, "getFloat32")
 
+
+    pub def getFirstCellNum(): RowEvaluator[Int32] =
+        liftPrim(r -> SheetIO/Internal/Row.getFirstCellNum(r))
+
+    pub def getLastCellNum(): RowEvaluator[Int32] =
+        liftPrim(r -> Result.map(n-> if (n > 0) n - 1 else n,  SheetIO/Internal/Row.getLastCellNum(r)))
+
+
+    pub def getHeaders(): RowEvaluator[Array[String]] =
+        let* end    = getLastCellNum();
+        let* xs     = getHeadersHelper(end, 0, ks -> return(ks));
+        let* arr    = liftAction(_ -> List.toArray(xs));
+        return(arr)
+        
+    // TODO not properly tail recursive as it uses let-syntax...
+    def getHeadersHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
+        if (ix > end)
+            k(Nil)
+        else 
+            let* s = getStringAt(ix);
+            getHeadersHelper(end, ix + 1, ss -> k(s :: ss))
 
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.

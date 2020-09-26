@@ -53,12 +53,12 @@ def evalHeaderRow(): RowEvaluator[Headers] =
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalAibExportRow(): RowEvaluator[AibExportRow] = 
-    use SheetIO/RowEvaluator.{flatMap, return, getString, getStringWithDefault};
-    let* s0     = getString(0);
-    let* s1     = getString(1);
-    let* s2     = getStringWithDefault(2, "");
-    let* s3     = getStringWithDefault(3, "");
-    let* s4     = getStringWithDefault(4, "");
+    use SheetIO/RowEvaluator.{flatMap, return, getStringAt, getStringAtWithDefault};
+    let* s0     = getStringAt(0);
+    let* s1     = getStringAt(1);
+    let* s2     = getStringAtWithDefault(2, "");
+    let* s3     = getStringAtWithDefault(3, "");
+    let* s4     = getStringAtWithDefault(4, "");
     return( { change = s0
             , reference = s1
             , assetName = s2

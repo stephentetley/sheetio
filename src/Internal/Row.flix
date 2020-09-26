@@ -42,4 +42,26 @@ namespace SheetIO/Internal/Row {
             case _: ##java.lang.Exception => Err(Generic("createCell")) 
         }
 
+
+    pub def getFirstCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getFirstCellNum(); 
+        try {
+            let ans = row.getFirstCellNum();
+            Ok(Int16.toInt32(ans))
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getFirstCellNum")) 
+        }
+
+
+    /// As per Java - index of last cell **plus 1**.
+    pub def getLastCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getLastCellNum(); 
+        try {
+            let ans = row.getLastCellNum();
+            Ok(Int16.toInt32(ans))
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getLastCellNum")) 
+        }
+
+
 }
