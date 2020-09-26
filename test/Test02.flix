@@ -41,15 +41,7 @@ type alias AibExportRow =
     }
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
-def evalHeaderRow(): RowEvaluator[Headers] = 
-    use SheetIO/RowEvaluator.{flatMap, return, getString, liftAction};
-    let* s0     = getString(0);
-    let* s1     = getString(1);
-    let* s2     = getString(2);
-    let* s3     = getString(3);
-    let* s4     = getString(4);
-    let* ans    = liftAction(_ -> [s0, s1, s2, s3, s4]);
-    return(ans)
+def evalHeaderRow(): RowEvaluator[Headers] = SheetIO/RowEvaluator.getHeaders()
 
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def evalAibExportRow(): RowEvaluator[AibExportRow] = 

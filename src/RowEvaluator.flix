@@ -33,9 +33,9 @@ namespace SheetIO/RowEvaluator {
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
 
-    def apply1(x: RowEvaluator[a], r: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
+    def apply1(x: RowEvaluator[a], row: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
         let RowEvaluator(f) = x;
-        f(r)
+        f(row)
 
     pub def throwError(msg: String): RowEvaluator[a] =
         RowEvaluator(_ -> Err(System/Error.Generic(msg)) as & Impure)
@@ -75,8 +75,8 @@ namespace SheetIO/RowEvaluator {
 
     pub def flatMap(k: a -> RowEvaluator[b], x: RowEvaluator[a]): RowEvaluator[b] = bind(x, k)
 
-    def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowEvaluator[a] =
-        RowEvaluator(r -> ask(r))
+    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowEvaluator[a] =
+        RowEvaluator(r -> fn(r))
 
 
     pub def liftAction(fn: Unit ~> a): RowEvaluator[a] =
@@ -96,14 +96,14 @@ namespace SheetIO/RowEvaluator {
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
     
-    pub def isNull(ix: Int32): RowEvaluator[Bool] = 
+    pub def isNullAt(ix: Int32): RowEvaluator[Bool] = 
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
 
-    pub def getNull(ix: Int32): RowEvaluator[Unit] =
+    pub def getNullAt(ix: Int32): RowEvaluator[Unit] =
         liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic("getNull"))))
 
 
-    pub def getCellType(ix: Int32): RowEvaluator[CellType] =
+    pub def getCellTypeAt(ix: Int32): RowEvaluator[CellType] =
         map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
     
@@ -111,7 +111,7 @@ namespace SheetIO/RowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
-        let* x = isNull(ix);
+        let* x = isNullAt(ix);
         if (x) return(d) else getStringAt(ix)
 
     pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =
@@ -122,7 +122,7 @@ namespace SheetIO/RowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
 
 
-    def getNum(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[a] =
+    def getNumAt(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[a] =
         let* n = getNumericAt(ix);
         match conv(n) {
             case Some(i) => return(i)
@@ -131,23 +131,23 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getInt8At(ix: Int32): RowEvaluator[Int8] =
-        getNum(ix, Float64.tryToInt8, "getInt8")
+        getNumAt(ix, Float64.tryToInt8, "getInt8")
 
     pub def getInt16At(ix: Int32): RowEvaluator[Int16] =
-        getNum(ix, Float64.tryToInt16, "getInt16")
+        getNumAt(ix, Float64.tryToInt16, "getInt16")
 
     pub def getInt32At(ix: Int32): RowEvaluator[Int32] =
-        getNum(ix, Float64.tryToInt32, "getInt32")
+        getNumAt(ix, Float64.tryToInt32, "getInt32")
 
     pub def getInt64At(ix: Int32): RowEvaluator[Int64] =
-        getNum(ix, Float64.tryToInt64, "getInt64")
+        getNumAt(ix, Float64.tryToInt64, "getInt64")
 
     pub def getFloat32At(ix: Int32): RowEvaluator[Float32] =
-        getNum(ix, Float64.tryToFloat32, "getFloat32")
+        getNumAt(ix, Float64.tryToFloat32, "getFloat32")
     
 
     pub def getFloat64At(ix: Int32): RowEvaluator[Float64] = 
-        getNum(ix, Some, "getFloat32")
+        getNumAt(ix, Some, "getFloat32")
 
 
     pub def getFirstCellNum(): RowEvaluator[Int32] =
