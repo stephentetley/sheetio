@@ -15,20 +15,6 @@
  */
 
 
-use System.Error.{Generic};
-
-use SheetIO.Row;
-use SheetIO.Row.{Row};
-use SheetIO.RowEvaluator;
-use SheetIO.RowEvaluator.{RowEvaluator};
-use SheetIO.Sheet;
-use SheetIO.Sheet.{Sheet};
-
-use SheetIO.SheetReader;
-use SheetIO.SheetReader.{SheetReader};
-
-
-
 namespace SheetIO {
 
     pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]
@@ -36,6 +22,20 @@ namespace SheetIO {
 }
 
 namespace SheetIO/SheetReader {
+    
+    use System.Error.{Generic};
+
+    use SheetIO.SheetReader;
+    use SheetIO.SheetReader.{SheetReader};
+
+    use SheetIO.Row;
+    use SheetIO.Row.{Row};
+    use SheetIO.RowEvaluator;
+    use SheetIO.RowEvaluator.{RowEvaluator};
+    use SheetIO.Sheet;
+    use SheetIO.Sheet.{Sheet};
+    use SheetIO.NamedRowEvaluator;
+    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
     pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
@@ -790,6 +790,38 @@ namespace SheetIO/SheetReader {
         let Row(x1) = x;
         liftActionResult(_ -> f(x1))
 
+
+
+    pub def namedRowsInRange(x: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
+        let NamedRowEvaluator(f) = eval;
+        let Sheet(x1) = x;
+        liftActionResult(_ -> namedRowsInRangeHelper(ixs, x1, f, b, e, err -> Err(err), xs -> Ok(xs)))
+
+
+    def namedRowsInRangeHelper(ixs: Map[String, Int32],
+                               ws: ##org.apache.poi.ss.usermodel.Sheet, 
+                               eval: (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error],
+                               ix: Int32, 
+                               endIx: Int32,
+                               fk: System.Error -> Result[List[a], System.Error],
+                               sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
+        use SheetIO/Internal/Sheet.{getRow};
+        if (ix >= endIx) 
+            sk(Nil)
+        else {
+            match getRow(ws, ix) {
+                case Ok(row) => match eval(ixs, row) {
+                    case Ok(x) => namedRowsInRangeHelper(ixs, ws, eval, ix + 1, endIx, fk, ks -> sk(x :: ks))
+                    case Err(e) => fk(e)
+                }
+                case Err(e) => fk(e)
+            }
+        }
+
+    pub def nameRowEval(x: Row, indices: Map[String, Int32], eval: NamedRowEvaluator[a]): SheetReader[a] =
+        let NamedRowEvaluator(f) = eval;
+        let Row(x1) = x;
+        liftActionResult(_ -> f(indices, x1))
 
 
 }
