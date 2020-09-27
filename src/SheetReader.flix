@@ -824,4 +824,19 @@ namespace SheetIO/SheetReader {
         liftActionResult(_ -> f(indices, x1))
 
 
+    /// Row 0 is read for the headers, all subsequent rows are *data*.
+    pub def allNamedRows(x: Sheet, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
+        namedRowsFrom(x, 0, 1, eval)
+
+    /// Reader headers from row at `headerIndex` then read data rows from `start`.
+    pub def namedRowsFrom(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
+        let* r0     = x.getRowAt(headerIndex);
+        let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
+        let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
+        let* end    = sheetPhysicalNumberOfRows(x);
+        let* xs     = namedRowsInRange(x, ixs, start, end, eval);
+        return(xs)
+
+
+
 }
