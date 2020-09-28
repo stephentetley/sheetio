@@ -71,6 +71,25 @@ namespace SheetIO/NamedRowEvaluator {
                 case Err(e1) => Err(e1)
             }
         )
+    
+    pub def seqLeft(ma: NamedRowEvaluator[a], mb: NamedRowEvaluator[b]): NamedRowEvaluator[a] = 
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(ma, ixs, r) { 
+                case Ok(a) => match apply1(mb, ixs, r) {
+                    case Ok(_) => Ok(a)
+                    case Err(e) => Err(e)
+                }
+                case Err(e) => Err(e)
+            }
+        )
+
+    pub def seqRight(ma: NamedRowEvaluator[a], mb: NamedRowEvaluator[b]): NamedRowEvaluator[b] = 
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(ma, ixs, r) { 
+                case Ok(_) => apply1(mb, ixs, r)
+                case Err(e) => Err(e)
+            }
+        )
 
     pub def bind(x: NamedRowEvaluator[a], k: a -> NamedRowEvaluator[b]): NamedRowEvaluator[b] =
         NamedRowEvaluator((ixs, r) ->
@@ -81,6 +100,26 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
     pub def flatMap(k: a -> NamedRowEvaluator[b], x: NamedRowEvaluator[a]): NamedRowEvaluator[b] = bind(x, k)
+
+    pub def kleisliLeft(f1: a -> NamedRowEvaluator[b], f2: b -> NamedRowEvaluator[c], x: a): NamedRowEvaluator[c] =
+        NamedRowEvaluator((ixs, r) -> 
+            match apply1(f1(x), ixs, r) { 
+                case Ok(b) => apply1(f2(b), ixs, r)
+                case Err(e) => Err(e)
+            }
+        )
+
+    pub def kleisliRight(f1: b -> NamedRowEvaluator[c], f2: a -> NamedRowEvaluator[b], x: a): NamedRowEvaluator[c] =
+        kleisliLeft(f2, f1, x)
+
+    pub def optional(x: NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] =
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(x, ixs, r) {
+                case Ok(a) => Ok(Some(a))
+                case Err(_) => Ok(None)
+            }
+        )
+
 
     def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, r) -> ask(r))
@@ -417,6 +456,40 @@ namespace SheetIO/NamedRowEvaluator {
                     o10: NamedRowEvaluator[t10]): NamedRowEvaluator[(t1, t2, t3, t4, t5, t6, t7, t8, t9, t10)]  =
         lift10((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) -> (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), 
                 o1, o2, o3, o4, o5, o6, o7, o8, o9, o10)
+
+    /// Alias for `seqRight`
+    pub def *>(p1: NamedRowEvaluator[a], p2: NamedRowEvaluator[b]): NamedRowEvaluator[b] = seqRight(p1, p2)
+
+    /// Alias for `seqLeft`
+    pub def <*(p1: NamedRowEvaluator[a], p2: NamedRowEvaluator[b]): NamedRowEvaluator[a] = seqLeft(p1, p2)
+
+    // Haskell's <$>
+    pub def <&>(f: a -> b, p2: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
+        map(f, p2)
+
+    pub def <&(x: b, p2: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
+        p2 *> return(x)
+
+    /// Alias for `bind`
+    pub def >>=(ma: NamedRowEvaluator[a], k: a -> NamedRowEvaluator[b]): NamedRowEvaluator[b] = 
+        bind(ma, k)
+
+    /// Alias for `flatMap` (flipped `bind`)
+    pub def =<<(k: a -> NamedRowEvaluator[b], ma: NamedRowEvaluator[a]): NamedRowEvaluator[b] = 
+        flatMap(k, ma)
+
+
+    // Haskell's ap <*>
+    pub def <*>(mf: NamedRowEvaluator[a -> b], p2: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
+        ap(mf, p2)
+
+    /// Alias for `kleisliLeft`
+    pub def >=>(f1: a -> NamedRowEvaluator[b], f2: b -> NamedRowEvaluator[c]): a -> NamedRowEvaluator[c] = 
+        x -> kleisliLeft(f1, f2, x)
+
+    /// Alias for `kleisliRight`
+    pub def <=<(f1: b -> NamedRowEvaluator[c], f2: a -> NamedRowEvaluator[b]): a -> NamedRowEvaluator[c] = 
+        x -> kleisliRight(f1, f2, x)
 
 
 }
