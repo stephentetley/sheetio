@@ -121,6 +121,15 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
 
+    pub def alt(ea: NamedRowEvaluator[a], eb: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(ea, ixs, r) {
+                case Ok(a) => Ok(a)
+                case Err(_) => apply1(eb, ixs, r) 
+            }
+        )
+
+
     def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, r) -> ask(r))
 

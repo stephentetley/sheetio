@@ -838,5 +838,28 @@ namespace SheetIO/SheetReader {
         return(xs)
 
 
+    pub def maximalNamedRows(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
+        let NamedRowEvaluator(f) = eval;
+        let Sheet(x1) = x;
+        let* r0     = x.getRowAt(headerIndex);
+        let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
+        let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
+        liftActionResult(_ -> maximalNamedRowsHelper(ixs, x1, f, start, xs -> Ok(xs)))
+
+
+    def maximalNamedRowsHelper(ixs: Map[String, Int32],
+                               ws: ##org.apache.poi.ss.usermodel.Sheet, 
+                               eval: (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error],
+                               ix: Int32, 
+                               sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
+        use SheetIO/Internal/Sheet.{getRow};
+        match getRow(ws, ix) {
+            case Ok(row) => match eval(ixs, row) {
+                case Ok(x) => maximalNamedRowsHelper(ixs, ws, eval, ix + 1, ks -> sk(x :: ks))
+                case Err(_) => sk(Nil)
+            }
+            case Err(_) => sk(Nil)
+        }
+
 
 }
