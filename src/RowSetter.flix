@@ -87,7 +87,7 @@ namespace SheetIO/RowSetter {
     //     use FactIO/Internal//PreparedStatement.{sql_type_null};
     //     liftPrim(x -> FactIO/Internal//PreparedStatement.setNull!(x, ix + 1, sql_type_null()))
 
-    pub def putString!(ix: Int32, value: String): RowSetter[Unit] =
+    pub def putStringAt!(ix: Int32, value: String): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
             let* cell   = SheetIO/Internal/Row.createCell(x, ix);
@@ -96,7 +96,7 @@ namespace SheetIO/RowSetter {
         };
         liftPrim(step)
 
-    pub def putBool!(ix: Int32, value: Bool): RowSetter[Unit] =
+    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
             let* cell   = SheetIO/Internal/Row.createCell(x, ix);
@@ -105,7 +105,7 @@ namespace SheetIO/RowSetter {
         };
         liftPrim(step)
 
-    def putNumeric!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
+    def putNumericAt!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
             let* cell   = SheetIO/Internal/Row.createCell(x, ix);
@@ -114,23 +114,23 @@ namespace SheetIO/RowSetter {
         };
         mapError(_ -> Generic(errMsg), liftPrim(step))
 
-    pub def putInt8!(ix: Int32, n: Int8): RowSetter[Unit] =
-        putNumeric!(ix, "putInt8!", Int8.toFloat64(n))
+    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[Unit] =
+        putNumericAt!(ix, "putInt8At!", Int8.toFloat64(n))
 
-    pub def putInt16!(ix: Int32, n: Int16): RowSetter[Unit] =
-        putNumeric!(ix, "putInt16!", Int16.toFloat64(n))
+    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[Unit] =
+        putNumericAt!(ix, "putInt16At!", Int16.toFloat64(n))
 
-    pub def putInt32!(ix: Int32, n: Int32): RowSetter[Unit] =
-        putNumeric!(ix, "putInt32!", Int32.toFloat64(n))
+    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[Unit] =
+        putNumericAt!(ix, "putInt32At!", Int32.toFloat64(n))
 
-    pub def putInt64!(ix: Int32, n: Int64): RowSetter[Unit] =
-        putNumeric!(ix, "putInt64!", Int64.toFloat64(n))
+    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[Unit] =
+        putNumericAt!(ix, "putInt64At!", Int64.toFloat64(n))
 
-    pub def putFloat32!(ix: Int32, n: Float32): RowSetter[Unit] =
-        putNumeric!(ix, "putFloat32!", Float32.toFloat64(n))
+    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[Unit] =
+        putNumericAt!(ix, "putFloat32At!", Float32.toFloat64(n))
 
-    pub def putFloat64!(ix: Int32, n: Float64): RowSetter[Unit] =
-        putNumeric!(ix, "putFloat64!", n)
+    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[Unit] =
+        putNumericAt!(ix, "putFloat64At!", n)
 
 
 
@@ -180,7 +180,8 @@ namespace SheetIO/RowSetter {
     ///
     /// Returns an error if either `o1` or `o2` are errors.
     ///
-    pub def lift2(f: (t1, t2) -> u & ef, o1: RowSetter[t1], o2: RowSetter[t2]): RowSetter[u] =
+    pub def lift2(f: (t1, t2) -> u & ef, 
+                  o1: RowSetter[t1], o2: RowSetter[t2]): RowSetter[u] =
         ap(map(f, o1), o2)
 
     ///

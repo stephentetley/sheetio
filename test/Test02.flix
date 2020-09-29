@@ -77,7 +77,7 @@ def test02(): SheetWriter[Unit] =
     
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def setRowOf2(a: String, b: String): RowSetter[Unit] = 
-    use SheetIO/RowSetter.{flatMap, return, putString!};
-    let* _      = putString!(0, a);
-    let* _      = putString!(1, b);
+    use SheetIO/RowSetter.{flatMap, return, putStringAt!};
+    let* _      = putStringAt!(0, a);
+    let* _      = putStringAt!(1, b);
     return()
