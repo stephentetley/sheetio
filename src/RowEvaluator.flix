@@ -201,7 +201,7 @@ namespace SheetIO/RowEvaluator {
         let* arr    = liftAction(_ -> List.toArray(xs));
         return(arr)
         
-    // TODO not properly tail recursive as it uses let-syntax...
+    // TODO not tail recursive as it uses let-syntax...
     def getHeadersHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
         if (ix > end)
             k(Nil)

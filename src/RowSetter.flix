@@ -81,7 +81,11 @@ namespace SheetIO/RowSetter {
     def liftPrim(update: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowSetter[a] =
         RowSetter(r -> update(r))
 
+    pub def liftAction(fn: Unit ~> a): RowSetter[a] =
+        RowSetter(_ -> let x = fn(); Ok(x))
 
+    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowSetter[a] =
+        RowSetter(_ -> fn())
 
     // pub def putNull!(ix: Int32): RowSetter[Unit] =
     //     use FactIO/Internal//PreparedStatement.{sql_type_null};
@@ -133,6 +137,17 @@ namespace SheetIO/RowSetter {
         putNumericAt!(ix, "putFloat64At!", n)
 
 
+    pub def putHeaders!(arr: Array[String]): RowSetter[Unit] = 
+        putHeadersHelper!(arr, Array.length(arr), 0)
+        
+    def putHeadersHelper!(arr: Array[String], end: Int32, ix: Int32): RowSetter[Unit] =
+        if (ix >= end)
+            return()
+        else {
+            let* s1 = liftAction(_ -> arr[ix]);
+            let* _  = putStringAt!(ix, s1);
+            putHeadersHelper!(arr, end, ix + 1)
+        }
 
     // pub def putOptionString!(ix: Int32, x: Option[String]): RowSetter[Unit] = match x {
     //     case Some(s) => putString!(ix, s)

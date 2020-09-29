@@ -688,5 +688,12 @@ namespace SheetIO/SheetWriter {
         let* _          = liftActionResult(_ -> mf(row1));
         return()
 
+    /// Row 0 is read for the headers, all subsequent rows are *data*.
+    pub def allRowsWithHeaders(x: Sheet, headers: Array[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
+        let* _      = appendRow(x, SheetIO/RowSetter.putHeaders!(headers));
+        let* _      = mapX(r -> appendRow(x, writer(r)), rows);
+        return()
+
+
 
 }
