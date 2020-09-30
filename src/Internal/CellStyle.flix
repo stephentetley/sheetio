@@ -14,17 +14,18 @@
  * limitations under the License.
  */
 
+use System.Error.{Generic};
 
+namespace SheetIO/Internal/CellStyle {
 
-namespace SheetIO {
-
-    pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
-
-    pub opaque type Row = ##org.apache.poi.ss.usermodel.Row
-
-    pub opaque type CellStyle = ##org.apache.poi.ss.usermodel.CellStyle
-
-    pub opaque type Font = ##org.apache.poi.ss.usermodel.Font
+    pub def setFont(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font); 
+        try {
+            let ans = style.setFont(font);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setFont")) 
+        }
 
 }
-

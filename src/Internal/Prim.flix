@@ -158,6 +158,24 @@ namespace SheetIO/Internal/Prim {
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err(Generic("getSheetAt")) 
-        }        
+        }
+
+    pub def createCellStyle(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.CellStyle, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.createCellStyle(); 
+        try {
+            let ans = wb.createCellStyle();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createCellStyle")) 
+        }
+
+    pub def createFont(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.Font, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.createFont(); 
+        try {
+            let ans = wb.createFont();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createFont")) 
+        }
 
 }

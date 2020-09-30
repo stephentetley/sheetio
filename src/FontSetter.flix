@@ -15,16 +15,25 @@
  */
 
 
-
 namespace SheetIO {
 
-    pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
-
-    pub opaque type Row = ##org.apache.poi.ss.usermodel.Row
-
-    pub opaque type CellStyle = ##org.apache.poi.ss.usermodel.CellStyle
-
-    pub opaque type Font = ##org.apache.poi.ss.usermodel.Font
+    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font ~> Result[a, System.Error]
 
 }
 
+namespace SheetIO/FontSetter {
+
+    use SheetIO.FontSetter;
+    use SheetIO.FontSetter.FontSetter;
+
+    pub def return(x: a): FontSetter[a] =
+        FontSetter(_ -> Ok(x) as & Impure)
+
+    /// def apply1(x: FontSetter[a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, System.Error] & Impure =
+    ///     let FontSetter(f) = x;
+    ///     f(r)
+
+    pub def setBold!(x: Bool): FontSetter[Unit] = 
+        FontSetter(r -> SheetIO/Internal/Font.setBold(r, x))
+        
+}

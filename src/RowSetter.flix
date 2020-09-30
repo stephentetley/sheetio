@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
-use SheetIO.RowSetter;
-use SheetIO.RowSetter.{RowSetter};
 
 
 
@@ -28,6 +24,13 @@ namespace SheetIO {
 }
 
 namespace SheetIO/RowSetter {
+
+    use System.Error.{Generic};
+
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
+    use SheetIO.RowSetter;
+    use SheetIO.RowSetter.{RowSetter};
 
     pub def return(x: a): RowSetter[a] =
         RowSetter(_ -> Ok(x) as & Impure)
@@ -87,14 +90,29 @@ namespace SheetIO/RowSetter {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowSetter[a] =
         RowSetter(_ -> fn())
 
-    // pub def putNull!(ix: Int32): RowSetter[Unit] =
-    //     use FactIO/Internal//PreparedStatement.{sql_type_null};
-    //     liftPrim(x -> FactIO/Internal//PreparedStatement.setNull!(x, ix + 1, sql_type_null()))
+    def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
+                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+        use SheetIO/Internal/Row.{getCell, createCell};
+        match getCell(row, ix) {
+            case Ok(a) => if (! Object.isNull(a)) Ok(a) else createCell(row, ix)
+            case Err(_) => createCell(row, ix)
+        }
+
+    pub def putCellStyleAt!(ix: Int32, style: CellStyle): RowSetter[Unit] =
+        use Result.flatMap;
+        let step = x -> {
+            let* cell               = createOrGetCell(x, ix);
+            let CellStyle(style1)   = style;
+            let* _                  = SheetIO/Internal/Cell.setCellStyle(cell, style1);
+            Ok()
+        };
+        liftPrim(step)
+
 
     pub def putStringAt!(ix: Int32, value: String): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
-            let* cell   = SheetIO/Internal/Row.createCell(x, ix);
+            let* cell   = createOrGetCell(x, ix);
             let* _      = SheetIO/Internal/Cell.setStringCellValue(cell, value);
             Ok()
         };
@@ -103,7 +121,7 @@ namespace SheetIO/RowSetter {
     pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
-            let* cell   = SheetIO/Internal/Row.createCell(x, ix);
+            let* cell   = createOrGetCell(x, ix);
             let* _      = SheetIO/Internal/Cell.setBooleanCellValue(cell, value);
             Ok()
         };
@@ -112,7 +130,7 @@ namespace SheetIO/RowSetter {
     def putNumericAt!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
-            let* cell   = SheetIO/Internal/Row.createCell(x, ix);
+            let* cell   = createOrGetCell(x, ix);
             let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
             Ok()
         };

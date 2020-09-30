@@ -15,19 +15,6 @@
  */
 
 
-use System.Error.{Generic};
-
-use SheetIO.Row;
-use SheetIO.Row.{Row};
-use SheetIO.RowSetter;
-use SheetIO.RowSetter.{RowSetter};
-use SheetIO.Sheet;
-use SheetIO.Sheet.{Sheet};
-
-use SheetIO.SheetWriter;
-use SheetIO.SheetWriter.{SheetWriter};
-use SheetIO.Cursors;
-
 namespace SheetIO {
 
    
@@ -38,6 +25,27 @@ namespace SheetIO {
 }
 
 namespace SheetIO/SheetWriter {
+
+    use System.Error.{Generic};
+
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
+    use SheetIO.CellStyleSetter;
+    use SheetIO.CellStyleSetter.{CellStyleSetter};
+    use SheetIO.Font;
+    use SheetIO.Font.{Font};
+    use SheetIO.FontSetter;
+    use SheetIO.FontSetter.{FontSetter};
+    use SheetIO.Row;
+    use SheetIO.Row.{Row};
+    use SheetIO.RowSetter;
+    use SheetIO.RowSetter.{RowSetter};
+    use SheetIO.Sheet;
+    use SheetIO.Sheet.{Sheet};
+
+    use SheetIO.SheetWriter;
+    use SheetIO.SheetWriter.{SheetWriter};
+    use SheetIO.Cursors;
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: SheetWriter[a], 
@@ -678,6 +686,25 @@ namespace SheetIO/SheetWriter {
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getSheetName())
 
+
+
+    pub def createCellStyle(mx: CellStyleSetter[a]): SheetWriter[CellStyle] =
+        use SheetIO/Internal/Prim.{createCellStyle};
+        let CellStyleSetter(mf) = mx;
+        let* style              = liftWorkbookPrim(x1 -> Result.map(CellStyle, x1.createCellStyle()));
+        let CellStyle(style1)   = style;
+        let* _                  = liftActionResult(_ -> mf(style1));
+        return(style)
+
+
+
+    pub def createFont(mx: FontSetter[a]): SheetWriter[Font] =
+        use SheetIO/Internal/Prim.{createFont};
+        let FontSetter(mf)      = mx;
+        let* font               = liftWorkbookPrim(x1 -> Result.map(Font, x1.createFont()));
+        let Font(font1)         = font;
+        let* _                  = liftActionResult(_ -> mf(font1));
+        return(font)
 
     // createRow
     def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =

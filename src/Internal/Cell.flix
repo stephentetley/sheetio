@@ -75,7 +75,8 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err(Generic("setNumericCellValue")) 
         }
 
-    pub def setStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: String): Result[Unit, System.Error] & Impure = 
+    pub def setStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
+                               value: String): Result[Unit, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(String); 
         try {
             let ans = cell.setCellValue(value);
@@ -84,5 +85,13 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err(Generic("setStringCellValue")) 
         }
 
-
+    pub def setCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell, 
+                         style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle); 
+        try {
+            let ans = cell.setCellStyle(style);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setCellStyle")) 
+        }
 }
