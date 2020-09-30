@@ -11,10 +11,12 @@ def main(): Unit & Impure =
 
 def write1(): SheetWriter[Unit] = 
     use SheetIO/SheetWriter.{flatMap, return, createSheet, createFont, createCellStyle, appendRow};
-    use SheetIO/FontSetter.{setBold!};
-    use SheetIO/CellStyleSetter.{setFont!};
+    use SheetIO/FontSetter.{setBold!, setColor!};
+    use SheetIO/FontSetter.{*>};
+    use SheetIO/CellStyleSetter.{setFont!};    
+    use SheetIO/IndexedColors.{getIndex, aqua}; 
     let* s1             = createSheet("Sheet1");
-    let* font1          = createFont(setBold!(true));
+    let* font1          = createFont(setBold!(true) *> setColor!(aqua().getIndex()));
     let* boldStyle      = createCellStyle(setFont!(font1));
     let* _      = appendRow(s1, setRowOf2(boldStyle, "Hello", "World!"));
     let* _      = appendRow(s1, setRowOf2(boldStyle, "one", "two"));

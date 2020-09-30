@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
-use SheetIO.CellType;
-use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
 
 namespace SheetIO {
@@ -38,6 +34,12 @@ namespace SheetIO {
 }
 
 namespace SheetIO/CellType {
+
+    use System.Error.{Generic};
+
+    use SheetIO.CellType;
+    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+
 
     pub def marshal(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
         import flix.runtime.spt.sheetreader.Wrapper:get_NONE()      as get_NONE;

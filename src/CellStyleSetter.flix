@@ -232,4 +232,7 @@ namespace SheetIO/CellStyleSetter {
     pub def setFillBackgroundColor!(x: Int16): CellStyleSetter[Unit] =
         liftPrim(r -> SheetIO/Internal/CellStyle.setFillBackgroundColor(r, x))
 
+    pub def setShrinkToFit!(x: Bool): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setShrinkToFit(r, x))
+
 }

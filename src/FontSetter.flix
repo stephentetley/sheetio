@@ -63,6 +63,27 @@ namespace SheetIO/FontSetter {
                 case Err(e1) => Err(e1)
             }
         )
+    
+    
+    pub def seqLeft(ma: FontSetter[a], mb: FontSetter[b]): FontSetter[a] = 
+        FontSetter(r -> 
+            match apply1(ma, r) { 
+                case Ok(a) => match apply1(mb, r) {
+                    case Ok(_) => Ok(a)
+                    case Err(e) => Err(e)
+                }
+                case Err(e) => Err(e)
+            }
+        )
+
+    pub def seqRight(ma: FontSetter[a], mb: FontSetter[b]): FontSetter[b] = 
+        FontSetter(r -> 
+            match apply1(ma, r) { 
+                case Ok(_) => apply1(mb, r)
+                case Err(e) => Err(e)
+            }
+        )
+
 
     pub def bind(x: FontSetter[a], k: a -> FontSetter[b]): FontSetter[b] =
         FontSetter(r ->
@@ -82,6 +103,30 @@ namespace SheetIO/FontSetter {
 
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): FontSetter[a] =
         FontSetter(_ -> fn())
+
+    /// Alias for `seqRight`
+    pub def *>(p1: FontSetter[a], p2: FontSetter[b]): FontSetter[b] = seqRight(p1, p2)
+
+    /// Alias for `seqLeft`
+    pub def <*(p1: FontSetter[a], p2: FontSetter[b]): FontSetter[a] = seqLeft(p1, p2)
+
+    // Haskell's <$>
+    pub def <&>(f: a -> b, p2: FontSetter[a]): FontSetter[b] =
+        map(f, p2)
+
+    pub def <&(x: b, p2: FontSetter[a]): FontSetter[b] =
+        p2 *> return(x)
+
+    /// Alias for `bind`
+    pub def >>=(ma: FontSetter[a], k: a -> FontSetter[b]): FontSetter[b] = bind(ma, k)
+
+    /// Alias for `flatMap` (flipped `bind`)
+    pub def =<<(k: a -> FontSetter[b], ma: FontSetter[a]): FontSetter[b] = flatMap(k, ma)
+
+
+    // Haskell's ap <*>
+    pub def <*>(mf: FontSetter[a -> b], p2: FontSetter[a]): FontSetter[b] = ap(mf, p2)
+
 
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.

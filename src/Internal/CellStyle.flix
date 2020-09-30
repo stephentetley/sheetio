@@ -69,4 +69,17 @@ namespace SheetIO/Internal/CellStyle {
         } catch {
             case _: ##java.lang.Exception => Err(Generic("setFillBackgroundColor")) 
         }
+
+
+    pub def setShrinkToFit(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                           value: Bool): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool); 
+        try {
+            let ans = style.setShrinkToFit(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setShrinkToFit")) 
+        }
+
+        
 }
