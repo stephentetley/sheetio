@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
 
 namespace SheetIO/Internal/Font {
+
+    use System.Error.{Generic};
 
     pub def setBold(font: ##org.apache.poi.ss.usermodel.Font,
                     value: Bool): Result[Unit, System.Error] & Impure = 
@@ -28,4 +29,35 @@ namespace SheetIO/Internal/Font {
             case _: ##java.lang.Exception => Err(Generic("setBold")) 
         }
 
+    pub def setItalic(font: ##org.apache.poi.ss.usermodel.Font,
+                      value: Bool): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.setItalic(Bool); 
+        try {
+            let ans = font.setItalic(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setItalic")) 
+        }
+
+
+    pub def setStrikeout(font: ##org.apache.poi.ss.usermodel.Font,
+                         value: Bool): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool); 
+        try {
+            let ans = font.setStrikeout(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setStrikeout")) 
+        }
+
+    pub def setColor(font: ##org.apache.poi.ss.usermodel.Font,
+                     value: Int16): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.setColor(Int16); 
+        try {
+            let ans = font.setColor(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setColor")) 
+        }
+        
 }
