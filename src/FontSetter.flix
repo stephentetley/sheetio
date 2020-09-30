@@ -209,6 +209,16 @@ namespace SheetIO/FontSetter {
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
+    pub def setFontName!(x: String): FontSetter[Unit] = 
+        liftPrim(r -> SheetIO/Internal/Font.setFontName(r, x))
+
+
+    pub def setFontHeight!(x: Int16): FontSetter[Unit] = 
+        liftPrim(r -> SheetIO/Internal/Font.setFontHeight(r, x))
+
+    pub def setFontHeightInPoints!(x: Int16): FontSetter[Unit] = 
+        liftPrim(r -> SheetIO/Internal/Font.setFontHeightInPoints(r, x))
+
     pub def setBold!(x: Bool): FontSetter[Unit] = 
         liftPrim(r -> SheetIO/Internal/Font.setBold(r, x))
 
@@ -221,5 +231,6 @@ namespace SheetIO/FontSetter {
     pub def setColor!(x: Int16): FontSetter[Unit] = 
         liftPrim(r -> SheetIO/Internal/Font.setColor(r, x))
 
+    /// TODO others need enums...
 
 }

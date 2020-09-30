@@ -28,4 +28,45 @@ namespace SheetIO/Internal/CellStyle {
             case _: ##java.lang.Exception => Err(Generic("setFont")) 
         }
 
+    pub def setWrapText(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                        value: Bool): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool); 
+        try {
+            let ans = style.setWrapText(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setWrapText")) 
+        }
+    
+    pub def setIndention(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                         value: Int16): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16); 
+        try {
+            let ans = style.setIndention(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setIndention")) 
+        }
+    
+    
+    pub def setFillForegroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                                   value: Int16): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16); 
+        try {
+            let ans = style.setFillForegroundColor(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setFillForegroundColor")) 
+        }
+
+    /// Note must set foreground color first
+    pub def setFillBackgroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                                   value: Int16): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16); 
+        try {
+            let ans = style.setFillBackgroundColor(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setFillBackgroundColor")) 
+        }
 }

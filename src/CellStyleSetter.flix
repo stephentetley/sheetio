@@ -219,4 +219,17 @@ namespace SheetIO/CellStyleSetter {
             SheetIO/Internal/CellStyle.setFont(r, font1)
         })
 
+    
+    pub def setWrapText!(x: Bool): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setWrapText(r, x))
+    
+    pub def setIndention!(x: Int16): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setIndention(r, x))
+
+    pub def setFillForegroundColor!(x: Int16): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setFillForegroundColor(r, x))
+    
+    pub def setFillBackgroundColor!(x: Int16): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setFillBackgroundColor(r, x))
+
 }
