@@ -37,7 +37,13 @@ namespace SheetIO/SheetReader {
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
+
+    /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+        runXssf(ma, path)
+    
+    /// Excel 2007 OOXML (.xlsx) format.
+    pub def runXssf(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
@@ -49,7 +55,21 @@ namespace SheetIO/SheetReader {
                 ans         
             }
         }
-    
+
+    /// Excel 97 binary (.xls) format.
+    pub def runHssf(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+        use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
+        use Result.{flatMap};
+        let path1 = System/FilePath.toString(path);
+        match openHSSFWorkbook(path1) { 
+            case Err(e) => Err(e)
+            case Ok(wb) => {
+                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
+                let* _ = closeHSSFWorkbook(wb);
+                ans         
+            }
+        }
+
 
     def apply1(ma: SheetReader[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
         let SheetReader(x1) = ma;

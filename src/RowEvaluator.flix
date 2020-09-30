@@ -20,6 +20,7 @@ use SheetIO.RowEvaluator;
 use SheetIO.RowEvaluator.{RowEvaluator};
 
 use SheetIO.CellType;
+use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
 
 namespace SheetIO {
@@ -144,13 +145,30 @@ namespace SheetIO/RowEvaluator {
     pub def getCellTypeAt(ix: Int32): RowEvaluator[CellType] =
         map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
+
+    pub def isBlankAt(ix: Int32): RowEvaluator[Bool] = 
+        let* typ = getCellTypeAt(ix);
+        match typ { 
+            case TyBlank => return(true)
+            case _ => return(false)
+        }
+
+
+    pub def getBlankAt(ix: Int32): RowEvaluator[Unit] = 
+        let* typ = getCellTypeAt(ix);
+        match typ { 
+            case TyBlank => return()
+            case _ => throwError("getBlankAt(${Int32.toString(ix)}) - not blank")
+        }
+
     
     pub def getStringAt(ix: Int32): RowEvaluator[String] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNullAt(ix);
-        if (x) return(d) else getStringAt(ix)
+        let* y = isBlankAt(ix);
+        if (x || y) return(d) else getStringAt(ix)
 
     pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))

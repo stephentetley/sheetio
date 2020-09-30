@@ -18,6 +18,7 @@ use System.Error.{Generic};
 
 namespace SheetIO/Internal/Prim {
 
+    // XSSF (OOXML) concretely
 
     ///
     /// Create new for writing.
@@ -79,6 +80,36 @@ namespace SheetIO/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("closeXSSFWorkbook")) 
         }
 
+
+    ///
+    /// Open for reading.
+    ///
+    pub def openHSSFWorkbook(path: String): Result[##org.apache.poi.hssf.usermodel.HSSFWorkbook, System.Error] & Impure = 
+        import new java.io.File(String) as newFile;
+        import new java.io.FileInputStream(##java.io.File) as newFileInputStream;
+        import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream) as newHSSFWorkbook;
+        try {
+            let file1 = newFile(path);
+            let fistream = newFileInputStream(file1);
+            let istream = fistream as ##java.io.InputStream;
+            let wb = newHSSFWorkbook(istream);
+            Ok(wb)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("openHSSFWorkbook")) 
+        }
+
+    pub def closeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.hssf.usermodel.HSSFWorkbook.close(); 
+        try {
+            let _ = wb.close();
+            Ok()
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("closeHSSFWorkbook")) 
+        }
+
+
+
+    // SS interface
 
     pub def createSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                         name: String): Result[##org.apache.poi.ss.usermodel.Sheet, System.Error] & Impure = 

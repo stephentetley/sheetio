@@ -39,8 +39,14 @@ namespace SheetIO {
 
 namespace SheetIO/SheetWriter {
 
-    
-    pub def runXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    /// Excel 2007 OOXML (.xlsx) format.
+    pub def runXlsx(ma: SheetWriter[a], 
+                    path: System.FilePath): Result[a, System.Error] & Impure = 
+        runXssf(ma, path)
+
+    /// Excel 2007 OOXML (.xlsx) format.
+    pub def runXssf(ma: SheetWriter[a], 
+                    path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let outpath     = System/FilePath.toString(path);
