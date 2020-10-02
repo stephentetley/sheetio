@@ -109,6 +109,18 @@ namespace SheetIO/RowSetter {
         liftPrim(step)
 
 
+    pub def putBlankAt!(ix: Int32): RowSetter[Unit] =
+        use SheetIO.CellType.{TyBlank};
+        use Result.flatMap;
+        let step = x -> {
+            let* cell   = createOrGetCell(x, ix);
+            let typ1    = SheetIO/CellType.marshal(TyBlank);
+            let* _      = SheetIO/Internal/Cell.setCellType(cell, typ1);
+            Ok()
+        };
+        liftPrim(step)
+
+
     pub def putStringAt!(ix: Int32, value: String): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
@@ -167,45 +179,45 @@ namespace SheetIO/RowSetter {
             putHeadersHelper!(arr, end, ix + 1)
         }
 
-    // pub def putOptionString!(ix: Int32, x: Option[String]): RowSetter[Unit] = match x {
-    //     case Some(s) => putString!(ix, s)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[Unit] = match x {
+        case Some(s) => putStringAt!(ix, s)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionBool!(ix: Int32, x: Option[Bool]): RowSetter[Unit] = match x {
-    //     case Some(b) => putBool!(ix, b)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionBool!(ix: Int32, x: Option[Bool]): RowSetter[Unit] = match x {
+        case Some(b) => putBoolAt!(ix, b)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionInt8!(ix: Int32, x: Option[Int8]): RowSetter[Unit] = match x {
-    //     case Some(n) => putInt8!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionInt8!(ix: Int32, x: Option[Int8]): RowSetter[Unit] = match x {
+        case Some(n) => putInt8At!(ix, n)
+        case None => putBlankAt!(ix)
+        }
 
-    // pub def putOptionInt16!(ix: Int32, x: Option[Int16]): RowSetter[Unit] = match x {
-    //     case Some(n) => putInt16!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionInt16!(ix: Int32, x: Option[Int16]): RowSetter[Unit] = match x {
+        case Some(n) => putInt16At!(ix, n)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionInt32!(ix: Int32, x: Option[Int32]): RowSetter[Unit] = match x {
-    //     case Some(n) => putInt32!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionInt32!(ix: Int32, x: Option[Int32]): RowSetter[Unit] = match x {
+        case Some(n) => putInt32At!(ix, n)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionInt64!(ix: Int32, x: Option[Int64]): RowSetter[Unit] = match x {
-    //     case Some(n) => putInt64!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionInt64!(ix: Int32, x: Option[Int64]): RowSetter[Unit] = match x {
+        case Some(n) => putInt64At!(ix, n)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionFloat32!(ix: Int32, x: Option[Float32]): RowSetter[Unit] = match x {
-    //     case Some(n) => putFloat32!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionFloat32!(ix: Int32, x: Option[Float32]): RowSetter[Unit] = match x {
+        case Some(n) => putFloat32At!(ix, n)
+        case None => putBlankAt!(ix)
+    }
 
-    // pub def putOptionFloat64!(ix: Int32, x: Option[Float64]): RowSetter[Unit] = match x {
-    //     case Some(n) => putFloat64!(ix, n)
-    //     case None => putNull!(ix)
-    // }
+    pub def putOptionFloat64!(ix: Int32, x: Option[Float64]): RowSetter[Unit] = match x {
+        case Some(n) => putFloat64At!(ix, n)
+        case None => putBlankAt!(ix)
+    }
 
 
     ///

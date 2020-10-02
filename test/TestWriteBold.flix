@@ -19,16 +19,17 @@ def write1(): SheetWriter[Unit] =
     let* s1             = createSheet("Sheet1");
     let* font1          = createFont(setBold!(true) *> setColor!(getIndex(Aqua)));
     let* boldStyle      = createCellStyle(setFont!(font1));
-    let* _      = appendRow(s1, setRowOf2(boldStyle, "Hello", "World!"));
-    let* _      = appendRow(s1, setRowOf2(boldStyle, "one", "two"));
-    let* _      = appendRow(s1, setRowOf2(boldStyle, "Red", "Green"));    
-    let* _      = appendRow(s1, setRowOf2(boldStyle, "Old", "New"));
+    let* _      = appendRow(s1, setRowOf2(boldStyle, "Hello", "World!", None));
+    let* _      = appendRow(s1, setRowOf2(boldStyle, "one", "two", Some("three")));
+    let* _      = appendRow(s1, setRowOf2(boldStyle, "Red", "Green", Some("Blue")));    
+    let* _      = appendRow(s1, setRowOf2(boldStyle, "Old", "New", None));
     return()
     
 // Change,Reference,Asset Name,OldParentName,NewParentName
-def setRowOf2(astyle: CellStyle, a: String, b: String): RowSetter[Unit] = 
-    use SheetIO/RowSetter.{flatMap, return, putCellStyleAt!, putStringAt!};
+def setRowOf2(astyle: CellStyle, a: String, b: String, c: Option[String]): RowSetter[Unit] = 
+    use SheetIO/RowSetter.{flatMap, return, putCellStyleAt!, putStringAt!, putOptionStringAt!};
     let* _      = putCellStyleAt!(0, astyle);
     let* _      = putStringAt!(0, a);
     let* _      = putStringAt!(1, b);
+    let* _      = putOptionStringAt!(2, c);
     return()

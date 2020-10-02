@@ -28,6 +28,16 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err(Generic("getCellType")) 
         }
 
+    pub def setCellType(cell: ##org.apache.poi.ss.usermodel.Cell, 
+                        typ: ##org.apache.poi.ss.usermodel.CellType): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellType(##org.apache.poi.ss.usermodel.CellType); 
+        try {
+            let ans = cell.setCellType(typ);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setCellType")) 
+        }
+
      
     pub def getBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(); 
