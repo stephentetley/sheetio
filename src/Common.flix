@@ -24,6 +24,8 @@ namespace SheetIO {
 
     pub opaque type CellStyle = ##org.apache.poi.ss.usermodel.CellStyle
 
+    pub opaque type DataFormat = ##org.apache.poi.ss.usermodel.DataFormat
+
     pub opaque type Font = ##org.apache.poi.ss.usermodel.Font
 
 }

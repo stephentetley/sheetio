@@ -32,6 +32,8 @@ namespace SheetIO/SheetWriter {
     use SheetIO.CellStyle.{CellStyle};
     use SheetIO.CellStyleSetter;
     use SheetIO.CellStyleSetter.{CellStyleSetter};
+    use SheetIO.DataFormat;
+    use SheetIO.DataFormat.{DataFormat};
     use SheetIO.Font;
     use SheetIO.Font.{Font};
     use SheetIO.FontSetter;
@@ -691,6 +693,16 @@ namespace SheetIO/SheetWriter {
         use SheetIO/Internal/Sheet.{getSheetName};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getSheetName())
+
+    pub def createDataFormat(): SheetWriter[DataFormat] =
+        use SheetIO/Internal/Prim.{createDataFormat};
+        liftWorkbookPrim(x1 -> Result.map(DataFormat, x1.createDataFormat()))
+
+    pub def getFormat(x: DataFormat, format: String): SheetWriter[Int16] =
+        use SheetIO/Internal/Prim.{getFormat};
+        let DataFormat(x1) = x;
+        liftActionResult(_ -> x1.getFormat(format))
+
 
     pub def setCursor!(x: Sheet, n: Int32): SheetWriter[Unit] =
         let* name = getSheetName(x);

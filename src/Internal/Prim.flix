@@ -178,4 +178,23 @@ namespace SheetIO/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("createFont")) 
         }
 
+    pub def createDataFormat(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.DataFormat, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.createDataFormat(); 
+        try {
+            let ans = wb.createDataFormat();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("createDataFormat")) 
+        }
+
+    pub def getFormat(dfmt: ##org.apache.poi.ss.usermodel.DataFormat,
+                      format: String): Result[Int16, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.DataFormat.getFormat(String); 
+        try {
+            let ans = dfmt.getFormat(format);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getFormat")) 
+        }
+
 }

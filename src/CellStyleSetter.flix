@@ -235,4 +235,7 @@ namespace SheetIO/CellStyleSetter {
     pub def setShrinkToFit!(x: Bool): CellStyleSetter[Unit] =
         liftPrim(r -> SheetIO/Internal/CellStyle.setShrinkToFit(r, x))
 
+    pub def setDataFormat!(x: Int16): CellStyleSetter[Unit] =
+        liftPrim(r -> SheetIO/Internal/CellStyle.setDataFormat(r, x))
+
 }

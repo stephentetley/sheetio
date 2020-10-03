@@ -81,5 +81,13 @@ namespace SheetIO/Internal/CellStyle {
             case _: ##java.lang.Exception => Err(Generic("setShrinkToFit")) 
         }
 
-        
+    pub def setDataFormat(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                          value: Int16): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16); 
+        try {
+            let ans = style.setDataFormat(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setDataFormat")) 
+        }
 }
