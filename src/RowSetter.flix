@@ -167,6 +167,29 @@ namespace SheetIO/RowSetter {
         putNumericAt!(ix, "putFloat64At!", n)
 
 
+    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[Unit] =
+        use Time.LocalDateTime.{LocalDateTime};
+        use Result.flatMap;
+        let step = x -> {
+            let* cell               = createOrGetCell(x, ix);
+            let  LocalDateTime(dt1) = dt;
+            let* _                  = SheetIO/Internal/Cell.setLocalDateTimeCellValue(cell, dt1);
+            Ok()
+        };
+        liftPrim(step)
+
+    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[Unit] =
+        use Time.LocalDate.{LocalDate};
+        use Result.flatMap;
+        let step = x -> {
+            let* cell           = createOrGetCell(x, ix);
+            let  LocalDate(dt1) = dt;
+            let* _              = SheetIO/Internal/Cell.setLocalDateCellValue(cell, dt1);
+            Ok()
+        };
+        liftPrim(step)
+
+
     pub def putHeaders!(arr: Array[String]): RowSetter[Unit] = 
         putHeadersHelper!(arr, Array.length(arr), 0)
         

@@ -201,10 +201,13 @@ namespace SheetIO/RowEvaluator {
     pub def getFloat32At(ix: Int32): RowEvaluator[Float32] =
         getNumAt(ix, Float64.tryToFloat32, "getFloat32")
     
-
     pub def getFloat64At(ix: Int32): RowEvaluator[Float64] = 
         getNumAt(ix, Some, "getFloat32")
 
+    pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[Time.LocalDateTime] = 
+        use Time.LocalDateTime.{LocalDateTime};
+        let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+        return(LocalDateTime(dt1))
 
     pub def getFirstCellNum(): RowEvaluator[Int32] =
         liftPrim(r -> SheetIO/Internal/Row.getFirstCellNum(r))

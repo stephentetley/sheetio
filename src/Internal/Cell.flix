@@ -67,6 +67,17 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err(Generic("getNumericCellValue")) 
         }
 
+
+    pub def getLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##java.time.LocalDateTime, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(); 
+        try {
+            let ans = cell.getLocalDateTimeCellValue();
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("getLocalDateTimeCellValue")) 
+        }
+
+
     pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, System.Error] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool); 
         try {
@@ -94,6 +105,28 @@ namespace SheetIO/Internal/Cell {
         } catch {
             case _: ##java.lang.Exception => Err(Generic("setStringCellValue")) 
         }
+
+
+    pub def setLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
+                                      value: ##java.time.LocalDateTime): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime); 
+        try {
+            let ans = cell.setCellValue(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setLocalDateTimeCellValue")) 
+        }
+
+    pub def setLocalDateCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
+                                  value: ##java.time.LocalDate): Result[Unit, System.Error] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate); 
+        try {
+            let ans = cell.setCellValue(value);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("setLocalDateCellValue")) 
+        }
+
 
     pub def setCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell, 
                          style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, System.Error] & Impure = 

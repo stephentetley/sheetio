@@ -677,15 +677,27 @@ namespace SheetIO/SheetWriter {
             case None       => Ok((Map.insert(sheetName, 1, st), 0)) as & Impure
         })
 
+    
+
     pub def createSheet(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Prim.{createSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
+
+    pub def getSheet(name: String): SheetWriter[Sheet] =
+        use SheetIO/Internal/Prim.{getSheet};
+        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
 
     def getSheetName(x: Sheet): SheetWriter[String] =
         use SheetIO/Internal/Sheet.{getSheetName};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getSheetName())
 
+    pub def setCursor!(x: Sheet, n: Int32): SheetWriter[Unit] =
+        let* name = getSheetName(x);
+        setCursorHelper(name, n)
+
+    def setCursorHelper(sheetName: String, n: Int32): SheetWriter[Unit] = 
+        SheetWriter((_, st) -> Ok((Map.insert(sheetName, n, st), ())) as & Impure)
 
 
     pub def createCellStyle(mx: CellStyleSetter[a]): SheetWriter[CellStyle] =
