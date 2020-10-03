@@ -14,12 +14,7 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic, IllegalArgumentException};
 
-use SheetIO.NamedRowEvaluator;
-use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
-
-use SheetIO.CellType;
 
 
 namespace SheetIO {
@@ -29,6 +24,14 @@ namespace SheetIO {
 }
 
 namespace SheetIO/NamedRowEvaluator {
+
+    use System.Error.{Generic, IllegalArgumentException};
+
+    use SheetIO.NamedRowEvaluator;
+    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
+
+    use SheetIO.CellType;
+    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
     pub def makeHeaders(names: Array[String]): Map[String, Int32] & Impure =
         let step = (acc, x) -> { let (i, mx) = acc; (i + 1, Map.insert(x, i, mx)) };
@@ -172,6 +175,20 @@ namespace SheetIO/NamedRowEvaluator {
         let* ix     = getIndex(label);
         map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
+    pub def isBlankNamed(label: String): NamedRowEvaluator[Bool] = 
+        let* typ = getCellTypeNamed(label);
+        match typ { 
+            case TyBlank => return(true)
+            case _ => return(false)
+        }
+
+
+    pub def getBlankNamed(label: String): NamedRowEvaluator[Unit] = 
+        let* typ = getCellTypeNamed(label);
+        match typ { 
+            case TyBlank => return()
+            case _ => throwError("getBlankNamed($label}) - not blank")
+        }
     
     pub def getStringNamed(label: String): NamedRowEvaluator[String] =
         let* ix     = getIndex(label);
@@ -211,12 +228,49 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getInt64Named(label: String): NamedRowEvaluator[Int64] =
         getNumNamed(label, Float64.tryToInt64, "getInt64")
 
-    pub def getFloat32At(label: String): NamedRowEvaluator[Float32] =
+    pub def getFloat32Named(label: String): NamedRowEvaluator[Float32] =
         getNumNamed(label, Float64.tryToFloat32, "getFloat32")
     
     pub def getFloat64Named(label: String): NamedRowEvaluator[Float64] = 
         getNumNamed(label, Some, "getFloat32")
 
+    pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[Time.LocalDateTime] = 
+        use Time.LocalDateTime.{LocalDateTime};
+        let* ix     = getIndex(label);
+        let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+        return(LocalDateTime(dt1))
+
+
+    def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] = 
+        let* x1 = isNullNamed(label);
+        let* y1 = isBlankNamed(label);
+        if (x1 || y1) return(None) else map(Some, getter(label))
+
+    pub def getOptionStringNamed(label: String): NamedRowEvaluator[Option[String]] =
+        getIfNotEmpty(label, getStringNamed)
+
+
+
+    pub def getOptionInt8Named(label: String): NamedRowEvaluator[Option[Int8]] =
+        getIfNotEmpty(label, getInt8Named)
+
+    pub def getOptionInt16Named(label: String): NamedRowEvaluator[Option[Int16]] =
+        getIfNotEmpty(label, getInt16Named)
+
+    pub def getOptionInt32Named(label: String): NamedRowEvaluator[Option[Int32]] =
+        getIfNotEmpty(label, getInt32Named)
+
+    pub def getOptionInt64Named(label: String): NamedRowEvaluator[Option[Int64]] =
+        getIfNotEmpty(label, getInt64Named)
+
+    pub def getOptionFloat32Named(label: String): NamedRowEvaluator[Option[Float32]] =
+        getIfNotEmpty(label, getFloat32Named)
+    
+    pub def getOptionFloat64Named(label: String): NamedRowEvaluator[Option[Float64]] = 
+        getIfNotEmpty(label, getFloat64Named)
+
+    pub def getOptionLocalDateTimeNamed(label: String): NamedRowEvaluator[Option[Time.LocalDateTime]] = 
+        getIfNotEmpty(label, getLocalDateTimeNamed)
 
 
     ///

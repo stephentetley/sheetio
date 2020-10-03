@@ -14,14 +14,6 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
-use SheetIO.RowEvaluator;
-use SheetIO.RowEvaluator.{RowEvaluator};
-
-use SheetIO.CellType;
-use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
-
 
 namespace SheetIO {
 
@@ -30,6 +22,14 @@ namespace SheetIO {
 }
 
 namespace SheetIO/RowEvaluator {
+
+    use System.Error.{Generic};
+
+    use SheetIO.RowEvaluator;
+    use SheetIO.RowEvaluator.{RowEvaluator};
+
+    use SheetIO.CellType;
+    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
@@ -209,6 +209,39 @@ namespace SheetIO/RowEvaluator {
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
         return(LocalDateTime(dt1))
 
+
+    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 
+        let* x1 = isNullAt(ix);
+        let* y1 = isBlankAt(ix);
+        if (x1 || y1) return(None) else map(Some, getter(ix))
+
+    pub def getOptionStringAt(ix: Int32): RowEvaluator[Option[String]] =
+        getIfNotEmpty(ix, getStringAt)
+
+
+
+    pub def getOptionInt8At(ix: Int32): RowEvaluator[Option[Int8]] =
+        getIfNotEmpty(ix, getInt8At)
+
+    pub def getOptionInt16At(ix: Int32): RowEvaluator[Option[Int16]] =
+        getIfNotEmpty(ix, getInt16At)
+
+    pub def getOptionInt32At(ix: Int32): RowEvaluator[Option[Int32]] =
+        getIfNotEmpty(ix, getInt32At)
+
+    pub def getOptionInt64At(ix: Int32): RowEvaluator[Option[Int64]] =
+        getIfNotEmpty(ix, getInt64At)
+
+    pub def getOptionFloat32At(ix: Int32): RowEvaluator[Option[Float32]] =
+        getIfNotEmpty(ix, getFloat32At)
+    
+    pub def getOptionFloat64At(ix: Int32): RowEvaluator[Option[Float64]] = 
+        getIfNotEmpty(ix, getFloat64At)
+
+    pub def getOptionLocalDateTimeAt(ix: Int32): RowEvaluator[Option[Time.LocalDateTime]] = 
+        getIfNotEmpty(ix, getLocalDateTimeAt)
+
+        
     pub def getFirstCellNum(): RowEvaluator[Int32] =
         liftPrim(r -> SheetIO/Internal/Row.getFirstCellNum(r))
 
