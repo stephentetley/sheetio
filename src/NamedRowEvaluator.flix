@@ -219,22 +219,22 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getInt8Named(label: String): NamedRowEvaluator[Int8] =
-        getNumNamed(label, Float64.tryToInt8, "getInt8")
+        getNumNamed(label, Float64.tryToInt8, "getInt8Named")
 
     pub def getInt16Named(label: String): NamedRowEvaluator[Int16] =
-        getNumNamed(label, Float64.tryToInt16, "getInt16")
+        getNumNamed(label, Float64.tryToInt16, "getInt16Named")
 
     pub def getInt32Named(label: String): NamedRowEvaluator[Int32] =
-        getNumNamed(label, Float64.tryToInt32, "getInt32")
+        getNumNamed(label, Float64.tryToInt32, "getInt32Named")
 
     pub def getInt64Named(label: String): NamedRowEvaluator[Int64] =
-        getNumNamed(label, Float64.tryToInt64, "getInt64")
+        getNumNamed(label, Float64.tryToInt64, "getInt64Named")
 
     pub def getFloat32Named(label: String): NamedRowEvaluator[Float32] =
-        getNumNamed(label, Float64.tryToFloat32, "getFloat32")
+        getNumNamed(label, Float64.tryToFloat32, "getFloat32Named")
     
     pub def getFloat64Named(label: String): NamedRowEvaluator[Float64] = 
-        getNumNamed(label, Some, "getFloat32")
+        getNumNamed(label, x -> Some(x), "getFloat64Named")
 
     /// Note will fail if CellType is String.
     pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[Time.LocalDateTime] = 

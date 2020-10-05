@@ -190,22 +190,22 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getInt8At(ix: Int32): RowEvaluator[Int8] =
-        getNumAt(ix, Float64.tryToInt8, "getInt8")
+        getNumAt(ix, Float64.tryToInt8, "getInt8At")
 
     pub def getInt16At(ix: Int32): RowEvaluator[Int16] =
-        getNumAt(ix, Float64.tryToInt16, "getInt16")
+        getNumAt(ix, Float64.tryToInt16, "getInt16At")
 
     pub def getInt32At(ix: Int32): RowEvaluator[Int32] =
-        getNumAt(ix, Float64.tryToInt32, "getInt32")
+        getNumAt(ix, Float64.tryToInt32, "getInt32At")
 
     pub def getInt64At(ix: Int32): RowEvaluator[Int64] =
-        getNumAt(ix, Float64.tryToInt64, "getInt64")
+        getNumAt(ix, Float64.tryToInt64, "getInt64At")
 
     pub def getFloat32At(ix: Int32): RowEvaluator[Float32] =
-        getNumAt(ix, Float64.tryToFloat32, "getFloat32")
+        getNumAt(ix, Float64.tryToFloat32, "getFloat32At")
     
     pub def getFloat64At(ix: Int32): RowEvaluator[Float64] = 
-        getNumAt(ix, Some, "getFloat32")
+        getNumAt(ix, x -> Some(x), "getFloat64At")
 
     pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
