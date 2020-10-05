@@ -90,6 +90,9 @@ namespace SheetIO/RowSetter {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowSetter[a] =
         RowSetter(_ -> fn())
 
+    pub def liftResult(x: Result[a, System.Error]): RowSetter[a] =
+        RowSetter(_ -> x as & Impure)
+        
     def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
                         ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
         use SheetIO/Internal/Row.{getCell, createCell};

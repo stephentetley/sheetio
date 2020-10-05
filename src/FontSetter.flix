@@ -104,6 +104,9 @@ namespace SheetIO/FontSetter {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): FontSetter[a] =
         FontSetter(_ -> fn())
 
+    pub def liftResult(x: Result[a, System.Error]): FontSetter[a] =
+        FontSetter(_ -> x as & Impure)
+        
     /// Alias for `seqRight`
     pub def *>(p1: FontSetter[a], p2: FontSetter[b]): FontSetter[b] = seqRight(p1, p2)
 

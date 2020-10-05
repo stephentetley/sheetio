@@ -124,6 +124,9 @@ namespace SheetIO/RowEvaluator {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowEvaluator[a] =
         RowEvaluator(_ -> fn())
 
+    pub def liftResult(x: Result[a, System.Error]): RowEvaluator[a] =
+        RowEvaluator(_ -> x as & Impure)
+
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
     // // so FactIO's API indexes from 0.

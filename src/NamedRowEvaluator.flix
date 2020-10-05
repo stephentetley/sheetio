@@ -143,6 +143,8 @@ namespace SheetIO/NamedRowEvaluator {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> fn())
 
+    pub def liftResult(x: Result[a, System.Error]): NamedRowEvaluator[a] =
+        NamedRowEvaluator((_, _) -> x as & Impure)
 
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
@@ -234,6 +236,7 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getFloat64Named(label: String): NamedRowEvaluator[Float64] = 
         getNumNamed(label, Some, "getFloat32")
 
+    /// Note will fail if CellType is String.
     pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
         let* ix     = getIndex(label);

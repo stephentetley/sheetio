@@ -256,7 +256,8 @@ namespace SheetIO/SheetReader {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetReader[a] = 
         SheetReader(_ -> fn())
 
-    
+    pub def liftResult(x: Result[a, System.Error]): SheetReader[a] = 
+        SheetReader(_ -> x as & Impure)
     
     pub def mapM(mf: a -> SheetReader[b], xs: List[a]): SheetReader[List[b]] =
         SheetReader(wb ->

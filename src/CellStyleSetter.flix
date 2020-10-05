@@ -87,6 +87,9 @@ namespace SheetIO/CellStyleSetter {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): CellStyleSetter[a] =
         CellStyleSetter(_ -> fn())
 
+    pub def liftResult(x: Result[a, System.Error]): CellStyleSetter[a] =
+        CellStyleSetter(_ -> x as & Impure)
+
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.
     ///

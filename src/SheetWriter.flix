@@ -194,6 +194,8 @@ namespace SheetIO/SheetWriter {
     pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetWriter[a] = 
         SheetWriter((_, st) -> { let ans = fn(); Result.map(x -> (st, x), ans)})
 
+    pub def liftResult(x: Result[a, System.Error]): SheetWriter[a] = 
+        SheetWriter((_, st) -> Result.map(a -> (st, a), x) as & Impure)
     
     
     pub def mapM(mf: a -> SheetWriter[b], xs: List[a]): SheetWriter[List[b]] =
