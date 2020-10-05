@@ -30,7 +30,9 @@ namespace SheetIO/RowEvaluator {
 
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
-
+    use SheetIO.DataFormatter;
+    use SheetIO.DataFormatter.{DataFormatter};
+    
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
 
@@ -172,6 +174,11 @@ namespace SheetIO/RowEvaluator {
         let* x = isNullAt(ix);
         let* y = isBlankAt(ix);
         if (x || y) return(d) else getStringAt(ix)
+
+    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[String] =
+        let DataFormatter(dfmt1) = dfmt;
+        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/Cell.getFormatterCellValue(cell, dfmt1)))
+
 
     pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))

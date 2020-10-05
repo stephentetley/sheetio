@@ -32,6 +32,9 @@ namespace SheetIO/NamedRowEvaluator {
 
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+    use SheetIO.DataFormatter;
+    use SheetIO.DataFormatter.{DataFormatter};
+
 
     pub def makeHeaders(names: Array[String]): Map[String, Int32] & Impure =
         let step = (acc, x) -> { let (i, mx) = acc; (i + 1, Map.insert(x, i, mx)) };
@@ -199,6 +202,13 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =
         let* x = isNullNamed(label);
         if (x) return(d) else getStringNamed(label)
+
+
+    pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[String] =
+        let* ix     = getIndex(label);
+        let DataFormatter(dfmt1) = dfmt;
+        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/Cell.getFormatterCellValue(cell, dfmt1)))
+
 
     pub def getBoolNamed(label: String): NamedRowEvaluator[Bool] =
         let* ix     = getIndex(label);
