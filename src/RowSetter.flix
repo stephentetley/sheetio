@@ -210,37 +210,37 @@ namespace SheetIO/RowSetter {
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionBool!(ix: Int32, x: Option[Bool]): RowSetter[Unit] = match x {
+    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[Unit] = match x {
         case Some(b) => putBoolAt!(ix, b)
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionInt8!(ix: Int32, x: Option[Int8]): RowSetter[Unit] = match x {
+    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[Unit] = match x {
         case Some(n) => putInt8At!(ix, n)
         case None => putBlankAt!(ix)
         }
 
-    pub def putOptionInt16!(ix: Int32, x: Option[Int16]): RowSetter[Unit] = match x {
+    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[Unit] = match x {
         case Some(n) => putInt16At!(ix, n)
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionInt32!(ix: Int32, x: Option[Int32]): RowSetter[Unit] = match x {
+    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[Unit] = match x {
         case Some(n) => putInt32At!(ix, n)
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionInt64!(ix: Int32, x: Option[Int64]): RowSetter[Unit] = match x {
+    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[Unit] = match x {
         case Some(n) => putInt64At!(ix, n)
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat32!(ix: Int32, x: Option[Float32]): RowSetter[Unit] = match x {
+    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[Unit] = match x {
         case Some(n) => putFloat32At!(ix, n)
         case None => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat64!(ix: Int32, x: Option[Float64]): RowSetter[Unit] = match x {
+    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[Unit] = match x {
         case Some(n) => putFloat64At!(ix, n)
         case None => putBlankAt!(ix)
     }
