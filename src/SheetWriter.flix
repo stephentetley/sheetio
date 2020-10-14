@@ -66,6 +66,31 @@ namespace SheetIO/SheetWriter {
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
 
+    pub def runTemplateXssf(ma: SheetWriter[a], 
+                            template: System.FilePath, 
+                            outPath: System.FilePath): Result[a, System.Error] & Impure =
+        use Result.{flatMap};
+        let* _      = System/File.copy(template, outPath);
+        runXssf(ma, outPath)
+                    
+    /// Excel 97 binary (.xls) format.
+    pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+        use Result.{flatMap};
+        let outpath     = System/FilePath.toString(path);
+        let* wb         = newXSSFWorkbook();
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* _          = writeXSSFWorkbook(wb, outpath);
+        let* _          = closeXSSFWorkbook(wb);
+        Ok(ans)
+
+    pub def runTemplateHssf(ma: SheetWriter[a], 
+                            template: System.FilePath, 
+                            outPath: System.FilePath): Result[a, System.Error] & Impure =
+        use Result.{flatMap};
+        let* _      = System/File.copy(template, outPath);
+        runHssf(ma, outPath)
+
     def apply1(ma: SheetWriter[a], 
                wb: ##org.apache.poi.ss.usermodel.Workbook, 
                st: Cursors): Result[(Cursors, a), System.Error] & Impure = 

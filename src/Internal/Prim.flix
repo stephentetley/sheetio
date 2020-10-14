@@ -52,7 +52,7 @@ namespace SheetIO/Internal/Prim {
 
 
     ///
-    /// Open for reading.
+    /// Write workbook.
     ///
     pub def writeXSSFWorkbook(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook, 
                               path: String): Result[Unit, System.Error] & Impure = 
@@ -80,6 +80,17 @@ namespace SheetIO/Internal/Prim {
             case _: ##java.lang.Exception => Err(Generic("closeXSSFWorkbook")) 
         }
 
+    ///
+    /// Create new for writing.
+    ///
+    pub def newHSSFWorkbook(): Result[##org.apache.poi.hssf.usermodel.HSSFWorkbook, System.Error] & Impure = 
+        import new org.apache.poi.hssf.usermodel.HSSFWorkbook() as newHSSFWorkbook;
+        try {
+            let wb = newHSSFWorkbook();
+            Ok(wb)
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("newHSSFWorkbook")) 
+        }
 
     ///
     /// Open for reading.
@@ -97,6 +108,25 @@ namespace SheetIO/Internal/Prim {
         } catch {
             case _: ##java.lang.Exception => Err(Generic("openHSSFWorkbook")) 
         }
+
+    ///
+    /// Write workbook.
+    ///
+    pub def writeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook, 
+                              path: String): Result[Unit, System.Error] & Impure = 
+        import new java.io.FileOutputStream(String) as newFileOutputStream;
+        import java.io.FileOutputStream.close();
+        import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream); 
+        try {
+            let fostream = newFileOutputStream(path);
+            let fostream1 = fostream as ##java.io.OutputStream;
+            wb.write(fostream1);
+            fostream.close();
+            Ok()
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("writeHSSFWorkbook")) 
+        }
+
 
     pub def closeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook): Result[Unit, System.Error] & Impure = 
         import org.apache.poi.hssf.usermodel.HSSFWorkbook.close(); 
