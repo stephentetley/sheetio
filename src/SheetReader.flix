@@ -736,16 +736,18 @@ namespace SheetIO/SheetReader {
         use SheetIO/Internal/Prim.{getNumberOfSheets};
         liftWorkbookPrim(x1 -> x1.getNumberOfSheets())
 
-    pub def getSheetName(ix: Int32): SheetReader[String] =
-        use SheetIO/Internal/Prim.{getSheetName};
-        liftWorkbookPrim(x1 -> x1.getSheetName(ix))        
-
     pub def getSheetNames(): SheetReader[List[String]] =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0,n);
-        mapM(getSheetName, ixs)
+        mapM(getSheetNameWb, ixs)      
 
-    pub def getSheet(name: String): SheetReader[Sheet] =
+
+    def getSheetNameWb(ix: Int32): SheetReader[String] =
+        use SheetIO/Internal/Prim.{getSheetName};
+        liftWorkbookPrim(x1 -> x1.getSheetName(ix))
+
+
+    pub def getSheetNamed(name: String): SheetReader[Sheet] =
         use SheetIO/Internal/Prim.{getSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
 
@@ -753,18 +755,23 @@ namespace SheetIO/SheetReader {
         use SheetIO/Internal/Prim.{getSheetAt};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheetAt(ix)))
 
-    pub def sheetFirstRowNum(x: Sheet): SheetReader[Int32] =
+    pub def getSheetName(x: Sheet): SheetReader[String] =
+        use SheetIO/Internal/Sheet.{getSheetName};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getSheetName())         
+
+    pub def getFirstRowNum(x: Sheet): SheetReader[Int32] =
         use SheetIO/Internal/Sheet.{getFirstRowNum};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getFirstRowNum())
 
-    pub def sheetLastRowNum(x: Sheet): SheetReader[Int32] =
+    pub def getLastRowNum(x: Sheet): SheetReader[Int32] =
         use SheetIO/Internal/Sheet.{getLastRowNum};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getLastRowNum())
 
 
-    pub def sheetPhysicalNumberOfRows(x: Sheet): SheetReader[Int32] =
+    pub def getPhysicalNumberOfRows(x: Sheet): SheetReader[Int32] =
         use SheetIO/Internal/Sheet.{getPhysicalNumberOfRows};
         let Sheet(x1) = x;
         liftActionResult(_ -> x1.getPhysicalNumberOfRows())
@@ -776,8 +783,8 @@ namespace SheetIO/SheetReader {
         liftActionResult(_ -> Result.map(Row,  x1.getRow(ix)))
 
     pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] = 
-        let* b = sheetFirstRowNum(x);
-        let* e = map(i -> i + 1, sheetLastRowNum(x));
+        let* b = getFirstRowNum(x);
+        let* e = map(i -> i + 1, getLastRowNum(x));
         rowsInRange(x, b, e, eval)
 
 
@@ -854,7 +861,7 @@ namespace SheetIO/SheetReader {
         let* r0     = x.getRowAt(headerIndex);
         let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
         let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* end    = sheetPhysicalNumberOfRows(x);
+        let* end    = getPhysicalNumberOfRows(x);
         let* xs     = namedRowsInRange(x, ixs, start, end, eval);
         return(xs)
 

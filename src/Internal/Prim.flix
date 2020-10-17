@@ -175,7 +175,10 @@ namespace SheetIO/Internal/Prim {
         import org.apache.poi.ss.usermodel.Workbook.getSheet(String); 
         try {
             let ans = wb.getSheet(name);
-            Ok(ans)
+            if (Object.isNull(ans))
+                Err(Generic("getSheet('${name}') is null"))
+            else
+                Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err(Generic("getSheet")) 
         }

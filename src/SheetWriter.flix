@@ -55,6 +55,7 @@ namespace SheetIO/SheetWriter {
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
+    /// Path is for a *new* file...
     pub def runXssf(ma: SheetWriter[a], 
                     path: System.FilePath): Result[a, System.Error] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
@@ -66,30 +67,44 @@ namespace SheetIO/SheetWriter {
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
 
+    /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: SheetWriter[a], 
                             template: System.FilePath, 
                             outPath: System.FilePath): Result[a, System.Error] & Impure =
+        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let* _      = System/File.copy(template, outPath);
-        runXssf(ma, outPath)
+        let* _          = System/File.copy(template, outPath);
+        let path1       = System/FilePath.toString(outPath);
+        let* wb         = openXSSFWorkbook(path1);
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* _          = writeXSSFWorkbook(wb, path1);
+        let* _          = closeXSSFWorkbook(wb);
+        Ok(ans)
+
                     
     /// Excel 97 binary (.xls) format.
     pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
-        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+        use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
-        let outpath     = System/FilePath.toString(path);
-        let* wb         = newXSSFWorkbook();
+        let path1       = System/FilePath.toString(path);
+        let* wb         = newHSSFWorkbook();
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
-        let* _          = writeXSSFWorkbook(wb, outpath);
-        let* _          = closeXSSFWorkbook(wb);
+        let* _          = writeHSSFWorkbook(wb, path1);
+        let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
 
     pub def runTemplateHssf(ma: SheetWriter[a], 
                             template: System.FilePath, 
                             outPath: System.FilePath): Result[a, System.Error] & Impure =
+        use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
-        let* _      = System/File.copy(template, outPath);
-        runHssf(ma, outPath)
+        let* _          = System/File.copy(template, outPath);
+        let outPath1    = System/FilePath.toString(outPath);
+        let* wb         = openHSSFWorkbook(outPath1);
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* _          = writeHSSFWorkbook(wb, outPath1);
+        let* _          = closeHSSFWorkbook(wb);
+        Ok(ans)
 
     def apply1(ma: SheetWriter[a], 
                wb: ##org.apache.poi.ss.usermodel.Workbook, 
@@ -712,14 +727,24 @@ namespace SheetIO/SheetWriter {
         use SheetIO/Internal/Prim.{createSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
 
-    pub def getSheet(name: String): SheetWriter[Sheet] =
+    pub def getSheetNamed(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Prim.{getSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
+    
+    /// TEMP <<<
+    pub def getSheetNames(): SheetWriter[List[String]] =
+        let* n  = getNumberOfSheets();
+        let ixs = List.range(0,n);
+        mapM(getSheetNameWb, ixs)      
+    
+    def getNumberOfSheets(): SheetWriter[Int32] =
+        use SheetIO/Internal/Prim.{getNumberOfSheets};
+        liftWorkbookPrim(x1 -> x1.getNumberOfSheets())
 
-    def getSheetName(x: Sheet): SheetWriter[String] =
-        use SheetIO/Internal/Sheet.{getSheetName};
-        let Sheet(x1) = x;
-        liftActionResult(_ -> x1.getSheetName())
+    def getSheetNameWb(ix: Int32): SheetWriter[String] =
+        use SheetIO/Internal/Prim.{getSheetName};
+        liftWorkbookPrim(x1 -> x1.getSheetName(ix))
+    /// TEMP >>>
 
     pub def createDataFormat(): SheetWriter[DataFormat] =
         use SheetIO/Internal/Prim.{createDataFormat};
@@ -734,6 +759,11 @@ namespace SheetIO/SheetWriter {
     pub def setCursor!(x: Sheet, n: Int32): SheetWriter[Unit] =
         let* name = getSheetName(x);
         setCursorHelper(name, n)
+
+    def getSheetName(x: Sheet): SheetWriter[String] =
+        use SheetIO/Internal/Sheet.{getSheetName};
+        let Sheet(x1) = x;
+        liftActionResult(_ -> x1.getSheetName())
 
     def setCursorHelper(sheetName: String, n: Int32): SheetWriter[Unit] = 
         SheetWriter((_, st) -> Ok((Map.insert(sheetName, n, st), ())) as & Impure)

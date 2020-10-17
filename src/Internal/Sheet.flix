@@ -24,7 +24,7 @@ namespace SheetIO/Internal/Sheet {
             let ans = ws.getSheetName();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getSheetName")) 
+            case _: ##java.lang.Exception => Err(Generic("getSheetName [Sheet]")) 
         }
 
     pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
