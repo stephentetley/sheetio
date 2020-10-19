@@ -43,6 +43,13 @@ namespace SheetIO/RowEvaluator {
     pub def throwError(msg: String): RowEvaluator[a] =
         RowEvaluator(_ -> Err(System/Error.Generic(msg)) as & Impure)
 
+    pub def swapError(ma: RowEvaluator[a], msg: String): RowEvaluator[a] =
+        RowEvaluator(r ->
+            match apply1(ma, r) {
+                case Ok(a) => Ok(a)
+                case Err(_) => Err(Generic(msg))
+            }
+        )
 
     pub def map(f: a -> b & ef, x: RowEvaluator[a]): RowEvaluator[b] =
         RowEvaluator(r ->
@@ -142,33 +149,39 @@ namespace SheetIO/RowEvaluator {
     
     pub def isNullAt(ix: Int32): RowEvaluator[Bool] = 
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
+            `swapError` "isNullAt(${Int32.toString(ix)})"
+
 
     pub def getNullAt(ix: Int32): RowEvaluator[Unit] =
-        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic("getNull"))))
+        let errMsg = "getNullAt(${Int32.toString(ix)})";
+        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic(errMsg))))
+            `swapError` errMsg
 
 
     pub def getCellTypeAt(ix: Int32): RowEvaluator[CellType] =
         map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
-
+            `swapError` "getCellTypeAt(${Int32.toString(ix)})"
 
     pub def isBlankAt(ix: Int32): RowEvaluator[Bool] = 
         let* typ = getCellTypeAt(ix);
         match typ { 
             case TyBlank => return(true)
             case _ => return(false)
-        }
+        } `swapError` "isBlankAt(${Int32.toString(ix)})"
 
 
     pub def getBlankAt(ix: Int32): RowEvaluator[Unit] = 
+        let errMsg = "getBlankAt(${Int32.toString(ix)})";
         let* typ = getCellTypeAt(ix);
         match typ { 
             case TyBlank => return()
-            case _ => throwError("getBlankAt(${Int32.toString(ix)}) - not blank")
-        }
+            case _ => throwError(errMsg + " - not blank")
+        } `swapError` errMsg
 
     
     pub def getStringAt(ix: Int32): RowEvaluator[String] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
+            `swapError` "getStringAt(${Int32.toString(ix)})"
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNullAt(ix);

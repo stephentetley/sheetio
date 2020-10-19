@@ -53,6 +53,14 @@ namespace SheetIO/NamedRowEvaluator {
     pub def throwError(msg: String): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> Err(System/Error.Generic(msg)) as & Impure)
 
+    pub def swapError(ma: NamedRowEvaluator[a], msg: String): NamedRowEvaluator[a] =
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(ma, ixs, r) {
+                case Ok(a) => Ok(a)
+                case Err(_) => Err(Generic(msg))
+            }
+        )
+
 
     pub def map(f: a -> b & ef, x: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
         NamedRowEvaluator((ixs, r) ->
@@ -197,7 +205,8 @@ namespace SheetIO/NamedRowEvaluator {
     
     pub def getStringNamed(label: String): NamedRowEvaluator[String] =
         let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue)) `swapError` "getStringNamed('${label}')"
+            
 
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =
         let* x = isNullNamed(label);
