@@ -42,7 +42,7 @@ namespace SheetIO/CellType {
 
 
     pub def marshal(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        import flix.runtime.spt.sheetreader.Wrapper:get_NONE()      as get_NONE;
+        import flix.runtime.spt.sheetio.Wrapper:get_NONE()      as get_NONE;
         import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
         import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
         import get org.apache.poi.ss.usermodel.CellType:ERROR       as getERROR;
@@ -60,7 +60,7 @@ namespace SheetIO/CellType {
         } as & Pure
 
     pub def unmarshal(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
-        import flix.runtime.spt.sheetreader.Wrapper:get_NONE()      as get_NONE;
+        import flix.runtime.spt.sheetio.Wrapper:get_NONE()      as get_NONE;
         import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
         import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
         import get org.apache.poi.ss.usermodel.CellType:ERROR       as getERROR;

@@ -23,6 +23,7 @@ namespace SheetIO {
 
 namespace SheetIO/SheetReader {
     
+    use Data.Stream;
     use System.Error.{Generic};
 
     use SheetIO.SheetReader;
@@ -865,28 +866,58 @@ namespace SheetIO/SheetReader {
         let* xs     = namedRowsInRange(x, ixs, start, end, eval);
         return(xs)
 
-
+    /// TODO - use a rowiterator instead...
     pub def maximalNamedRows(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
+        use SheetIO/RowEvaluator.{isNullAt};
         let NamedRowEvaluator(f) = eval;
+        let RowEvaluator(blankF) = isNullAt(0);
         let Sheet(x1) = x;
         let* r0     = x.getRowAt(headerIndex);
         let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
         let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        liftActionResult(_ -> maximalNamedRowsHelper(ixs, x1, f, start, xs -> Ok(xs)))
+        liftActionResult(_ -> maximalNamedRowsHelper(ixs, x1, f, blankF, start, e -> Err(e), xs -> Ok(xs)))
 
 
     def maximalNamedRowsHelper(ixs: Map[String, Int32],
                                ws: ##org.apache.poi.ss.usermodel.Sheet, 
                                eval: (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error],
+                               evalBlank: ##org.apache.poi.ss.usermodel.Row ~> Result[Bool, System.Error],
                                ix: Int32, 
+                               fk: System.Error -> Result[List[a], System.Error],
                                sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
         use SheetIO/Internal/Sheet.{getRow};
+        Console.printLine("ix: ${Int32.toString(ix)}");
         match getRow(ws, ix) {
-            case Ok(row) => match eval(ixs, row) {
-                case Ok(x) => maximalNamedRowsHelper(ixs, ws, eval, ix + 1, ks -> sk(x :: ks))
-                case Err(_) => sk(Nil)
+            case Ok(row) => match evalBlank(row) {
+                case Err(e1) => fk(e1)
+                case Ok(true) => sk(Nil)
+                case Ok(false) => match eval(ixs, row) { 
+                    case Ok(x) =>  maximalNamedRowsHelper(ixs, ws, eval, evalBlank, ix + 1, fk, ks -> sk(x :: ks))
+                    case Err(e2) => fk(e2)
+                }
             }
-            case Err(_) => sk(Nil)
+            case Err(e3) => fk(e3)
+        }
+
+    ///
+    /// Returns a new Row Stream.
+    /// Temporarily public...
+    ///
+    pub def newRowStream(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], System.Error] & Impure =
+        import new flix.runtime.spt.sheetio.RowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
+        import flix.runtime.spt.sheetio.RowIterator.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.RowIterator.next() as ffiNext;
+        import flix.runtime.spt.sheetio.RowIterator.close() as ffiClose;
+        try {
+            let iter = newRowsIterator(sheet);
+            let streamiter =  {
+                  hasNext = () -> ffiHasNext(iter)
+                , next = () -> ffiNext(iter)
+                , finalize = () -> ffiClose(iter)
+            };
+            Ok(Data/Stream.fromIterator(streamiter))
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("newRowStream")) 
         }
 
 

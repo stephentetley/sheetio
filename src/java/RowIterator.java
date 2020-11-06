@@ -17,12 +17,26 @@
 
 package flix.runtime.spt.sheetio;
 
-import org.apache.poi.ss.usermodel.CellType;
 
-public class Wrapper {
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
 
-    public static CellType get_NONE() {
-        return CellType._NONE;
+import java.util.Iterator;
+
+public class RowIterator {
+
+    private Iterator<Row> iter;
+
+    public RowIterator(Sheet sheet) throws Exception {
+        this.iter = sheet.rowIterator();
     }
+
+    public boolean hasNext() {
+        return this.iter.hasNext();
+    }
+
+    public Row next() throws Exception { return this.iter.next(); }
+
+    public void close() throws Exception { return; }
 
 }

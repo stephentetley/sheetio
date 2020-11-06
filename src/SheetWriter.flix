@@ -76,7 +76,7 @@ namespace SheetIO/SheetWriter {
         let* _          = System/File.copy(template, outPath);
         let path1       = System/FilePath.toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());        
         let* _          = writeXSSFWorkbook(wb, path1);
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
