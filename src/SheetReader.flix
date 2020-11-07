@@ -783,36 +783,42 @@ namespace SheetIO/SheetReader {
         let Sheet(x1) = x;
         liftActionResult(_ -> Result.map(Row,  x1.getRow(ix)))
 
-    pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] = 
-        let* b = getFirstRowNum(x);
-        let* e = map(i -> i + 1, getLastRowNum(x));
-        rowsInRange(x, b, e, eval)
+    ///
+    /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
+    /// than traying to use `getLastRowNum` to find the end.
+    ///
+    def newRowStream(x: Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], System.Error] & Impure =
+        import new flix.runtime.spt.sheetio.RowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
+        import flix.runtime.spt.sheetio.RowIterator.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.RowIterator.next() as ffiNext;
+        import flix.runtime.spt.sheetio.RowIterator.close() as ffiClose;
+        try {
+            let Sheet(x1)       = x;
+            let iter = newRowsIterator(x1);
+            let streamiter =  {
+                  hasNext = () -> ffiHasNext(iter)
+                , next = () -> ffiNext(iter)
+                , finalize = () -> ffiClose(iter)
+            };
+            Ok(Data/Stream.fromIterator(streamiter))
+        } catch {
+            case _: ##java.lang.Exception => Err(Generic("newRowStream")) 
+        }
 
+    /// Use rowiterator...
+    pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
+        let RowEvaluator(f) = eval;
+        let* strm           = liftActionResult(_ -> newRowStream(x));
+        let* xs             = liftActionResult(_ -> Data/Stream.traverseToListResult(f, strm));
+        return(xs)
 
     pub def rowsInRange(x: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
+        use Data/Stream.{take, drop, traverseToListResult};
         let RowEvaluator(f) = eval;
-        let Sheet(x1) = x;
-        liftActionResult(_ -> rowsInRangeHelper(x1, f, b, e, err -> Err(err), xs -> Ok(xs)))
-
-
-    def rowsInRangeHelper(ws: ##org.apache.poi.ss.usermodel.Sheet, 
-                          eval: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error],
-                          ix: Int32, 
-                          endIx: Int32,
-                          fk: System.Error -> Result[List[a], System.Error],
-                          sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
-        use SheetIO/Internal/Sheet.{getRow};
-        if (ix >= endIx) 
-            sk(Nil)
-        else {
-            match getRow(ws, ix) {
-                case Ok(row) => match eval(row) {
-                    case Ok(x) => rowsInRangeHelper(ws, eval, ix + 1, endIx, fk, ks -> sk(x :: ks))
-                    case Err(e) => fk(e)
-                }
-                case Err(e) => fk(e)
-            }
-        }
+        let* strm0          = liftActionResult(_ -> newRowStream(x));
+        let strm1           = take(e - b, drop(b, strm0));
+        let* xs             = liftActionResult(_ -> traverseToListResult(f, strm1));
+        return(xs)
 
     pub def rowEval(x: Row, eval: RowEvaluator[a]): SheetReader[a] =
         let RowEvaluator(f) = eval;
@@ -822,30 +828,12 @@ namespace SheetIO/SheetReader {
 
 
     pub def namedRowsInRange(x: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
+        use Data/Stream.{take, drop, traverseToListResult};
         let NamedRowEvaluator(f) = eval;
-        let Sheet(x1) = x;
-        liftActionResult(_ -> namedRowsInRangeHelper(ixs, x1, f, b, e, err -> Err(err), xs -> Ok(xs)))
-
-
-    def namedRowsInRangeHelper(ixs: Map[String, Int32],
-                               ws: ##org.apache.poi.ss.usermodel.Sheet, 
-                               eval: (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error],
-                               ix: Int32, 
-                               endIx: Int32,
-                               fk: System.Error -> Result[List[a], System.Error],
-                               sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
-        use SheetIO/Internal/Sheet.{getRow};
-        if (ix >= endIx) 
-            sk(Nil)
-        else {
-            match getRow(ws, ix) {
-                case Ok(row) => match eval(ixs, row) {
-                    case Ok(x) => namedRowsInRangeHelper(ixs, ws, eval, ix + 1, endIx, fk, ks -> sk(x :: ks))
-                    case Err(e) => fk(e)
-                }
-                case Err(e) => fk(e)
-            }
-        }
+        let* strm0          = liftActionResult(_ -> newRowStream(x));
+        let strm1           = take(e - b, drop(b, strm0));
+        let* xs             = liftActionResult(_ -> traverseToListResult(f(ixs), strm1));
+        return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], eval: NamedRowEvaluator[a]): SheetReader[a] =
         let NamedRowEvaluator(f) = eval;
@@ -859,66 +847,15 @@ namespace SheetIO/SheetReader {
 
     /// Reader headers from row at `headerIndex` then read data rows from `start`.
     pub def namedRowsFrom(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
-        let* r0     = x.getRowAt(headerIndex);
-        let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
-        let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* end    = getPhysicalNumberOfRows(x);
-        let* xs     = namedRowsInRange(x, ixs, start, end, eval);
+        use Data/Stream.{take, drop, traverseToListResult};
+        let NamedRowEvaluator(f)    = eval;
+        let* r0         = x.getRowAt(headerIndex);
+        let* hdrs       = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
+        let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
+        let* strm0      = liftActionResult(_ -> newRowStream(x));
+        let strm1       = drop(start, strm0);
+        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1));
         return(xs)
 
-    /// TODO - use a rowiterator instead...
-    pub def maximalNamedRows(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
-        use SheetIO/RowEvaluator.{isNullAt};
-        let NamedRowEvaluator(f) = eval;
-        let RowEvaluator(blankF) = isNullAt(0);
-        let Sheet(x1) = x;
-        let* r0     = x.getRowAt(headerIndex);
-        let* hdrs   = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
-        let* ixs    = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        liftActionResult(_ -> maximalNamedRowsHelper(ixs, x1, f, blankF, start, e -> Err(e), xs -> Ok(xs)))
-
-
-    def maximalNamedRowsHelper(ixs: Map[String, Int32],
-                               ws: ##org.apache.poi.ss.usermodel.Sheet, 
-                               eval: (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error],
-                               evalBlank: ##org.apache.poi.ss.usermodel.Row ~> Result[Bool, System.Error],
-                               ix: Int32, 
-                               fk: System.Error -> Result[List[a], System.Error],
-                               sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure = 
-        use SheetIO/Internal/Sheet.{getRow};
-        Console.printLine("ix: ${Int32.toString(ix)}");
-        match getRow(ws, ix) {
-            case Ok(row) => match evalBlank(row) {
-                case Err(e1) => fk(e1)
-                case Ok(true) => sk(Nil)
-                case Ok(false) => match eval(ixs, row) { 
-                    case Ok(x) =>  maximalNamedRowsHelper(ixs, ws, eval, evalBlank, ix + 1, fk, ks -> sk(x :: ks))
-                    case Err(e2) => fk(e2)
-                }
-            }
-            case Err(e3) => fk(e3)
-        }
-
-    ///
-    /// Returns a new Row Stream.
-    /// Temporarily public...
-    ///
-    pub def newRowStream(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], System.Error] & Impure =
-        import new flix.runtime.spt.sheetio.RowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
-        import flix.runtime.spt.sheetio.RowIterator.hasNext() as ffiHasNext;
-        import flix.runtime.spt.sheetio.RowIterator.next() as ffiNext;
-        import flix.runtime.spt.sheetio.RowIterator.close() as ffiClose;
-        try {
-            let iter = newRowsIterator(sheet);
-            let streamiter =  {
-                  hasNext = () -> ffiHasNext(iter)
-                , next = () -> ffiNext(iter)
-                , finalize = () -> ffiClose(iter)
-            };
-            Ok(Data/Stream.fromIterator(streamiter))
-        } catch {
-            case _: ##java.lang.Exception => Err(Generic("newRowStream")) 
-        }
-
-
+    
 }
