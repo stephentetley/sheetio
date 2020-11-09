@@ -49,7 +49,7 @@ namespace SheetIO/SheetReader {
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match openXSSFWorkbook(path1) { 
-            case Err(e) => Err(e)
+            case Err(_) => Err(Generic("runXssf('${path1}')"))
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeXSSFWorkbook(wb);
@@ -63,7 +63,7 @@ namespace SheetIO/SheetReader {
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match openHSSFWorkbook(path1) { 
-            case Err(e) => Err(e)
+            case Err(_) => Err(Generic("runHssf('${path1}')"))
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeHSSFWorkbook(wb);
