@@ -97,7 +97,7 @@ namespace SheetIO/RowSetter {
                         ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
         use SheetIO/Internal/Row.{getCell, createCell};
         match getCell(row, ix) {
-            case Ok(a) => if (! Object.isNull(a)) Ok(a) else createCell(row, ix)
+            case Ok(a) => if (not Object.isNull(a)) Ok(a) else createCell(row, ix)
             case Err(_) => createCell(row, ix)
         }
 

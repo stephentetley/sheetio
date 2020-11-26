@@ -266,7 +266,7 @@ namespace SheetIO/NamedRowEvaluator {
     def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] = 
         let* x1 = isNullNamed(label);
         let* y1 = isBlankNamed(label);
-        if (x1 || y1) return(None) else map(Some, getter(label))
+        if (x1 or y1) return(None) else map(Some, getter(label))
 
     pub def getOptionStringNamed(label: String): NamedRowEvaluator[Option[String]] =
         getIfNotEmpty(label, getStringNamed)

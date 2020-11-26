@@ -186,7 +186,7 @@ namespace SheetIO/RowEvaluator {
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNullAt(ix);
         let* y = isBlankAt(ix);
-        if (x || y) return(d) else getStringAt(ix)
+        if (x or y) return(d) else getStringAt(ix)
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[String] =
         let DataFormatter(dfmt1) = dfmt;
@@ -236,7 +236,7 @@ namespace SheetIO/RowEvaluator {
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 
         let* x1 = isNullAt(ix);
         let* y1 = isBlankAt(ix);
-        if (x1 || y1) return(None) else map(Some, getter(ix))
+        if (x1 or y1) return(None) else map(Some, getter(ix))
 
     pub def getOptionStringAt(ix: Int32): RowEvaluator[Option[String]] =
         getIfNotEmpty(ix, getStringAt)
