@@ -372,5 +372,50 @@ namespace SheetIO/RowSetter {
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
+    pub def mapM(mf: a -> RowSetter[b], xs: List[a]): RowSetter[List[b]] =
+        RowSetter(r ->
+            mapMHelper(r, mf, xs, e -> Err(e), ys -> Ok(ys))
+        )
+
+    ///
+    /// Helper function for `mapM`.
+    ///
+    def mapMHelper(row: ##org.apache.poi.ss.usermodel.Row, 
+                   mf: a -> RowSetter[b], 
+                   xs: List[a], 
+                   fk: System.Error -> Result[List[b], System.Error], 
+                   sk: List[b] -> Result[List[b], System.Error]): Result[List[b], System.Error] & Impure =
+        match xs {
+            case Nil => sk(Nil)
+            case x :: rs => {
+                let ma = mf(x);
+                match apply1(ma, row) {
+                    case Err(e) => fk(e)
+                    case Ok(x1) => mapMHelper(row, mf, rs, fk, ks -> sk(x1 :: ks))
+                }
+            }
+        }
+
+    pub def mapX(mf: a -> RowSetter[b], xs: List[a]): RowSetter[Unit] =
+        RowSetter(r ->
+            mapXHelper(r, mf, xs, e -> Err(e), _ -> Ok())
+        )
+
+    def mapXHelper(row: ##org.apache.poi.ss.usermodel.Row, 
+                   mf: a -> RowSetter[b], 
+                   xs: List[a], 
+                   fk: System.Error -> Result[Unit, System.Error], 
+                   sk: Unit -> Result[Unit, System.Error]): Result[Unit, System.Error] & Impure =
+        match xs {
+            case Nil => sk()
+            case x :: rs => {
+                let ma = mf(x);
+                match apply1(ma, row) {
+                    case Err(e) => fk(e)
+                    case Ok(_) => mapXHelper(row, mf, rs, fk, sk)
+                }
+            }
+        }
+
 }
 
