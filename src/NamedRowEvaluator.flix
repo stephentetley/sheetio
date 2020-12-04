@@ -221,13 +221,12 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def getBoolNamed(label: String): NamedRowEvaluator[Bool] =
         let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue)) `swapError` "getNumericNamed('${label}')"
     
 
     pub def getNumericNamed(label: String): NamedRowEvaluator[Float64] =
         let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
-
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue)) `swapError` "getNumericNamed('${label}')"
 
     def getNumNamed(label: String, conv: Float64 -> Option[a], errMsg: String): NamedRowEvaluator[a] =
         let* n = getNumericNamed(label);
@@ -238,22 +237,22 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getInt8Named(label: String): NamedRowEvaluator[Int8] =
-        getNumNamed(label, Float64.tryToInt8, "getInt8Named")
+        getNumNamed(label, Float64.tryToInt8, "getInt8Named('${label}')")
 
     pub def getInt16Named(label: String): NamedRowEvaluator[Int16] =
-        getNumNamed(label, Float64.tryToInt16, "getInt16Named")
+        getNumNamed(label, Float64.tryToInt16, "getInt16Named('${label}')")
 
     pub def getInt32Named(label: String): NamedRowEvaluator[Int32] =
-        getNumNamed(label, Float64.tryToInt32, "getInt32Named")
+        getNumNamed(label, Float64.tryToInt32, "getInt32Named('${label}')")
 
     pub def getInt64Named(label: String): NamedRowEvaluator[Int64] =
-        getNumNamed(label, Float64.tryToInt64, "getInt64Named")
+        getNumNamed(label, Float64.tryToInt64, "getInt64Named('${label}')")
 
     pub def getFloat32Named(label: String): NamedRowEvaluator[Float32] =
-        getNumNamed(label, Float64.tryToFloat32, "getFloat32Named")
+        getNumNamed(label, Float64.tryToFloat32, "getFloat32Named('${label}')")
     
     pub def getFloat64Named(label: String): NamedRowEvaluator[Float64] = 
-        getNumNamed(label, x -> Some(x), "getFloat64Named")
+        getNumNamed(label, x -> Some(x), "getFloat64Named('${label}')")
 
     /// Note will fail if CellType is String.
     pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[Time.LocalDateTime] = 
