@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
 namespace SheetIO/Internal/Row {
 
     pub def getRowNum(row: ##org.apache.poi.ss.usermodel.Row): Int32 & Impure = 
@@ -23,44 +21,44 @@ namespace SheetIO/Internal/Row {
         row.getRowNum()
     
     pub def getCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                    ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+                    ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getCell(Int32); 
         try {
             let ans = row.getCell(ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getCell")) 
+            case _: ##java.lang.Exception => Err("getCell")
         }
 
     pub def createCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.createCell(Int32); 
         try {
             let ans = row.createCell(ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("createCell")) 
+            case _: ##java.lang.Exception => Err("createCell")
         }
 
 
-    pub def getFirstCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, System.Error] & Impure = 
+    pub def getFirstCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getFirstCellNum(); 
         try {
             let ans = row.getFirstCellNum();
             Ok(Int16.toInt32(ans))
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getFirstCellNum")) 
+            case _: ##java.lang.Exception => Err("getFirstCellNum")
         }
 
 
     /// As per Java - index of last cell **plus 1**.
-    pub def getLastCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, System.Error] & Impure = 
+    pub def getLastCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getLastCellNum(); 
         try {
             let ans = row.getLastCellNum();
             Ok(Int16.toInt32(ans))
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getLastCellNum")) 
+            case _: ##java.lang.Exception => Err("getLastCellNum")
         }
 
 

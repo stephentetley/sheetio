@@ -19,13 +19,11 @@
 
 namespace SheetIO {
 
-    pub opaque type NamedRowEvaluator[a] = (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, System.Error]
+    pub opaque type NamedRowEvaluator[a] = (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, String]
 
 }
 
 namespace SheetIO/NamedRowEvaluator {
-
-    use System.Error.{Generic, IllegalArgumentException};
 
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
@@ -46,18 +44,18 @@ namespace SheetIO/NamedRowEvaluator {
 
     def apply1(x: NamedRowEvaluator[a], 
                ixs: Map[String, Int32], 
-               row: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
+               row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
         let NamedRowEvaluator(f) = x;
         f(ixs, row)
 
     pub def throwError(msg: String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _) -> Err(System/Error.Generic(msg)) as & Impure)
+        NamedRowEvaluator((_, _) -> Err(msg) as & Impure)
 
     pub def swapError(ma: NamedRowEvaluator[a], msg: String): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, r) ->
             match apply1(ma, ixs, r) {
                 case Ok(a) => Ok(a)
-                case Err(_) => Err(Generic(msg))
+                case Err(_) => Err(msg)
             }
         )
 
@@ -144,17 +142,17 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
 
-    def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): NamedRowEvaluator[a] =
+    def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, r) -> ask(r))
 
 
     pub def liftAction(fn: Unit ~> a): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): NamedRowEvaluator[a] =
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> fn())
 
-    pub def liftResult(x: Result[a, System.Error]): NamedRowEvaluator[a] =
+    pub def liftResult(x: Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> x as & Impure)
 
 
@@ -162,15 +160,15 @@ namespace SheetIO/NamedRowEvaluator {
     // // so FactIO's API indexes from 0.
     
     def getIndex(label: String): NamedRowEvaluator[Int32] =
-        NamedRowEvaluator((ixs, _) -> match Map.get(label, ixs) {
-            case None => Err(IllegalArgumentException) as & Impure
+        NamedRowEvaluator((ixs, _) -> match Map.get(label, ixs) {            
             case Some(ix) => Ok(ix) as & Impure
+            case None => Err("getIndex - '${label}'") as & Impure
         })
 
 
     def withCell(row: ##org.apache.poi.ss.usermodel.Row,
                  ix: Int32, 
-                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
+                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): Result[a, String] & Impure = 
         use Result.{flatMap};
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
@@ -181,7 +179,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def getNullNamed(label: String): NamedRowEvaluator[Unit] =
         let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic("getNull"))))
+        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err("getNullNamed")))
 
 
     pub def getCellTypeNamed(label: String): NamedRowEvaluator[CellType] =

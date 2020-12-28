@@ -14,65 +14,63 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
 namespace SheetIO/Internal/Sheet {
 
-    pub def getSheetName(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[String, System.Error] & Impure = 
+    pub def getSheetName(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getSheetName(); 
         try {
             let ans = ws.getSheetName();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getSheetName [Sheet]")) 
+            case _: ##java.lang.Exception => Err("getSheetName [Sheet]")
         }
 
-    pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+    pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(); 
         try {
             let ans = ws.getFirstRowNum();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getFirstRowNum")) 
+            case _: ##java.lang.Exception => Err("getFirstRowNum")
         }
 
-    pub def getLastRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+    pub def getLastRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(); 
         try {
             let ans = ws.getLastRowNum();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getLastRowNum")) 
+            case _: ##java.lang.Exception => Err("getLastRowNum")
         }
 
-    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, System.Error] & Impure = 
+    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(); 
         try {
             let ans = ws.getPhysicalNumberOfRows();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getPhysicalNumberOfRows")) 
+            case _: ##java.lang.Exception => Err("getPhysicalNumberOfRows")
         }
 
 
     pub def getRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
-                   ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, System.Error] & Impure = 
+                   ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getRow(Int32); 
         try {
             let ans = ws.getRow(ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getRow")) 
+            case _: ##java.lang.Exception => Err("getRow")
         }
 
     pub def createRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
-                      ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, System.Error] & Impure = 
+                      ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.createRow(Int32); 
         try {
             let ans = ws.createRow(ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("createRow")) 
+            case _: ##java.lang.Exception => Err("createRow")
         }
 
 }

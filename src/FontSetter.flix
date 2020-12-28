@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font ~> Result[a, System.Error]
+    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]
 
 }
 
@@ -29,11 +29,11 @@ namespace SheetIO/FontSetter {
     pub def return(x: a): FontSetter[a] =
         FontSetter(_ -> Ok(x) as & Impure)
 
-    def apply1(x: FontSetter[a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, System.Error] & Impure =
+    def apply1(x: FontSetter[a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, String] & Impure =
         let FontSetter(f) = x;
         f(r)
 
-    pub def mapError(f: System.Error -> System.Error, ma: FontSetter[a]): FontSetter[a] =
+    pub def mapError(f: String -> String, ma: FontSetter[a]): FontSetter[a] =
         FontSetter(r -> match apply1(ma, r) { 
             case Ok(p1) => Ok(p1)
             case Err(e) => Err(f(e))
@@ -95,16 +95,16 @@ namespace SheetIO/FontSetter {
 
     pub def flatMap(k: a -> FontSetter[b], x: FontSetter[a]): FontSetter[b] = bind(x, k)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font ~> Result[a, System.Error]): FontSetter[a] =
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): FontSetter[a] =
         FontSetter(r -> update(r))
 
     pub def liftAction(fn: Unit ~> a): FontSetter[a] =
         FontSetter(_ -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): FontSetter[a] =
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): FontSetter[a] =
         FontSetter(_ -> fn())
 
-    pub def liftResult(x: Result[a, System.Error]): FontSetter[a] =
+    pub def liftResult(x: Result[a, String]): FontSetter[a] =
         FontSetter(_ -> x as & Impure)
         
     /// Alias for `seqRight`

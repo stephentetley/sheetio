@@ -35,8 +35,6 @@ namespace SheetIO {
 
 namespace SheetIO/CellType {
 
-    use System.Error.{Generic};
-
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
@@ -95,19 +93,16 @@ namespace SheetIO/CellType {
     }
 
     ///
-    /// Returns the corresponding day of the week for the integer `n`.
     ///
-    /// `n` must be within the range 1 (Monday) to 7 (Sunday) otherwise `Err(_)` is returned.
-    ///
-    pub def fromInt32(n: Int32): Result[CellType, System.Error] = match n {
-        case x1 if x1 == 0      => Ok(TyNone)
-        case x1 if x1 == 1      => Ok(TyBlank)
-        case x1 if x1 == 2      => Ok(TyBoolean)
-        case x1 if x1 == 3      => Ok(TyError)
-        case x1 if x1 == 4      => Ok(TyFormula)
-        case x1 if x1 == 5      => Ok(TyNumeric)
-        case x1 if x1 == 6      => Ok(TyString)
-        case _                  => Err(Generic("fromInt32"))
+    pub def fromInt32(n: Int32): Option[CellType] = match n {
+        case x1 if x1 == 0      => Some(TyNone)
+        case x1 if x1 == 1      => Some(TyBlank)
+        case x1 if x1 == 2      => Some(TyBoolean)
+        case x1 if x1 == 3      => Some(TyError)
+        case x1 if x1 == 4      => Some(TyFormula)
+        case x1 if x1 == 5      => Some(TyNumeric)
+        case x1 if x1 == 6      => Some(TyString)
+        case _                  => None
     }
 
     pub def equals(x: CellType, y: CellType): Bool = toInt32(x) == toInt32(y)

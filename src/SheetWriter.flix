@@ -18,15 +18,13 @@
 namespace SheetIO {
 
    
-    pub opaque type SheetWriter[a] = ##org.apache.poi.ss.usermodel.Workbook -> Cursors ~> Result[(Cursors, a), System.Error]
+    pub opaque type SheetWriter[a] = ##org.apache.poi.ss.usermodel.Workbook -> Cursors ~> Result[(Cursors, a), String]
 
     type alias Cursors = Map[String, Int32]
 
 }
 
 namespace SheetIO/SheetWriter {
-
-    use System.Error.{Generic};
 
     use SheetIO.CellStyle;
     use SheetIO.CellStyle.{CellStyle};
@@ -51,13 +49,13 @@ namespace SheetIO/SheetWriter {
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: SheetWriter[a], 
-                    path: System.FilePath): Result[a, System.Error] & Impure = 
+                    path: System.FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
     pub def runXssf(ma: SheetWriter[a], 
-                    path: System.FilePath): Result[a, System.Error] & Impure = 
+                    path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let outpath     = System/FilePath.toString(path);
@@ -70,10 +68,10 @@ namespace SheetIO/SheetWriter {
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: SheetWriter[a], 
                             template: System.FilePath, 
-                            outPath: System.FilePath): Result[a, System.Error] & Impure =
+                            outPath: System.FilePath): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let* _          = System/File.copy(template, outPath);
+        let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
         let path1       = System/FilePath.toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());        
@@ -83,7 +81,7 @@ namespace SheetIO/SheetWriter {
 
                     
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1       = System/FilePath.toString(path);
@@ -95,10 +93,10 @@ namespace SheetIO/SheetWriter {
 
     pub def runTemplateHssf(ma: SheetWriter[a], 
                             template: System.FilePath, 
-                            outPath: System.FilePath): Result[a, System.Error] & Impure =
-        use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
+                            outPath: System.FilePath): Result[a, String] & Impure =
         use Result.{flatMap};
-        let* _          = System/File.copy(template, outPath);
+        use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
+        let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
         let outPath1    = System/FilePath.toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
@@ -108,7 +106,7 @@ namespace SheetIO/SheetWriter {
 
     def apply1(ma: SheetWriter[a], 
                wb: ##org.apache.poi.ss.usermodel.Workbook, 
-               st: Cursors): Result[(Cursors, a), System.Error] & Impure = 
+               st: Cursors): Result[(Cursors, a), String] & Impure = 
         let SheetWriter(x1) = ma;
         x1(wb, st)
 
@@ -116,16 +114,16 @@ namespace SheetIO/SheetWriter {
         SheetWriter((_, st) -> Ok((st, x)) as & Impure)
 
     pub def throwError(msg: String): SheetWriter[a] =
-        SheetWriter((_, _) -> Err(System/Error.Generic(msg)) as & Impure)
+        SheetWriter((_, _) -> Err(msg) as & Impure)
 
 
-    pub def catchError(ma: SheetWriter[a], handle: System.Error -> SheetWriter[a]): SheetWriter[a] =
+    pub def catchError(ma: SheetWriter[a], handle: String -> SheetWriter[a]): SheetWriter[a] =
         SheetWriter((wb, st) -> match apply1(ma, wb, st) { 
             case Ok(p1) => Ok(p1)
             case Err(e) => apply1(handle(e), wb, st)
         })
 
-    pub def mapError(f: System.Error -> System.Error, ma: SheetWriter[a]): SheetWriter[a] =
+    pub def mapError(f: String -> String, ma: SheetWriter[a]): SheetWriter[a] =
         SheetWriter((wb, st) -> match apply1(ma, wb, st) { 
             case Ok(p1) => Ok(p1)
             case Err(e) => Err(f(e))
@@ -225,16 +223,16 @@ namespace SheetIO/SheetWriter {
 
 
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]): SheetWriter[a] = 
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]): SheetWriter[a] = 
         SheetWriter((wb, st) -> { let ans = fn(wb); Result.map(x -> (st, x), ans)})
 
     pub def liftAction(fn: Unit ~> a): SheetWriter[a] = 
         SheetWriter((_, st)-> { let a = fn(); Ok((st, a)) })
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetWriter[a] = 
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetWriter[a] = 
         SheetWriter((_, st) -> { let ans = fn(); Result.map(x -> (st, x), ans)})
 
-    pub def liftResult(x: Result[a, System.Error]): SheetWriter[a] = 
+    pub def liftResult(x: Result[a, String]): SheetWriter[a] = 
         SheetWriter((_, st) -> Result.map(a -> (st, a), x) as & Impure)
     
     
@@ -250,8 +248,8 @@ namespace SheetIO/SheetWriter {
                    st: Cursors,
                    mf: a -> SheetWriter[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[(Cursors, List[b]), System.Error], 
-                   sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), System.Error]): Result[(Cursors, List[b]), System.Error] & Impure =
+                   fk: String -> Result[(Cursors, List[b]), String], 
+                   sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
         match xs {
             case Nil => sk(st, Nil)
             case x :: rs => {
@@ -272,8 +270,8 @@ namespace SheetIO/SheetWriter {
                    st: Cursors,
                    mf: a -> SheetWriter[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[(Cursors, Unit), System.Error], 
-                   sk: Cursors -> Result[(Cursors, Unit), System.Error]): Result[(Cursors, Unit), System.Error] & Impure =
+                   fk: String -> Result[(Cursors, Unit), String], 
+                   sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
         match xs {
             case Nil => sk(st)
             case x :: rs => {
@@ -298,8 +296,8 @@ namespace SheetIO/SheetWriter {
                             mf: (a, Int32) -> SheetWriter[b], 
                             ix : Int32, 
                             xs: List[a], 
-                            fk: System.Error -> Result[(Cursors, List[b]), System.Error], 
-                            sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), System.Error]): Result[(Cursors, List[b]), System.Error] & Impure =
+                            fk: String -> Result[(Cursors, List[b]), String], 
+                            sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
         match xs {
             case Nil => sk(st, Nil)
             case x :: rs => {
@@ -321,8 +319,8 @@ namespace SheetIO/SheetWriter {
                             mf: (a, Int32) -> SheetWriter[b],
                             ix: Int32, 
                             xs: List[a], 
-                            fk: System.Error -> Result[(Cursors, Unit), System.Error], 
-                            sk: Cursors -> Result[(Cursors, Unit), System.Error]): Result[(Cursors, Unit), System.Error] & Impure =
+                            fk: String -> Result[(Cursors, Unit), String], 
+                            sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
         match xs {
             case Nil => sk(st)
             case x :: rs => {
@@ -346,8 +344,8 @@ namespace SheetIO/SheetWriter {
     def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                        st: Cursors,
                        xs: List[SheetWriter[a]], 
-                       fk: System.Error -> Result[(Cursors, List[a]), System.Error], 
-                       sk: (Cursors, List[a]) -> Result[(Cursors, List[a]), System.Error]): Result[(Cursors, List[a]), System.Error] & Impure =
+                       fk: String -> Result[(Cursors, List[a]), String], 
+                       sk: (Cursors, List[a]) -> Result[(Cursors, List[a]), String]): Result[(Cursors, List[a]), String] & Impure =
         match xs {
             case Nil => sk(st, Nil)
             case mx :: rs => match apply1(mx, wb, st) {
@@ -390,8 +388,8 @@ namespace SheetIO/SheetWriter {
                     mf: (b, a) -> SheetWriter[b], 
                     acc: b, 
                     xs: List[a], 
-                    fk: System.Error -> Result[(Cursors, b), System.Error], 
-                    sk: (Cursors, b) -> Result[(Cursors, b), System.Error]): Result[(Cursors, b), System.Error] & Impure =
+                    fk: String -> Result[(Cursors, b), String], 
+                    sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
         match xs {
             case Nil => sk(st, acc)
             case x :: rs => {
@@ -413,8 +411,8 @@ namespace SheetIO/SheetWriter {
                         mf: (ac, a) -> SheetWriter[(ac, b)],
                         ac: ac,
                         xs: List[a],
-                        fk: System.Error -> Result[(Cursors, (ac, List[b])), System.Error],
-                        sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), System.Error]): Result[(Cursors, (ac, List[b])), System.Error] & Impure =
+                        fk: String -> Result[(Cursors, (ac, List[b])), String],
+                        sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
         match xs {
             case Nil => sk(st, ac, Nil)
             case x :: rs => {

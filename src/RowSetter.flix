@@ -19,13 +19,11 @@
 
 namespace SheetIO {
 
-    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]
+    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]
 
 }
 
 namespace SheetIO/RowSetter {
-
-    use System.Error.{Generic};
 
     use SheetIO.CellStyle;
     use SheetIO.CellStyle.{CellStyle};
@@ -35,15 +33,21 @@ namespace SheetIO/RowSetter {
     pub def return(x: a): RowSetter[a] =
         RowSetter(_ -> Ok(x) as & Impure)
 
-    def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
+    def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
         let RowSetter(f) = x;
         f(r)
 
 
-    pub def mapError(f: System.Error -> System.Error, ma: RowSetter[a]): RowSetter[a] =
+    pub def mapError(f: String -> String, ma: RowSetter[a]): RowSetter[a] =
         RowSetter(r -> match apply1(ma, r) { 
-            case Ok(p1) => Ok(p1)
+            case Ok(a) => Ok(a)
             case Err(e) => Err(f(e))
+        })
+
+    pub def swapError(ma: RowSetter[a], errMsg: String): RowSetter[a] =
+        RowSetter(r -> match apply1(ma, r) { 
+            case Ok(a) => Ok(a)
+            case Err(_) => Err(errMsg)
         })
 
 
@@ -81,20 +85,20 @@ namespace SheetIO/RowSetter {
 
     pub def flatMap(k: a -> RowSetter[b], x: RowSetter[a]): RowSetter[b] = bind(x, k)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowSetter[a] =
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowSetter[a] =
         RowSetter(r -> update(r))
 
     pub def liftAction(fn: Unit ~> a): RowSetter[a] =
         RowSetter(_ -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowSetter[a] =
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): RowSetter[a] =
         RowSetter(_ -> fn())
 
-    pub def liftResult(x: Result[a, System.Error]): RowSetter[a] =
+    pub def liftResult(x: Result[a, String]): RowSetter[a] =
         RowSetter(_ -> x as & Impure)
         
     def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, System.Error] & Impure = 
+                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         use SheetIO/Internal/Row.{getCell, createCell};
         match getCell(row, ix) {
             case Ok(a) => if (not Object.isNull(a)) Ok(a) else createCell(row, ix)
@@ -149,7 +153,7 @@ namespace SheetIO/RowSetter {
             let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
             Ok()
         };
-        mapError(_ -> Generic(errMsg), liftPrim(step))
+        liftPrim(step) `swapError` errMsg
 
     pub def putInt8At!(ix: Int32, n: Int8): RowSetter[Unit] =
         putNumericAt!(ix, "putInt8At!", Int8.toFloat64(n))
@@ -383,8 +387,8 @@ namespace SheetIO/RowSetter {
     def mapMHelper(row: ##org.apache.poi.ss.usermodel.Row, 
                    mf: a -> RowSetter[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[List[b], System.Error], 
-                   sk: List[b] -> Result[List[b], System.Error]): Result[List[b], System.Error] & Impure =
+                   fk: String -> Result[List[b], String], 
+                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
         match xs {
             case Nil => sk(Nil)
             case x :: rs => {
@@ -404,8 +408,8 @@ namespace SheetIO/RowSetter {
     def mapXHelper(row: ##org.apache.poi.ss.usermodel.Row, 
                    mf: a -> RowSetter[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[Unit, System.Error], 
-                   sk: Unit -> Result[Unit, System.Error]): Result[Unit, System.Error] & Impure =
+                   fk: String -> Result[Unit, String], 
+                   sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
         match xs {
             case Nil => sk()
             case x :: rs => {

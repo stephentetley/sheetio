@@ -14,137 +14,135 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
 namespace SheetIO/Internal/Cell {
 
 
-    pub def getCellType(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellType, System.Error] & Impure = 
+    pub def getCellType(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellType, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getCellType(); 
         try {
             let ans = cell.getCellType();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getCellType")) 
+            case _: ##java.lang.Exception => Err("getCellType")
         }
 
     pub def setCellType(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                        typ: ##org.apache.poi.ss.usermodel.CellType): Result[Unit, System.Error] & Impure = 
+                        typ: ##org.apache.poi.ss.usermodel.CellType): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellType(##org.apache.poi.ss.usermodel.CellType); 
         try {
             let ans = cell.setCellType(typ);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setCellType")) 
+            case _: ##java.lang.Exception => Err("setCellType")
         }
 
      
-    pub def getBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, System.Error] & Impure = 
+    pub def getBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(); 
         try {
             let ans = cell.getBooleanCellValue();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getBooleanCellValue")) 
+            case _: ##java.lang.Exception => Err("getBooleanCellValue")
         }
 
 
-    pub def getStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, System.Error] & Impure = 
+    pub def getStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getStringCellValue(); 
         try {
             let ans = cell.getStringCellValue();
-            Ok(ans)
+            if (not Object.isNull(ans)) Ok(ans) else Ok("")
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getStringCellValue")) 
+            case _: ##java.lang.Exception => Err("getStringCellValue")
         }
 
-    pub def getNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Float64, System.Error] & Impure = 
+    pub def getNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Float64, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(); 
         try {
             let ans = cell.getNumericCellValue();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getNumericCellValue")) 
+            case _: ##java.lang.Exception => Err("getNumericCellValue")
         }
 
 
-    pub def getLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##java.time.LocalDateTime, System.Error] & Impure = 
+    pub def getLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##java.time.LocalDateTime, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(); 
         try {
             let ans = cell.getLocalDateTimeCellValue();
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getLocalDateTimeCellValue")) 
+            case _: ##java.lang.Exception => Err("getLocalDateTimeCellValue")
         }
 
     pub def getFormatterCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                                  formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, System.Error] & Impure = 
+                                  formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, String] & Impure = 
         import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell); 
         try {
             let ans = formatter.formatCellValue(cell);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("getFormatterCellValue")) 
+            case _: ##java.lang.Exception => Err("getFormatterCellValue")
         }
 
 
-    pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, System.Error] & Impure = 
+    pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool); 
         try {
             let ans = cell.setCellValue(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setBooleanCellValue")) 
+            case _: ##java.lang.Exception => Err("setBooleanCellValue")
         }
 
-    pub def setNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Float64): Result[Unit, System.Error] & Impure = 
+    pub def setNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Float64): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64); 
         try {
             let ans = cell.setCellValue(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setNumericCellValue")) 
+            case _: ##java.lang.Exception => Err("setNumericCellValue")
         }
 
     pub def setStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                               value: String): Result[Unit, System.Error] & Impure = 
+                               value: String): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(String); 
         try {
             let ans = cell.setCellValue(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setStringCellValue")) 
+            case _: ##java.lang.Exception => Err("setStringCellValue")
         }
 
 
     pub def setLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                                      value: ##java.time.LocalDateTime): Result[Unit, System.Error] & Impure = 
+                                      value: ##java.time.LocalDateTime): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime); 
         try {
             let ans = cell.setCellValue(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setLocalDateTimeCellValue")) 
+            case _: ##java.lang.Exception => Err("setLocalDateTimeCellValue")
         }
 
     pub def setLocalDateCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                                  value: ##java.time.LocalDate): Result[Unit, System.Error] & Impure = 
+                                  value: ##java.time.LocalDate): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate); 
         try {
             let ans = cell.setCellValue(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setLocalDateCellValue")) 
+            case _: ##java.lang.Exception => Err("setLocalDateCellValue") 
         }
 
 
     pub def setCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                         style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, System.Error] & Impure = 
+                         style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle); 
         try {
             let ans = cell.setCellStyle(style);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setCellStyle")) 
+            case _: ##java.lang.Exception => Err("setCellStyle")
         }
 }

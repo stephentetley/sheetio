@@ -17,14 +17,13 @@
 
 namespace SheetIO {
 
-    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]
+    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]
 
 }
 
 namespace SheetIO/SheetReader {
     
     use Data.Stream;
-    use System.Error.{Generic};
 
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
@@ -40,16 +39,16 @@ namespace SheetIO/SheetReader {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runXssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match openXSSFWorkbook(path1) { 
-            case Err(_) => Err(Generic("runXssf('${path1}')"))
+            case Err(_) => Err("runXssf('${path1}')")
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeXSSFWorkbook(wb);
@@ -58,12 +57,12 @@ namespace SheetIO/SheetReader {
         }
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetReader[a], path: System.FilePath): Result[a, System.Error] & Impure = 
+    pub def runHssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1 = System/FilePath.toString(path);
         match openHSSFWorkbook(path1) { 
-            case Err(_) => Err(Generic("runHssf('${path1}')"))
+            case Err(_) => Err("runHssf('${path1}')")
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeHSSFWorkbook(wb);
@@ -72,7 +71,7 @@ namespace SheetIO/SheetReader {
         }
 
 
-    def apply1(ma: SheetReader[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, System.Error] & Impure = 
+    def apply1(ma: SheetReader[a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, String] & Impure = 
         let SheetReader(x1) = ma;
         x1(wb)
 
@@ -80,16 +79,16 @@ namespace SheetIO/SheetReader {
         SheetReader(_ -> Ok(x) as & Impure)
 
     pub def throwError(msg: String): SheetReader[a] =
-        SheetReader(_ -> Err(System/Error.Generic(msg)) as & Impure)
+        SheetReader(_ -> Err(msg) as & Impure)
 
 
-    pub def catchError(ma: SheetReader[a], handle: System.Error -> SheetReader[a]): SheetReader[a] =
+    pub def catchError(ma: SheetReader[a], handle: String -> SheetReader[a]): SheetReader[a] =
         SheetReader(wb -> match apply1(ma, wb) { 
             case Ok(a) => Ok(a)
             case Err(e) => apply1(handle(e), wb)
         })
 
-    pub def mapError(f: System.Error -> System.Error, ma: SheetReader[a]): SheetReader[a] =
+    pub def mapError(f: String -> String, ma: SheetReader[a]): SheetReader[a] =
         SheetReader(wb -> match apply1(ma, wb) { 
             case Ok(a) => Ok(a)
             case Err(e) => Err(f(e))
@@ -184,7 +183,7 @@ namespace SheetIO/SheetReader {
     ///
     /// By definition this never fails.
     ///
-    pub def result(ma: SheetReader[a]): SheetReader[Result[a, System.Error]] = 
+    pub def result(ma: SheetReader[a]): SheetReader[Result[a, String]] = 
         SheetReader(wb -> 
             let ans = apply1(ma, wb);
             Ok(ans)
@@ -248,16 +247,16 @@ namespace SheetIO/SheetReader {
             case None => melse
         })
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, System.Error]): SheetReader[a] = 
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]): SheetReader[a] = 
         SheetReader(wb -> fn(wb))
 
     pub def liftAction(fn: Unit ~> a): SheetReader[a] = 
         SheetReader(_ -> { let a = fn(); Ok(a) })
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): SheetReader[a] = 
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetReader[a] = 
         SheetReader(_ -> fn())
 
-    pub def liftResult(x: Result[a, System.Error]): SheetReader[a] = 
+    pub def liftResult(x: Result[a, String]): SheetReader[a] = 
         SheetReader(_ -> x as & Impure)
     
     pub def mapM(mf: a -> SheetReader[b], xs: List[a]): SheetReader[List[b]] =
@@ -271,8 +270,8 @@ namespace SheetIO/SheetReader {
     def mapMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                    mf: a -> SheetReader[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[List[b], System.Error], 
-                   sk: List[b] -> Result[List[b], System.Error]): Result[List[b], System.Error] & Impure =
+                   fk: String -> Result[List[b], String], 
+                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
         match xs {
             case Nil => sk(Nil)
             case x :: rs => {
@@ -292,8 +291,8 @@ namespace SheetIO/SheetReader {
     def mapXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                    mf: a -> SheetReader[b], 
                    xs: List[a], 
-                   fk: System.Error -> Result[Unit, System.Error], 
-                   sk: Unit -> Result[Unit, System.Error]): Result[Unit, System.Error] & Impure =
+                   fk: String -> Result[Unit, String], 
+                   sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
         match xs {
             case Nil => sk()
             case x :: rs => {
@@ -317,8 +316,8 @@ namespace SheetIO/SheetReader {
                             mf: (a, Int32) -> SheetReader[b], 
                             ix : Int32, 
                             xs: List[a], 
-                            fk: System.Error -> Result[List[b], System.Error], 
-                            sk: List[b] -> Result[List[b], System.Error]): Result[List[b], System.Error] & Impure =
+                            fk: String -> Result[List[b], String], 
+                            sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
         match xs {
             case Nil => sk(Nil)
             case x :: rs => {
@@ -339,8 +338,8 @@ namespace SheetIO/SheetReader {
                             mf: (a, Int32) -> SheetReader[b],
                             ix: Int32, 
                             xs: List[a], 
-                            fk: System.Error -> Result[Unit, System.Error], 
-                            sk: Unit -> Result[Unit, System.Error]): Result[Unit, System.Error] & Impure =
+                            fk: String -> Result[Unit, String], 
+                            sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
         match xs {
             case Nil => sk()
             case x :: rs => {
@@ -363,8 +362,8 @@ namespace SheetIO/SheetReader {
     ///
     def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                        xs: List[SheetReader[a]], 
-                       fk: System.Error -> Result[List[a], System.Error], 
-                       sk: List[a] -> Result[List[a], System.Error]): Result[List[a], System.Error] & Impure =
+                       fk: String -> Result[List[a], String], 
+                       sk: List[a] -> Result[List[a], String]): Result[List[a], String] & Impure =
         match xs {
             case Nil => sk(Nil)
             case mx :: rs => match apply1(mx, wb) {
@@ -406,8 +405,8 @@ namespace SheetIO/SheetReader {
                     mf: (b, a) -> SheetReader[b], 
                     acc: b, 
                     xs: List[a], 
-                    fk: System.Error -> Result[b, System.Error], 
-                    sk: b -> Result[b, System.Error]): Result[b, System.Error] & Impure =
+                    fk: String -> Result[b, String], 
+                    sk: b -> Result[b, String]): Result[b, String] & Impure =
         match xs {
             case Nil => sk(acc)
             case x :: rs => {
@@ -428,8 +427,8 @@ namespace SheetIO/SheetReader {
                         mf: (ac, a) -> SheetReader[(ac, b)],
                         ac: ac,
                         xs: List[a],
-                        fk: System.Error -> Result[(ac, List[b]), System.Error],
-                        sk: (ac, List[b]) -> Result[(ac, List[b]), System.Error]): Result[(ac, List[b]), System.Error] & Impure =
+                        fk: String -> Result[(ac, List[b]), String],
+                        sk: (ac, List[b]) -> Result[(ac, List[b]), String]): Result[(ac, List[b]), String] & Impure =
         match xs {
             case Nil => sk(ac, Nil)
             case x :: rs => {
@@ -787,7 +786,7 @@ namespace SheetIO/SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than traying to use `getLastRowNum` to find the end.
     ///
-    def newRowStream(x: Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], System.Error] & Impure =
+    def newRowStream(x: Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], String] & Impure =
         import new flix.runtime.spt.sheetio.RowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
         import flix.runtime.spt.sheetio.RowIterator.hasNext() as ffiHasNext;
         import flix.runtime.spt.sheetio.RowIterator.next() as ffiNext;
@@ -802,7 +801,7 @@ namespace SheetIO/SheetReader {
             };
             Ok(Data/Stream.fromIterator(streamiter))
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("newRowStream")) 
+            case _: ##java.lang.Exception => Err("newRowStream")
         }
 
     /// Use rowiterator...
@@ -854,7 +853,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm0      = liftActionResult(_ -> newRowStream(x));
         let strm1       = drop(start, strm0);
-        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1));
+        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1) |> Result.mapErr(_ -> "namedRowsFrom"));
         return(xs)
 
     

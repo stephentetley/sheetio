@@ -27,8 +27,6 @@ namespace SheetIO {
 
 namespace SheetIO/DataFormatter {
 
-    use System.Error.{Generic};
-
     use SheetIO.DataFormatter;
     use SheetIO.DataFormatter.{DataFormatter};
 

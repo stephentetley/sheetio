@@ -17,13 +17,11 @@
 
 namespace SheetIO {
 
-    pub opaque type RowEvaluator[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]
+    pub opaque type RowEvaluator[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]
 
 }
 
 namespace SheetIO/RowEvaluator {
-
-    use System.Error.{Generic};
 
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
@@ -36,18 +34,18 @@ namespace SheetIO/RowEvaluator {
     pub def return(x: a): RowEvaluator[a] =
         RowEvaluator(_ -> Ok(x) as & Impure)
 
-    def apply1(x: RowEvaluator[a], row: ##org.apache.poi.ss.usermodel.Row): Result[a, System.Error] & Impure =
+    def apply1(x: RowEvaluator[a], row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
         let RowEvaluator(f) = x;
         f(row)
 
     pub def throwError(msg: String): RowEvaluator[a] =
-        RowEvaluator(_ -> Err(System/Error.Generic(msg)) as & Impure)
+        RowEvaluator(_ -> Err(msg) as & Impure)
 
     pub def swapError(ma: RowEvaluator[a], msg: String): RowEvaluator[a] =
         RowEvaluator(r ->
             match apply1(ma, r) {
                 case Ok(a) => Ok(a)
-                case Err(_) => Err(Generic(msg))
+                case Err(_) => Err(msg)
             }
         )
 
@@ -123,17 +121,17 @@ namespace SheetIO/RowEvaluator {
             }
         )
 
-    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, System.Error]): RowEvaluator[a] =
+    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(r -> fn(r))
 
 
     pub def liftAction(fn: Unit ~> a): RowEvaluator[a] =
         RowEvaluator(_ -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, System.Error]): RowEvaluator[a] =
+    pub def liftActionResult(fn: Unit ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(_ -> fn())
 
-    pub def liftResult(x: Result[a, System.Error]): RowEvaluator[a] =
+    pub def liftResult(x: Result[a, String]): RowEvaluator[a] =
         RowEvaluator(_ -> x as & Impure)
 
 
@@ -142,7 +140,7 @@ namespace SheetIO/RowEvaluator {
 
     def withCell(row: ##org.apache.poi.ss.usermodel.Row,
                  ix: Int32, 
-                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, System.Error]): Result[a, System.Error] & Impure = 
+                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): Result[a, String] & Impure = 
         use Result.{flatMap};
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
@@ -154,8 +152,7 @@ namespace SheetIO/RowEvaluator {
 
     pub def getNullAt(ix: Int32): RowEvaluator[Unit] =
         let errMsg = "getNullAt(${Int32.toString(ix)})";
-        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(Generic(errMsg))))
-            `swapError` errMsg
+        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err(errMsg)))
 
 
     pub def getCellTypeAt(ix: Int32): RowEvaluator[CellType] =

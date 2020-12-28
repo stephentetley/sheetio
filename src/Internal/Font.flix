@@ -17,98 +17,96 @@
 
 namespace SheetIO/Internal/Font {
 
-    use System.Error.{Generic};
-
     pub def setFontName(font: ##org.apache.poi.ss.usermodel.Font,
-                        value: String): Result[Unit, System.Error] & Impure = 
+                        value: String): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontName(String); 
         try {
             let ans = font.setFontName(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFontName")) 
+            case _: ##java.lang.Exception => Err("setFontName")
         }
 
     pub def setFontHeight(font: ##org.apache.poi.ss.usermodel.Font,
-                          value: Int16): Result[Unit, System.Error] & Impure = 
+                          value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16); 
         try {
             let ans = font.setFontHeight(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFontHeight")) 
+            case _: ##java.lang.Exception => Err("setFontHeight")
         }
 
     pub def setFontHeightInPoints(font: ##org.apache.poi.ss.usermodel.Font,
-                                  value: Int16): Result[Unit, System.Error] & Impure = 
+                                  value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16); 
         try {
             let ans = font.setFontHeightInPoints(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFontHeightInPoints")) 
+            case _: ##java.lang.Exception => Err("setFontHeightInPoints")
         }
 
 
     pub def setBold(font: ##org.apache.poi.ss.usermodel.Font,
-                    value: Bool): Result[Unit, System.Error] & Impure = 
+                    value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setBold(Bool); 
         try {
             let ans = font.setBold(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setBold")) 
+            case _: ##java.lang.Exception => Err("setBold")
         }
 
     pub def setItalic(font: ##org.apache.poi.ss.usermodel.Font,
-                      value: Bool): Result[Unit, System.Error] & Impure = 
+                      value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setItalic(Bool); 
         try {
             let ans = font.setItalic(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setItalic")) 
+            case _: ##java.lang.Exception => Err("setItalic")
         }
 
 
     pub def setStrikeout(font: ##org.apache.poi.ss.usermodel.Font,
-                         value: Bool): Result[Unit, System.Error] & Impure = 
+                         value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool); 
         try {
             let ans = font.setStrikeout(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setStrikeout")) 
+            case _: ##java.lang.Exception => Err("setStrikeout")
         }
 
     pub def setColor(font: ##org.apache.poi.ss.usermodel.Font,
-                     value: Int16): Result[Unit, System.Error] & Impure = 
+                     value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setColor(Int16); 
         try {
             let ans = font.setColor(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setColor")) 
+            case _: ##java.lang.Exception => Err("setColor")
         }
 
     pub def setTypeOffset(font: ##org.apache.poi.ss.usermodel.Font,
-                          value: Int16): Result[Unit, System.Error] & Impure = 
+                          value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16); 
         try {
             let ans = font.setTypeOffset(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setTypeOffset")) 
+            case _: ##java.lang.Exception => Err("setTypeOffset")
         }
 
     pub def setUnderline(font: ##org.apache.poi.ss.usermodel.Font,
-                         value: Int8): Result[Unit, System.Error] & Impure = 
+                         value: Int8): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setUnderline(Int8); 
         try {
             let ans = font.setUnderline(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setUnderline")) 
+            case _: ##java.lang.Exception => Err("setUnderline")
         }
 
 }

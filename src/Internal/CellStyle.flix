@@ -14,80 +14,78 @@
  * limitations under the License.
  */
 
-use System.Error.{Generic};
-
 namespace SheetIO/Internal/CellStyle {
 
     pub def setFont(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, System.Error] & Impure = 
+                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font); 
         try {
             let ans = style.setFont(font);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFont")) 
+            case _: ##java.lang.Exception => Err("setFont")
         }
 
     pub def setWrapText(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                        value: Bool): Result[Unit, System.Error] & Impure = 
+                        value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool); 
         try {
             let ans = style.setWrapText(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setWrapText")) 
+            case _: ##java.lang.Exception => Err("setWrapText")
         }
     
     pub def setIndention(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                         value: Int16): Result[Unit, System.Error] & Impure = 
+                         value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16); 
         try {
             let ans = style.setIndention(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setIndention")) 
+            case _: ##java.lang.Exception => Err("setIndention")
         }
     
     
     pub def setFillForegroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                                   value: Int16): Result[Unit, System.Error] & Impure = 
+                                   value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16); 
         try {
             let ans = style.setFillForegroundColor(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFillForegroundColor")) 
+            case _: ##java.lang.Exception => Err("setFillForegroundColor")
         }
 
     /// Note must set foreground color first
     pub def setFillBackgroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                                   value: Int16): Result[Unit, System.Error] & Impure = 
+                                   value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16); 
         try {
             let ans = style.setFillBackgroundColor(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setFillBackgroundColor")) 
+            case _: ##java.lang.Exception => Err("setFillBackgroundColor")
         }
 
 
     pub def setShrinkToFit(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                           value: Bool): Result[Unit, System.Error] & Impure = 
+                           value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool); 
         try {
             let ans = style.setShrinkToFit(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setShrinkToFit")) 
+            case _: ##java.lang.Exception => Err("setShrinkToFit") 
         }
 
     pub def setDataFormat(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                          value: Int16): Result[Unit, System.Error] & Impure = 
+                          value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16); 
         try {
             let ans = style.setDataFormat(value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err(Generic("setDataFormat")) 
+            case _: ##java.lang.Exception => Err("setDataFormat") 
         }
 }
