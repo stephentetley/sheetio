@@ -37,6 +37,8 @@ namespace SheetIO/RowSetter {
         let RowSetter(f) = x;
         f(r)
 
+    pub def throwError(errMsg: String): RowSetter[a] =
+        RowSetter(_ -> Err(errMsg) as & Impure)
 
     pub def mapError(f: String -> String, ma: RowSetter[a]): RowSetter[a] =
         RowSetter(r -> match apply1(ma, r) { 
@@ -93,6 +95,13 @@ namespace SheetIO/RowSetter {
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): RowSetter[a] =
         RowSetter(_ -> fn())
+
+    pub def liftOption(x: Option[a], errMsg: String): RowSetter[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
+        
+    
 
     pub def liftResult(x: Result[a, String]): RowSetter[a] =
         RowSetter(_ -> x as & Impure)

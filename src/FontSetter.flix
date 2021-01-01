@@ -33,6 +33,9 @@ namespace SheetIO/FontSetter {
         let FontSetter(f) = x;
         f(r)
 
+    pub def throwError(errMsg: String): FontSetter[a] =
+        FontSetter(_ -> Err(errMsg) as & Impure)
+
     pub def mapError(f: String -> String, ma: FontSetter[a]): FontSetter[a] =
         FontSetter(r -> match apply1(ma, r) { 
             case Ok(p1) => Ok(p1)
@@ -103,6 +106,11 @@ namespace SheetIO/FontSetter {
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): FontSetter[a] =
         FontSetter(_ -> fn())
+
+    pub def liftOption(x: Option[a], errMsg: String): FontSetter[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
 
     pub def liftResult(x: Result[a, String]): FontSetter[a] =
         FontSetter(_ -> x as & Impure)

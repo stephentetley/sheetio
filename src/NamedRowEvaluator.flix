@@ -152,6 +152,11 @@ namespace SheetIO/NamedRowEvaluator {
     pub def liftActionResult(fn: Unit ~> Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> fn())
 
+    pub def liftOption(x: Option[a], errMsg: String): NamedRowEvaluator[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
+
     pub def liftResult(x: Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> x as & Impure)
 

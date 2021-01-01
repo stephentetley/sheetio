@@ -36,6 +36,8 @@ namespace SheetIO/CellStyleSetter {
         let CellStyleSetter(f) = x;
         f(r)
 
+    pub def throwError(errMsg: String): CellStyleSetter[a] =
+        CellStyleSetter(_ -> Err(errMsg) as & Impure)
 
      pub def mapError(f: String -> String, ma: CellStyleSetter[a]): CellStyleSetter[a] =
         CellStyleSetter(r -> match apply1(ma, r) { 
@@ -86,6 +88,11 @@ namespace SheetIO/CellStyleSetter {
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): CellStyleSetter[a] =
         CellStyleSetter(_ -> fn())
+
+    pub def liftOption(x: Option[a], errMsg: String): CellStyleSetter[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
 
     pub def liftResult(x: Result[a, String]): CellStyleSetter[a] =
         CellStyleSetter(_ -> x as & Impure)

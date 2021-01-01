@@ -131,6 +131,12 @@ namespace SheetIO/RowEvaluator {
     pub def liftActionResult(fn: Unit ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(_ -> fn())
 
+
+    pub def liftOption(x: Option[a], errMsg: String): RowEvaluator[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
+
     pub def liftResult(x: Result[a, String]): RowEvaluator[a] =
         RowEvaluator(_ -> x as & Impure)
 
