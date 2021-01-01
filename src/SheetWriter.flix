@@ -26,6 +26,8 @@ namespace SheetIO {
 
 namespace SheetIO/SheetWriter {
 
+    use ToString.toString;
+
     use SheetIO.CellStyle;
     use SheetIO.CellStyle.{CellStyle};
     use SheetIO.CellStyleSetter;
@@ -58,7 +60,7 @@ namespace SheetIO/SheetWriter {
                     path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let outpath     = System/FilePath.toString(path);
+        let outpath     = toString(path);
         let* wb         = newXSSFWorkbook();
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
         let* _          = writeXSSFWorkbook(wb, outpath);
@@ -72,7 +74,7 @@ namespace SheetIO/SheetWriter {
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
-        let path1       = System/FilePath.toString(outPath);
+        let path1       = toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());        
         let* _          = writeXSSFWorkbook(wb, path1);
@@ -84,7 +86,7 @@ namespace SheetIO/SheetWriter {
     pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
-        let path1       = System/FilePath.toString(path);
+        let path1       = toString(path);
         let* wb         = newHSSFWorkbook();
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
         let* _          = writeHSSFWorkbook(wb, path1);
@@ -97,7 +99,7 @@ namespace SheetIO/SheetWriter {
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
         let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
-        let outPath1    = System/FilePath.toString(outPath);
+        let outPath1    = toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
         let* _          = writeHSSFWorkbook(wb, outPath1);

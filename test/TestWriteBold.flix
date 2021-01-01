@@ -4,7 +4,7 @@ use SheetIO.CellStyle;
 
 def main(): Unit & Impure = 
     match SheetIO/SheetWriter.runXlsx(write1(), System/FilePath.new("E:/coding/flix/sheetio/data/bold_out1.xlsx")) { 
-        case Err(e) => Console.printLine("Error: " + System/Error.toString(e))
+        case Err(e) => Console.printLine("Error: ${e}")
         case Ok() => Console.printLine("[writer done]")
     }
 

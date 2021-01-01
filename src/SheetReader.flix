@@ -22,6 +22,8 @@ namespace SheetIO {
 }
 
 namespace SheetIO/SheetReader {
+
+    use ToString.toString;
     
     use Data.Stream;
 
@@ -46,7 +48,7 @@ namespace SheetIO/SheetReader {
     pub def runXssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let path1 = System/FilePath.toString(path);
+        let path1 = toString(path);
         match openXSSFWorkbook(path1) { 
             case Err(_) => Err("runXssf('${path1}')")
             case Ok(wb) => {
@@ -60,7 +62,7 @@ namespace SheetIO/SheetReader {
     pub def runHssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
-        let path1 = System/FilePath.toString(path);
+        let path1 = toString(path);
         match openHSSFWorkbook(path1) { 
             case Err(_) => Err("runHssf('${path1}')")
             case Ok(wb) => {
