@@ -142,6 +142,32 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
 
+    pub def mapM(mf: a -> NamedRowEvaluator[b], xs: List[a]): NamedRowEvaluator[List[b]] =
+        NamedRowEvaluator((ixs, r) ->
+            mapMHelper(ixs, r, mf, xs, e -> Err(e), ys -> Ok(ys))
+        )
+
+    ///
+    /// Helper function for `mapM`.
+    ///
+    def mapMHelper(ixs: Map[String, Int32], 
+                   r: ##org.apache.poi.ss.usermodel.Row, 
+                   mf: a -> NamedRowEvaluator[b], 
+                   xs: List[a], 
+                   fk: String -> Result[List[b], String], 
+                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
+        match xs {
+            case Nil => sk(Nil)
+            case x :: rs => {
+                let ma = mf(x);
+                match apply1(ma, ixs, r) {
+                    case Err(e) => fk(e)
+                    case Ok(x1) => mapMHelper(ixs, r, mf, rs, fk, ks -> sk(x1 :: ks))
+                }
+            }
+        }
+        
+        
     def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, r) -> ask(r))
 

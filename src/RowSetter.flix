@@ -15,11 +15,13 @@
  */
 
 
-
+/// Use `Option[CellStyle]` as a Reader env in the Monad to allow inherited styles.
 
 namespace SheetIO {
 
-    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]
+    use SheetIO.CellStyle;
+
+    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] ~> Result[a, String]
 
 }
 
@@ -31,70 +33,64 @@ namespace SheetIO/RowSetter {
     use SheetIO.RowSetter.{RowSetter};
 
     pub def return(x: a): RowSetter[a] =
-        RowSetter(_ -> Ok(x) as & Impure)
+        RowSetter((_, _) -> Ok(x) as & Impure)
 
-    def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
+    def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, String] & Impure =
         let RowSetter(f) = x;
-        f(r)
+        f(r, style)
 
     pub def throwError(errMsg: String): RowSetter[a] =
-        RowSetter(_ -> Err(errMsg) as & Impure)
+        RowSetter((_, _) -> Err(errMsg) as & Impure)
 
     pub def mapError(f: String -> String, ma: RowSetter[a]): RowSetter[a] =
-        RowSetter(r -> match apply1(ma, r) { 
+        RowSetter((r, style) -> match apply1(ma, r, style) { 
             case Ok(a) => Ok(a)
             case Err(e) => Err(f(e))
         })
 
     pub def swapError(ma: RowSetter[a], errMsg: String): RowSetter[a] =
-        RowSetter(r -> match apply1(ma, r) { 
+        RowSetter((r, style)-> match apply1(ma, r, style) { 
             case Ok(a) => Ok(a)
             case Err(_) => Err(errMsg)
         })
 
 
     pub def map(f: a -> b & ef, x: RowSetter[a]): RowSetter[b] =
-        RowSetter(r ->
-            match apply1(x, r) {
-                case Ok(a) => {
-                    let ans = f(a) as & Impure;
-                    Ok(ans)
-                }
-                case Err(e) => Err(e)
+        RowSetter((r, style) -> match apply1(x, r, style) {
+            case Ok(a) => {
+                let ans = f(a) as & Impure;
+                Ok(ans)
             }
-        )
+            case Err(e) => Err(e)
+        })
 
     pub def ap(mf: RowSetter[a -> b & ef], ma: RowSetter[a]): RowSetter[b] =
-        RowSetter(r ->
-            match apply1(mf, r) {
-                case Ok(f) => {
-                    match apply1(ma, r) {
-                        case Ok(a) => Ok(f(a) as & Impure)
-                        case Err(e2) => Err(e2)
-                    }
+        RowSetter((r, style) ->  match apply1(mf, r, style) {
+            case Ok(f) => {
+                match apply1(ma, r, style) {
+                    case Ok(a) => Ok(f(a) as & Impure)
+                    case Err(e2) => Err(e2)
                 }
-                case Err(e1) => Err(e1)
             }
-        )
+            case Err(e1) => Err(e1)
+        })
 
     pub def bind(x: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] =
-        RowSetter(r ->
-            match apply1(x, r) {
-                case Ok(a) => { let ans = k(a); apply1(ans, r) }
-                case Err(e) => Err(e)
-            }
-        )
+        RowSetter((r, style) -> match apply1(x, r, style) {
+            case Ok(a) => {let ans = k(a); apply1(ans, r, style)}
+            case Err(e) => Err(e)
+        })
 
     pub def flatMap(k: a -> RowSetter[b], x: RowSetter[a]): RowSetter[b] = bind(x, k)
 
     def liftPrim(update: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowSetter[a] =
-        RowSetter(r -> update(r))
+        RowSetter((r, _) -> update(r))
 
     pub def liftAction(fn: Unit ~> a): RowSetter[a] =
-        RowSetter(_ -> let x = fn(); Ok(x))
+        RowSetter((_, _) -> let x = fn(); Ok(x))
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): RowSetter[a] =
-        RowSetter(_ -> fn())
+        RowSetter((_, _) -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): RowSetter[a] = match x { 
         case Some(x1) => return(x1)
@@ -104,7 +100,7 @@ namespace SheetIO/RowSetter {
     
 
     pub def liftResult(x: Result[a, String]): RowSetter[a] =
-        RowSetter(_ -> x as & Impure)
+        RowSetter((_, _) -> x as & Impure)
         
     def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
                         ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
@@ -114,6 +110,7 @@ namespace SheetIO/RowSetter {
             case Err(_) => createCell(row, ix)
         }
 
+    /// TODO - should be public `localStyle` instead...
     pub def putCellStyleAt!(ix: Int32, style: CellStyle): RowSetter[Unit] =
         use Result.flatMap;
         let step = x -> {
@@ -386,14 +383,15 @@ namespace SheetIO/RowSetter {
 
 
     pub def mapM(mf: a -> RowSetter[b], xs: List[a]): RowSetter[List[b]] =
-        RowSetter(r ->
-            mapMHelper(r, mf, xs, e -> Err(e), ys -> Ok(ys))
+        RowSetter((r, style) ->
+            mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
     def mapMHelper(row: ##org.apache.poi.ss.usermodel.Row, 
+                   style: Option[CellStyle], 
                    mf: a -> RowSetter[b], 
                    xs: List[a], 
                    fk: String -> Result[List[b], String], 
@@ -402,19 +400,20 @@ namespace SheetIO/RowSetter {
             case Nil => sk(Nil)
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, row) {
+                match apply1(ma, row, style) {
                     case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(row, mf, rs, fk, ks -> sk(x1 :: ks))
+                    case Ok(x1) => mapMHelper(row, style, mf, rs, fk, ks -> sk(x1 :: ks))
                 }
             }
         }
 
     pub def mapX(mf: a -> RowSetter[b], xs: List[a]): RowSetter[Unit] =
-        RowSetter(r ->
-            mapXHelper(r, mf, xs, e -> Err(e), _ -> Ok())
+        RowSetter((r, style) ->
+            mapXHelper(r, style, mf, xs, e -> Err(e), _ -> Ok())
         )
 
     def mapXHelper(row: ##org.apache.poi.ss.usermodel.Row, 
+                   style: Option[CellStyle],
                    mf: a -> RowSetter[b], 
                    xs: List[a], 
                    fk: String -> Result[Unit, String], 
@@ -423,9 +422,9 @@ namespace SheetIO/RowSetter {
             case Nil => sk()
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, row) {
+                match apply1(ma, row, style) {
                     case Err(e) => fk(e)
-                    case Ok(_) => mapXHelper(row, mf, rs, fk, sk)
+                    case Ok(_) => mapXHelper(row, style, mf, rs, fk, sk)
                 }
             }
         }

@@ -50,7 +50,7 @@ namespace SheetIO/SheetReader {
         use Result.{flatMap};
         let path1 = toString(path);
         match openXSSFWorkbook(path1) { 
-            case Err(_) => Err("runXssf('${path1}')")
+            case Err(e) => Err("runXssf('${path1}'): ${e}")
             case Ok(wb) => {
                 let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _ = closeXSSFWorkbook(wb);
@@ -855,7 +855,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm0      = liftActionResult(_ -> newRowStream(x));
         let strm1       = drop(start, strm0);
-        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1) |> Result.mapErr(_ -> "namedRowsFrom"));
+        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1) |> Result.mapErr(e -> "namedRowsFrom [${e}]"));
         return(xs)
 
     

@@ -17,8 +17,10 @@
 
 namespace SheetIO {
 
+    use SheetIO.CellStyle;
    
-    pub opaque type SheetWriter[a] = ##org.apache.poi.ss.usermodel.Workbook -> Cursors ~> Result[(Cursors, a), String]
+    pub opaque type SheetWriter[a] = 
+        ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors ~> Result[(Cursors, a), String]
 
     type alias Cursors = Map[String, Int32]
 
@@ -62,7 +64,7 @@ namespace SheetIO/SheetWriter {
         use Result.{flatMap};
         let outpath     = toString(path);
         let* wb         = newXSSFWorkbook();
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
         let* _          = writeXSSFWorkbook(wb, outpath);
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
@@ -76,7 +78,7 @@ namespace SheetIO/SheetWriter {
         let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
         let path1       = toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());        
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());        
         let* _          = writeXSSFWorkbook(wb, path1);
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
@@ -88,7 +90,7 @@ namespace SheetIO/SheetWriter {
         use Result.{flatMap};
         let path1       = toString(path);
         let* wb         = newHSSFWorkbook();
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
         let* _          = writeHSSFWorkbook(wb, path1);
         let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
@@ -101,93 +103,86 @@ namespace SheetIO/SheetWriter {
         let* _          = System/File.copy(template, outPath) |> Result.mapErr(x -> System/Error.toString(x));
         let outPath1    = toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, Map.empty());
+        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
         let* _          = writeHSSFWorkbook(wb, outPath1);
         let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
 
     def apply1(ma: SheetWriter[a], 
                wb: ##org.apache.poi.ss.usermodel.Workbook, 
-               st: Cursors): Result[(Cursors, a), String] & Impure = 
+               style: Option[CellStyle],
+               s1: Cursors): Result[(Cursors, a), String] & Impure = 
         let SheetWriter(x1) = ma;
-        x1(wb, st)
+        x1(wb, style, s1)
+
+    pub def askStyle(): SheetWriter[Option[CellStyle]] = 
+        SheetWriter((_, style, s1) -> Ok((s1, style)) as & Impure)
+
 
     pub def return(x: a): SheetWriter[a] = 
-        SheetWriter((_, st) -> Ok((st, x)) as & Impure)
+        SheetWriter((_, _, s1) -> Ok((s1, x)) as & Impure)
 
     pub def throwError(msg: String): SheetWriter[a] =
-        SheetWriter((_, _) -> Err(msg) as & Impure)
+        SheetWriter((_, _, _) -> Err(msg) as & Impure)
 
 
     pub def catchError(ma: SheetWriter[a], handle: String -> SheetWriter[a]): SheetWriter[a] =
-        SheetWriter((wb, st) -> match apply1(ma, wb, st) { 
-            case Ok(p1) => Ok(p1)
-            case Err(e) => apply1(handle(e), wb, st)
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, a)) => Ok((s2, a))
+            case Err(e) => apply1(handle(e), wb, style, s1)
         })
 
     pub def mapError(f: String -> String, ma: SheetWriter[a]): SheetWriter[a] =
-        SheetWriter((wb, st) -> match apply1(ma, wb, st) { 
-            case Ok(p1) => Ok(p1)
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, a)) => Ok((s2, a))
             case Err(e) => Err(f(e))
         })
 
     /// Needs to allow allow effects (e.g create / access arrays)
     pub def map(fn: a -> b & ef, ma: SheetWriter[a]): SheetWriter[b] = 
-        SheetWriter((wb, st) -> 
-            match apply1(ma, wb, st) { 
-                case Ok((st1, a)) => { let ans = fn(a) as & Impure; Ok((st1, ans)) }
-                case Err(e) => Err(e)
-            }
-        )
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, a)) => { let ans = fn(a) as & Impure; Ok((s2, ans)) }
+            case Err(e) => Err(e)
+        })
 
     pub def ap(mf: SheetWriter[a -> b & ef], ma: SheetWriter[a]): SheetWriter[b] = 
-        SheetWriter((wb, st) -> 
-            match apply1(mf, wb, st) { 
-                case Ok((st1, f)) => match apply1(ma, wb, st1) { 
-                    case Ok((st2, a)) => { let ans = f(a) as & Impure; Ok((st2, ans)) }
-                    case Err(e) => Err(e)
-                }
+        SheetWriter((wb, style, s1) -> match apply1(mf, wb, style, s1) { 
+            case Ok((s2, f)) => match apply1(ma, wb, style, s2) { 
+                case Ok((s3, a)) => { let ans = f(a) as & Impure; Ok((s3, ans)) }
                 case Err(e) => Err(e)
             }
-        )
+            case Err(e) => Err(e)
+        })
 
     pub def seqLeft(ma: SheetWriter[a], mb: SheetWriter[b]): SheetWriter[a] = 
-        SheetWriter((wb, st) -> 
-            match apply1(ma, wb, st) { 
-                case Ok((st1, a)) => match apply1(mb, wb, st1) {
-                    case Ok((st2, _)) => Ok((st2, a))
-                    case Err(e) => Err(e)
-                }
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, a)) => match apply1(mb, wb, style, s2) {
+                case Ok((s3, _)) => Ok((s3, a))
                 case Err(e) => Err(e)
             }
-        )
+            case Err(e) => Err(e)
+        })
 
     pub def seqRight(ma: SheetWriter[a], mb: SheetWriter[b]): SheetWriter[b] = 
-        SheetWriter((wb, st) -> 
-            match apply1(ma, wb, st) { 
-                case Ok((st1, _)) => apply1(mb, wb, st1)
-                case Err(e) => Err(e)
-            }
-        )
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, _)) => apply1(mb, wb, style, s2)
+            case Err(e) => Err(e)
+        })
 
 
     pub def bind(ma: SheetWriter[a], fn: a -> SheetWriter[b]): SheetWriter[b] = 
-        SheetWriter((wb, st) -> 
-            match apply1(ma, wb, st) { 
-                case Ok((st1, a)) => apply1(fn(a), wb, st1)
-                case Err(e) => Err(e)
-            }
-        )
+        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
+            case Ok((s2, a)) => apply1(fn(a), wb, style, s2)
+            case Err(e) => Err(e)
+        })
 
     pub def flatMap(fn: a -> SheetWriter[b], ma: SheetWriter[a]): SheetWriter[b] = bind(ma, fn)
 
     pub def kleisliLeft(f1: a -> SheetWriter[b], f2: b -> SheetWriter[c], x: a): SheetWriter[c] =
-        SheetWriter((wb, st) -> 
-            match apply1(f1(x), wb, st) { 
-                case Ok((st1, b)) => apply1(f2(b), wb, st1)
-                case Err(e) => Err(e)
-            }
-        )
+        SheetWriter((wb, style, s1) -> match apply1(f1(x), wb, style, s1) { 
+            case Ok((s2, b)) => apply1(f2(b), wb, style, s2)
+            case Err(e) => Err(e)
+        })
 
     pub def kleisliRight(f1: b -> SheetWriter[c], f2: a -> SheetWriter[b], x: a): SheetWriter[c] =
         kleisliLeft(f2, f1, x)
@@ -226,133 +221,138 @@ namespace SheetIO/SheetWriter {
 
 
     def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]): SheetWriter[a] = 
-        SheetWriter((wb, st) -> { let ans = fn(wb); Result.map(x -> (st, x), ans)})
+        SheetWriter((wb, _, s1) -> {let ans = fn(wb); Result.map(x -> (s1, x), ans)})
 
     pub def liftAction(fn: Unit ~> a): SheetWriter[a] = 
-        SheetWriter((_, st)-> { let a = fn(); Ok((st, a)) })
+        SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetWriter[a] = 
-        SheetWriter((_, st) -> { let ans = fn(); Result.map(x -> (st, x), ans)})
+        SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
     pub def liftResult(x: Result[a, String]): SheetWriter[a] = 
-        SheetWriter((_, st) -> Result.map(a -> (st, a), x) as & Impure)
+        SheetWriter((_, _, s1) -> Result.map(a -> (s1, a), x) as & Impure)
     
     
     pub def mapM(mf: a -> SheetWriter[b], xs: List[a]): SheetWriter[List[b]] =
-        SheetWriter((wb, st) ->
-            mapMHelper(wb, st, mf, xs, e -> Err(e), (st1, ys) -> Ok(st1, ys))
+        SheetWriter((wb, style, s1) ->
+            mapMHelper(wb, style, s1, mf, xs, e -> Err(e), (s2, ys) -> Ok(s2, ys))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
     def mapMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   st: Cursors,
+                   style: Option[CellStyle],
+                   s1: Cursors,
                    mf: a -> SheetWriter[b], 
                    xs: List[a], 
                    fk: String -> Result[(Cursors, List[b]), String], 
                    sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
         match xs {
-            case Nil => sk(st, Nil)
+            case Nil => sk(s1, Nil)
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, x1)) => mapMHelper(wb, st1, mf, rs, fk, (st2, ks) -> sk(st2, x1 :: ks))
+                    case Ok((s2, x1)) => mapMHelper(wb, style, s2, mf, rs, fk, (s3, ks) -> sk(s3, x1 :: ks))
                 }
             }
         }
 
     pub def mapX(mf: a -> SheetWriter[b], xs: List[a]): SheetWriter[Unit] =
-        SheetWriter((wb, st) ->
-            mapXHelper(wb, st, mf, xs, e -> Err(e), st1 -> Ok((st1, ())))
+        SheetWriter((wb, style, s1) ->
+            mapXHelper(wb, style, s1, mf, xs, e -> Err(e), s2 -> Ok((s2, ())))
         )
 
     def mapXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   st: Cursors,
+                   style: Option[CellStyle],
+                   s1: Cursors,
                    mf: a -> SheetWriter[b], 
                    xs: List[a], 
                    fk: String -> Result[(Cursors, Unit), String], 
                    sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
         match xs {
-            case Nil => sk(st)
+            case Nil => sk(s1)
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, _)) => mapXHelper(wb, st1, mf, rs, fk, sk)
+                    case Ok((s2, _)) => mapXHelper(wb, style, s2, mf, rs, fk, sk)
                 }
             }
         }
 
     pub def mapWithIndexM(mf: (a, Int32) -> SheetWriter[b], xs: List[a]): SheetWriter[List[b]] =
-        SheetWriter((wb, st) ->
-            mapWithIndexMHelper(wb, st, mf, 0, xs, e -> Err(e), (st1, ys) -> Ok((st1, ys)))
+        SheetWriter((wb, style, s1) ->
+            mapWithIndexMHelper(wb, style, s1, mf, 0, xs, e -> Err(e), (s2, ys) -> Ok((s2, ys)))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
     def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            st: Cursors,
+                            style: Option[CellStyle],
+                            s1: Cursors,
                             mf: (a, Int32) -> SheetWriter[b], 
                             ix : Int32, 
                             xs: List[a], 
                             fk: String -> Result[(Cursors, List[b]), String], 
                             sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
         match xs {
-            case Nil => sk(st, Nil)
+            case Nil => sk(s1, Nil)
             case x :: rs => {
                 let ma = mf(x, ix);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, x1)) => mapWithIndexMHelper(wb, st1, mf, ix + 1, rs, fk, (st2, ks) -> sk(st2, x1 :: ks))
+                    case Ok((s2, x1)) => mapWithIndexMHelper(wb, style, s2, mf, ix + 1, rs, fk, (s3, ks) -> sk(s3, x1 :: ks))
                 }
             }
         }
 
     pub def mapWithIndexX(mf: (a, Int32) -> SheetWriter[b], xs: List[a]): SheetWriter[Unit] =
-        SheetWriter((wb, st) ->
-            mapWithIndexXHelper(wb, st, mf, 0, xs, e -> Err(e), st1 -> Ok((st1, ())))
+        SheetWriter((wb, style, s1) ->
+            mapWithIndexXHelper(wb, style, s1, mf, 0, xs, e -> Err(e), s2 -> Ok((s2, ())))
         )
 
     def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            st: Cursors,
+                            style: Option[CellStyle],
+                            s1: Cursors,
                             mf: (a, Int32) -> SheetWriter[b],
                             ix: Int32, 
                             xs: List[a], 
                             fk: String -> Result[(Cursors, Unit), String], 
                             sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
         match xs {
-            case Nil => sk(st)
+            case Nil => sk(s1)
             case x :: rs => {
                 let ma = mf(x, ix);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, _)) => mapWithIndexXHelper(wb, st1, mf, ix + 1, rs, fk, sk)
+                    case Ok((s2, _)) => mapWithIndexXHelper(wb, style, s2, mf, ix + 1, rs, fk, sk)
                 }
             }
         }
 
 
     pub def sequence(xs: List[SheetWriter[a]]): SheetWriter[List[a]] =
-        SheetWriter((wb, st) ->
-            sequenceHelper(wb, st, xs, e -> Err(e), (st1, ks) -> Ok((st1, ks)))
+        SheetWriter((wb, style, s1) ->
+            sequenceHelper(wb, style, s1, xs, e -> Err(e), (s2, ks) -> Ok((s2, ks)))
         )
 
     ///
     /// Helper function for `sequence`.
     ///
     def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                       st: Cursors,
+                       style: Option[CellStyle],
+                       s1: Cursors,
                        xs: List[SheetWriter[a]], 
                        fk: String -> Result[(Cursors, List[a]), String], 
                        sk: (Cursors, List[a]) -> Result[(Cursors, List[a]), String]): Result[(Cursors, List[a]), String] & Impure =
         match xs {
-            case Nil => sk(st, Nil)
-            case mx :: rs => match apply1(mx, wb, st) {
+            case Nil => sk(s1, Nil)
+            case mx :: rs => match apply1(mx, wb, style, s1) {
                 case Err(e) => fk(e)
-                case Ok((st1, x)) => sequenceHelper(wb, st1, rs, fk, (st2, ks) -> sk(st2, x :: ks))
+                case Ok((s2, x)) => sequenceHelper(wb, style, s2, rs, fk, (s3, ks) -> sk(s3, x :: ks))
             }
         }
 
@@ -381,47 +381,49 @@ namespace SheetIO/SheetWriter {
 
 
     pub def foldM(mf: (b, a) -> SheetWriter[b], start: b, xs: List[a]): SheetWriter[b] =
-        SheetWriter((wb, st) ->
-            foldMHelper(wb, st, mf, start, xs, e -> Err(e), (st1, ac) -> Ok((st1, ac)))
+        SheetWriter((wb, style, s1) ->
+            foldMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac) -> Ok((s2, ac)))
         )
 
     def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                    st: Cursors,
+                    style: Option[CellStyle],
+                    s1: Cursors,
                     mf: (b, a) -> SheetWriter[b], 
                     acc: b, 
                     xs: List[a], 
                     fk: String -> Result[(Cursors, b), String], 
                     sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
         match xs {
-            case Nil => sk(st, acc)
+            case Nil => sk(s1, acc)
             case x :: rs => {
                 let ma = mf(acc, x);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, acc1)) => foldMHelper(wb, st1, mf, acc1, rs, fk, sk)
+                    case Ok((s2, acc1)) => foldMHelper(wb, style, s2, mf, acc1, rs, fk, sk)
                 }
             }
         }
 
     pub def mapAccumM(mf: (ac, a) -> SheetWriter[(ac, b)], start: ac, xs: List[a]): SheetWriter[(ac, List[b])] =
-        SheetWriter((wb, st) ->
-            mapAccumMHelper(wb, st, mf, start, xs, e -> Err(e), (st1, ac, ks) -> Ok((st1, (ac, ks))))
+        SheetWriter((wb, style, s1) ->
+            mapAccumMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac, ks) -> Ok((s2, (ac, ks))))
         )
 
     def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
-                        st: Cursors,
+                        style: Option[CellStyle],
+                        s1: Cursors,
                         mf: (ac, a) -> SheetWriter[(ac, b)],
                         ac: ac,
                         xs: List[a],
                         fk: String -> Result[(Cursors, (ac, List[b])), String],
                         sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
         match xs {
-            case Nil => sk(st, ac, Nil)
+            case Nil => sk(s1, ac, Nil)
             case x :: rs => {
                 let ma = mf(ac, x);
-                match apply1(ma, wb, st) {
+                match apply1(ma, wb, style, s1) {
                     case Err(e) => fk(e)
-                    case Ok((st1, (ac1, x1))) => mapAccumMHelper(wb, st1, mf, ac1, rs, fk, (st2, ac2, ks) -> sk(st2, ac2, x1 :: ks))
+                    case Ok((s2, (ac1, x1))) => mapAccumMHelper(wb, style, s2, mf, ac1, rs, fk, (s3, ac2, ks) -> sk(s3, ac2, x1 :: ks))
                 }
             }
         }
@@ -716,9 +718,9 @@ namespace SheetIO/SheetWriter {
     // SheetWriter
 
     def getCursorAndIncr(sheetName: String): SheetWriter[Int32] = 
-        SheetWriter((_, st) -> match Map.get(sheetName, st) {
-            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, st), ix)) as & Impure
-            case None       => Ok((Map.insert(sheetName, 1, st), 0)) as & Impure
+        SheetWriter((_, _, s1) -> match Map.get(sheetName, s1) {
+            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, s1), ix)) as & Impure
+            case None       => Ok((Map.insert(sheetName, 1, s1), 0)) as & Impure
         })
 
     
@@ -766,7 +768,7 @@ namespace SheetIO/SheetWriter {
         liftActionResult(_ -> x1.getSheetName())
 
     def setCursorHelper(sheetName: String, n: Int32): SheetWriter[Unit] = 
-        SheetWriter((_, st) -> Ok((Map.insert(sheetName, n, st), ())) as & Impure)
+        SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as & Impure)
 
 
     pub def createCellStyle(mx: CellStyleSetter[a]): SheetWriter[CellStyle] =
@@ -799,7 +801,8 @@ namespace SheetIO/SheetWriter {
         let* ix         = getCursorAndIncr(name);
         let* row        = createRow(x, ix);
         let Row(row1)   = row;
-        let* _          = liftActionResult(_ -> mf(row1));
+        let* style      = askStyle();
+        let* _          = liftActionResult(_ -> mf(row1, style));
         return()
 
     /// Row 0 is read for the headers, all subsequent rows are *data*.
