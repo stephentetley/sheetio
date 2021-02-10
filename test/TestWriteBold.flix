@@ -34,16 +34,14 @@ def write1(): SheetWriter[Unit] =
     
 // Change,Reference,Asset Name,OldParentName,NewParentName
 def setRowOf2(astyle: CellStyle, a: String, b: String, c: Option[String]): RowSetter[Unit] = 
-    use SheetIO/RowSetter.{flatMap, return, putCellStyleAt!, putStringAt!, putOptionStringAt!};
-    let* _      = putCellStyleAt!(0, astyle);
-    let* _      = putStringAt!(0, a);
+    use SheetIO/RowSetter.{flatMap, return, localCellStyle, putStringAt!, putOptionStringAt!};
+    let* _      = localCellStyle(astyle, putStringAt!(0, a));
     let* _      = putStringAt!(1, b);
     let* _      = putOptionStringAt!(2, c);
     return()
 
 def setRowOf1(sty: CellStyle, a: Float64): RowSetter[Unit] = 
-    use SheetIO/RowSetter.{flatMap, return, putCellStyleAt!, putStringAt!, putFloat64At!};
-    let* _      = putCellStyleAt!(1, sty);
+    use SheetIO/RowSetter.{flatMap, return, localCellStyle, putStringAt!, putFloat64At!};
     let* _      = putStringAt!(0, "Number");
-    let* _      = putFloat64At!(1, a);
+    let* _      = localCellStyle(sty, putFloat64At!(1, a));
     return()

@@ -83,8 +83,8 @@ namespace SheetIO/RowSetter {
 
     pub def flatMap(k: a -> RowSetter[b], x: RowSetter[a]): RowSetter[b] = bind(x, k)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowSetter[a] =
-        RowSetter((r, _) -> update(r))
+    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] ~> Result[a, String]): RowSetter[a] =
+        RowSetter((r, style) -> fn(r, style))
 
     pub def liftAction(fn: Unit ~> a): RowSetter[a] =
         RowSetter((_, _) -> let x = fn(); Ok(x))
@@ -103,30 +103,28 @@ namespace SheetIO/RowSetter {
         RowSetter((_, _) -> x as & Impure)
         
     def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
+                        style: Option[CellStyle],
                         ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
+        use Result.{flatMap};
         use SheetIO/Internal/Row.{getCell, createCell};
-        match getCell(row, ix) {
-            case Ok(a) => if (not Object.isNull(a)) Ok(a) else createCell(row, ix)
-            case Err(_) => createCell(row, ix)
-        }
+        let* cell   = match getCell(row, ix) {
+                        case Ok(a) => if (not Object.isNull(a)) Ok(a) else createCell(row, ix)
+                        case Err(_) => createCell(row, ix)
+                    };
+        let* _      = match style { 
+                        case Some(x) => {let CellStyle(style1) = x; SheetIO/Internal/Cell.setCellStyle(cell, style1)}
+                        case None => Ok() as & Impure
+                    };
+        Ok(cell)
 
-    /// TODO - should be public `localStyle` instead...
-    pub def putCellStyleAt!(ix: Int32, style: CellStyle): RowSetter[Unit] =
-        use Result.flatMap;
-        let step = x -> {
-            let* cell               = createOrGetCell(x, ix);
-            let CellStyle(style1)   = style;
-            let* _                  = SheetIO/Internal/Cell.setCellStyle(cell, style1);
-            Ok()
-        };
-        liftPrim(step)
-
-
+    pub def localCellStyle(style: CellStyle, mx: RowSetter[a]): RowSetter[a] = 
+        RowSetter((r, _) -> apply1(mx, r, Some(style)))
+    
     pub def putBlankAt!(ix: Int32): RowSetter[Unit] =
         use SheetIO.CellType.{TyBlank};
         use Result.flatMap;
-        let step = x -> {
-            let* cell   = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell   = createOrGetCell(row, style, ix);
             let typ1    = SheetIO/CellType.marshal(TyBlank);
             let* _      = SheetIO/Internal/Cell.setCellType(cell, typ1);
             Ok()
@@ -136,8 +134,8 @@ namespace SheetIO/RowSetter {
 
     pub def putStringAt!(ix: Int32, value: String): RowSetter[Unit] =
         use Result.flatMap;
-        let step = x -> {
-            let* cell   = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell   = createOrGetCell(row, style, ix);
             let* _      = SheetIO/Internal/Cell.setStringCellValue(cell, value);
             Ok()
         };
@@ -145,8 +143,8 @@ namespace SheetIO/RowSetter {
 
     pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[Unit] =
         use Result.flatMap;
-        let step = x -> {
-            let* cell   = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell   = createOrGetCell(row, style, ix);
             let* _      = SheetIO/Internal/Cell.setBooleanCellValue(cell, value);
             Ok()
         };
@@ -154,8 +152,8 @@ namespace SheetIO/RowSetter {
 
     def putNumericAt!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
         use Result.flatMap;
-        let step = x -> {
-            let* cell   = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell   = createOrGetCell(row, style, ix);
             let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
             Ok()
         };
@@ -183,8 +181,8 @@ namespace SheetIO/RowSetter {
     pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[Unit] =
         use Time.LocalDateTime.{LocalDateTime};
         use Result.flatMap;
-        let step = x -> {
-            let* cell               = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell               = createOrGetCell(row, style, ix);
             let  LocalDateTime(dt1) = dt;
             let* _                  = SheetIO/Internal/Cell.setLocalDateTimeCellValue(cell, dt1);
             Ok()
@@ -194,8 +192,8 @@ namespace SheetIO/RowSetter {
     pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[Unit] =
         use Time.LocalDate.{LocalDate};
         use Result.flatMap;
-        let step = x -> {
-            let* cell           = createOrGetCell(x, ix);
+        let step = (row, style) -> {
+            let* cell           = createOrGetCell(row, style, ix);
             let  LocalDate(dt1) = dt;
             let* _              = SheetIO/Internal/Cell.setLocalDateCellValue(cell, dt1);
             Ok()

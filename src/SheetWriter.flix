@@ -232,7 +232,10 @@ namespace SheetIO/SheetWriter {
     pub def liftResult(x: Result[a, String]): SheetWriter[a] = 
         SheetWriter((_, _, s1) -> Result.map(a -> (s1, a), x) as & Impure)
     
-    
+    pub def localCellStyle(style: CellStyle, mx: SheetWriter[a]): SheetWriter[a] = 
+        SheetWriter((wb, _, s1) -> apply1(mx, wb, Some(style), s1))
+
+
     pub def mapM(mf: a -> SheetWriter[b], xs: List[a]): SheetWriter[List[b]] =
         SheetWriter((wb, style, s1) ->
             mapMHelper(wb, style, s1, mf, xs, e -> Err(e), (s2, ys) -> Ok(s2, ys))
