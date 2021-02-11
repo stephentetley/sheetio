@@ -88,4 +88,15 @@ namespace SheetIO/Internal/CellStyle {
         } catch {
             case _: ##java.lang.Exception => Err("setDataFormat") 
         }
+
+    pub def cloneStyleFrom(style: ##org.apache.poi.ss.usermodel.CellStyle, 
+                           styleToClone: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, String] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle); 
+        try {
+            let ans = cloneStyleFrom(style, styleToClone);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("cloneStyleFrom") 
+        }
+
 }

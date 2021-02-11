@@ -24,7 +24,9 @@ namespace SheetIO {
 namespace SheetIO/CellStyleSetter {
 
     use SheetIO.CellStyleSetter;
-    use SheetIO.CellStyleSetter.CellStyleSetter;
+    use SheetIO.CellStyleSetter.{CellStyleSetter};
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
     use SheetIO.Font;
     use SheetIO.Font.Font;
     
@@ -247,5 +249,9 @@ namespace SheetIO/CellStyleSetter {
 
     pub def setDataFormat!(x: Int16): CellStyleSetter[Unit] =
         liftPrim(r -> SheetIO/Internal/CellStyle.setDataFormat(r, x))
+
+    pub def cloneStyleFrom!(x: CellStyle): CellStyleSetter[Unit] =
+        let CellStyle(x1) = x;
+        liftPrim(r -> SheetIO/Internal/CellStyle.cloneStyleFrom(r, x1))
 
 }

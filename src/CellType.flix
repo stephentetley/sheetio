@@ -73,6 +73,10 @@ namespace SheetIO {
         def neq(x: CellType, y: CellType): Bool = not (x == y)
     }
 
+    instance Hash[CellType] {
+        def hash(x: CellType): Int = SheetIO/CellType.hashCode(x)
+    }
+
 }
 
 namespace SheetIO/CellType {
@@ -82,7 +86,7 @@ namespace SheetIO/CellType {
 
 
     pub def marshal(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        import flix.runtime.spt.sheetio.Wrapper:get_NONE()      as get_NONE;
+        import flix.runtime.spt.sheetio.Wrapper:get_NONE()          as get_NONE;
         import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
         import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
         import get org.apache.poi.ss.usermodel.CellType:ERROR       as getERROR;
@@ -157,6 +161,11 @@ namespace SheetIO/CellType {
     pub def equals(x: CellType, y: CellType): Bool = toInt32(x) == toInt32(y)
 
     pub def compare(x: CellType, y: CellType): Int32 = Int32.compare(toInt32(x), toInt32(y))
+
+    pub def hashCode(x: CellType): Int32 =
+        import java.lang.Enum.hashCode();
+        let en1 = marshal(x) as ##java.lang.Enum;
+        hashCode(en1) as & Pure
 
 
     pub def format (x: CellType): String = match x {

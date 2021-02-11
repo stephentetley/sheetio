@@ -237,6 +237,11 @@ namespace SheetIO/NamedRowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue)) `swapError` "getStringNamed('${label}')"
             
 
+    pub def getContentNamed(label: String): NamedRowEvaluator[String] =
+        let* ix     = getIndex(label);
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue)) `swapError` "getContentNamed('${label}')"
+
+
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =
         let* x = isNullNamed(label);
         if (x) return(d) else getStringNamed(label)

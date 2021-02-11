@@ -114,12 +114,10 @@ namespace SheetIO/RowEvaluator {
         kleisliLeft(f2, f1, x)
 
     pub def optional(x: RowEvaluator[a]): RowEvaluator[Option[a]] =
-        RowEvaluator(r ->
-            match apply1(x, r) {
-                case Ok(a) => Ok(Some(a))
-                case Err(_) => Ok(None)
-            }
-        )
+        RowEvaluator(r -> match apply1(x, r) {
+            case Ok(a) => Ok(Some(a))
+            case Err(_) => Ok(None)
+        })
 
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(r -> fn(r))
@@ -181,10 +179,17 @@ namespace SheetIO/RowEvaluator {
             case _ => throwError(errMsg + " - not blank")
         } `swapError` errMsg
 
-    
+    /// Error if the cell type is numeric.
     pub def getStringAt(ix: Int32): RowEvaluator[String] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue))
             `swapError` "getStringAt(${Int32.toString(ix)})"
+
+
+    /// Uses the default DataFormatter
+    pub def getContentAt(ix: Int32): RowEvaluator[String] =
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue))
+            `swapError` "getContentAt(${Int32.toString(ix)})"
+
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNullAt(ix);
@@ -199,7 +204,8 @@ namespace SheetIO/RowEvaluator {
     pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue))
     
-
+    /// Error if the cell type is String or cell value is not a readable double.
+    /// Returns 0 for blank cells.
     pub def getNumericAt(ix: Int32): RowEvaluator[Float64] =
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
 
