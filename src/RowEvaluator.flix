@@ -241,6 +241,9 @@ namespace SheetIO/RowEvaluator {
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
         return(LocalDateTime(dt1))
 
+    pub def getLocalDateAt(ix: Int32): RowEvaluator[Time.LocalDate] = 
+        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeAt(ix))
+
 
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 
         let* x1 = isNullAt(ix);

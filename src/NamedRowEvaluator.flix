@@ -295,6 +295,8 @@ namespace SheetIO/NamedRowEvaluator {
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
         return(LocalDateTime(dt1))
 
+    pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
+        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label))
 
     def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] = 
         let* x1 = isNullNamed(label);
