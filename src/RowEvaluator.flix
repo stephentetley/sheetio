@@ -241,9 +241,35 @@ namespace SheetIO/RowEvaluator {
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
         return(LocalDateTime(dt1))
 
+
+    /// Cell must be readable as a String
+    pub def getLocalDateTimeAtWithFormat(ix: Int32, fmt: Time/Format.DateTimeFormatter): RowEvaluator[Time.LocalDateTime] = 
+        let* s = getStringAt(ix);
+        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeAtWithFormat")
+        
+
+    /// Cell must be readable as a String
+    pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDateTime] = 
+        let* fmt    = liftOption(Time/Format/DateTimeFormatter.fromPattern(patt), "getLocalDateTimeAtWithPattern - bad pattern");
+        let* s      = getStringAt(ix);
+        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeAtWithPattern")
+
     pub def getLocalDateAt(ix: Int32): RowEvaluator[Time.LocalDate] = 
         map(Time/LocalDateTime.toLocalDate, getLocalDateTimeAt(ix))
 
+
+    /// Cell must be readable as a String
+    pub def getLocalDateAtWithFormat(ix: Int32, fmt: Time/Format.DateFormatter): RowEvaluator[Time.LocalDate] = 
+        let* s = getStringAt(ix);
+        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateAtWithFormat")
+        
+
+    /// Cell must be readable as a String
+    pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDate] = 
+        let* fmt    = liftOption(Time/Format/DateFormatter.fromPattern(patt), "getLocalDateAtWithPattern - bad pattern");
+        let* s      = getStringAt(ix);
+        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateAtWithPattern")
+        
 
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 
         let* x1 = isNullAt(ix);

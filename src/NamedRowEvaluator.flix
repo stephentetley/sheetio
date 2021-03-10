@@ -264,10 +264,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     def getNumNamed(label: String, conv: Float64 -> Option[a], errMsg: String): NamedRowEvaluator[a] =
         let* n = getNumericNamed(label);
-        match conv(n) {
-            case Some(i) => return(i)
-            case None => throwError(errMsg)
-        }
+        liftOption(conv(n), errMsg)
 
 
     pub def getInt8Named(label: String): NamedRowEvaluator[Int8] =
@@ -295,8 +292,36 @@ namespace SheetIO/NamedRowEvaluator {
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
         return(LocalDateTime(dt1))
 
+
+    /// Cell must be readable as a String
+    pub def getLocalDateTimeNamedWithFormat(label: String, fmt: Time/Format.DateTimeFormatter): NamedRowEvaluator[Time.LocalDateTime] = 
+        let* s = getStringNamed(label);
+        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeNamedWithFormat")
+        
+
+    /// Cell must be readable as a String
+    pub def getLocalTimeDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDateTime] = 
+        let* fmt    = liftOption(Time/Format/DateTimeFormatter.fromPattern(patt), "getLocalTimeDateNamedWithPattern - bad pattern");
+        let* s = getStringNamed(label);
+        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalTimeDateNamedWithPattern")
+
+
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
         map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label))
+
+    /// Cell must be readable as a String
+    pub def getLocalDateNamedWithFormat(label: String, fmt: Time/Format.DateFormatter): NamedRowEvaluator[Time.LocalDate] = 
+        let* s = getStringNamed(label);
+        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateNamedWithFormat")
+        
+
+    /// Cell must be readable as a String
+    pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDate] = 
+        let* fmt    = liftOption(Time/Format/DateFormatter.fromPattern(patt), "getLocalDateNamedWithPattern - bad pattern");
+        let* s = getStringNamed(label);
+        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateNamedWithPattern")
+    
+
 
     def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] = 
         let* x1 = isNullNamed(label);
