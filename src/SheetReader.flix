@@ -258,9 +258,22 @@ namespace SheetIO/SheetReader {
     pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetReader[a] = 
         SheetReader(_ -> fn())
 
-    pub def liftResult(x: Result[a, String]): SheetReader[a] = 
-        SheetReader(_ -> x as & Impure)
-    
+    pub def liftOption(x: Option[a], errMsg: String): SheetReader[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
+
+    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): SheetReader[a] = match x { 
+        case Ok(x1) => return(x1)
+        case Err(e) => throwError(makeErrMsg(e))
+    }
+
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetReader[a] = match x { 
+        case Success(x1) => return(x1)
+        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+    }
+
+
     pub def mapM(mf: a -> SheetReader[b], xs: List[a]): SheetReader[List[b]] =
         SheetReader(wb ->
             mapMHelper(wb, mf, xs, e -> Err(e), ys -> Ok(ys))

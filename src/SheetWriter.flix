@@ -229,9 +229,21 @@ namespace SheetIO/SheetWriter {
     pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetWriter[a] = 
         SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
-    pub def liftResult(x: Result[a, String]): SheetWriter[a] = 
-        SheetWriter((_, _, s1) -> Result.map(a -> (s1, a), x) as & Impure)
-    
+    pub def liftOption(x: Option[a], errMsg: String): SheetWriter[a] = match x { 
+        case Some(x1) => return(x1)
+        case None => throwError(errMsg)
+    }
+
+    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): SheetWriter[a] = match x { 
+        case Ok(x1) => return(x1)
+        case Err(e) => throwError(makeErrMsg(e))
+    }
+
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetWriter[a] = match x { 
+        case Success(x1) => return(x1)
+        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+    }
+
     pub def localCellStyle(style: CellStyle, mx: SheetWriter[a]): SheetWriter[a] = 
         SheetWriter((wb, _, s1) -> apply1(mx, wb, Some(style), s1))
 

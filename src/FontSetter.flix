@@ -112,9 +112,18 @@ namespace SheetIO/FontSetter {
         case None => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, String]): FontSetter[a] =
-        FontSetter(_ -> x as & Impure)
-        
+
+    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): FontSetter[a] = match x { 
+        case Ok(x1) => return(x1)
+        case Err(e) => throwError(makeErrMsg(e))
+    }
+
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): FontSetter[a] = match x { 
+        case Success(x1) => return(x1)
+        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+    }
+
+
     /// Alias for `seqRight`
     pub def *>(p1: FontSetter[a], p2: FontSetter[b]): FontSetter[b] = seqRight(p1, p2)
 

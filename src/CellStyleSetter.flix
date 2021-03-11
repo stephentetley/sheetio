@@ -96,8 +96,15 @@ namespace SheetIO/CellStyleSetter {
         case None => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, String]): CellStyleSetter[a] =
-        CellStyleSetter(_ -> x as & Impure)
+    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): CellStyleSetter[a] = match x { 
+        case Ok(x1) => return(x1)
+        case Err(e) => throwError(makeErrMsg(e))
+    }
+
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): CellStyleSetter[a] = match x { 
+        case Success(x1) => return(x1)
+        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+    }
 
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.
