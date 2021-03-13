@@ -33,7 +33,7 @@ namespace SheetIO {
 
 
     instance ToString[CellType] {
-        def toString(x: CellType): String = match x {
+        pub def toString(x: CellType): String = match x {
             case TyNone => "TyNone"
             case TyBlank => "TyBlank"
             case TyBoolean => "TyBoolean"
@@ -45,7 +45,7 @@ namespace SheetIO {
     }
 
     instance FromString[CellType] {
-        def fromString(x: String): Option[CellType] = match x {
+        pub def fromString(x: String): Option[CellType] = match x {
             case "TyNone" => Some(TyNone)
             case "TyBlank" => Some(TyBlank)
             case "TyBoolean" => Some(TyBoolean)
@@ -58,8 +58,7 @@ namespace SheetIO {
     }
 
     instance Eq[CellType] {
-
-        def eq(x: CellType, y: CellType): Bool = match (x, y) {
+        pub def eq(x: CellType, y: CellType): Bool = match (x, y) {
             case (TyNone, TyNone) => true
             case (TyBlank, TyBlank) => true
             case (TyBoolean, TyBoolean) => true
@@ -70,11 +69,11 @@ namespace SheetIO {
             case (_, _) => false
         }
 
-        def neq(x: CellType, y: CellType): Bool = not (x == y)
+        pub def neq(x: CellType, y: CellType): Bool = not (x == y)
     }
 
     instance Hash[CellType] {
-        def hash(x: CellType): Int = SheetIO/CellType.hashCode(x)
+        pub def hash(x: CellType): Int = SheetIO/CellType.hashCode(x)
     }
 
 }
