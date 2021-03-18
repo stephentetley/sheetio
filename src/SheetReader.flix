@@ -871,5 +871,5 @@ namespace SheetIO/SheetReader {
         let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1) |> Result.mapErr(e -> "namedRowsFrom [${e}]"));
         return(xs)
 
-    
+    /// TODO fold version of `namedRowsFrom`
 }
