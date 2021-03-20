@@ -68,8 +68,6 @@ namespace SheetIO {
             case (TyString, TyString) => true
             case (_, _) => false
         }
-
-        pub def neq(x: CellType, y: CellType): Bool = not (x == y)
     }
 
     instance Hash[CellType] {
