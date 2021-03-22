@@ -134,13 +134,8 @@ namespace SheetIO/NamedRowEvaluator {
 
     /// Note - this returns default for all errors (i.e. unknown column which is a
     /// schema error). Might be better if it can just return default if cell is null...
-    pub def optionWithDefault(x: NamedRowEvaluator[a], d: a): NamedRowEvaluator[a] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(x, ixs, r) {
-                case Ok(a) => Ok(a)
-                case Err(_) => Ok(d)
-            }
-        )
+    pub def withDefault(x: NamedRowEvaluator[a], d: a): NamedRowEvaluator[a] =
+        alt(x, return(d))
 
     pub def alt(ea: NamedRowEvaluator[a], eb: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, r) ->

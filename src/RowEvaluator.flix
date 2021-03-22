@@ -102,6 +102,15 @@ namespace SheetIO/RowEvaluator {
 
     pub def flatMap(k: a -> RowEvaluator[b], x: RowEvaluator[a]): RowEvaluator[b] = bind(x, k)
 
+
+    pub def alt(ea: RowEvaluator[a], eb: RowEvaluator[a]): RowEvaluator[a] =
+        RowEvaluator(r ->
+            match apply1(ea, r) {
+                case Ok(a) => Ok(a)
+                case Err(_) => apply1(eb, r)
+            }
+        )
+
     pub def kleisliLeft(f1: a -> RowEvaluator[b], f2: b -> RowEvaluator[c], x: a): RowEvaluator[c] =
         RowEvaluator(r -> 
             match apply1(f1(x), r) { 
@@ -118,6 +127,11 @@ namespace SheetIO/RowEvaluator {
             case Ok(a) => Ok(Some(a))
             case Err(_) => Ok(None)
         })
+
+    /// Note - this returns the default value for any errors (i.e. unknown column which is a
+    /// schema error), not just a "read" error if the cell type is wrong.
+    pub def withDefault(x: RowEvaluator[a], d: a): RowEvaluator[a] =
+        alt(x, return(d))
 
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(r -> fn(r))
