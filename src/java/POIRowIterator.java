@@ -23,11 +23,22 @@ import org.apache.poi.ss.usermodel.Sheet;
 
 import java.util.Iterator;
 
-public class RowIterator {
+
+/* Note - this class iterates the rows of org.apache.poi.ss.usermodel.Sheet.
+ * This is only because delegating to Java to iterating rows was found to
+ * be a reliable method of reading up to the end of the sheet. Trying to
+ * find the end with a call to `getLastRowNum` in Flix code seemed error
+ * prone and was abandoned as a strategy.
+ *
+ * As far as I am aware the whole Sheet is read into memory and it
+ * is streamed while in memory - this module does not implement
+ * streaming as a way of achieving low memory usage.
+*/
+public class POIRowIterator {
 
     private Iterator<Row> iter;
 
-    public RowIterator(Sheet sheet) throws Exception {
+    public POIRowIterator(Sheet sheet) throws Exception {
         this.iter = sheet.rowIterator();
     }
 

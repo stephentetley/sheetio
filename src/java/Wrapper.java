@@ -19,6 +19,9 @@ package flix.runtime.spt.sheetio;
 
 import org.apache.poi.ss.usermodel.CellType;
 
+/* Static wrappers for parts of the POI API that cause trouble for
+ * Flix's JVM interface.
+ */
 public class Wrapper {
 
     public static CellType get_NONE() {
