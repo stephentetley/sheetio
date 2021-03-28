@@ -25,8 +25,6 @@ namespace SheetIO/SheetReader {
 
     use ToString.toString;
     
-    use Data.Stream;
-
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
 
@@ -801,7 +799,7 @@ namespace SheetIO/SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def newPOIRowStream(x: Sheet): Result[Stream[##org.apache.poi.ss.usermodel.Row], String] & Impure =
+    def newPOIRowStream(x: Sheet): Result[Cursor[##org.apache.poi.ss.usermodel.Row], String] & Impure =
         import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
         import flix.runtime.spt.sheetio.POIRowIterator.hasNext() as ffiHasNext;
         import flix.runtime.spt.sheetio.POIRowIterator.next() as ffiNext;
@@ -809,12 +807,12 @@ namespace SheetIO/SheetReader {
         try {
             let Sheet(x1)       = x;
             let iter = newRowsIterator(x1);
-            let streamiter =  {
+            let cursorIter =  {
                   hasNext = () -> ffiHasNext(iter)
                 , next = () -> ffiNext(iter)
                 , finalize = () -> ffiClose(iter)
             };
-            Ok(Data/Stream.fromIterator(streamiter))
+            Ok(Cursor.makeCursor(cursorIter))
         } catch {
             case _: ##java.lang.Exception => Err("newRowStream")
         }
@@ -823,11 +821,11 @@ namespace SheetIO/SheetReader {
     pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
         let* strm           = liftActionResult(_ -> newPOIRowStream(x));
-        let* xs             = liftActionResult(_ -> Data/Stream.traverseToListResult(f, strm));
+        let* xs             = liftActionResult(_ -> Cursor.traverseToListResult(f, strm));
         return(xs)
 
     pub def rowsInRange(x: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
-        use Data/Stream.{take, drop, traverseToListResult};
+        use Cursor.{take, drop, traverseToListResult};
         let RowEvaluator(f) = eval;
         let* strm0          = liftActionResult(_ -> newPOIRowStream(x));
         let strm1           = take(e - b, drop(b, strm0));
@@ -842,7 +840,7 @@ namespace SheetIO/SheetReader {
 
 
     pub def namedRowsInRange(x: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
-        use Data/Stream.{take, drop, traverseToListResult};
+        use Cursor.{take, drop, traverseToListResult};
         let NamedRowEvaluator(f) = eval;
         let* strm0          = liftActionResult(_ -> newPOIRowStream(x));
         let strm1           = take(e - b, drop(b, strm0));
@@ -861,7 +859,7 @@ namespace SheetIO/SheetReader {
 
     /// Reader headers from row at `headerIndex` then read data rows from `start`.
     pub def namedRowsFrom(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
-        use Data/Stream.{take, drop, traverseToListResult};
+        use Cursor.{take, drop, traverseToListResult};
         let NamedRowEvaluator(f)    = eval;
         let* r0         = x.getRowAt(headerIndex);
         let* hdrs       = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
