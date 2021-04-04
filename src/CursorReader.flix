@@ -30,72 +30,70 @@ namespace SheetIO/CursorReader {
     ///
     /// Returns a new Row Cursor.
     ///
-    pub def newRowCursor(src: System.FilePath, sheetName: String): Result[Cursor[POIRow], String] & Impure =
-        import new flix.runtime.spt.sheetio.StreamingRowIterator(##java.nio.file.Path, String) as newRowIterator;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext() as ffiHasNext;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.next() as ffiNext;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.close() as ffiClose;
+    pub def newRowCursor(src: System.FilePath, sheetName: String): Cursor[String, POIRow] & Impure =
+        import flix.runtime.spt.sheetio.StreamingRowCursor:createCursorWithSheetName(##java.nio.file.Path, String) as newRowCursor;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.next() as ffiNext;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.close() as ffiClose;
         try {
             let FilePath(src1) = src;
-            let iter = newRowIterator(src1, sheetName);
-            let cursorIter =  {
-                  hasNext = () -> ffiHasNext(iter)
-                , next = () -> ffiNext(iter)
-                , finalize = () -> ffiClose(iter)
+            let iter = newRowCursor(src1, sheetName);
+            let cursorAlg =  {
+                  hasNext   = () -> ffiHasNext(iter)
+                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , finalize  = () -> ffiClose(iter)
             };
-            Ok(Cursor.makeCursor(cursorIter))
+            Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Err("newRowCursor")
+            case _: ##java.lang.Exception => Cursor.failure("newRowCursor")
         }
 
     ///
     /// Returns a new Row Cursor for sheet at `ix`.
     ///
-    pub def newRowCursorAt(src: System.FilePath, sheetIndex: Int32): Result[Cursor[POIRow], String] & Impure =
-        import new flix.runtime.spt.sheetio.StreamingRowIterator(##java.nio.file.Path, Int32) as newRowIterator;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext() as ffiHasNext;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.next() as ffiNext;
-        import flix.runtime.spt.sheetio.StreamingRowIterator.close() as ffiClose;
+    pub def newRowCursorAt(src: System.FilePath, sheetIndex: Int32): Cursor[String, POIRow] & Impure =
+        import flix.runtime.spt.sheetio.StreamingRowCursor:createCursorWithSheetNumber(##java.nio.file.Path, Int32) as newRowCursor;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.next() as ffiNext;
+        import flix.runtime.spt.sheetio.StreamingRowCursor.close() as ffiClose;
         try {
             let FilePath(src1) = src;
-            let iter = newRowIterator(src1, sheetIndex);
-            let cursorIter =  {
-                  hasNext = () -> ffiHasNext(iter)
-                , next = () -> ffiNext(iter)
-                , finalize = () -> ffiClose(iter)
+            let iter = newRowCursor(src1, sheetIndex);
+            let cursorAlg =  {
+                  hasNext   = () -> ffiHasNext(iter)
+                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , finalize  = () -> ffiClose(iter)
             };
-            Ok(Cursor.makeCursor(cursorIter))
+            Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Err("newRowCursorAt")
+            case _: ##java.lang.Exception => Cursor.failure("newRowCursorAt")
         }
 
     /// 
-    /// At the moment the answer type is not ideal, it would be much nicer to embed the `Result` type 
-    /// in the cursor so the answer is `Cursor[a]` or more likely `Cursor[m, a]` where `m` is some
-    /// monad.
+    /// Improved answer type...
     /// 
-    pub def indexedRowCursor(start: Int32, eval: RowEvaluator[a], cr: Cursor[POIRow]): Cursor[Result[a, String]] = 
+    pub def indexedRowCursor(start: Int32, eval: RowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
         let RowEvaluator(eval1) = eval;
-        cr |> Cursor.drop(start) |> Cursor.map(eval1)
+        src |> Cursor.drop(start) |> Cursor.mapResult(eval1)
 
     /// 
-    /// Likewise this function has a similar not ideal answer type, which is even more cumbersome due to the effect 
-    /// (the Cursor type already embeds Impure but here it has to leak out)
-    /// 
     /// Because Cursor is implicitly tied to iterating "IO-like" resources (e.g. lines of a file, database results)
-    /// it should most likely embed errors itself.
+    /// it no embeds errors itself.
     /// 
-    pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], cr: Cursor[POIRow]): Cursor[Result[a, String]] & Impure = 
+    pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
         let NamedRowEvaluator(eval1) = eval;
         let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
-        let cr1 = if (headersLine > 0) Cursor.drop(headersLine - 1, cr) else cr;
-        match Cursor.view(cr1) {
-            case Some(hrow, cr2) => {
+        let src1 = if (headersLine > 0) Cursor.drop(headersLine - 1, src) else src;
+        match Cursor.head!(src1) {
+            case Some(hrow) => {
                 let arr = Result.getWithDefault(headerEval1(hrow), Array.new("", 0));
                 let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
-                Cursor.map(eval1(lookups), cr2)
+                Cursor.mapResult(eval1(lookups), src1)
             }
-            case None => Cursor.empty()
+            case None => { 
+                Cursor.finalize!(src1);
+                Cursor.failure("Cannot find headers")
+            }
         }
 
 }

@@ -25,37 +25,41 @@ import java.util.Iterator;
 import com.monitorjbl.xlsx.StreamingReader;
 import org.apache.poi.ss.usermodel.*;
 
-public class StreamingRowIterator {
-    private Workbook wb = null;
-    private Iterator<Row> rowIterator;
+/// This is a properly streaming (i.e. low memory use) cursor using the
+/// library xlsx-streamer [com.monitorjbl.xlsx.StreamingReader]
+public class StreamingRowCursor {
 
-    public StreamingRowIterator(Path path, String sheetName) throws Exception {
-        InputStream instr = new FileInputStream(path.toFile());
-        wb = StreamingReader.builder().open(instr);
+    private final Workbook workbook;
+    private final Iterator<Row> iter;
 
-        rowIterator = wb.getSheet(sheetName).rowIterator();
-
+    protected StreamingRowCursor(Workbook wb, String sheetName) {
+        workbook = wb;
+        iter = workbook.getSheet(sheetName).rowIterator();
     }
 
-    public StreamingRowIterator(Path path, int sheetnumber) throws Exception {
+    public static StreamingRowCursor createCursorWithSheetName(Path path, String sheetName) throws Exception {
         InputStream instr = new FileInputStream(path.toFile());
-        wb = StreamingReader.builder().open(instr);
+        Workbook wb = StreamingReader.builder().open(instr);
+        return new StreamingRowCursor(wb, sheetName);
+    }
 
-        rowIterator = wb.getSheetAt(sheetnumber).rowIterator();
-
+    public static StreamingRowCursor createCursorWithSheetNumber(Path path, int sheetNumber) throws Exception {
+        InputStream instr = new FileInputStream(path.toFile());
+        Workbook wb = StreamingReader.builder().open(instr);
+        String sheetName = wb.getSheetName(sheetNumber);
+        return new StreamingRowCursor(wb, sheetName);
     }
 
     public boolean hasNext() {
-        return rowIterator.hasNext();
+        return iter.hasNext();
     }
 
     public Row next() throws Exception {
-        Row row = rowIterator.next();
-        return row;
+        return iter.next();
     }
 
     public void close() throws IOException {
-        wb.close();
+        workbook.close();
     }
 
 }

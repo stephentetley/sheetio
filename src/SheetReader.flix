@@ -799,37 +799,37 @@ namespace SheetIO/SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def newPOIRowStream(x: Sheet): Result[Cursor[##org.apache.poi.ss.usermodel.Row], String] & Impure =
-        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowsIterator;
-        import flix.runtime.spt.sheetio.POIRowIterator.hasNext() as ffiHasNext;
-        import flix.runtime.spt.sheetio.POIRowIterator.next() as ffiNext;
-        import flix.runtime.spt.sheetio.POIRowIterator.close() as ffiClose;
+    def newPOIRowStream(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
+        import new flix.runtime.spt.sheetio.POIRowCursor(##org.apache.poi.ss.usermodel.Sheet) as newRowCursor;
+        import flix.runtime.spt.sheetio.POIRowCursor.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.POIRowCursor.next() as ffiNext;
+        import flix.runtime.spt.sheetio.POIRowCursor.close() as ffiClose;
         try {
             let Sheet(x1)       = x;
-            let iter = newRowsIterator(x1);
-            let cursorIter =  {
-                  hasNext = () -> ffiHasNext(iter)
-                , next = () -> ffiNext(iter)
-                , finalize = () -> ffiClose(iter)
+            let iter = newRowCursor(x1);
+            let cursorAlg =  {
+                  hasNext   = () -> ffiHasNext(iter)
+                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , finalize  = () -> ffiClose(iter)
             };
-            Ok(Cursor.makeCursor(cursorIter))
+            Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Err("newRowStream")
+            case _: ##java.lang.Exception => Cursor.failure("newPOIRowStream")
         }
 
     /// Use rowiterator...
     pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
-        let* strm           = liftActionResult(_ -> newPOIRowStream(x));
-        let* xs             = liftActionResult(_ -> Cursor.traverseToListResult(f, strm));
+        let* strm           = liftAction(_ -> newPOIRowStream(x));
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm) |> Cursor.toList);
         return(xs)
 
     pub def rowsInRange(x: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
-        use Cursor.{take, drop, traverseToListResult};
         let RowEvaluator(f) = eval;
-        let* strm0          = liftActionResult(_ -> newPOIRowStream(x));
-        let strm1           = take(e - b, drop(b, strm0));
-        let* xs             = liftActionResult(_ -> traverseToListResult(f, strm1));
+        let* strm           = liftAction(_ -> newPOIRowStream(x));
+        let* _              = liftAction(_ -> Cursor.drop!(b, strm));
+        let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm1) |> Cursor.toList);
         return(xs)
 
     pub def rowEval(x: Row, eval: RowEvaluator[a]): SheetReader[a] =
@@ -840,11 +840,11 @@ namespace SheetIO/SheetReader {
 
 
     pub def namedRowsInRange(x: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
-        use Cursor.{take, drop, traverseToListResult};
         let NamedRowEvaluator(f) = eval;
-        let* strm0          = liftActionResult(_ -> newPOIRowStream(x));
-        let strm1           = take(e - b, drop(b, strm0));
-        let* xs             = liftActionResult(_ -> traverseToListResult(f(ixs), strm1));
+        let* strm           = liftAction(_ -> newPOIRowStream(x));
+        let* _              = liftAction(_ -> Cursor.drop!(b, strm));
+        let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm1) |> Cursor.toList);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], eval: NamedRowEvaluator[a]): SheetReader[a] =
@@ -859,14 +859,13 @@ namespace SheetIO/SheetReader {
 
     /// Reader headers from row at `headerIndex` then read data rows from `start`.
     pub def namedRowsFrom(x: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
-        use Cursor.{take, drop, traverseToListResult};
         let NamedRowEvaluator(f)    = eval;
         let* r0         = x.getRowAt(headerIndex);
         let* hdrs       = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm0      = liftActionResult(_ -> newPOIRowStream(x));
-        let strm1       = drop(start, strm0);
-        let* xs         = liftActionResult(_ -> traverseToListResult(f(ixs), strm1) |> Result.mapErr(e -> "namedRowsFrom [${e}]"));
+        let* strm       = liftAction(_ -> newPOIRowStream(x));
+        let _           = liftAction(_ -> Cursor.drop!(start, strm));
+        let* xs         = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm) |> Cursor.toList);
         return(xs)
 
     /// TODO fold version of `namedRowsFrom`

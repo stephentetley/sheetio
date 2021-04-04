@@ -14,8 +14,5 @@ poi-ooxml-schemas-4.1.2.jar
 xmlbeans-3.1.0.jar
 commons-compress-1.20.jar
 commons-collections4-4.4.jar
-
-Streaming needs these extra jars:
-
 xlsx-streamer-2.2.0
 slf4j-api-2.0.0-alpha1

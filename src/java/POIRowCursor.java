@@ -34,11 +34,11 @@ import java.util.Iterator;
  * is streamed while in memory - this module does not implement
  * streaming as a way of achieving low memory usage.
 */
-public class POIRowIterator {
+public class POIRowCursor {
 
     private Iterator<Row> iter;
 
-    public POIRowIterator(Sheet sheet) throws Exception {
+    public POIRowCursor(Sheet sheet) throws Exception {
         this.iter = sheet.rowIterator();
     }
 
