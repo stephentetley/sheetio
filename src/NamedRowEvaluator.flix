@@ -51,11 +51,31 @@ namespace SheetIO/NamedRowEvaluator {
     pub def throwError(msg: String): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _) -> Err(msg) as & Impure)
 
+    /// TODO - row num is useful but we need a less ad-hoc API...
+    pub def throwErrorWithRowNum(msgF: Int32 -> String): NamedRowEvaluator[a] =
+        NamedRowEvaluator((_, row) -> 
+            let msg = msgF(SheetIO/Internal/Row.getRowNum(row));
+            Err(msg)
+        )
+
+
     pub def swapError(ma: NamedRowEvaluator[a], msg: String): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, r) ->
             match apply1(ma, ixs, r) {
                 case Ok(a) => Ok(a)
                 case Err(_) => Err(msg)
+            }
+        )
+
+    /// TODO - row num is useful but we need a less ad-hoc API...
+    pub def swapErrorWithRowNum(ma: NamedRowEvaluator[a], msgF: Int32 -> String): NamedRowEvaluator[a] =
+        NamedRowEvaluator((ixs, r) ->
+            match apply1(ma, ixs, r) {
+                case Ok(a) => Ok(a)
+                case Err(_) => { 
+                    let msg = msgF(SheetIO/Internal/Row.getRowNum(r));
+                    Err(msg)
+                }
             }
         )
 
@@ -213,7 +233,11 @@ namespace SheetIO/NamedRowEvaluator {
         use Result.{flatMap};
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
-    
+
+    pub def getRowNum(): NamedRowEvaluator[Int32] = 
+        NamedRowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+
+
     pub def isNullNamed(label: String): NamedRowEvaluator[Bool] = 
         let* ix     = getIndex(label);
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
@@ -317,7 +341,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
-        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label))
+        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label)) `swapError` "getLocalDateNamed"
 
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithFormat(label: String, fmt: Time/Format.DateFormatter): NamedRowEvaluator[Time.LocalDate] = 

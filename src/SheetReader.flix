@@ -864,7 +864,7 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(r0, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> newPOIRowStream(x));
-        let _           = liftAction(_ -> Cursor.drop!(start, strm));
+        let* _          = liftAction(_ -> Cursor.drop!(start, strm));
         let* xs         = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm) |> Cursor.toList);
         return(xs)
 

@@ -170,6 +170,10 @@ namespace SheetIO/RowEvaluator {
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
     
+
+    pub def getRowNum(): RowEvaluator[Int32] = 
+        RowEvaluator(row -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+
     pub def isNullAt(ix: Int32): RowEvaluator[Bool] = 
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
             `swapError` "isNullAt(${Int32.toString(ix)})"
