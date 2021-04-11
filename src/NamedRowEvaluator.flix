@@ -383,7 +383,7 @@ namespace SheetIO/NamedRowEvaluator {
         getIfNotEmpty(label, getFloat32Named)
     
     pub def getOptionFloat64Named(label: String): NamedRowEvaluator[Option[Float64]] = 
-        getIfNotEmpty(label, getFloat64Named)
+        getIfNotEmpty(label, getFloat64Named) `swapErrorWithRowNum` (i -> "getOptionFloat64Named('${label}') - row: ${i}")
 
     pub def getOptionLocalDateTimeNamed(label: String): NamedRowEvaluator[Option[Time.LocalDateTime]] = 
         getIfNotEmpty(label, getLocalDateTimeNamed)

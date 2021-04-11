@@ -821,7 +821,7 @@ namespace SheetIO/SheetReader {
     pub def allRows(x: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
         let* strm           = liftAction(_ -> newPOIRowStream(x));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm) |> Cursor.toList);
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm) |> Cursor.toList!);
         return(xs)
 
     pub def rowsInRange(x: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
@@ -829,7 +829,7 @@ namespace SheetIO/SheetReader {
         let* strm           = liftAction(_ -> newPOIRowStream(x));
         let* _              = liftAction(_ -> Cursor.drop!(b, strm));
         let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm1) |> Cursor.toList);
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f, strm1) |> Cursor.toList!);
         return(xs)
 
     pub def rowEval(x: Row, eval: RowEvaluator[a]): SheetReader[a] =
@@ -844,7 +844,7 @@ namespace SheetIO/SheetReader {
         let* strm           = liftAction(_ -> newPOIRowStream(x));
         let* _              = liftAction(_ -> Cursor.drop!(b, strm));
         let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm1) |> Cursor.toList);
+        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm1) |> Cursor.toList!);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], eval: NamedRowEvaluator[a]): SheetReader[a] =
@@ -865,7 +865,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> newPOIRowStream(x));
         let* _          = liftAction(_ -> Cursor.drop!(start, strm));
-        let* xs         = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm) |> Cursor.toList);
+        let* xs         = liftActionResult(_ -> Cursor.mapResult(f(ixs), strm) |> Cursor.toList!);
         return(xs)
 
     /// TODO fold version of `namedRowsFrom`
