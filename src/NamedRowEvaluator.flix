@@ -275,10 +275,15 @@ namespace SheetIO/NamedRowEvaluator {
         let* ix     = getIndex(label);
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue)) `swapError` "getContentNamed('${label}')"
 
-    pub def getNonEmptyContentNamed(label: String): NamedRowEvaluator[String] =
+
+    pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[String] =
         let step = getContentNamed(label) >>= x -> 
-                    if (String.isEmpty(x)) throwError("getNonEmptyContentNamed('${label}') - empty") else return(x);
-        step `swapError` "getNonEmptyContentNamed('${label}')"
+                    if (test(x)) return(x) else throwError("getSatifiesNamed('${label}') - failed");
+        step `swapError` "getSatifiesNamed('${label}')"
+
+
+    pub def getNonEmptyContentNamed(label: String): NamedRowEvaluator[String] =
+        getSatifiesNamed(label, x -> not String.isEmpty(x)) `swapError` "getNonEmptyContentNamed('${label}')"
 
 
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =

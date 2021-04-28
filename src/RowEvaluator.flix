@@ -215,10 +215,13 @@ namespace SheetIO/RowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue))
             `swapError` "getContentAt(${Int32.toString(ix)})"
 
-    pub def getNonEmptyContentAt(ix: Int32):: NamedRowEvaluator[String] =
-        let step = getContentNamed(label) >>= x -> 
-                    if (String.isEmpty(x)) throwError("getNonEmptyContentAt('${ix}') - empty") else return(x);
-        step `swapError` "getNonEmptyContentAt('${ix}')"
+    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[String] =
+        let step = getContentAt(ix) >>= x -> 
+                    if (test(x)) return(x) else throwError("getSatifiesAt('${ix}') - failed");
+        step `swapError` "getSatifiesAt('${ix}')"
+
+    pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[String] =
+        getSatifiesAt(ix, x -> not String.isEmpty(x)) `swapError` "getNonEmptyContentAt('${ix}')"
 
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
