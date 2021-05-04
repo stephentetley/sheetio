@@ -155,4 +155,15 @@ namespace SheetIO/Internal/Cell {
         } catch {
             case _: ##java.lang.Exception => Err("setCellStyle")
         }
+
+   pub def getCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellStyle, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Cell.getCellStyle(); 
+        try {
+            let ans = getCellStyle(cell);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getCellStyle")
+        }
+
 }
+

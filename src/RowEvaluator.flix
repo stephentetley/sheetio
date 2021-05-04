@@ -345,6 +345,32 @@ namespace SheetIO/RowEvaluator {
         liftPrim(r -> Result.map(n-> if (n > 0) n - 1 else n,  SheetIO/Internal/Row.getLastCellNum(r)))
 
 
+
+    def queryFontAt(ix: Int32, query: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): RowEvaluator[a] = 
+        use Result.flatMap;
+        liftPrim(row -> 
+            let* cell   = SheetIO/Internal/Row.getCell(row, ix);
+            let* style  = SheetIO/Internal/Cell.getCellStyle(cell);
+            let* idx    = SheetIO/Internal/CellStyle.getFontIndexAsInt(style);
+            let* sheet  = SheetIO/Internal/Row.getSheet(row);
+            let* wb     = SheetIO/Internal/Sheet.getWorkbook(sheet);
+            let* font   = SheetIO/Internal/Prim.getFontAt(wb, idx);
+            let* ans    = query(font); 
+            Ok(ans)
+        )
+
+
+    pub def getIsBoldAt(ix: Int32): RowEvaluator[Bool] = 
+        queryFontAt(ix, SheetIO/Internal/Font.getBold)
+
+
+    pub def getIsItalicAt(ix: Int32): RowEvaluator[Bool] = 
+        queryFontAt(ix, SheetIO/Internal/Font.getItalic)
+
+    pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[Bool] = 
+        queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
+
+
     pub def getHeaders(): RowEvaluator[Array[String]] =
         let* end    = getLastCellNum();
         let* xs     = getHeadersHelper(end, 0, ks -> return(ks));

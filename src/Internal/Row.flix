@@ -30,6 +30,15 @@ namespace SheetIO/Internal/Row {
             case _: ##java.lang.Exception => Err("getCell")
         }
 
+    pub def getSheet(row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getSheet(); 
+        try {
+            let ans = getSheet(row);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getSheet")
+        }
+
     pub def createCell(row: ##org.apache.poi.ss.usermodel.Row, 
                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.createCell(Int32); 

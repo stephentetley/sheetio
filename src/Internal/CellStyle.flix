@@ -26,6 +26,15 @@ namespace SheetIO/Internal/CellStyle {
             case _: ##java.lang.Exception => Err("setFont")
         }
 
+    pub def getFontIndexAsInt(style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Int32, String] & Impure = 
+        import org.apache.poi.ss.usermodel.CellStyle.getFontIndexAsInt(); 
+        try {
+            let ans = getFontIndexAsInt(style);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getFontIndexAsInt")
+        }
+
     pub def setWrapText(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                         value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool); 

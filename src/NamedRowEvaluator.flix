@@ -399,6 +399,37 @@ namespace SheetIO/NamedRowEvaluator {
         getIfNotEmpty(label, getLocalDateTimeNamed)
 
 
+
+
+    def queryFontAt(ix: Int32, query: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): NamedRowEvaluator[a] = 
+        use Result.flatMap;
+        liftPrim(row -> 
+            let* cell   = SheetIO/Internal/Row.getCell(row, ix);
+            let* style  = SheetIO/Internal/Cell.getCellStyle(cell);
+            let* idx    = SheetIO/Internal/CellStyle.getFontIndexAsInt(style);
+            let* sheet  = SheetIO/Internal/Row.getSheet(row);
+            let* wb     = SheetIO/Internal/Sheet.getWorkbook(sheet);
+            let* font   = SheetIO/Internal/Prim.getFontAt(wb, idx);
+            let* ans    = query(font); 
+            Ok(ans)
+        )
+
+
+    pub def getIsBoldNamed(label: String): NamedRowEvaluator[Bool] = 
+        let* ix = getIndex(label);
+        queryFontAt(ix, SheetIO/Internal/Font.getBold)
+
+
+    pub def getIsItalicNamed(label: String): NamedRowEvaluator[Bool] = 
+        let* ix = getIndex(label);
+        queryFontAt(ix, SheetIO/Internal/Font.getItalic)
+
+    pub def getIsStrikeoutNamed(label: String): NamedRowEvaluator[Bool] = 
+        let* ix = getIndex(label);
+        queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
+
+
+
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.
     ///

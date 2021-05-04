@@ -139,6 +139,7 @@ namespace SheetIO/Internal/Prim {
 
 
     // SS interface
+    /// TODO new module Workbook?
 
     pub def createSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                         name: String): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
@@ -191,6 +192,20 @@ namespace SheetIO/Internal/Prim {
         } catch {
             case _: ##java.lang.Exception => Err("getSheetAt") 
         }
+
+    pub def getFontAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+                     idx: Int32): Result[##org.apache.poi.ss.usermodel.Font, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32); 
+        try {
+            let ans = getFontAt(wb, idx);
+            if (Object.isNull(ans))
+                Err("getFontAt('${idx}') answer is null")
+            else
+                Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getFontAt")
+        }
+
 
     pub def createCellStyle(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.CellStyle, String] & Impure = 
         import org.apache.poi.ss.usermodel.Workbook.createCellStyle(); 

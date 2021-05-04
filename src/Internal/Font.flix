@@ -47,6 +47,15 @@ namespace SheetIO/Internal/Font {
             case _: ##java.lang.Exception => Err("setFontHeightInPoints")
         }
 
+    
+    pub def getBold(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.getBold(); 
+        try {
+            let ans = getBold(font);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getBold")
+        }
 
     pub def setBold(font: ##org.apache.poi.ss.usermodel.Font,
                     value: Bool): Result[Unit, String] & Impure = 
@@ -68,6 +77,15 @@ namespace SheetIO/Internal/Font {
             case _: ##java.lang.Exception => Err("setItalic")
         }
 
+    
+    pub def getItalic(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.getItalic(); 
+        try {
+            let ans = getItalic(font);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getItalic")
+        }
 
     pub def setStrikeout(font: ##org.apache.poi.ss.usermodel.Font,
                          value: Bool): Result[Unit, String] & Impure = 
@@ -77,6 +95,15 @@ namespace SheetIO/Internal/Font {
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setStrikeout")
+        }
+    
+    pub def getStrikeout(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Font.getStrikeout(); 
+        try {
+            let ans = getStrikeout(font);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getStrikeout")
         }
 
     pub def setColor(font: ##org.apache.poi.ss.usermodel.Font,
