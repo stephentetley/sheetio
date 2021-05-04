@@ -133,6 +133,8 @@ namespace SheetIO/RowEvaluator {
     pub def withDefault(x: RowEvaluator[a], d: a): RowEvaluator[a] =
         alt(x, return(d))
 
+
+
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
         RowEvaluator(r -> fn(r))
 
