@@ -16,67 +16,67 @@
 
 namespace SheetIO/Internal/Sheet {
 
-    pub def getSheetName(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] & Impure = 
+    pub def getSheetName(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getSheetName(); 
         try {
-            let ans = ws.getSheetName();
+            let ans = getSheetName(sheet);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getSheetName [Sheet]")
         }
 
-    pub def getFirstRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
+    pub def getFirstRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(); 
         try {
-            let ans = ws.getFirstRowNum();
+            let ans = getFirstRowNum(sheet);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getFirstRowNum")
         }
 
-    pub def getLastRowNum(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
+    pub def getLastRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(); 
         try {
-            let ans = ws.getLastRowNum();
+            let ans = getLastRowNum(sheet);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getLastRowNum")
         }
 
-    pub def getPhysicalNumberOfRows(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
+    pub def getPhysicalNumberOfRows(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(); 
         try {
-            let ans = ws.getPhysicalNumberOfRows();
+            let ans = getPhysicalNumberOfRows(sheet);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getPhysicalNumberOfRows")
         }
 
-    pub def getWorkbook(ws: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, String] & Impure = 
+    pub def getWorkbook(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getWorkbook(); 
         try {
-            let ans = getWorkbook(ws);
+            let ans = getWorkbook(sheet);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getWorkbook [Sheet]")
         }
 
 
-    pub def getRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
+    pub def getRow(sheet: ##org.apache.poi.ss.usermodel.Sheet,
                    ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getRow(Int32); 
         try {
-            let ans = ws.getRow(ix);
+            let ans = getRow(sheet, ix);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getRow")
         }
 
-    pub def createRow(ws: ##org.apache.poi.ss.usermodel.Sheet,
+    pub def createRow(sheet: ##org.apache.poi.ss.usermodel.Sheet,
                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.createRow(Int32); 
         try {
-            let ans = ws.createRow(ix);
+            let ans = createRow(sheet, ix);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("createRow")

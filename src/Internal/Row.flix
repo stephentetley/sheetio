@@ -18,13 +18,13 @@ namespace SheetIO/Internal/Row {
 
     pub def getRowNum(row: ##org.apache.poi.ss.usermodel.Row): Int32 & Impure = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(); 
-        row.getRowNum()
+        getRowNum(row)
     
     pub def getCell(row: ##org.apache.poi.ss.usermodel.Row, 
                     ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getCell(Int32); 
         try {
-            let ans = row.getCell(ix);
+            let ans = getCell(row, ix);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("getCell")
@@ -43,7 +43,7 @@ namespace SheetIO/Internal/Row {
                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.createCell(Int32); 
         try {
-            let ans = row.createCell(ix);
+            let ans = createCell(row, ix);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("createCell")
@@ -53,7 +53,7 @@ namespace SheetIO/Internal/Row {
     pub def getFirstCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getFirstCellNum(); 
         try {
-            let ans = row.getFirstCellNum();
+            let ans = getFirstCellNum(row);
             Ok(Int16.toInt32(ans))
         } catch {
             case _: ##java.lang.Exception => Err("getFirstCellNum")
@@ -64,11 +64,10 @@ namespace SheetIO/Internal/Row {
     pub def getLastCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Row.getLastCellNum(); 
         try {
-            let ans = row.getLastCellNum();
+            let ans = getLastCellNum(row);
             Ok(Int16.toInt32(ans))
         } catch {
             case _: ##java.lang.Exception => Err("getLastCellNum")
         }
-
 
 }

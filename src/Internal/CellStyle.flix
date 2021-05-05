@@ -20,7 +20,7 @@ namespace SheetIO/Internal/CellStyle {
                     font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font); 
         try {
-            let ans = style.setFont(font);
+            let ans = setFont(style, font);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFont")
@@ -39,7 +39,7 @@ namespace SheetIO/Internal/CellStyle {
                         value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool); 
         try {
-            let ans = style.setWrapText(value);
+            let ans = setWrapText(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setWrapText")
@@ -49,7 +49,7 @@ namespace SheetIO/Internal/CellStyle {
                          value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16); 
         try {
-            let ans = style.setIndention(value);
+            let ans = setIndention(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setIndention")
@@ -60,7 +60,7 @@ namespace SheetIO/Internal/CellStyle {
                                    value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16); 
         try {
-            let ans = style.setFillForegroundColor(value);
+            let ans = setFillForegroundColor(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFillForegroundColor")
@@ -71,7 +71,7 @@ namespace SheetIO/Internal/CellStyle {
                                    value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16); 
         try {
-            let ans = style.setFillBackgroundColor(value);
+            let ans = setFillBackgroundColor(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFillBackgroundColor")
@@ -82,7 +82,7 @@ namespace SheetIO/Internal/CellStyle {
                            value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool); 
         try {
-            let ans = style.setShrinkToFit(value);
+            let ans = setShrinkToFit(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setShrinkToFit") 
@@ -92,7 +92,7 @@ namespace SheetIO/Internal/CellStyle {
                           value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16); 
         try {
-            let ans = style.setDataFormat(value);
+            let ans = setDataFormat(style, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setDataFormat") 

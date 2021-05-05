@@ -741,11 +741,11 @@ namespace SheetIO/SheetWriter {
     
 
     pub def createSheet(name: String): SheetWriter[Sheet] =
-        use SheetIO/Internal/Prim.{createSheet};
+        use SheetIO/Internal/Workbook.{createSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
 
     pub def getSheetNamed(name: String): SheetWriter[Sheet] =
-        use SheetIO/Internal/Prim.{getSheet};
+        use SheetIO/Internal/Workbook.{getSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
     
     /// TEMP <<<
@@ -755,20 +755,20 @@ namespace SheetIO/SheetWriter {
         mapM(getSheetNameWb, ixs)      
     
     def getNumberOfSheets(): SheetWriter[Int32] =
-        use SheetIO/Internal/Prim.{getNumberOfSheets};
+        use SheetIO/Internal/Workbook.{getNumberOfSheets};
         liftWorkbookPrim(x1 -> x1.getNumberOfSheets())
 
     def getSheetNameWb(ix: Int32): SheetWriter[String] =
-        use SheetIO/Internal/Prim.{getSheetName};
+        use SheetIO/Internal/Workbook.{getSheetName};
         liftWorkbookPrim(x1 -> x1.getSheetName(ix))
     /// TEMP >>>
 
     pub def createDataFormat(): SheetWriter[DataFormat] =
-        use SheetIO/Internal/Prim.{createDataFormat};
+        use SheetIO/Internal/Workbook.{createDataFormat};
         liftWorkbookPrim(x1 -> Result.map(DataFormat, x1.createDataFormat()))
 
     pub def getFormat(x: DataFormat, format: String): SheetWriter[Int16] =
-        use SheetIO/Internal/Prim.{getFormat};
+        use SheetIO/Internal/Workbook.{getFormat};
         let DataFormat(x1) = x;
         liftActionResult(_ -> x1.getFormat(format))
 
@@ -787,7 +787,7 @@ namespace SheetIO/SheetWriter {
 
 
     pub def createCellStyle(mx: CellStyleSetter[a]): SheetWriter[CellStyle] =
-        use SheetIO/Internal/Prim.{createCellStyle};
+        use SheetIO/Internal/Workbook.{createCellStyle};
         let CellStyleSetter(mf) = mx;
         let* style              = liftWorkbookPrim(x1 -> Result.map(CellStyle, x1.createCellStyle()));
         let CellStyle(style1)   = style;
@@ -797,7 +797,7 @@ namespace SheetIO/SheetWriter {
 
 
     pub def createFont(mx: FontSetter[a]): SheetWriter[Font] =
-        use SheetIO/Internal/Prim.{createFont};
+        use SheetIO/Internal/Workbook.{createFont};
         let FontSetter(mf)      = mx;
         let* font               = liftWorkbookPrim(x1 -> Result.map(Font, x1.createFont()));
         let Font(font1)         = font;

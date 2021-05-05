@@ -62,8 +62,8 @@ namespace SheetIO/Internal/Prim {
             let fostream = newFileOutputStream(path);
             let fostream1 = fostream as ##java.io.OutputStream;
             let wb1 = wb as ##org.apache.poi.ooxml.POIXMLDocument;
-            wb1.write(fostream1);
-            fostream.close();
+            write(wb1, fostream1);
+            close(fostream);
             Ok()
         } catch {
             case _: ##java.lang.Exception => Err("writeXSSFWorkbook")
@@ -73,7 +73,7 @@ namespace SheetIO/Internal/Prim {
     pub def closeXSSFWorkbook(wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook): Result[Unit, String] & Impure = 
         import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(); 
         try {
-            let _ = wb.close();
+            let _ = close(wb);
             Ok()
         } catch {
             case _: ##java.lang.Exception => Err("closeXSSFWorkbook")
@@ -119,8 +119,8 @@ namespace SheetIO/Internal/Prim {
         try {
             let fostream = newFileOutputStream(path);
             let fostream1 = fostream as ##java.io.OutputStream;
-            wb.write(fostream1);
-            fostream.close();
+            write(wb, fostream1);
+            close(fostream);
             Ok()
         } catch {
             case _: ##java.lang.Exception => Err("writeHSSFWorkbook")
@@ -130,118 +130,11 @@ namespace SheetIO/Internal/Prim {
     pub def closeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook): Result[Unit, String] & Impure = 
         import org.apache.poi.hssf.usermodel.HSSFWorkbook.close(); 
         try {
-            let _ = wb.close();
+            let _ = close(wb);
             Ok()
         } catch {
             case _: ##java.lang.Exception => Err("closeHSSFWorkbook")
         }
 
-
-
-    // SS interface
-    /// TODO new module Workbook?
-
-    pub def createSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                        name: String): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createSheet(String); 
-        try {
-            let ans = wb.createSheet(name);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("createSheet")
-        }
-
-
-    pub def getNumberOfSheets(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(); 
-        try {
-            let ans = wb.getNumberOfSheets();
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getNumberOfSheets")
-        }
-
-    pub def getSheetName(wb: ##org.apache.poi.ss.usermodel.Workbook, ix: Int32): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32); 
-        try {
-            let ans = wb.getSheetName(ix);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getSheetName")
-        }
-
-    pub def getSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                     name: String): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheet(String); 
-        try {
-            let ans = wb.getSheet(name);
-            if (Object.isNull(ans))
-                Err("getSheet('${name}') is null")
-            else
-                Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getSheet")
-        }
-
-    pub def getSheetAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32); 
-        try {
-            let ans = wb.getSheetAt(ix);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getSheetAt") 
-        }
-
-    pub def getFontAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                     idx: Int32): Result[##org.apache.poi.ss.usermodel.Font, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32); 
-        try {
-            let ans = getFontAt(wb, idx);
-            if (Object.isNull(ans))
-                Err("getFontAt('${idx}') answer is null")
-            else
-                Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getFontAt")
-        }
-
-
-    pub def createCellStyle(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.CellStyle, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createCellStyle(); 
-        try {
-            let ans = wb.createCellStyle();
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("createCellStyle")
-        }
-
-    pub def createFont(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.Font, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createFont(); 
-        try {
-            let ans = wb.createFont();
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("createFont")
-        }
-
-    pub def createDataFormat(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.DataFormat, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createDataFormat(); 
-        try {
-            let ans = wb.createDataFormat();
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("createDataFormat")
-        }
-
-    pub def getFormat(dfmt: ##org.apache.poi.ss.usermodel.DataFormat,
-                      format: String): Result[Int16, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormat.getFormat(String); 
-        try {
-            let ans = dfmt.getFormat(format);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getFormat")
-        }
 
 }

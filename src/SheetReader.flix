@@ -746,7 +746,7 @@ namespace SheetIO/SheetReader {
 
 
     pub def getNumberOfSheets(): SheetReader[Int32] =
-        use SheetIO/Internal/Prim.{getNumberOfSheets};
+        use SheetIO/Internal/Workbook.{getNumberOfSheets};
         liftWorkbookPrim(x1 -> x1.getNumberOfSheets())
 
     pub def getSheetNames(): SheetReader[List[String]] =
@@ -756,16 +756,16 @@ namespace SheetIO/SheetReader {
 
 
     def getSheetNameWb(ix: Int32): SheetReader[String] =
-        use SheetIO/Internal/Prim.{getSheetName};
+        use SheetIO/Internal/Workbook.{getSheetName};
         liftWorkbookPrim(x1 -> x1.getSheetName(ix))
 
 
     pub def getSheetNamed(name: String): SheetReader[Sheet] =
-        use SheetIO/Internal/Prim.{getSheet};
+        use SheetIO/Internal/Workbook.{getSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
 
     pub def getSheetAt(ix: Int32): SheetReader[Sheet] =
-        use SheetIO/Internal/Prim.{getSheetAt};
+        use SheetIO/Internal/Workbook.{getSheetAt};
         liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheetAt(ix)))
 
     pub def getSheetName(x: Sheet): SheetReader[String] =

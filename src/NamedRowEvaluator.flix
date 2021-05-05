@@ -401,7 +401,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
 
-    def queryFontAt(ix: Int32, query: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): NamedRowEvaluator[a] = 
+    def queryFontAt(ix: Int32, asks: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): NamedRowEvaluator[a] = 
         use Result.flatMap;
         liftPrim(row -> 
             let* cell   = SheetIO/Internal/Row.getCell(row, ix);
@@ -409,8 +409,8 @@ namespace SheetIO/NamedRowEvaluator {
             let* idx    = SheetIO/Internal/CellStyle.getFontIndexAsInt(style);
             let* sheet  = SheetIO/Internal/Row.getSheet(row);
             let* wb     = SheetIO/Internal/Sheet.getWorkbook(sheet);
-            let* font   = SheetIO/Internal/Prim.getFontAt(wb, idx);
-            let* ans    = query(font); 
+            let* font   = SheetIO/Internal/Workbook.getFontAt(wb, idx);
+            let* ans    = asks(font); 
             Ok(ans)
         )
 

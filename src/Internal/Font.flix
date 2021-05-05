@@ -21,7 +21,7 @@ namespace SheetIO/Internal/Font {
                         value: String): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontName(String); 
         try {
-            let ans = font.setFontName(value);
+            let ans = setFontName(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFontName")
@@ -31,7 +31,7 @@ namespace SheetIO/Internal/Font {
                           value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16); 
         try {
-            let ans = font.setFontHeight(value);
+            let ans = setFontHeight(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFontHeight")
@@ -41,7 +41,7 @@ namespace SheetIO/Internal/Font {
                                   value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16); 
         try {
-            let ans = font.setFontHeightInPoints(value);
+            let ans = setFontHeightInPoints(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setFontHeightInPoints")
@@ -61,7 +61,7 @@ namespace SheetIO/Internal/Font {
                     value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setBold(Bool); 
         try {
-            let ans = font.setBold(value);
+            let ans = setBold(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setBold")
@@ -71,7 +71,7 @@ namespace SheetIO/Internal/Font {
                       value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setItalic(Bool); 
         try {
-            let ans = font.setItalic(value);
+            let ans = setItalic(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setItalic")
@@ -91,7 +91,7 @@ namespace SheetIO/Internal/Font {
                          value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool); 
         try {
-            let ans = font.setStrikeout(value);
+            let ans = setStrikeout(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setStrikeout")
@@ -110,7 +110,7 @@ namespace SheetIO/Internal/Font {
                      value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setColor(Int16); 
         try {
-            let ans = font.setColor(value);
+            let ans = setColor(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setColor")
@@ -120,7 +120,7 @@ namespace SheetIO/Internal/Font {
                           value: Int16): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16); 
         try {
-            let ans = font.setTypeOffset(value);
+            let ans = setTypeOffset(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setTypeOffset")
@@ -130,7 +130,7 @@ namespace SheetIO/Internal/Font {
                          value: Int8): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Font.setUnderline(Int8); 
         try {
-            let ans = font.setUnderline(value);
+            let ans = setUnderline(font, value);
             Ok(ans)
         } catch {
             case _: ##java.lang.Exception => Err("setUnderline")
