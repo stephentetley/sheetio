@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+/// Streaming reader for large lfiles with homogeneous rows.
+
 namespace SheetIO/CursorReader {
 
 
@@ -78,7 +80,7 @@ namespace SheetIO/CursorReader {
 
     /// 
     /// Because Cursor is implicitly tied to iterating "IO-like" resources (e.g. lines of a file, database results)
-    /// it no embeds errors itself.
+    /// it embeds errors.
     /// 
     pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
         let NamedRowEvaluator(eval1) = eval;

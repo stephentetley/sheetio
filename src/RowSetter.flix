@@ -131,7 +131,7 @@ namespace SheetIO/RowSetter {
         use Result.flatMap;
         let step = (row, style) -> {
             let* cell   = createOrGetCell(row, style, ix);
-            let typ1    = SheetIO/CellType.marshal(TyBlank);
+            let typ1    = SheetIO/CellType.toNative(TyBlank);
             let* _      = SheetIO/Internal/Cell.setCellType(cell, typ1);
             Ok()
         };

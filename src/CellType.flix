@@ -82,7 +82,7 @@ namespace SheetIO/CellType {
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
 
 
-    pub def marshal(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
+    pub def toNative(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
         import flix.runtime.spt.sheetio.POIWrapper:get_NONE()          as get_NONE;
         import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
         import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
@@ -107,7 +107,7 @@ namespace SheetIO/CellType {
         let y1 = y as ##java.lang.Object;
         equals(x1, y1) as & Pure
 
-    pub def unmarshal(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
+    pub def fromNative(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
         import flix.runtime.spt.sheetio.POIWrapper:get_NONE()      as get_NONE;
         import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
         import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
@@ -161,8 +161,8 @@ namespace SheetIO/CellType {
 
     pub def hashCode(x: CellType): Int32 =
         import java.lang.Enum.hashCode();
-        let en1 = marshal(x) as ##java.lang.Enum;
-        hashCode(en1) as & Pure
+        let x1 = toNative(x) as ##java.lang.Enum;
+        hashCode(x1) as & Pure
 
 
     pub def format (x: CellType): String = match x {

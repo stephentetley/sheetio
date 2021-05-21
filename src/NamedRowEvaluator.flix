@@ -249,7 +249,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def getCellTypeNamed(label: String): NamedRowEvaluator[CellType] =
         let* ix     = getIndex(label);
-        map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
+        map(SheetIO/CellType.fromNative, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
 
     pub def isBlankNamed(label: String): NamedRowEvaluator[Bool] = 
         let* typ = getCellTypeNamed(label);

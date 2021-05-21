@@ -187,7 +187,7 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getCellTypeAt(ix: Int32): RowEvaluator[CellType] =
-        map(SheetIO/CellType.unmarshal, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
+        map(SheetIO/CellType.fromNative, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
             `swapError` "getCellTypeAt(${Int32.toString(ix)})"
 
     pub def isBlankAt(ix: Int32): RowEvaluator[Bool] = 
