@@ -285,7 +285,7 @@ namespace SheetIO/RowEvaluator {
 
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDateTime] = 
-        let* fmt    = liftOption(Time/Format/DateTimeFormatter.fromPattern(patt), "getLocalDateTimeAtWithPattern - bad pattern");
+        let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalDateTimeAtWithPattern - bad pattern");
         let* s      = getStringAt(ix);
         liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeAtWithPattern")
 
@@ -301,7 +301,7 @@ namespace SheetIO/RowEvaluator {
 
     /// Cell must be readable as a String
     pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDate] = 
-        let* fmt    = liftOption(Time/Format/DateFormatter.fromPattern(patt), "getLocalDateAtWithPattern - bad pattern");
+        let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateAtWithPattern - bad pattern");
         let* s      = getStringAt(ix);
         liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateAtWithPattern")
         

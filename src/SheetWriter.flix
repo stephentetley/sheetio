@@ -742,35 +742,36 @@ namespace SheetIO/SheetWriter {
 
     pub def createSheet(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Workbook.{createSheet};
-        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.createSheet(name))) 
+        liftWorkbookPrim(x1 -> Result.map(Sheet, createSheet(x1, name))) 
 
     pub def getSheetNamed(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Workbook.{getSheet};
-        liftWorkbookPrim(x1 -> Result.map(Sheet, x1.getSheet(name))) 
+        liftWorkbookPrim(x1 -> Result.map(Sheet, getSheet(x1, name))) 
     
     /// TEMP <<<
     pub def getSheetNames(): SheetWriter[List[String]] =
         let* n  = getNumberOfSheets();
-        let ixs = List.range(0,n);
+        let ixs = List.range(0, n);
         mapM(getSheetNameWb, ixs)      
     
     def getNumberOfSheets(): SheetWriter[Int32] =
         use SheetIO/Internal/Workbook.{getNumberOfSheets};
-        liftWorkbookPrim(x1 -> x1.getNumberOfSheets())
+        liftWorkbookPrim(getNumberOfSheets)
 
     def getSheetNameWb(ix: Int32): SheetWriter[String] =
         use SheetIO/Internal/Workbook.{getSheetName};
-        liftWorkbookPrim(x1 -> x1.getSheetName(ix))
+        liftWorkbookPrim(x1 -> getSheetName(x1, ix))
+   
     /// TEMP >>>
 
     pub def createDataFormat(): SheetWriter[DataFormat] =
         use SheetIO/Internal/Workbook.{createDataFormat};
-        liftWorkbookPrim(x1 -> Result.map(DataFormat, x1.createDataFormat()))
+        liftWorkbookPrim(x1 -> Result.map(DataFormat, createDataFormat(x1)))
 
     pub def getFormat(x: DataFormat, format: String): SheetWriter[Int16] =
         use SheetIO/Internal/Workbook.{getFormat};
         let DataFormat(x1) = x;
-        liftActionResult(_ -> x1.getFormat(format))
+        liftActionResult(_ -> getFormat(x1, format))
 
 
     pub def setCursor!(x: Sheet, n: Int32): SheetWriter[Unit] =
@@ -780,7 +781,7 @@ namespace SheetIO/SheetWriter {
     def getSheetName(x: Sheet): SheetWriter[String] =
         use SheetIO/Internal/Sheet.{getSheetName};
         let Sheet(x1) = x;
-        liftActionResult(_ -> x1.getSheetName())
+        liftActionResult(_ -> getSheetName(x1))
 
     def setCursorHelper(sheetName: String, n: Int32): SheetWriter[Unit] = 
         SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as & Impure)
@@ -789,7 +790,7 @@ namespace SheetIO/SheetWriter {
     pub def createCellStyle(mx: CellStyleSetter[a]): SheetWriter[CellStyle] =
         use SheetIO/Internal/Workbook.{createCellStyle};
         let CellStyleSetter(mf) = mx;
-        let* style              = liftWorkbookPrim(x1 -> Result.map(CellStyle, x1.createCellStyle()));
+        let* style              = liftWorkbookPrim(createCellStyle >> Result.map(CellStyle));
         let CellStyle(style1)   = style;
         let* _                  = liftActionResult(_ -> mf(style1));
         return(style)
@@ -799,7 +800,7 @@ namespace SheetIO/SheetWriter {
     pub def createFont(mx: FontSetter[a]): SheetWriter[Font] =
         use SheetIO/Internal/Workbook.{createFont};
         let FontSetter(mf)      = mx;
-        let* font               = liftWorkbookPrim(x1 -> Result.map(Font, x1.createFont()));
+        let* font               = liftWorkbookPrim(createFont >> Result.map(Font));
         let Font(font1)         = font;
         let* _                  = liftActionResult(_ -> mf(font1));
         return(font)
@@ -808,7 +809,7 @@ namespace SheetIO/SheetWriter {
     def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =
         use SheetIO/Internal/Sheet.{createRow};
         let Sheet(x1) = x;
-        liftActionResult(_ -> Result.map(Row, x1.createRow(ix)))
+        liftActionResult(_ -> Result.map(Row, createRow(x1, ix)))
 
     pub def appendRow(x: Sheet, mx: RowSetter[a]): SheetWriter[Unit] =
         let RowSetter(mf) = mx;
@@ -825,7 +826,5 @@ namespace SheetIO/SheetWriter {
         let* _      = appendRow(x, SheetIO/RowSetter.putHeaders!(headers));
         let* _      = mapX(r -> appendRow(x, writer(r)), rows);
         return()
-
-
 
 }

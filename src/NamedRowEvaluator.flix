@@ -345,7 +345,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     /// Cell must be readable as a String
     pub def getLocalTimeDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDateTime] = 
-        let* fmt    = liftOption(Time/Format/DateTimeFormatter.fromPattern(patt), "getLocalTimeDateNamedWithPattern - bad pattern");
+        let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalTimeDateNamedWithPattern - bad pattern");
         let* s      = getStringNamed(label);
         liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalTimeDateNamedWithPattern - '${s}'")
 
@@ -361,7 +361,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDate] = 
-        let* fmt    = liftOption(Time/Format/DateFormatter.fromPattern(patt), "getLocalDateNamedWithPattern - bad pattern");
+        let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateNamedWithPattern - bad pattern");
         let* s      = getStringNamed(label);
         liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateNamedWithPattern - '${s}'")
     
