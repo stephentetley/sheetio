@@ -86,7 +86,7 @@ namespace SheetIO/IndexedColors {
     use SheetIO.IndexedColors;
     
 
-    def marshal(x: IndexedColors): ##org.apache.poi.ss.usermodel.IndexedColors = 
+    def toNative(x: IndexedColors): ##org.apache.poi.ss.usermodel.IndexedColors = 
         import get org.apache.poi.ss.usermodel.IndexedColors:AQUA                   as getAQUA;
         import get org.apache.poi.ss.usermodel.IndexedColors:AUTOMATIC              as getAUTOMATIC;
         import get org.apache.poi.ss.usermodel.IndexedColors:BLACK                  as getBLACK;
@@ -206,7 +206,7 @@ namespace SheetIO/IndexedColors {
 
     pub def getIndex(x: IndexedColors): Int16 = 
         import org.apache.poi.ss.usermodel.IndexedColors.getIndex();
-        let x1 = marshal(x);
+        let x1 = toNative(x);
         x1.getIndex() as & Pure
 
 
