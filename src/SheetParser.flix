@@ -254,13 +254,15 @@ namespace SheetIO/SheetParser {
 
     
     def getRowIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, sheet, st) ->
-            sk(st.row, fk, sheet, st)
+        GenSheetParser((sk, fk, sheet, st, errs) ->
+            let idx = st.row;
+            sk(idx, fk, sheet, st, errs)
         )
     
     def getColumnIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, sheet, st) ->
-            sk(st.column, fk, sheet, st)
+        GenSheetParser((sk, fk, sheet, st, errs) ->
+            let idx = st.column;
+            sk(idx, fk, sheet, st, errs)
         )
 
     pub def getSourcePosition(): GenSheetParser[ka1, st, SourcePosition] =  
@@ -425,17 +427,128 @@ namespace SheetIO/SheetParser {
         let* pos = getSourcePosition();
         setSourcePos({column = pos.column + 1 | pos})
         
-
-    pub def getContent(): GenSheetParser[ka1, st, String] =  
-        let* ans    = liftCellPrim(SheetIO/Internal/Cell.getDefaultFormatterCellValue);
+    def readCellWith(fn: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] = 
+        let* ans    = liftCellPrim(fn);
         let* _      = incColumnPos();
         return(ans)
+
+    pub def content(): GenSheetParser[ka1, st, String] =  
+        readCellWith(SheetIO/Internal/Cell.getDefaultFormatterCellValue)
+        
+    pub def boolean(): GenSheetParser[ka1, st, Bool] =
+        readCellWith(SheetIO/Internal/Cell.getBooleanCellValue)
+
+    pub def numeric(): GenSheetParser[ka1, st, Float64] =
+        readCellWith(SheetIO/Internal/Cell.getNumericCellValue)
+
+    pub def literal(s: String): GenSheetParser[ka1, st, String] =
+        let* s1 = content();
+        if (s == s1) 
+            return(s)
+        else 
+            throwError("literal - no match")
 
     pub def row(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =  
         let* ans    = p;
         let* pos    = getSourcePosition();
         let* _      = setSourcePos({row = pos.row + 1, column = 0});
         return(ans)
+
+    ///
+    /// lookahead - run the parser but don't consume input on success
+    /// On fail, fail.
+    ///
+    pub def lookahead(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
+        GenSheetParser((sk, fk, sheet, st) ->
+            let sk1 = (ans, fk1, _, _) -> sk(ans, fk1, sheet, st);
+            apply1(p, sk1, fk, sheet, st)
+        )
+
+    pub def endOfInput() : GenSheetParser[ka1, st, Unit] =
+        GenSheetParser((sk, fk, sheet, st, errs) -> 
+            match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
+                case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("endOfInput - ${msg}", errs))
+                case Ok(rmax) => 
+                    if (st.row >= rmax) 
+                        sk((), fk, sheet, st, errs)
+                    else 
+                        fk({row = st.row, column = st.column}, Chain.cons("endOfInput - not at end", errs))
+            }
+        )
+
+    pub def isAtEnd() : GenSheetParser[ka1, st, Bool] =
+        GenSheetParser((sk, fk, sheet, st, errs) -> 
+            match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
+                case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("isEof - ${msg}", errs))
+                case Ok(rmax) => 
+                    if (st.row >= rmax) 
+                        sk(true, fk, sheet, st, errs)
+                    else 
+                        sk(false, fk, sheet, st, errs)
+            }
+        )
+
+    pub def satisfy(f: String -> Bool & ef): GenSheetParser[ka1, st, String] =
+        let* s1     = content();
+        let* ans    = liftAction(_ -> f(s1));
+        if (ans) 
+            return(s1)
+        else 
+            throwError("satisfy - failed")
+
+
+    pub def choice(ps: List[GenSheetParser[ka1, st, a]]): GenSheetParser[ka1, st, a] =
+        match ps {
+            case p1 :: rs => ifThenElse(p1, return, choice(rs))
+            case Nil => fail("choice")
+        }
+
+    pub def optional(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Option[a]] = 
+        alt(map(Some,p), return(None))
+
+    pub def optionalWithDefault(p: GenSheetParser[ka1, st, a], d: a): GenSheetParser[ka1, st, a] = 
+        alt(p, return(d))
+
+    pub def ignore(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Unit] =
+        map(constant(), p)
+
+    pub def between(openp: GenSheetParser[ka1, st, open], 
+                    closep: GenSheetParser[ka1, st, close], 
+                    p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] = 
+        let* _ = openp;
+        let* a = p;
+        let* _ = closep;
+        return(a)        
+
+    /// `p` is run with `lookahead`, no text is consumed
+    pub def succeeds(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Bool] = 
+        alt(seqRight(lookahead(p), return(true)), return(false))
+
+    pub def countWith(combine: (ac, a) -> ac, acc: ac, n: Int32, p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, ac] = 
+        if (n <= 0)
+            return(acc)
+        else {
+            let* a = p;
+            countWith(combine, combine(acc, a), n-1, p)
+        }
+
+    pub def count(n: Int32, p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, List[a]] = 
+        use Chain.{empty, snoc, toList};
+        countWith(snoc, empty(), n, p) |> map(toList)
+
+
+    pub def skipMany(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Unit] = 
+        ifThenElse(p, _ -> skipMany(p), return())
+
+    pub def skipMany1(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Unit] = 
+        bind(p, _ -> skipMany(p))
+
+
+    pub def skipManyTill(p: GenSheetParser[ka1, st, a], endp: GenSheetParser[ka1, st, end]): GenSheetParser[ka1, st, Unit] = 
+        ifThenElse(endp, _ -> return(), bind(p, _ -> skipManyTill(p, endp)))
+
+    pub def skipMany1Till(p: GenSheetParser[ka1, st, a], endp: GenSheetParser[ka1, st, end]): GenSheetParser[ka1, st, Unit] = 
+        bind(p, _ -> skipManyTill(p, endp))
 
 }
 
