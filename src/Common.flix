@@ -18,6 +18,8 @@
 
 namespace SheetIO {
 
+    /// TODO - do we really need to wrap these?
+    
     pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
 
     pub opaque type Row = ##org.apache.poi.ss.usermodel.Row

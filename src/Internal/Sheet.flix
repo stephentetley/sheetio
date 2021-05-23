@@ -34,6 +34,7 @@ namespace SheetIO/Internal/Sheet {
             case _: ##java.lang.Exception => Err("getFirstRowNum")
         }
 
+    /// Gets the last row number - this row could be "empty" if cells in the row have been written to but then cleared.
     pub def getLastRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(); 
         try {
@@ -43,6 +44,7 @@ namespace SheetIO/Internal/Sheet {
             case _: ##java.lang.Exception => Err("getLastRowNum")
         }
 
+    /// Number of rows used - do not use for trying to find end.
     pub def getPhysicalNumberOfRows(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
         import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(); 
         try {
