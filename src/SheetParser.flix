@@ -127,9 +127,76 @@ namespace SheetIO/SheetParser {
 
     pub def flatMap(k: a -> GenSheetParser[ka1, st, b], ma: GenSheetParser[ka1, st, a]):  GenSheetParser[ka1, st, b] = bind(ma, k)
 
+    /// `alt` rolls back the parser state (including the position) if `p` fails.
+    pub def alt(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
+        ifThenElse(p, return, q)
 
-    pub def >>=(ma: GenSheetParser[ka1, st, a], k: a -> GenSheetParser[ka1, st, b]):  GenSheetParser[ka1, st, b] =
-        bind(ma, k)
+    pub def seqLeft(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, a] =
+        let* a = p;
+        let* _ = q;
+        return(a)
+
+    pub def seqRight(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] =
+        let* _ = p;
+        let* b = q;
+        return(b)
+
+    pub def kleisliLeft(f1: a -> GenSheetParser[ka1, st, b], f2: b -> GenSheetParser[ka1, st, c], x: a): GenSheetParser[ka1, st, c] =
+        let* b  = f1(x);
+        let* c  = f2(b);
+        return(c)
+
+    pub def kleisliRight(f1: b -> GenSheetParser[ka1, st, c], f2: a -> GenSheetParser[ka1, st, b], x: a): GenSheetParser[ka1, st, c] =
+        kleisliLeft(f2, f1, x)
+
+
+    /// Alias for `seqRight`
+    pub def *>(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] = 
+        seqRight(p1, p2)
+
+    /// Alias for `seqLeft`
+    pub def <*(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, a] = 
+        seqLeft(p1, p2)
+
+    pub def <!>(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
+        alt(p1, p2)
+
+    // Haskell's <$>
+    pub def <&>(f: a -> b, p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
+        map(f, p2)
+
+    pub def <&(x: b, p1: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
+        p1 *> return(x)
+
+    pub def &>(p1: GenSheetParser[ka1, st, a], x: b): GenSheetParser[ka1, st, b] =
+        p1 *> return(x)
+
+    /// Flipped <&>
+    pub def <&&>(p2: GenSheetParser[ka1, st, a], f: a -> b): GenSheetParser[ka1, st, b] =
+        map(f, p2)
+
+
+    // Haskell's ap <*>
+    pub def <*>(mf: GenSheetParser[ka1, st, a -> b], p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
+        ap(mf, p2)
+
+    /// Flipped <*>
+    pub def <**>(p2: GenSheetParser[ka1, st, a], mf: GenSheetParser[ka1, st, a -> b]): GenSheetParser[ka1, st, b] =
+        ap(mf, p2)        
+
+
+    pub def >>=(p: GenSheetParser[ka1, st, a], k: a -> GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] =
+        bind(p, k)
+
+
+    pub def =<<(k: a -> GenSheetParser[ka1, st, b], p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
+        bind(p, k)
+
+    pub def >=>(f1: a -> GenSheetParser[ka1, st, b], f2: b -> GenSheetParser[ka1, st, c], x: a): GenSheetParser[ka1, st, c] =
+        kleisliLeft(f1, f2, x)
+
+    pub def <=<(f1: b -> GenSheetParser[ka1, st, c], f2: a -> GenSheetParser[ka1, st, b], x: a): GenSheetParser[ka1, st, c] = 
+        kleisliRight(f1, f2, x)
 
     pub def liftAction(f: Unit -> a & ef): GenSheetParser[ka1, st, a] =
         GenSheetParser((sk, fk, sheet, st, errs) ->
@@ -225,20 +292,149 @@ namespace SheetIO/SheetParser {
             sk((), fk, sheet, st1)
         )  
 
-    /// TODO - maybe incrementing row should be manual...
-    def incSourcePos(): GenSheetParser[ka1, st, Unit] =  
-        let* pos = getSourcePosition();
-        /// cmax is +1 the zero-indexed column number...
-        let* cmax = liftRowPrim(SheetIO/Internal/Row.getLastCellNum);
-        if (pos.column >= cmax)
-            setSourcePos({row = pos.row + 1, column = 0})
-        else 
-            setSourcePos({column = pos.column + 1 | pos})
 
+    pub def tuple2(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, (a, b)] =
+        let* a = p1; 
+        let* b = p2;
+        return((a, b))
+
+    pub def tuple3(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c]): GenSheetParser[ka1, st, (a, b, c)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        return((a, b, c))
+
+    pub def tuple4(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d]): GenSheetParser[ka1, st, (a, b, c, d)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        return((a, b, c, d))
+
+
+    pub def tuple5(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e]): GenSheetParser[ka1, st, (a, b, c, d, e)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        return((a, b, c, d, e))
+
+    pub def tuple6(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e], 
+                    p6: GenSheetParser[ka1, st, f]): 
+                    GenSheetParser[ka1, st, (a, b, c, d, e, f)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        let* f = p6;
+        return((a, b, c, d, e, f))
+
+    pub def tuple7(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e], 
+                    p6: GenSheetParser[ka1, st, f], 
+                    p7: GenSheetParser[ka1, st, g]): GenSheetParser[ka1, st, (a, b, c, d, e, f, g)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        let* f = p6;
+        let* g = p7;
+        return((a, b, c, d, e, f, g))
+
+    pub def tuple8(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e], 
+                    p6: GenSheetParser[ka1, st, f], 
+                    p7: GenSheetParser[ka1, st, g], 
+                    p8: GenSheetParser[ka1, st, h]): GenSheetParser[ka1, st, (a, b, c, d, e, f, g, h)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        let* f = p6;
+        let* g = p7;
+        let* h = p8;
+        return((a, b, c, d, e, f, g, h))
+
+    pub def tuple9(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e], 
+                    p6: GenSheetParser[ka1, st, f], 
+                    p7: GenSheetParser[ka1, st, g], 
+                    p8: GenSheetParser[ka1, st, h], 
+                    p9: GenSheetParser[ka1, st, i]): GenSheetParser[ka1, st, (a, b, c, d, e, f, g, h, i)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        let* f = p6;
+        let* g = p7;
+        let* h = p8;
+        let* i = p9;
+        return((a, b, c, d, e, f, g, h, i))
+
+    pub def tuple10(p1: GenSheetParser[ka1, st, a], 
+                    p2: GenSheetParser[ka1, st, b], 
+                    p3: GenSheetParser[ka1, st, c], 
+                    p4: GenSheetParser[ka1, st, d], 
+                    p5: GenSheetParser[ka1, st, e], 
+                    p6: GenSheetParser[ka1, st, f], 
+                    p7: GenSheetParser[ka1, st, g], 
+                    p8: GenSheetParser[ka1, st, h], 
+                    p9: GenSheetParser[ka1, st, i], 
+                    p10: GenSheetParser[ka1, st, j]): GenSheetParser[ka1, st, (a, b, c, d, e, f, g, h, i, j)] =
+        let* a = p1; 
+        let* b = p2;
+        let* c = p3;
+        let* d = p4;
+        let* e = p5;
+        let* f = p6;
+        let* g = p7;
+        let* h = p8;
+        let* i = p9;
+        let* j = p10;
+        return((a, b, c, d, e, f, g, h, i, j))
+
+    /// TODO - maybe incrementing row should be manual...
+    def incColumnPos(): GenSheetParser[ka1, st, Unit] =  
+        let* pos = getSourcePosition();
+        setSourcePos({column = pos.column + 1 | pos})
+        
 
     pub def getContent(): GenSheetParser[ka1, st, String] =  
         let* ans    = liftCellPrim(SheetIO/Internal/Cell.getDefaultFormatterCellValue);
-        let* _      = incSourcePos();
+        let* _      = incColumnPos();
+        return(ans)
+
+    pub def row(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =  
+        let* ans    = p;
+        let* pos    = getSourcePosition();
+        let* _      = setSourcePos({row = pos.row + 1, column = 0});
         return(ans)
 
 }

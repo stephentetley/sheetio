@@ -9,10 +9,12 @@ def main(_args: Array[String]): Int32 & Impure =
     0
 
 def parser1(): SheetParser1[(String, String)] = 
-    use SheetIO/SheetParser.{flatMap, return, getContent};
-    let* s1     = getContent();
-    let* s2     = getContent();
-    return((s1, s2))
+    use SheetIO/SheetParser.{flatMap, return, row, getContent};
+    row({
+        let* s1     = getContent();
+        let* s2     = getContent();
+        return((s1, s2))
+    })
 
 
 
