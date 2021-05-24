@@ -20,9 +20,9 @@ namespace SheetIO/SheetParser {
 
     type alias Sheet = ##org.apache.poi.ss.usermodel.Sheet
 
-    type alias SourcePosition = {row: Int32, column: Int32}
+    type alias SourcePosition = (Int32, Int32)
 
-    type alias ParseState[st] = {row: Int32, column: Int32, userState: st}
+    type alias ParseState[st] = {position: SourcePosition, userState: st}
 
     type alias Failures = Chain[String]
 
@@ -63,7 +63,7 @@ namespace SheetIO/SheetParser {
             case Err(e) => Err("runXssf('${path1}'): ${e}")
             case Ok(wb) => {
                 let* sheet = SheetIO/Internal/Workbook.getSheet(wb as ##org.apache.poi.ss.usermodel.Workbook, sheetName);
-                let state = {row = 0, column = 0, userState = state};
+                let state = {position = (0,0), userState = state};
                 let fk = (posn, errs) -> Err({messages = errs, position = posn}) as & Impure;
                 let sk = (a, _, _, _, _) -> Ok(a) as & Impure;
                 let GenSheetParser(p1) = p;
@@ -71,7 +71,7 @@ namespace SheetIO/SheetParser {
                 let* _ = SheetIO/Internal/Prim.closeXSSFWorkbook(wb);
                 match ans {
                     case Ok(a) => Ok(a)
-                    case Err(e1) => Err("Error {row: ${e1.position.row}, column: ${e1.position.column}}")
+                    case Err(e1) => Err("Error {row: ${fst(e1.position)}, column: ${snd(e1.position)}}")
                 }
             }
         }
@@ -81,7 +81,7 @@ namespace SheetIO/SheetParser {
 
     pub def throwError(message: String) : GenSheetParser[ka1, st, ans] =
         use Chain.{singleton};
-        GenSheetParser((_, fk, st, _, _) -> fk({row = st.row, column = st.column}, singleton(message)))
+        GenSheetParser((_, fk, st, _, _) -> fk(st.position, singleton(message)))
 
     pub def fail(message: String) : GenSheetParser[ka1, st, ans] = throwError(message)
 
@@ -218,7 +218,7 @@ namespace SheetIO/SheetParser {
             let ans = f(sheet);
             match ans { 
                 case Ok(a) => sk(a, fk, st, sheet, errs)
-                case Err(msg) => fk({row = st.row, column = st.column}, singleton("liftSheetPrim - ${msg}"))
+                case Err(msg) => fk(st.position, singleton("liftSheetPrim - ${msg}"))
             }
         )
 
@@ -255,28 +255,25 @@ namespace SheetIO/SheetParser {
         })
     
     def getRowIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, st, sheet, errs) ->
-            let idx = st.row;
-            sk(idx, fk, st, sheet, errs)
-        )
+        map(fst, getSourcePosition())
     
     def getColumnIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, st, sheet, errs) ->
-            let idx = st.column;
-            sk(idx, fk, st, sheet, errs)
-        )
+        map(snd, getSourcePosition())
 
     pub def getSourcePosition(): GenSheetParser[ka1, st, SourcePosition] =  
-        GenSheetParser((sk, fk, st) ->
-            let pos = {row = st.row, column = st.column};
-            sk(pos, fk, st)
+        GenSheetParser((sk, fk, st, sheet, errs) ->
+            let pos = st.position;
+            sk(pos, fk, st, sheet, errs)
         )
 
-    pub def setSourcePos(pos: SourcePosition): GenSheetParser[ka1, st, Unit] =  
-        GenSheetParser((sk, fk, st, sheet) ->
-            let st1 = {row = pos.row, column = pos.column | st};
+    
+    
+    pub def setSourcePos(row: Int32, col: Int32): GenSheetParser[ka1, st, Unit] =  
+            GenSheetParser((sk, fk, st, sheet) ->
+            let st1 = {position = (row, col) | st};
             sk((), fk, st1, sheet)
         ) 
+
 
     pub def getState(): GenSheetParser[ka1, st, st] =  
         GenSheetParser((sk, fk, st, sheet) ->            
@@ -426,8 +423,9 @@ namespace SheetIO/SheetParser {
 
     /// TODO - maybe incrementing row should be manual...
     def incColumnPos(): GenSheetParser[ka1, st, Unit] =  
-        let* pos = getSourcePosition();
-        setSourcePos({column = pos.column + 1 | pos})
+        let* xy = getSourcePosition();
+        let (row, col) = xy;
+        setSourcePos(row, col + 1)
         
     def readCellWith(fn: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] = 
         let* ans    = liftCellPrim(fn);
@@ -451,14 +449,14 @@ namespace SheetIO/SheetParser {
             throwError("literal - no match")
 
     pub def row(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =  
-        let* ans    = p;
-        let* pos    = getSourcePosition();
-        let* _      = setSourcePos({row = pos.row + 1, column = 0});
+        let* ans        = p;
+        let* row        = getRowIndex();
+        let* _          = setSourcePos(row + 1, 0);
         return(ans)
 
     pub def skipRow(): GenSheetParser[ka1, st, Unit] =  
-        let* pos    = getSourcePosition();
-        let* _      = setSourcePos({row = pos.row + 1, column = 0});
+        let* row        = getRowIndex();
+        let* _          = setSourcePos(row + 1, 0);
         return()
 
 
@@ -475,21 +473,21 @@ namespace SheetIO/SheetParser {
     pub def endOfInput() : GenSheetParser[ka1, st, Unit] =
         GenSheetParser((sk, fk, st, sheet, errs) -> 
             match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
-                case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("endOfInput - ${msg}", errs))
+                case Err(msg) => fk(st.position, Chain.cons("endOfInput - ${msg}", errs))
                 case Ok(rmax) => 
-                    if (st.row >= rmax) 
+                    if (fst(st.position) >= rmax) 
                         sk((), fk, st, sheet, errs)
                     else 
-                        fk({row = st.row, column = st.column}, Chain.cons("endOfInput - not at end", errs))
+                        fk(st.position, Chain.cons("endOfInput - not at end", errs))
             }
         )
 
     pub def isAtEnd() : GenSheetParser[ka1, st, Bool] =
         GenSheetParser((sk, fk, st, sheet, errs) -> 
             match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
-                case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("isEof - ${msg}", errs))
+                case Err(msg) => fk(st.position, Chain.cons("isEof - ${msg}", errs))
                 case Ok(rmax) => 
-                    if (st.row >= rmax) 
+                    if (fst(st.position) >= rmax) 
                         sk(true, fk, st, sheet, errs)
                     else 
                         sk(false, fk, st, sheet, errs)
