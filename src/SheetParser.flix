@@ -28,7 +28,7 @@ namespace SheetIO/SheetParser {
 
     type alias FailK[ka1] = SourcePosition -> Failures ~> ka1
 
-    type alias SuccessK[ka1, st, ans] = ans -> FailK[ka1] -> Sheet -> ParseState[st] -> Failures ~> ka1
+    type alias SuccessK[ka1, st, ans] = ans -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures ~> ka1
 
 
     /// `st` is the type of user state
@@ -36,7 +36,7 @@ namespace SheetIO/SheetParser {
     /// `ka1` is the continuation answer type - if Flix had user visible existentials it would 
     /// be hidden as an existential type. Generally it will always be represented with a type variable
     /// except in "run" functions.
-    pub opaque type GenSheetParser[ka1, st, ans] = SuccessK[ka1, st, ans] -> FailK[ka1] -> Sheet -> ParseState[st] -> Failures ~> ka1
+    pub opaque type GenSheetParser[ka1, st, ans] = SuccessK[ka1, st, ans] -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures ~> ka1
 
     type alias SheetParser[ka1, ans] = GenSheetParser[ka1, Unit, ans]
 
@@ -67,7 +67,7 @@ namespace SheetIO/SheetParser {
                 let fk = (posn, errs) -> Err({messages = errs, position = posn}) as & Impure;
                 let sk = (a, _, _, _, _) -> Ok(a) as & Impure;
                 let GenSheetParser(p1) = p;
-                let ans = p1(sk, fk, sheet, state, Chain.empty());
+                let ans = p1(sk, fk, state, sheet, Chain.empty());
                 let* _ = SheetIO/Internal/Prim.closeXSSFWorkbook(wb);
                 match ans {
                     case Ok(a) => Ok(a)
@@ -81,18 +81,18 @@ namespace SheetIO/SheetParser {
 
     pub def throwError(message: String) : GenSheetParser[ka1, st, ans] =
         use Chain.{singleton};
-        GenSheetParser((_, fk, _, st, _) -> fk({row = st.row, column = st.column}, singleton(message)))
+        GenSheetParser((_, fk, st, _, _) -> fk({row = st.row, column = st.column}, singleton(message)))
 
     pub def fail(message: String) : GenSheetParser[ka1, st, ans] = throwError(message)
 
     def apply1 (p: GenSheetParser[ka1, st, ans], 
                 sk: SuccessK[ka1, st, ans], 
                 fk: FailK[ka1], 
-                sheet: Sheet, 
-                st: ParseState[st], 
+                st: ParseState[st],
+                sheet: Sheet,  
                 errs: Failures): ka1 & Impure =
         let GenSheetParser(pf) = p;
-        pf(sk, fk, sheet, st, errs)
+        pf(sk, fk, st, sheet, errs)
 
 
     ///
@@ -102,17 +102,17 @@ namespace SheetIO/SheetParser {
     ///
     pub def swapError(p: GenSheetParser[ka1, st, ans], message: String) : GenSheetParser[ka1, st, ans] =
         use Chain.{singleton};
-        GenSheetParser((sk, fk, sheet, st, errs) ->
+        GenSheetParser((sk, fk, st, sheet, errs) ->
             let fk1 = (pos, _) -> fk(pos, singleton(message));
-            let sk1 = (x, _, _, st1, _) -> sk(x, fk, sheet, st1, errs);
-            apply1(p, sk1, fk1, sheet, st, errs)
+            let sk1 = (x, _, st1, _, _) -> sk(x, fk, st1, sheet, errs);
+            apply1(p, sk1, fk1, st, sheet, errs)
         )
 
 
     pub def map(f: a -> b & ef, p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
-        GenSheetParser((sk, fk, sheet, pos, errs) ->
-            let sk1 = (x, fk1, _, pos1, errs1) -> sk(f(x) as & Impure, fk1, sheet, pos1, errs1);
-            apply1(p, sk1, fk, sheet, pos, errs)
+        GenSheetParser((sk, fk, st, sheet, errs) ->
+            let sk1 = (x, fk1, st1, _, errs1) -> sk(f(x) as & Impure, fk1, st1, sheet, errs1);
+            apply1(p, sk1, fk, st, sheet, errs)
         )
 
     pub def ap(mf: GenSheetParser[ka1, st, a -> b & ef], ma: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
@@ -126,6 +126,14 @@ namespace SheetIO/SheetParser {
         )
 
     pub def flatMap(k: a -> GenSheetParser[ka1, st, b], ma: GenSheetParser[ka1, st, a]):  GenSheetParser[ka1, st, b] = bind(ma, k)
+
+
+    pub def ifThenElse(cond: GenSheetParser[ka1, st, a], 
+                        thenp: a -> GenSheetParser[ka1, st, b], 
+                        elsep: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] = 
+        GenSheetParser((sk, fk, st, sheet) ->
+            apply1(cond, (x, fk1, st1, _) -> apply1(thenp(x), sk, fk1, st1, sheet), _ -> apply1(elsep, sk, fk, st, sheet), st, sheet))
+
 
     /// `alt` rolls back the parser state (including the position) if `p` fails.
     pub def alt(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
@@ -199,17 +207,17 @@ namespace SheetIO/SheetParser {
         kleisliRight(f1, f2, x)
 
     pub def liftAction(f: Unit -> a & ef): GenSheetParser[ka1, st, a] =
-        GenSheetParser((sk, fk, sheet, st, errs) ->
+        GenSheetParser((sk, fk, st, sheet, errs) ->
             let a = f() as & Impure;
-            sk(a, fk, sheet, st, errs)
+            sk(a, fk, st, sheet, errs)
         )
         
     pub def liftSheetPrim(f: Sheet ~> Result[a, String]): GenSheetParser[ka1, st, a] =
         use Chain.{singleton};
-        GenSheetParser((sk, fk, sheet, st, errs) ->
+        GenSheetParser((sk, fk, st, sheet, errs) ->
             let ans = f(sheet);
             match ans { 
-                case Ok(a) => sk(a, fk, sheet, st, errs)
+                case Ok(a) => sk(a, fk, st, sheet, errs)
                 case Err(msg) => fk({row = st.row, column = st.column}, singleton("liftSheetPrim - ${msg}"))
             }
         )
@@ -245,53 +253,47 @@ namespace SheetIO/SheetParser {
                 f(cell)
             }
         })
-
-    pub def ifThenElse(cond: GenSheetParser[ka1, st, a], 
-                        thenp: a -> GenSheetParser[ka1, st, b], 
-                        elsep: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] = 
-        GenSheetParser((sk, fk, sheet, st) ->
-            apply1(cond, x -> apply1(thenp(x), sk), _ -> apply1(elsep, sk, fk, sheet, st), sheet, st))
-
     
     def getRowIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, sheet, st, errs) ->
+        GenSheetParser((sk, fk, st, sheet, errs) ->
             let idx = st.row;
-            sk(idx, fk, sheet, st, errs)
+            sk(idx, fk, st, sheet, errs)
         )
     
     def getColumnIndex(): GenSheetParser[ka1, st, Int32] =  
-        GenSheetParser((sk, fk, sheet, st, errs) ->
+        GenSheetParser((sk, fk, st, sheet, errs) ->
             let idx = st.column;
-            sk(idx, fk, sheet, st, errs)
+            sk(idx, fk, st, sheet, errs)
         )
 
     pub def getSourcePosition(): GenSheetParser[ka1, st, SourcePosition] =  
-        GenSheetParser((sk, fk, sheet, st) ->
-            sk({row = st.row, column = st.column}, fk, sheet, st)
+        GenSheetParser((sk, fk, st) ->
+            let pos = {row = st.row, column = st.column};
+            sk(pos, fk, st)
         )
 
     pub def setSourcePos(pos: SourcePosition): GenSheetParser[ka1, st, Unit] =  
-        GenSheetParser((sk, fk, sheet, st) ->
+        GenSheetParser((sk, fk, st, sheet) ->
             let st1 = {row = pos.row, column = pos.column | st};
-            sk((), fk, sheet, st1)
+            sk((), fk, st1, sheet)
         ) 
 
     pub def getState(): GenSheetParser[ka1, st, st] =  
-        GenSheetParser((sk, fk, sheet, st) ->            
-            sk(st.userState, fk, sheet, st)
+        GenSheetParser((sk, fk, st, sheet) ->            
+            sk(st.userState, fk, st, sheet)
         )
 
     pub def setState(state: st): GenSheetParser[ka1, st, Unit] =  
-        GenSheetParser((sk, fk, sheet, st) ->
+        GenSheetParser((sk, fk, st, sheet) ->
             let st1 = {userState = state | st};
-            sk((), fk, sheet, st1)
+            sk((), fk, st1, sheet)
         )
 
 
     pub def updateState(modify: st -> st): GenSheetParser[ka1, st, Unit] =  
-        GenSheetParser((sk, fk, sheet, st) ->
+        GenSheetParser((sk, fk, st, sheet) ->
             let st1 = {userState = modify(st.userState) | st};
-            sk((), fk, sheet, st1)
+            sk((), fk, st1, sheet)
         )  
 
 
@@ -454,37 +456,43 @@ namespace SheetIO/SheetParser {
         let* _      = setSourcePos({row = pos.row + 1, column = 0});
         return(ans)
 
+    pub def skipRow(): GenSheetParser[ka1, st, Unit] =  
+        let* pos    = getSourcePosition();
+        let* _      = setSourcePos({row = pos.row + 1, column = 0});
+        return()
+
+
     ///
     /// lookahead - run the parser but don't consume input on success
     /// On fail, fail.
     ///
     pub def lookahead(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
-        GenSheetParser((sk, fk, sheet, st) ->
-            let sk1 = (ans, fk1, _, _) -> sk(ans, fk1, sheet, st);
-            apply1(p, sk1, fk, sheet, st)
+        GenSheetParser((sk, fk, st, sheet) ->
+            let sk1 = (ans, fk1, _, _) -> sk(ans, fk1, st, sheet);
+            apply1(p, sk1, fk, st, sheet)
         )
 
     pub def endOfInput() : GenSheetParser[ka1, st, Unit] =
-        GenSheetParser((sk, fk, sheet, st, errs) -> 
+        GenSheetParser((sk, fk, st, sheet, errs) -> 
             match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
                 case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("endOfInput - ${msg}", errs))
                 case Ok(rmax) => 
                     if (st.row >= rmax) 
-                        sk((), fk, sheet, st, errs)
+                        sk((), fk, st, sheet, errs)
                     else 
                         fk({row = st.row, column = st.column}, Chain.cons("endOfInput - not at end", errs))
             }
         )
 
     pub def isAtEnd() : GenSheetParser[ka1, st, Bool] =
-        GenSheetParser((sk, fk, sheet, st, errs) -> 
+        GenSheetParser((sk, fk, st, sheet, errs) -> 
             match SheetIO/Internal/Sheet.getLastRowNum(sheet) {
                 case Err(msg) => fk({row = st.row, column = st.column}, Chain.cons("isEof - ${msg}", errs))
                 case Ok(rmax) => 
                     if (st.row >= rmax) 
-                        sk(true, fk, sheet, st, errs)
+                        sk(true, fk, st, sheet, errs)
                     else 
-                        sk(false, fk, sheet, st, errs)
+                        sk(false, fk, st, sheet, errs)
             }
         )
 
@@ -504,7 +512,7 @@ namespace SheetIO/SheetParser {
         }
 
     pub def optional(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Option[a]] = 
-        alt(map(Some,p), return(None))
+        alt(map(Some, p), return(None))
 
     pub def optionalWithDefault(p: GenSheetParser[ka1, st, a], d: a): GenSheetParser[ka1, st, a] = 
         alt(p, return(d))
@@ -543,9 +551,10 @@ namespace SheetIO/SheetParser {
     pub def skipMany1(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Unit] = 
         bind(p, _ -> skipMany(p))
 
-
+    /// This works fine vis-a-vis not breaking the stack in FlixParsec...
     pub def skipManyTill(p: GenSheetParser[ka1, st, a], endp: GenSheetParser[ka1, st, end]): GenSheetParser[ka1, st, Unit] = 
         ifThenElse(endp, _ -> return(), bind(p, _ -> skipManyTill(p, endp)))
+
 
     pub def skipMany1Till(p: GenSheetParser[ka1, st, a], endp: GenSheetParser[ka1, st, end]): GenSheetParser[ka1, st, Unit] = 
         bind(p, _ -> skipManyTill(p, endp))
