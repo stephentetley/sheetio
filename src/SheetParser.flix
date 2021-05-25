@@ -271,13 +271,13 @@ namespace SheetIO/SheetParser {
         )
 
     
-    
-    pub def setSourcePos(row: Int32, col: Int32): GenSheetParser[ka1, st, Unit] =  
-            GenSheetParser((sk, fk, st, sheet) ->
+    pub def setSourcePosition(row: Int32, col: Int32): GenSheetParser[ka1, st, Unit] =  
+        GenSheetParser((sk, fk, st, sheet) ->
             let st1 = {position = (row, col) | st};
             sk((), fk, st1, sheet)
         ) 
 
+    pub def gotoRow(row: Int32): GenSheetParser[ka1, st, Unit] = setSourcePosition(row, 0)
 
     pub def getState(): GenSheetParser[ka1, st, st] =  
         GenSheetParser((sk, fk, st, sheet) ->            
@@ -429,7 +429,7 @@ namespace SheetIO/SheetParser {
     def incColumnPos(): GenSheetParser[ka1, st, Unit] =  
         let* xy = getSourcePosition();
         let (row, col) = xy;
-        setSourcePos(row, col + 1)
+        setSourcePosition(row, col + 1)
         
     def readCellWith(fn: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] = 
         let* ans    = liftCellPrim(fn);
@@ -455,7 +455,7 @@ namespace SheetIO/SheetParser {
     pub def row(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =  
         let* ans        = p;
         let* row        = getRowNumber();
-        let* _          = setSourcePos(row + 1, 0);
+        let* _          = setSourcePosition(row + 1, 0);
         return(ans)
 
     pub def skipRow(): GenSheetParser[ka1, st, Unit] =  
@@ -464,7 +464,7 @@ namespace SheetIO/SheetParser {
             throwError("skipRow - at End")
         else {
             let* row        = getRowNumber();
-            let* _          = setSourcePos(row + 1, 0);
+            let* _          = setSourcePosition(row + 1, 0);
             return()
         }
 
@@ -721,8 +721,14 @@ namespace SheetIO/SheetParser {
     pub def skipMany1Till(p: GenSheetParser[ka1, st, a], endp: GenSheetParser[ka1, st, end]): GenSheetParser[ka1, st, Unit] = 
         bind(p, _ -> skipManyTill(p, endp))
 
+    /// Note - bounded and find don't play well together with the current implementation....
+    /// Bounded won't curtial the extent of find.
     pub def find(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] = 
         ifThenElse(p, return, bind(skipRow(), _ -> find(p)))
+
+    
+    pub def island(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] = lookahead(find(p))
+
 
     ///
     /// Run parser `p` within a bounded number of rows `nrowsWindow`.
