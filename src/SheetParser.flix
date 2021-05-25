@@ -455,10 +455,14 @@ namespace SheetIO/SheetParser {
         return(ans)
 
     pub def skipRow(): GenSheetParser[ka1, st, Unit] =  
-        let* row        = getRowIndex();
-        let* _          = setSourcePos(row + 1, 0);
-        return()
-
+        let* end        = isAtEnd();
+        if (end) 
+            throwError("skipRow - at End")
+        else {
+            let* row        = getRowIndex();
+            let* _          = setSourcePos(row + 1, 0);
+            return()
+        }
 
     ///
     /// lookahead - run the parser but don't consume input on success
