@@ -723,6 +723,8 @@ namespace SheetIO/SheetParser {
 
     /// Note - bounded and find don't play well together with the current implementation....
     /// Bounded won't curtial the extent of find.
+    
+    /// TODO - allow find to wrap around...
     pub def find(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] = 
         ifThenElse(p, return, bind(skipRow(), _ -> find(p)))
 
