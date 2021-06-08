@@ -898,7 +898,10 @@ namespace SheetIO/SheetReader {
     /// Row 0 is read for the headers, some subsequent rows are *data*.
     pub def someNamedRows(sheet: Sheet, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
         let eval1 = SheetIO/NamedRowEvaluator.alt(SheetIO/NamedRowEvaluator.map(Some, eval), SheetIO/NamedRowEvaluator.return(None));
-        let postprocess = Option.sequence >> flip(Option.getWithDefault, Nil);
+        let postprocess = xs -> List.foldRight((x, ac) -> match x {
+                case None => ac
+                case Some(x1) => x1 :: ac
+            }, Nil, xs);
         map(postprocess, allNamedRows(sheet, eval1))
 
 
