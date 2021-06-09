@@ -445,6 +445,15 @@ namespace SheetIO/SheetParser {
     pub def numeric(): GenSheetParser[ka1, st, Float64] =
         readCellWith(SheetIO/Internal/Cell.getNumericCellValue)
 
+    pub def localDateTime(): GenSheetParser[ka1, st, Time.LocalDateTime] =
+        use Time.LocalDateTime.{LocalDateTime};
+        map(LocalDateTime, readCellWith(SheetIO/Internal/Cell.getLocalDateTimeCellValue))
+
+    pub def localDate(): GenSheetParser[ka1, st, Time.LocalDate] =
+        map(Time/LocalDateTime.toLocalDate, localDateTime())
+
+
+
     pub def literal(s: String): GenSheetParser[ka1, st, String] =
         let* s1 = content();
         if (s == s1) 
