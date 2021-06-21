@@ -71,7 +71,10 @@ namespace SheetIO/SheetParser {
                 let* _ = SheetIO/Internal/Prim.closeXSSFWorkbook(wb);
                 match ans {
                     case Ok(a) => Ok(a)
-                    case Err(e1) => Err("Error {row: ${fst(e1.position)}, column: ${snd(e1.position)}}")
+                    case Err(e1) => { 
+                        let errText = String.unlines("Error {row: ${fst(e1.position)}, column: ${snd(e1.position)}}" :: Chain.toList(e1.messages));
+                        Err(errText)
+                    }
                 }
             }
         }
@@ -205,9 +208,6 @@ namespace SheetIO/SheetParser {
 
     pub def <=<(f1: b -> GenSheetParser[ka1, st, c], f2: a -> GenSheetParser[ka1, st, b], x: a): GenSheetParser[ka1, st, c] = 
         kleisliRight(f1, f2, x)
-
-
-
 
 
     pub def liftAction(f: Unit -> a & ef): GenSheetParser[ka1, st, a] =
