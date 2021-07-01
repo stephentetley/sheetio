@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type RowEvaluator[a] = ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]
+    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) ~> Result[a, String]
 
 }
 
@@ -32,26 +32,28 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.DataFormatter.{DataFormatter};
     
     pub def return(x: a): RowEvaluator[a] =
-        RowEvaluator(_ -> Ok(x) as & Impure)
+        RowEvaluator((_, _) -> Ok(x) as & Impure)
 
-    def apply1(x: RowEvaluator[a], row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
+    def apply1(x: RowEvaluator[a], 
+                fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
+                row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
         let RowEvaluator(f) = x;
-        f(row)
+        f(fmt, row)
 
     pub def throwError(msg: String): RowEvaluator[a] =
-        RowEvaluator(_ -> Err(msg) as & Impure)
+        RowEvaluator((_, _) -> Err(msg) as & Impure)
 
     pub def swapError(ma: RowEvaluator[a], msg: String): RowEvaluator[a] =
-        RowEvaluator(r ->
-            match apply1(ma, r) {
+        RowEvaluator((fmt, row) ->
+            match apply1(ma, fmt, row) {
                 case Ok(a) => Ok(a)
                 case Err(_) => Err(msg)
             }
         )
 
     pub def map(f: a -> b & ef, x: RowEvaluator[a]): RowEvaluator[b] =
-        RowEvaluator(r ->
-            match apply1(x, r) {
+        RowEvaluator((fmt, row) ->
+            match apply1(x, fmt, row) {
                 case Ok(a) => {
                     let ans = f(a) as & Impure;
                     Ok(ans)
@@ -61,10 +63,10 @@ namespace SheetIO/RowEvaluator {
         )
 
     pub def ap(mf: RowEvaluator[a -> b & ef], ma: RowEvaluator[a]): RowEvaluator[b] =
-        RowEvaluator(r ->
-            match apply1(mf, r) {
+        RowEvaluator((fmt, row) ->
+            match apply1(mf, fmt, row) {
                 case Ok(f) => {
-                    match apply1(ma, r) {
+                    match apply1(ma, fmt, row) {
                         case Ok(a) => Ok(f(a) as & Impure)
                         case Err(e2) => Err(e2)
                     }
@@ -74,9 +76,9 @@ namespace SheetIO/RowEvaluator {
         )
     
     pub def seqLeft(ma: RowEvaluator[a], mb: RowEvaluator[b]): RowEvaluator[a] = 
-        RowEvaluator(r ->
-            match apply1(ma, r) { 
-                case Ok(a) => match apply1(mb, r) {
+        RowEvaluator((fmt, row) ->
+            match apply1(ma, fmt, row) { 
+                case Ok(a) => match apply1(mb, fmt, row) {
                     case Ok(_) => Ok(a)
                     case Err(e) => Err(e)
                 }
@@ -85,17 +87,17 @@ namespace SheetIO/RowEvaluator {
         )
 
     pub def seqRight(ma: RowEvaluator[a], mb: RowEvaluator[b]): RowEvaluator[b] = 
-        RowEvaluator(r ->
-            match apply1(ma, r) { 
-                case Ok(_) => apply1(mb, r)
+        RowEvaluator((fmt, row) ->
+            match apply1(ma, fmt, row) { 
+                case Ok(_) => apply1(mb, fmt, row)
                 case Err(e) => Err(e)
             }
         )
 
     pub def bind(x: RowEvaluator[a], k: a -> RowEvaluator[b]): RowEvaluator[b] =
-        RowEvaluator(r ->
-            match apply1(x, r) {
-                case Ok(a) => { let ans = k(a); apply1(ans, r) }
+        RowEvaluator((fmt, row) ->
+            match apply1(x, fmt, row) {
+                case Ok(a) => { let ans = k(a); apply1(ans, fmt, row) }
                 case Err(e) => Err(e)
             }
         )
@@ -104,17 +106,17 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def alt(ea: RowEvaluator[a], eb: RowEvaluator[a]): RowEvaluator[a] =
-        RowEvaluator(r ->
-            match apply1(ea, r) {
+        RowEvaluator((fmt, row) ->
+            match apply1(ea, fmt, row) {
                 case Ok(a) => Ok(a)
-                case Err(_) => apply1(eb, r)
+                case Err(_) => apply1(eb, fmt, row)
             }
         )
 
     pub def kleisliLeft(f1: a -> RowEvaluator[b], f2: b -> RowEvaluator[c], x: a): RowEvaluator[c] =
-        RowEvaluator(r -> 
-            match apply1(f1(x), r) { 
-                case Ok(b) => apply1(f2(b), r)
+        RowEvaluator((fmt, row) -> 
+            match apply1(f1(x), fmt, row) { 
+                case Ok(b) => apply1(f2(b), fmt, row)
                 case Err(e) => Err(e)
             }
         )
@@ -123,7 +125,7 @@ namespace SheetIO/RowEvaluator {
         kleisliLeft(f2, f1, x)
 
     pub def optional(x: RowEvaluator[a]): RowEvaluator[Option[a]] =
-        RowEvaluator(r -> match apply1(x, r) {
+        RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
             case Ok(a) => Ok(Some(a))
             case Err(_) => Ok(None)
         })
@@ -136,14 +138,14 @@ namespace SheetIO/RowEvaluator {
 
 
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
-        RowEvaluator(r -> fn(r))
+        RowEvaluator((_, row) -> fn(row))
 
 
     pub def liftAction(fn: Unit ~> a): RowEvaluator[a] =
-        RowEvaluator(_ -> let x = fn(); Ok(x))
+        RowEvaluator((_, _) -> let x = fn(); Ok(x))
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): RowEvaluator[a] =
-        RowEvaluator(_ -> fn())
+        RowEvaluator((_, _) -> fn())
 
 
     pub def liftOption(x: Option[a], errMsg: String): RowEvaluator[a] = match x { 
@@ -172,9 +174,20 @@ namespace SheetIO/RowEvaluator {
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
     
+    def getDataFormatter(): RowEvaluator[##org.apache.poi.ss.usermodel.DataFormatter] = 
+        RowEvaluator((fmt, _) -> Ok(fmt) as & Impure)
 
     pub def getRowNum(): RowEvaluator[Int32] = 
-        RowEvaluator(row -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+        RowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+
+
+    /// Uses the default DataFormatter
+    pub def getContentAt(ix: Int32): RowEvaluator[String] =
+        let* fmt = getDataFormatter();
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DataFormatter.formatCellValue(fmt)))
+            `swapError` "getContentAt(${Int32.toString(ix)})"
+
+
 
     pub def isNullAt(ix: Int32): RowEvaluator[Bool] = 
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))
@@ -212,11 +225,7 @@ namespace SheetIO/RowEvaluator {
             `swapError` "getStringAt(${Int32.toString(ix)})"
 
 
-    /// Uses the default DataFormatter
-    pub def getContentAt(ix: Int32): RowEvaluator[String] =
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue))
-            `swapError` "getContentAt(${Int32.toString(ix)})"
-
+    
     pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[String] =
         let step = getContentAt(ix) >>= x -> 
                     if (test(x)) return(x) else throwError("getSatifiesAt('${ix}') - failed");

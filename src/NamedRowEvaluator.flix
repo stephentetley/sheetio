@@ -19,7 +19,7 @@
 
 namespace SheetIO {
 
-    pub opaque type NamedRowEvaluator[a] = (Map[String, Int32], ##org.apache.poi.ss.usermodel.Row) ~> Result[a, String]
+    pub opaque type NamedRowEvaluator[a] = (Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) ~> Result[a, String]
 
 }
 
@@ -40,28 +40,29 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def return(x: a): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _) -> Ok(x) as & Impure)
+        NamedRowEvaluator((_, _, _) -> Ok(x) as & Impure)
 
     def apply1(x: NamedRowEvaluator[a], 
                ixs: Map[String, Int32], 
+               fmt: ##org.apache.poi.ss.usermodel.DataFormatter,
                row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
         let NamedRowEvaluator(f) = x;
-        f(ixs, row)
+        f(ixs, fmt, row)
 
     pub def throwError(msg: String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _) -> Err(msg) as & Impure)
+        NamedRowEvaluator((_, _, _) -> Err(msg) as & Impure)
 
     /// TODO - row num is useful but we need a less ad-hoc API...
     pub def throwErrorWithRowNum(msgF: Int32 -> String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, row) -> 
+        NamedRowEvaluator((_, _, row) -> 
             let msg = msgF(SheetIO/Internal/Row.getRowNum(row));
             Err(msg)
         )
 
 
     pub def swapError(ma: NamedRowEvaluator[a], msg: String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(ma, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ma, ixs, fmt, row) {
                 case Ok(a) => Ok(a)
                 case Err(_) => Err(msg)
             }
@@ -69,11 +70,11 @@ namespace SheetIO/NamedRowEvaluator {
 
     /// TODO - row num is useful but we need a less ad-hoc API...
     pub def swapErrorWithRowNum(ma: NamedRowEvaluator[a], msgF: Int32 -> String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(ma, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ma, ixs, fmt, row) {
                 case Ok(a) => Ok(a)
                 case Err(_) => { 
-                    let msg = msgF(SheetIO/Internal/Row.getRowNum(r));
+                    let msg = msgF(SheetIO/Internal/Row.getRowNum(row));
                     Err(msg)
                 }
             }
@@ -81,8 +82,8 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def map(f: a -> b & ef, x: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(x, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(x, ixs, fmt, row) {
                 case Ok(a) => {
                     let ans = f(a) as & Impure;
                     Ok(ans)
@@ -92,10 +93,10 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
     pub def ap(mf: NamedRowEvaluator[a -> b & ef], ma: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(mf, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(mf, ixs, fmt, row) {
                 case Ok(f) => {
-                    match apply1(ma, ixs, r) {
+                    match apply1(ma, ixs, fmt, row) {
                         case Ok(a) => Ok(f(a) as & Impure)
                         case Err(e2) => Err(e2)
                     }
@@ -105,9 +106,9 @@ namespace SheetIO/NamedRowEvaluator {
         )
     
     pub def seqLeft(ma: NamedRowEvaluator[a], mb: NamedRowEvaluator[b]): NamedRowEvaluator[a] = 
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(ma, ixs, r) { 
-                case Ok(a) => match apply1(mb, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ma, ixs, fmt, row) { 
+                case Ok(a) => match apply1(mb, ixs, fmt, row) {
                     case Ok(_) => Ok(a)
                     case Err(e) => Err(e)
                 }
@@ -116,17 +117,17 @@ namespace SheetIO/NamedRowEvaluator {
         )
 
     pub def seqRight(ma: NamedRowEvaluator[a], mb: NamedRowEvaluator[b]): NamedRowEvaluator[b] = 
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(ma, ixs, r) { 
-                case Ok(_) => apply1(mb, ixs, r)
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ma, ixs, fmt, row) { 
+                case Ok(_) => apply1(mb, ixs, fmt, row)
                 case Err(e) => Err(e)
             }
         )
 
     pub def bind(x: NamedRowEvaluator[a], k: a -> NamedRowEvaluator[b]): NamedRowEvaluator[b] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(x, ixs, r) {
-                case Ok(a) => { let ans = k(a); apply1(ans, ixs, r) }
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(x, ixs, fmt, row) {
+                case Ok(a) => { let ans = k(a); apply1(ans, ixs, fmt, row) }
                 case Err(e) => Err(e)
             }
         )
@@ -134,9 +135,9 @@ namespace SheetIO/NamedRowEvaluator {
     pub def flatMap(k: a -> NamedRowEvaluator[b], x: NamedRowEvaluator[a]): NamedRowEvaluator[b] = bind(x, k)
 
     pub def kleisliLeft(f1: a -> NamedRowEvaluator[b], f2: b -> NamedRowEvaluator[c], x: a): NamedRowEvaluator[c] =
-        NamedRowEvaluator((ixs, r) -> 
-            match apply1(f1(x), ixs, r) { 
-                case Ok(b) => apply1(f2(b), ixs, r)
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(f1(x), ixs, fmt, row) { 
+                case Ok(b) => apply1(f2(b), ixs, fmt, row)
                 case Err(e) => Err(e)
             }
         )
@@ -145,8 +146,8 @@ namespace SheetIO/NamedRowEvaluator {
         kleisliLeft(f2, f1, x)
 
     pub def optional(x: NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(x, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(x, ixs, fmt, row) {
                 case Ok(a) => Ok(Some(a))
                 case Err(_) => Ok(None)
             }
@@ -158,24 +159,25 @@ namespace SheetIO/NamedRowEvaluator {
         alt(x, return(d))
 
     pub def alt(ea: NamedRowEvaluator[a], eb: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
-        NamedRowEvaluator((ixs, r) ->
-            match apply1(ea, ixs, r) {
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ea, ixs, fmt, row) {
                 case Ok(a) => Ok(a)
-                case Err(_) => apply1(eb, ixs, r) 
+                case Err(_) => apply1(eb, ixs, fmt, row) 
             }
         )
 
 
     pub def mapM(mf: a -> NamedRowEvaluator[b], xs: List[a]): NamedRowEvaluator[List[b]] =
-        NamedRowEvaluator((ixs, r) ->
-            mapMHelper(ixs, r, mf, xs, e -> Err(e), ys -> Ok(ys))
+        NamedRowEvaluator((ixs, fmt, row) ->
+            mapMHelper(ixs, fmt, row, mf, xs, e -> Err(e), ys -> Ok(ys))
         )
 
     ///
     /// Helper function for `mapM`.
     ///
     def mapMHelper(ixs: Map[String, Int32], 
-                   r: ##org.apache.poi.ss.usermodel.Row, 
+                   fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
+                   row: ##org.apache.poi.ss.usermodel.Row, 
                    mf: a -> NamedRowEvaluator[b], 
                    xs: List[a], 
                    fk: String -> Result[List[b], String], 
@@ -184,23 +186,23 @@ namespace SheetIO/NamedRowEvaluator {
             case Nil => sk(Nil)
             case x :: rs => {
                 let ma = mf(x);
-                match apply1(ma, ixs, r) {
+                match apply1(ma, ixs, fmt, row) {
                     case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(ixs, r, mf, rs, fk, ks -> sk(x1 :: ks))
+                    case Ok(x1) => mapMHelper(ixs, fmt, row, mf, rs, fk, ks -> sk(x1 :: ks))
                 }
             }
         }
         
         
     def liftPrim(ask: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, r) -> ask(r))
+        NamedRowEvaluator((_, _, row) -> ask(row))
 
 
     pub def liftAction(fn: Unit ~> a): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _) -> let x = fn(); Ok(x))
+        NamedRowEvaluator((_, _, _) -> let x = fn(); Ok(x))
 
     pub def liftActionResult(fn: Unit ~> Result[a, String]): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _) -> fn())
+        NamedRowEvaluator((_, _, _) -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): NamedRowEvaluator[a] = match x { 
         case Some(x1) => return(x1)
@@ -221,10 +223,13 @@ namespace SheetIO/NamedRowEvaluator {
     // // so FactIO's API indexes from 0.
     
     def getIndex(label: String): NamedRowEvaluator[Int32] =
-        NamedRowEvaluator((ixs, _) -> match Map.get(label, ixs) {            
+        NamedRowEvaluator((ixs, _, _) -> match Map.get(label, ixs) {
             case Some(ix) => Ok(ix) as & Impure
             case None => Err("getIndex - '${label}'") as & Impure
         })
+
+    def getDataFormatter(): NamedRowEvaluator[##org.apache.poi.ss.usermodel.DataFormatter] =
+        NamedRowEvaluator((_, fmt, _) -> Ok(fmt) as & Impure)
 
 
     def withCell(row: ##org.apache.poi.ss.usermodel.Row,
@@ -235,7 +240,12 @@ namespace SheetIO/NamedRowEvaluator {
         f(cell)
 
     pub def getRowNum(): NamedRowEvaluator[Int32] = 
-        NamedRowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+        NamedRowEvaluator((_, _, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
+
+    pub def getContentNamed(label: String): NamedRowEvaluator[String] =
+        let* ix     = getIndex(label);
+        let* fmt    = getDataFormatter();
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DataFormatter.formatCellValue(fmt))) `swapError` "getContentNamed('${label}')"
 
 
     pub def isNullNamed(label: String): NamedRowEvaluator[Bool] = 
@@ -270,10 +280,6 @@ namespace SheetIO/NamedRowEvaluator {
         let* ix     = getIndex(label);
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue)) `swapError` "getStringNamed('${label}')"
             
-
-    pub def getContentNamed(label: String): NamedRowEvaluator[String] =
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getDefaultFormatterCellValue)) `swapError` "getContentNamed('${label}')"
 
 
     pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[String] =
