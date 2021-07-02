@@ -248,6 +248,11 @@ namespace SheetIO/NamedRowEvaluator {
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/DataFormatter.formatCellValue(fmt))) `swapError` "getContentNamed('${label}')"
 
 
+    /// Uses the default DataFormatter
+    pub def getTrimmedContentNamed(label: String): NamedRowEvaluator[String] =
+        map(String.trim, getContentNamed(label)) `swapError` "getTrimmedContentNamed(${label})"
+        
+
     pub def isNullNamed(label: String): NamedRowEvaluator[Bool] = 
         let* ix     = getIndex(label);
         liftPrim(x -> withCell(x, ix, ans -> Ok(Object.isNull(ans) as & Impure)))

@@ -835,10 +835,12 @@ namespace SheetIO/SheetReader {
         return(xs)
     
     /// Row 0 is read for the headers, some subsequent rows are *data*.
-    pub def someRows(sheet: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] = 
-        let eval1 = SheetIO/RowEvaluator.alt(SheetIO/RowEvaluator.map(Some, eval), SheetIO/RowEvaluator.return(None));
-        let postprocess = Option.sequence >> flip(Option.getWithDefault, Nil);
-        map(postprocess, allRows(sheet, eval1))
+    pub def someRows(sheet: Sheet, eval: RowEvaluator[Option[a]]): SheetReader[List[a]] = 
+        let postprocess = xs -> List.foldRight((x, ac) -> match x {
+                case None => ac
+                case Some(x1) => x1 :: ac
+            }, Nil, xs);
+        map(postprocess, allRows(sheet, eval))
 
     pub def foldAllRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: RowEvaluator[a]): SheetReader[b] =
         let RowEvaluator(f) = eval;
@@ -905,13 +907,12 @@ namespace SheetIO/SheetReader {
         namedRowsFrom(sheet, 0, 1, eval)
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
-    pub def someNamedRows(sheet: Sheet, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
-        let eval1 = SheetIO/NamedRowEvaluator.alt(SheetIO/NamedRowEvaluator.map(Some, eval), SheetIO/NamedRowEvaluator.return(None));
+    pub def someNamedRows(sheet: Sheet, eval: NamedRowEvaluator[Option[a]]): SheetReader[List[a]] = 
         let postprocess = xs -> List.foldRight((x, ac) -> match x {
                 case None => ac
                 case Some(x1) => x1 :: ac
             }, Nil, xs);
-        map(postprocess, allNamedRows(sheet, eval1))
+        map(postprocess, allNamedRows(sheet, eval))
 
 
     pub def foldNamedRowsFrom(sheet: Sheet, headerIndex: Int32, start: Int32, 

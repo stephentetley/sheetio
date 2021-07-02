@@ -180,12 +180,31 @@ namespace SheetIO/RowEvaluator {
     pub def getRowNum(): RowEvaluator[Int32] = 
         RowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
 
+    def decodeColumn(s: String): Result[Int32, String] & Impure = 
+        import new org.apache.poi.ss.util.CellAddress(String) as newCellAddress; 
+        import org.apache.poi.ss.util.CellAddress.getColumn(); 
+        try {
+            let addr = newCellAddress(s + "1");
+            Ok(getColumn(addr))
+        } catch {
+            case _: ##java.lang.Exception => Err("decodeColumn") 
+        }
+
+    /// Get the column index from the column identifier "A", "B", ... "AA", "AB", ...
+    pub def getColumnIndex(s: String): RowEvaluator[Int32] = 
+        liftPrim(_ -> decodeColumn(s))
+        
+
 
     /// Uses the default DataFormatter
     pub def getContentAt(ix: Int32): RowEvaluator[String] =
         let* fmt = getDataFormatter();
         liftPrim(x -> withCell(x, ix, SheetIO/Internal/DataFormatter.formatCellValue(fmt)))
             `swapError` "getContentAt(${Int32.toString(ix)})"
+
+    /// Uses the default DataFormatter
+    pub def getTrimmedContentAt(ix: Int32): RowEvaluator[String] =
+        map(String.trim, getContentAt(ix)) `swapError` "getTrimmedContentAt(${Int32.toString(ix)})"
 
 
 
