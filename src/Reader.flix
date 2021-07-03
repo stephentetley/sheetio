@@ -58,4 +58,43 @@ namespace SheetIO/Reader {
         };
         SheetIO/SheetReader.runXlsx(readStep(), path)
 
+    pub def foldAllRows(sheetName: String, 
+                        path: System.FilePath, 
+                        combine: (b, a) -> b & ef, 
+                        ac: b, 
+                        eval: RowEvaluator[a]): Result[b, String] & Impure =
+        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, foldAllRows};
+        let readStep = () -> { 
+            let* s1     = getSheetNamed(sheetName);
+            let* xs     = foldAllRows(s1, combine, ac, eval);
+            return(xs)
+        };
+        SheetIO/SheetReader.runXlsx(readStep(), path)
+
+
+    pub def foldSomeRows(sheetName: String, 
+                        path: System.FilePath, 
+                        combine: (b, a) -> b & ef, 
+                        ac: b, 
+                        eval: RowEvaluator[Option[a]]): Result[b, String] & Impure =
+        let combine1 = (b, a) -> match a { 
+            case Some(a1) => combine(b, a1)
+            case None => b as & ef
+        };
+        foldAllRows(sheetName, path, combine1, ac, eval)
+
+
+    pub def foldAllNamedRows(sheetName: String, 
+                            path: System.FilePath, 
+                            combine: (b, a) -> b & ef, 
+                            ac: b, 
+                            eval: NamedRowEvaluator[a]): Result[b, String] & Impure =
+        use SheetIO/SheetReader.{bind, flatMap, return, getSheetNamed, foldAllNamedRows};
+        let readStep = () -> { 
+            let* s1     = getSheetNamed(sheetName);
+            let* xs     = foldAllNamedRows(s1, combine, ac, eval);
+            return(xs)
+        };
+        SheetIO/SheetReader.runXlsx(readStep(), path)
+
 }
