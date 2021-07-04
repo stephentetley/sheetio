@@ -305,7 +305,7 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[String] =
         let* ix     = getIndex(label);
         let DataFormatter(dfmt1) = dfmt;
-        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/Cell.getFormatterCellValue(cell, dfmt1)))
+        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/DataFormatter.formatCellValue(dfmt1, cell)))
 
 
     pub def getBoolNamed(label: String): NamedRowEvaluator[Bool] =

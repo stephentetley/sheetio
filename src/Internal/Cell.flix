@@ -75,26 +75,6 @@ namespace SheetIO/Internal/Cell {
             case _: ##java.lang.Exception => Err("getLocalDateTimeCellValue")
         }
 
-    pub def getFormatterCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
-                                  formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell); 
-        try {
-            let ans = formatter.formatCellValue(cell);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getFormatterCellValue")
-        }
-
-    pub def getDefaultFormatterCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell); 
-        import new org.apache.poi.ss.usermodel.DataFormatter() as newDataFormatter;
-        try {
-            let formatter = newDataFormatter();
-            let ans = formatter.formatCellValue(cell);
-            Ok(ans)
-        } catch {
-            case _: ##java.lang.Exception => Err("getFormatterCellValue")
-        }
 
     pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, String] & Impure = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool); 

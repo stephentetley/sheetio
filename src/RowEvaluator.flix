@@ -261,7 +261,7 @@ namespace SheetIO/RowEvaluator {
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[String] =
         let DataFormatter(dfmt1) = dfmt;
-        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/Cell.getFormatterCellValue(cell, dfmt1)))
+        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/DataFormatter.formatCellValue(dfmt1, cell)))
 
 
     pub def getBoolAt(ix: Int32): RowEvaluator[Bool] =

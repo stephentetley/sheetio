@@ -97,4 +97,29 @@ namespace SheetIO/Reader {
         };
         SheetIO/SheetReader.runXlsx(readStep(), path)
 
+
+    pub def foldSomeNamedRows(sheetName: String, 
+                        path: System.FilePath, 
+                        combine: (b, a) -> b & ef, 
+                        ac: b, 
+                        eval: NamedRowEvaluator[Option[a]]): Result[b, String] & Impure =
+        let combine1 = (b, a) -> match a { 
+            case Some(a1) => combine(b, a1)
+            case None => b as & ef
+        };
+        foldAllNamedRows(sheetName, path, combine1, ac, eval)
+
+    pub def allRelations(sheetName: String, 
+                            path: System.FilePath, 
+                            eval: RowEvaluator[#{| reln}]): Result[#{| reln}, String] & Impure =
+        foldAllRows(sheetName, path, (ac, x) -> ac <+> x, #{}, eval)
+
+
+    pub def allNamedRelations(sheetName: String, 
+                            path: System.FilePath, 
+                            eval: NamedRowEvaluator[#{| reln}]): Result[#{| reln}, String] & Impure =
+        foldAllNamedRows(sheetName, path, (ac, x) -> ac <+> x, #{}, eval)
+
+
+
 }
