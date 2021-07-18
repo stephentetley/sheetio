@@ -75,7 +75,7 @@ namespace SheetIO/SheetWriter {
                             outPath: System.FilePath): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let* _          = System/File.copy(template, outPath);
+        let* _          = System/Directory.copy(template, outPath);
         let path1       = toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());        
@@ -100,7 +100,7 @@ namespace SheetIO/SheetWriter {
                             outPath: System.FilePath): Result[a, String] & Impure =
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
-        let* _          = System/File.copy(template, outPath);
+        let* _          = System/Directory.copy(template, outPath);
         let outPath1    = toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
