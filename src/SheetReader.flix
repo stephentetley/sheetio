@@ -25,6 +25,8 @@ namespace SheetIO/SheetReader {
 
     use ToString.toString;
     
+    use X.Cursor;
+    
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
 
@@ -818,12 +820,12 @@ namespace SheetIO/SheetReader {
             let iter = newRowCursor(x1);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
-                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
                 , finalize  = () -> ffiClose(iter)
             };
-            Cursor.makeCursor(cursorAlg)
+            X/Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Cursor.failure("newPOIRowStream")
+            case _: ##java.lang.Exception => X/Cursor.failure("newPOIRowStream")
         }
 
     /// Use rowiterator...
@@ -831,7 +833,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(fmt), strm) |> Cursor.toList!);
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
         return(xs)
     
     /// Row 0 is read for the headers, some subsequent rows are *data*.
@@ -846,7 +848,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* ans            = liftActionResult(_ -> Cursor.mapResult(f(fmt), strm) |> Cursor.fold!(combine, ac));
+        let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
 
@@ -855,9 +857,9 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* _              = liftAction(_ -> Cursor.drop!(b, strm));
-        let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(fmt), strm1) |> Cursor.toList!);
+        let* _              = liftAction(_ -> X/Cursor.drop!(b, strm));
+        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm1) |> X/Cursor.toList!);
         return(xs)
 
     pub def rowEval(x: Row, 
@@ -873,9 +875,9 @@ namespace SheetIO/SheetReader {
         let NamedRowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* _              = liftAction(_ -> Cursor.drop!(b, strm));
-        let* strm1          = liftAction(_ -> Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> Cursor.mapResult(f(ixs, fmt), strm1) |> Cursor.toList!);
+        let* _              = liftAction(_ -> X/Cursor.drop!(b, strm));
+        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm1) |> X/Cursor.toList!);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], 
@@ -897,8 +899,8 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet));
-        let* _          = liftAction(_ -> Cursor.drop!(start, strm));
-        let* xs         = liftActionResult(_ -> Cursor.mapResult(f(ixs, fmt), strm) |> Cursor.toList!);
+        let* _          = liftAction(_ -> X/Cursor.drop!(start, strm));
+        let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
 
@@ -923,8 +925,8 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet));
-        let* _          = liftAction(_ -> Cursor.drop!(start, strm));
-        let* ans        = liftActionResult(_ -> Cursor.mapResult(f(ixs, fmt), strm) |> Cursor.fold!(combine, ac));
+        let* _          = liftAction(_ -> X/Cursor.drop!(start, strm));
+        let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
     pub def foldAllNamedRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a]): SheetReader[b] =
