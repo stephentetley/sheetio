@@ -18,7 +18,7 @@
 
 namespace SheetIO/CursorReader {
 
-
+    use X.Cursor;
     use System.FilePath.{FilePath};
 
     use SheetIO.RowEvaluator;
@@ -42,12 +42,12 @@ namespace SheetIO/CursorReader {
             let iter = newRowCursor(src1, sheetName);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
-                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
                 , finalize  = () -> ffiClose(iter)
             };
-            Cursor.makeCursor(cursorAlg)
+            X/Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Cursor.failure("newRowCursor")
+            case _: ##java.lang.Exception => X/Cursor.failure("newRowCursor")
         }
 
     ///
@@ -63,12 +63,12 @@ namespace SheetIO/CursorReader {
             let iter = newRowCursor(src1, sheetIndex);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
-                , next      = Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
                 , finalize  = () -> ffiClose(iter)
             };
-            Cursor.makeCursor(cursorAlg)
+            X/Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Cursor.failure("newRowCursorAt")
+            case _: ##java.lang.Exception => X/Cursor.failure("newRowCursorAt")
         }
 
     /// 
@@ -76,7 +76,8 @@ namespace SheetIO/CursorReader {
     /// 
     pub def indexedRowCursor(start: Int32, eval: RowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
         let RowEvaluator(eval1) = eval;
-        src |> Cursor.drop(start) |> Cursor.mapResult(eval1)
+        let fmt = SheetIO/Internal/DataFormatter.new();
+        src |> X/Cursor.drop(start) |> X/Cursor.mapResult(eval1(fmt))
 
     /// 
     /// Because Cursor is implicitly tied to iterating "IO-like" resources (e.g. lines of a file, database results)
@@ -85,16 +86,17 @@ namespace SheetIO/CursorReader {
     pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
         let NamedRowEvaluator(eval1) = eval;
         let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
-        let src1 = if (headersLine > 0) Cursor.drop(headersLine - 1, src) else src;
-        match Cursor.head!(src1) {
+        let fmt = SheetIO/Internal/DataFormatter.new();
+        let src1 = if (headersLine > 0) X/Cursor.drop(headersLine - 1, src) else src;
+        match X/Cursor.head!(src1) {
             case Some(hrow) => {
-                let arr = Result.getWithDefault(headerEval1(hrow), Array.new("", 0));
+                let arr = Result.getWithDefault(headerEval1(fmt, hrow), Array.new("", 0));
                 let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
-                Cursor.mapResult(eval1(lookups), src1)
+                X/Cursor.mapResult(eval1(lookups), src1)
             }
             case None => { 
-                Cursor.finalize!(src1);
-                Cursor.failure("Cannot find headers")
+                X/Cursor.finalize!(src1);
+                X/Cursor.failure("Cannot find headers")
             }
         }
 

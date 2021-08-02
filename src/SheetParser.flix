@@ -436,8 +436,13 @@ namespace SheetIO/SheetParser {
         let* _      = incColumnPos();
         return(ans)
 
-    pub def content(): GenSheetParser[ka1, st, String] =  
-        readCellWith(SheetIO/Internal/Cell.getDefaultFormatterCellValue)
+    /// TODO cache fmt in the parser
+    pub def content(): GenSheetParser[ka1, st, String] =
+        let* fmt    = SheetIO/Internal/DataFormatter.new();
+        let* ans    = liftCellPrim(readCellWith(SheetIO/Internal/DataFormatter.formatCellValue(fmt)));
+        let* _      = incColumnPos();
+        return(ans)
+        
         
     pub def boolean(): GenSheetParser[ka1, st, Bool] =
         readCellWith(SheetIO/Internal/Cell.getBooleanCellValue)

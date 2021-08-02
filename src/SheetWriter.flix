@@ -821,10 +821,15 @@ namespace SheetIO/SheetWriter {
         let* _          = liftActionResult(_ -> mf(row1, style));
         return()
 
+
+    pub def allRows(sheet: Sheet, rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
+        mapX(r -> appendRow(sheet, writer(r)), rows)
+
+
     /// Row 0 is read for the headers, all subsequent rows are *data*.
-    pub def allRowsWithHeaders(x: Sheet, headers: Array[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
-        let* _      = appendRow(x, SheetIO/RowSetter.putHeaders!(headers));
-        let* _      = mapX(r -> appendRow(x, writer(r)), rows);
+    pub def allRowsWithHeaders(sheet: Sheet, headers: Array[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
+        let* _      = appendRow(sheet, SheetIO/RowSetter.putHeaders!(headers));
+        let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
         return()
 
 }
