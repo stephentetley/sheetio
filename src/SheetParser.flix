@@ -216,6 +216,17 @@ namespace SheetIO/SheetParser {
             sk(a, fk, st, sheet, errs)
         )
         
+    pub def liftActionResult(f: Unit -> Result[a, String] & ef): GenSheetParser[ka1, st, a] =
+        use Chain.{singleton};
+        GenSheetParser((sk, fk, st, sheet, errs) ->
+            let ans1 = f() as & Impure;
+            match ans1 { 
+                case Err(msg) => fk(st.position, singleton("liftSheetPrim - ${msg}"))
+                case Ok(a1) => sk(a1, fk, st, sheet, errs)
+            }
+            
+        )
+
     pub def liftSheetPrim(f: Sheet ~> Result[a, String]): GenSheetParser[ka1, st, a] =
         use Chain.{singleton};
         GenSheetParser((sk, fk, st, sheet, errs) ->
@@ -438,11 +449,13 @@ namespace SheetIO/SheetParser {
 
     /// TODO cache fmt in the parser
     pub def content(): GenSheetParser[ka1, st, String] =
-        let* fmt    = SheetIO/Internal/DataFormatter.new();
-        let* ans    = liftCellPrim(readCellWith(SheetIO/Internal/DataFormatter.formatCellValue(fmt)));
+        let* fmt    = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
+        let* ans    = readCellWith(SheetIO/Internal/DataFormatter.formatCellValue(fmt));
         let* _      = incColumnPos();
         return(ans)
-        
+    
+
+    
         
     pub def boolean(): GenSheetParser[ka1, st, Bool] =
         readCellWith(SheetIO/Internal/Cell.getBooleanCellValue)
@@ -452,7 +465,10 @@ namespace SheetIO/SheetParser {
 
     pub def localDateTime(): GenSheetParser[ka1, st, Time.LocalDateTime] =
         use Time.LocalDateTime.{LocalDateTime};
-        map(LocalDateTime, readCellWith(SheetIO/Internal/Cell.getLocalDateTimeCellValue))
+        let* dt = readCellWith(SheetIO/Internal/Cell.getLocalDateTimeCellValue);
+        if (Object.isNull(dt)) 
+            throwError("localDateTime - null")
+        else return(LocalDateTime(dt))
 
     pub def localDate(): GenSheetParser[ka1, st, Time.LocalDate] =
         map(Time/LocalDateTime.toLocalDate, localDateTime())
