@@ -1,12 +1,13 @@
 use SheetIO.SheetReader;
 use SheetIO.NamedRowEvaluator;
 
-def main(): Unit & Impure = 
+def main(_args: Array[String]): Int32 & Impure = 
     use SheetIO/SheetReader.{runHssf};
     match runHssf(test01(), System/FilePath.new("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
-        case Err(e) => Console.printLine(System/Error.toString(e))
+        case Err(msg) => Console.printLine("Error: ${msg}")
         case Ok(xs) => List.foreach(x -> { let (a,b) = x; Console.printLine("${a}, ${b}")} , xs)
-    }
+    };
+    0
 
 pub def test01(): SheetReader[List[(String, String)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allNamedRows};      

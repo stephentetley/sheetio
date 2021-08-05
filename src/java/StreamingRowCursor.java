@@ -22,11 +22,13 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.util.Iterator;
 
-import com.monitorjbl.xlsx.StreamingReader;
+import com.github.pjfanning.xlsx.StreamingReader;
 import org.apache.poi.ss.usermodel.*;
 
-/// This is a properly streaming (i.e. low memory use) cursor using the
-/// library xlsx-streamer [com.monitorjbl.xlsx.StreamingReader]
+/// This is a properly streaming (i.e. low memory residency) cursor using the
+/// pjfanning's fork of excel-streaming-reader [original: com.monitorjbl.xlsx.StreamingReader]
+/// The pjfanning fork works with poi-5.0.0
+
 public class StreamingRowCursor {
 
     private final Workbook workbook;

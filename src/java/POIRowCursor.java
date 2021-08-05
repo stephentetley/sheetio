@@ -31,7 +31,7 @@ import java.util.Iterator;
  * prone and was abandoned as a strategy.
  *
  * As far as I am aware the whole Sheet is read into memory and it
- * is streamed while resident in memory - this module does not implement
+ * is streamed while in memory - this module does not implement
  * streaming as a way of achieving low memory usage.
 */
 public class POIRowCursor {
