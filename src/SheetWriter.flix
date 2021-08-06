@@ -69,6 +69,25 @@ namespace SheetIO/SheetWriter {
         let* _          = closeXSSFWorkbook(wb);
         Ok(ans)
 
+    /// Excel 2007 OOXML (.xlsx) format.
+    pub def runAppendXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
+        runAppendXssf(ma, path)
+    
+    /// Excel 2007 OOXML (.xlsx) format.
+    pub def runAppendXssf(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
+        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+        use Result.{flatMap};
+        let path1 = toString(path);
+        match openXSSFWorkbook(path1) { 
+            case Err(e) => Err("runAppendXssf('${path1}'): ${e}")
+            case Ok(wb) => {
+                let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
+                let* _          = writeXSSFWorkbook(wb, path1);
+                let* _          = closeXSSFWorkbook(wb);
+                Ok(ans)
+            }
+        }
+
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: SheetWriter[a], 
                             template: System.FilePath, 

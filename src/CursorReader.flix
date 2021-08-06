@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-/// Streaming reader for large lfiles with homogeneous rows.
+/// Streaming reader for large files with homogeneous rows.
 
 namespace SheetIO/CursorReader {
 

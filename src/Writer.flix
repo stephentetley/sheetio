@@ -19,26 +19,46 @@
 namespace SheetIO/Writer {
 
     use SheetIO.RowSetter;
+    use SheetIO.SheetWriter;
     
-    
 
-    pub def writeAllRows(path: System.FilePath, setter: a -> RowSetter[Unit], rows: List[a]): Result[Unit, String] & Impure =
-        use SheetIO/SheetWriter.{flatMap, return, createSheet, allRows};
-        let writeStep = () -> { 
-            let* s1     = createSheet("Sheet1");
-            let* _      = allRows(s1, rows, setter);
-            return()
-        };
-        SheetIO/SheetWriter.runXlsx(writeStep(), path)
+    /// TODO must be able to append sheets to an existing WorkBook
+
+    /// TODO - rows should be t[a] with Foldable[t]...
+    type alias WorkSheetWriter[row] = 
+        { sheetName: String
+        , headers: Option[Array[String]]
+        , setter: row -> RowSetter[Unit]
+        , rows: List[row] 
+        } 
+
+    /// Write a workbook containing a single sheet
+    pub def writeWorkSheet(sheetWriter: WorkSheetWriter[a], path: System.FilePath): Result[Unit, String] & Impure =
+        SheetIO/SheetWriter.runXlsx(writeSheet(sheetWriter), path)
+
+    /// It is not viable to writer a list of WorkSheetWriter as a list of WorkSheetWriter's are unlikely 
+    /// to have the same row type.
+    /// To write multiple sheets we need to be able to append sheets...
+
+    /// Add a Sheet to an existing Workbook
+    pub def addWorkSheet(sheetWriter: WorkSheetWriter[a], path: System.FilePath): Result[Unit, String] & Impure =
+        SheetIO/SheetWriter.runAppendXlsx(writeSheet(sheetWriter), path)
 
 
-    pub def writeAllRowsWithHeaders(path: System.FilePath, setter: a-> RowSetter[Unit], headers: Array[String], rows: List[a]): Result[Unit, String] & Impure =
-        use SheetIO/SheetWriter.{flatMap, return, createSheet, allRowsWithHeaders};
-        let writeStep = () -> { 
-            let* s1     = createSheet("Sheet1");
-            let* _      = allRowsWithHeaders(s1, headers, rows, setter);
-            return()
-        };
-        SheetIO/SheetWriter.runXlsx(writeStep(), path)
+    def writeSheet(sheetWriter: WorkSheetWriter[a]): SheetWriter[Unit] = 
+        use SheetIO/SheetWriter.{flatMap, return, createSheet, allRows, allRowsWithHeaders};
+        match sheetWriter.headers {
+            case None => {
+                let* s1     = createSheet(sheetWriter.sheetName);
+                let* _      = allRows(s1, sheetWriter.rows, sheetWriter.setter);
+                return()
+            }
+            case Some(headers) => {
+                let* s1     = createSheet(sheetWriter.sheetName);
+                let* _      = allRowsWithHeaders(s1, headers, sheetWriter.rows, sheetWriter.setter);
+                return()
+            }
+        }
+
 
 }
