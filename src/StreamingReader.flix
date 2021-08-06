@@ -18,7 +18,6 @@
 
 namespace SheetIO/StreamingReader {
 
-    use X.Cursor;
     use System.FilePath.{FilePath};
 
     use SheetIO.RowEvaluator;
@@ -30,10 +29,10 @@ namespace SheetIO/StreamingReader {
     type alias POIRow = ##org.apache.poi.ss.usermodel.Row
 
 
-    pub opaque type StreamingReaderHandle[a] = (##flix.runtime.spt.sheetio.StreamingRowCursor, Iterator[Result[a, String]])
+    pub opaque type StreamingReaderHandle[a] = (##flix.runtime.spt.sheetio.StreamingRowIterator, Iterator[Result[a, String]])
 
     pub def close(handle: StreamingReaderHandle[a]): Result[Unit, String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowCursor.close();
+        import flix.runtime.spt.sheetio.StreamingRowIterator.close();
         let StreamingReaderHandle((x1, _)) = handle;
         try {
             close(x1);
@@ -51,12 +50,12 @@ namespace SheetIO/StreamingReader {
     /// Returns a new StreamingReader Handle (iterator and a "close" handle).
     ///
     pub def newStreamingReaderHandle(src: System.FilePath, sheetName: String): Result[StreamingReaderHandle[POIRow], String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowCursor:createCursorWithSheetName(##java.nio.file.Path, String);
-        import flix.runtime.spt.sheetio.StreamingRowCursor.hasNext();
-        import flix.runtime.spt.sheetio.StreamingRowCursor.next();
+        import flix.runtime.spt.sheetio.StreamingRowIterator:createIteratorWithSheetName(##java.nio.file.Path, String);
+        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext();
+        import flix.runtime.spt.sheetio.StreamingRowIterator.next();
         try {
             let FilePath(src1) = src;
-            let primIter = createCursorWithSheetName(src1, sheetName);
+            let primIter = createIteratorWithSheetName(src1, sheetName);
             let iterDone = () -> if (hasNext(primIter)) false else true;
             let iterNext = () -> {
                 try {
@@ -77,12 +76,12 @@ namespace SheetIO/StreamingReader {
     /// Returns a new StreamingReader Handle for sheet at `ix`.
     ///
     pub def newStreamingReaderHandleWithIndex(src: System.FilePath, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowCursor:createCursorWithSheetNumber(##java.nio.file.Path, Int32);
-        import flix.runtime.spt.sheetio.StreamingRowCursor.hasNext();
-        import flix.runtime.spt.sheetio.StreamingRowCursor.next();
+        import flix.runtime.spt.sheetio.StreamingRowIterator:createIteratorWithSheetNumber(##java.nio.file.Path, Int32);
+        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext();
+        import flix.runtime.spt.sheetio.StreamingRowIterator.next();
         try {
             let FilePath(src1) = src;
-            let primIter = createCursorWithSheetNumber(src1, sheetIndex);
+            let primIter = createIteratorWithSheetNumber(src1, sheetIndex);
             let iterDone = () -> if (hasNext(primIter)) false else true;
             let iterNext = () -> {
                 try {

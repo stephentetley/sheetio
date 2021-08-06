@@ -29,27 +29,27 @@ import org.apache.poi.ss.usermodel.*;
 /// pjfanning's fork of excel-streaming-reader [original: com.monitorjbl.xlsx.StreamingReader]
 /// The pjfanning fork works with poi-5.0.0
 
-public class StreamingRowCursor {
+public class StreamingRowIterator {
 
     private final Workbook workbook;
     private final Iterator<Row> iter;
 
-    protected StreamingRowCursor(Workbook wb, String sheetName) {
+    protected StreamingRowIterator(Workbook wb, String sheetName) {
         workbook = wb;
         iter = workbook.getSheet(sheetName).rowIterator();
     }
 
-    public static StreamingRowCursor createCursorWithSheetName(Path path, String sheetName) throws Exception {
+    public static StreamingRowIterator createIteratorWithSheetName(Path path, String sheetName) throws Exception {
         InputStream instr = new FileInputStream(path.toFile());
         Workbook wb = StreamingReader.builder().open(instr);
-        return new StreamingRowCursor(wb, sheetName);
+        return new StreamingRowIterator(wb, sheetName);
     }
 
-    public static StreamingRowCursor createCursorWithSheetNumber(Path path, int sheetNumber) throws Exception {
+    public static StreamingRowIterator createIteratorWithSheetNumber(Path path, int sheetNumber) throws Exception {
         InputStream instr = new FileInputStream(path.toFile());
         Workbook wb = StreamingReader.builder().open(instr);
         String sheetName = wb.getSheetName(sheetNumber);
-        return new StreamingRowCursor(wb, sheetName);
+        return new StreamingRowIterator(wb, sheetName);
     }
 
     public boolean hasNext() {
