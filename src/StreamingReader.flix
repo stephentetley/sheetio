@@ -109,7 +109,7 @@ namespace SheetIO/StreamingReader {
 
 
     
-    pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
+    pub def namedRowIterator(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
         let NamedRowEvaluator(eval1) = eval;
         let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
         let fmt = SheetIO/Internal/DataFormatter.new();
@@ -120,8 +120,8 @@ namespace SheetIO/StreamingReader {
                 let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
                 Iterator.map(Result.flatMap(eval1(lookups, fmt)), src1)
             }
-            case Some(Err(msg)) => Iterator.repeat(Err("namedRowCursor - ${msg}"), 1)
-            case None => Iterator.repeat(Err("namedRowCursor - Cannot find headers"), 1)
+            case Some(Err(msg)) => Iterator.repeat(Err("namedRowIterator - ${msg}"), 1)
+            case None => Iterator.repeat(Err("namedRowIterator - Cannot find headers"), 1)
         }
 
 }
