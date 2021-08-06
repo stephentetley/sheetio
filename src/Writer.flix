@@ -22,7 +22,6 @@ namespace SheetIO/Writer {
     use SheetIO.SheetWriter;
     
 
-    /// TODO must be able to append sheets to an existing WorkBook
 
     /// TODO - rows should be t[a] with Foldable[t]...
     type alias WorkSheetWriter[row] = 
