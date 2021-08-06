@@ -107,25 +107,21 @@ namespace SheetIO/StreamingReader {
         let fmt = SheetIO/Internal/DataFormatter.new();
         src |> Iterator.drop(start) |> Iterator.map(Result.flatMap(eval1(fmt)))
 
-    /// 
-    /// Because Cursor is implicitly tied to iterating "IO-like" resources (e.g. lines of a file, database results)
-    /// it embeds errors.
-    /// 
-    /// pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Cursor[String, POIRow]): Cursor[String, a] & Impure = 
-    ///     let NamedRowEvaluator(eval1) = eval;
-    ///     let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
-    ///     let fmt = SheetIO/Internal/DataFormatter.new();
-    ///     let src1 = if (headersLine > 0) X/Cursor.drop(headersLine - 1, src) else src;
-    ///     match X/Cursor.head!(src1) {
-    ///         case Some(hrow) => {
-    ///             let arr = Result.getWithDefault(headerEval1(fmt, hrow), Array.new("", 0));
-    ///             let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
-    ///             X/Cursor.mapResult(eval1(lookups), src1)
-    ///         }
-    ///         case None => { 
-    ///             X/Cursor.finalize!(src1);
-    ///             X/Cursor.failure("Cannot find headers")
-    ///         }
-    ///     }
+
+    
+    pub def namedRowCursor(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
+        let NamedRowEvaluator(eval1) = eval;
+        let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
+        let fmt = SheetIO/Internal/DataFormatter.new();
+        let src1 = if (headersLine > 0) Iterator.drop(headersLine - 1, src) else src;
+        match Iterator.head(src1) {
+            case Some(Ok(hrow)) => {
+                let arr = Result.getWithDefault(headerEval1(fmt, hrow), Array.new("", 0));
+                let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
+                Iterator.map(Result.flatMap(eval1(lookups, fmt)), src1)
+            }
+            case Some(Err(msg)) => Iterator.repeat(Err("namedRowCursor - ${msg}"), 1)
+            case None => Iterator.repeat(Err("namedRowCursor - Cannot find headers"), 1)
+        }
 
 }
