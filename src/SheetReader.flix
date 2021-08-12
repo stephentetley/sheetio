@@ -833,7 +833,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> Iterator.sequenceToList);
+        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> X/IteratorExtras.sequenceToList);
         return(xs)
     
     /// Row 0 is read for the headers, some subsequent rows are *data*.
@@ -849,7 +849,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* ans            = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> Iterator.foldLeftM(combineR, ac));
+        let* ans            = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> X/IteratorExtras.foldLeftM(combineR, ac));
         return(ans)
 
 
@@ -859,7 +859,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowIterator(sheet));
         let* strm1          = liftAction(_ -> Iterator.drop(b, strm) |> Iterator.take(e - b));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm1) |> Iterator.sequenceToList);
+        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm1) |> X/IteratorExtras.sequenceToList);
         return(xs)
 
     pub def rowEval(x: Row, 
@@ -876,7 +876,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowIterator(sheet));
         let* strm1          = liftAction(_ -> Iterator.drop(b, strm) |> Iterator.take(e - b));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> Iterator.sequenceToList);
+        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> X/IteratorExtras.sequenceToList);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], 
@@ -899,7 +899,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowIterator(sheet));
         let* strm1      = liftAction(_ -> Iterator.drop(start, strm));
-        let* xs         = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> Iterator.sequenceToList);
+        let* xs         = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> X/IteratorExtras.sequenceToList);
         return(xs)
 
 
@@ -925,7 +925,7 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowIterator(sheet) |> Iterator.drop(start));
-        let* ans        = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm) |> Iterator.foldLeftM(combineR, ac));
+        let* ans        = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm) |> X/IteratorExtras.foldLeftM(combineR, ac));
         return(ans)
 
     pub def foldAllNamedRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a]): SheetReader[b] =
