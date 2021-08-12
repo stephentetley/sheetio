@@ -120,4 +120,15 @@ namespace SheetIO/Reader {
                                 eval: NamedRowEvaluator[#{| reln}]): Result[#{| reln}, String] & Impure =
         foldAllNamedRows(src, (ac, x) -> ac <+> x, #{}, eval)
 
+    pub def someRelations(src: XlsxSource, 
+                        eval: RowEvaluator[#{| reln}]): Result[#{| reln}, String] & Impure =
+        use SheetIO/NamedRowEvaluator.{withDefault};
+        foldAllRows(src, (ac, x) -> ac <+> x, #{}, withDefault(eval, #{}))
+
+
+    pub def someNamedRelations(src: XlsxSource, 
+                                eval: NamedRowEvaluator[#{| reln}]): Result[#{| reln}, String] & Impure =
+        use SheetIO/NamedRowEvaluator.{withDefault};
+        foldAllNamedRows(src, (ac, x) -> ac <+> x, #{}, withDefault(eval, #{}))
+
 }
