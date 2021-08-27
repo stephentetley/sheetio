@@ -92,12 +92,26 @@ namespace SheetIO/RowSetter {
 
 
     pub def bind(x: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] =
-        RowSetter((r, style) -> match apply1(x, r, style) {
-            case Ok(a) => {let ans = k(a); apply1(ans, r, style)}
-            case Err(e) => Err(e)
-        })
+        RowSetter((r, style) -> 
+            match apply1(x, r, style) {
+                case Ok(a) => {let ans = k(a); apply1(ans, r, style)}
+                case Err(e) => Err(e)
+            })
 
     pub def flatMap(k: a -> RowSetter[b], x: RowSetter[a]): RowSetter[b] = bind(x, k)
+
+
+    pub def kleisliLeft(f1: a -> RowSetter[b], f2: b -> RowSetter[c], x: a): RowSetter[c] =
+        RowSetter((r, style) ->  
+            match apply1(f1(x), r, style) { 
+                case Ok(b) => apply1(f2(b), r, style)
+                case Err(e) => Err(e)
+            }
+        )
+
+    pub def kleisliRight(f1: b -> RowSetter[c], f2: a -> RowSetter[b], x: a): RowSetter[c] =
+        kleisliLeft(f2, f1, x)
+
 
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] ~> Result[a, String]): RowSetter[a] =
         RowSetter((r, style) -> fn(r, style))
@@ -402,12 +416,6 @@ namespace SheetIO/RowSetter {
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
-    pub def mapM(mf: a -> RowSetter[b], xs: List[a]): RowSetter[List[b]] =
-        RowSetter((r, style) ->
-            mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
-        )
-
-
 
     /// Alias for `seqRight`
     pub def *>(p1: RowSetter[a], p2: RowSetter[b]): RowSetter[b] = seqRight(p1, p2)
@@ -415,6 +423,40 @@ namespace SheetIO/RowSetter {
     /// Alias for `seqLeft`
     pub def <*(p1: RowSetter[a], p2: RowSetter[b]): RowSetter[a] = seqLeft(p1, p2)
 
+
+    // Haskell's <$>
+    pub def <&>(f: a -> b, p2: RowSetter[a]): RowSetter[b] =
+        map(f, p2)
+
+    pub def <&(x: b, p2: RowSetter[a]): RowSetter[b] =
+        p2 *> return(x)
+
+    /// Alias for `bind`
+    pub def >>=(ma: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] = 
+        bind(ma, k)
+
+    /// Alias for `flatMap` (flipped `bind`)
+    pub def =<<(k: a -> RowSetter[b], ma: RowSetter[a]): RowSetter[b] = 
+        flatMap(k, ma)
+
+
+    // Haskell's ap <*>
+    pub def <*>(mf: RowSetter[a -> b], p2: RowSetter[a]): RowSetter[b] =
+        ap(mf, p2)
+
+    /// Alias for `kleisliLeft`
+    pub def >=>(f1: a -> RowSetter[b], f2: b -> RowSetter[c]): a -> RowSetter[c] = 
+        x -> kleisliLeft(f1, f2, x)
+
+    /// Alias for `kleisliRight`
+    pub def <=<(f1: b -> RowSetter[c], f2: a -> RowSetter[b]): a -> RowSetter[c] = 
+        x -> kleisliRight(f1, f2, x)
+
+
+    pub def mapM(mf: a -> RowSetter[b], xs: List[a]): RowSetter[List[b]] =
+        RowSetter((r, style) ->
+            mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
+        )
 
     ///
     /// Helper function for `mapM`.
