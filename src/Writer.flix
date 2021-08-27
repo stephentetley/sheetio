@@ -21,21 +21,22 @@ namespace SheetIO/Writer {
     use SheetIO.RowSetter;
     use SheetIO.SheetWriter;
     
-
+    /// Note - this isn't very satisfactory. Ideally WorkSheetWriter would not be 
+    /// parametric on row so we could put them in a list.
 
     /// TODO - rows should be t[a] with Foldable[t]...
     type alias WorkSheetWriter[row] = 
         { sheetName: String
         , headers: Option[Array[String]]
         , setter: row -> RowSetter[Unit]
-        , rows: List[row] 
+        , rows: List[row]
         } 
 
     /// Write a workbook containing a single sheet
     pub def writeWorkSheet(sheetWriter: WorkSheetWriter[a], path: System.FilePath): Result[Unit, String] & Impure =
         SheetIO/SheetWriter.runXlsx(writeSheet(sheetWriter), path)
 
-    /// It is not viable to writer a list of WorkSheetWriter as a list of WorkSheetWriter's are unlikely 
+    /// It is not viable to write a list of WorkSheetWriter as a list of WorkSheetWriter's are unlikely 
     /// to have the same row type.
     /// To write multiple sheets we need to be able to append sheets...
 

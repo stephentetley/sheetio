@@ -75,6 +75,22 @@ namespace SheetIO/RowSetter {
             case Err(e1) => Err(e1)
         })
 
+    pub def seqLeft(ma: RowSetter[a], mb: RowSetter[b]): RowSetter[a] =
+        RowSetter((r, style) ->  match apply1(ma, r, style) {
+            case Ok(a) => match apply1(mb, r, style) {
+                case Ok(_) => Ok(a)
+                case Err(e2) => Err(e2)
+            }
+            case Err(e1) => Err(e1)
+        })
+
+    pub def seqRight(ma: RowSetter[a], mb: RowSetter[b]): RowSetter[b] =
+        RowSetter((r, style) ->  match apply1(ma, r, style) {
+            case Ok(_) => apply1(mb, r, style)
+            case Err(e1) => Err(e1)
+        })
+
+
     pub def bind(x: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] =
         RowSetter((r, style) -> match apply1(x, r, style) {
             case Ok(a) => {let ans = k(a); apply1(ans, r, style)}
@@ -390,6 +406,15 @@ namespace SheetIO/RowSetter {
         RowSetter((r, style) ->
             mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
         )
+
+
+
+    /// Alias for `seqRight`
+    pub def *>(p1: RowSetter[a], p2: RowSetter[b]): RowSetter[b] = seqRight(p1, p2)
+
+    /// Alias for `seqLeft`
+    pub def <*(p1: RowSetter[a], p2: RowSetter[b]): RowSetter[a] = seqLeft(p1, p2)
+
 
     ///
     /// Helper function for `mapM`.
