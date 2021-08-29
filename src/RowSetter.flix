@@ -500,5 +500,21 @@ namespace SheetIO/RowSetter {
             }
         }
 
+
+
+    /// `startingAt` and `++>` form an idiom for building a RowSetter that writes successive cells
+    /// without the cell index needing to be explicitly stated
+
+    pub def startingAt(i: Int32): RowSetter[Int32] = SheetIO/RowSetter.return(i)
+
+
+    /// incrementing `bind`
+    pub def ++>(mi: RowSetter[Int32], mx: Int32 -> RowSetter[b]): RowSetter[Int32] = 
+        use SheetIO/RowSetter.{flatMap, return};
+        let* ix = mi;
+        let* _ = mx(ix);
+        return(ix + 1)
+
+
 }
 
