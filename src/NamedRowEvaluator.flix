@@ -33,10 +33,18 @@ namespace SheetIO/NamedRowEvaluator {
     use SheetIO.DataFormatter;
     use SheetIO.DataFormatter.{DataFormatter};
 
-
+    /// Duplicate column names are allowed - subsequent key duplicates are named with a suffixed index:
+    /// "name", "name.1", "name.2", , "name.3" ...
     pub def makeHeaders(names: Array[String]): Map[String, Int32] & Impure =
-        let step = (acc, x) -> { let (i, mx) = acc; (i + 1, Map.insert(x, i, mx)) };
-        Array.foldLeft(step, (0, Map.empty()), names) |> snd
+        let step = (acc, key) -> { 
+            let (col, counts, indices) = acc; 
+            match Map.get(key, counts) {
+                case None => (col + 1, Map.insert(key, 1, counts), Map.insert(key, col, indices))
+                case Some(i) => (col + 1, Map.insert(key, i + 1, counts), Map.insert("${key}.${i}", col, indices))
+            }
+        };        
+        let (_, _, ans) = Array.foldLeft(step, (0, Map.empty(), Map.empty()), names);
+        ans
 
 
     pub def return(x: a): NamedRowEvaluator[a] =
