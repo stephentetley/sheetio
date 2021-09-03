@@ -1,9 +1,12 @@
 use SheetIO.SheetReader;
 use SheetIO.NamedRowEvaluator;
+use SheetIO.RowEvaluator;
 
 def main(_args: Array[String]): Int32 & Impure = 
     runtest("test01...", test01());
     runtest("test02...", test02());
+    runtest("test03...", test03());
+    runtest("test04...", test04());
     0
 
 def runtest(description: String, action: SheetReader[List[(String, Int32)]]): Unit & Impure =
@@ -17,19 +20,36 @@ def runtest(description: String, action: SheetReader[List[(String, Int32)]]): Un
 def test01(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allNamedRows};      
     let* s1     = getSheetNamed("From_row_1");
-    let* xs     = allNamedRows(s1, evalRow());
+    let* xs     = allNamedRows(s1, evalNamedRow());
     return(xs)
 
 def test02(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, namedRowsFrom};      
     let* s1     = getSheetNamed("From_row_3");
-    let* xs     = namedRowsFrom(s1, 2, 3, evalRow());
+    let* xs     = namedRowsFrom(s1, 2, 3, evalNamedRow());
     return(xs)
 
-def evalRow(): NamedRowEvaluator[(String, Int32)] = 
+def evalNamedRow(): NamedRowEvaluator[(String, Int32)] = 
     use SheetIO/NamedRowEvaluator.{tuple2, getContentNamed, getInt32Named};
     tuple2( getContentNamed("Lang")
           , getInt32Named("Year")
           )
 
+def test03(): SheetReader[List[(String, Int32)]] = 
+    use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRowsFrom};      
+    let* s1     = getSheetNamed("From_row_1");
+    let* xs     = allRowsFrom(s1, 1, evalIndexedRow());
+    return(xs)
+
+def test04(): SheetReader[List[(String, Int32)]] = 
+    use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRowsFrom};      
+    let* s1     = getSheetNamed("From_row_3");
+    let* xs     = allRowsFrom(s1, 3, evalIndexedRow());
+    return(xs)
+
+def evalIndexedRow(): RowEvaluator[(String, Int32)] = 
+    use SheetIO/RowEvaluator.{tuple2, getContentAt, getInt32At};
+    tuple2( getContentAt(0)
+          , getInt32At(1)
+          )
 

@@ -24,7 +24,9 @@ namespace SheetIO {
 namespace SheetIO/SheetReader {
 
     use ToString.toString;
-    
+
+    use X.Cursor;
+
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
 
@@ -808,34 +810,42 @@ namespace SheetIO/SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def getRowIterator(x: Sheet): Iterator[Result[##org.apache.poi.ss.usermodel.Row, String]] & Impure =
-        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowIterator;
-        import flix.runtime.spt.sheetio.POIRowIterator.hasNext();
-        import flix.runtime.spt.sheetio.POIRowIterator.next();
+    def getRowCursor(x: Sheet, start: Int32): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
+        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet, Int32) as newRowCursor;
+        import flix.runtime.spt.sheetio.POIRowIterator.hasNext() as ffiHasNext;
+        import flix.runtime.spt.sheetio.POIRowIterator.next() as ffiNext;
         try {
-            let Sheet(x1)   = x;
-            let primIter    = newRowIterator(x1);
-            let iterDone = () -> if (hasNext(primIter)) false else true;
-            let iterNext = () -> {
-                try {
-                    Ok(next(primIter))
-                } catch {
-                    case _: ##java.lang.Exception => Err("StreamingReader[next]")
-                }
+            let Sheet(x1)       = x;
+            let iter = newRowCursor(x1, start);
+            let cursorAlg =  {
+                  hasNext   = () -> ffiHasNext(iter)
+                , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , finalize  = () -> () as & Impure
             };
-            Iterator(iterDone, iterNext)
+            X/Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => Iterator.repeat(Err("newPOIRowStream"), 1)
+            case _: ##java.lang.Exception => X/Cursor.failure("newPOIRowStream")
         }
 
     /// Use rowiterator...
     pub def allRows(sheet: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> X/IteratorExtras.sequenceToList);
+        let* strm           = liftAction(_ -> getRowCursor(sheet, 0));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
         return(xs)
-    
+
+
+    /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
+    /// We need a more robust implementation than this...
+    pub def allRowsFrom(sheet: Sheet, start: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] =         
+        let RowEvaluator(f) = eval;
+        let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
+        let* strm           = liftAction(_ -> getRowCursor(sheet, start));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
+        return(xs)
+
+
     /// Row 0 is read for the headers, some subsequent rows are *data*.
     pub def someRows(sheet: Sheet, eval: RowEvaluator[Option[a]]): SheetReader[List[a]] = 
         let postprocess = xs -> List.foldRight((x, ac) -> match x {
@@ -845,11 +855,10 @@ namespace SheetIO/SheetReader {
         map(postprocess, allRows(sheet, eval))
 
     pub def foldAllRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: RowEvaluator[a]): SheetReader[b] =
-        let combineR        = (b, a) -> Ok(combine(b, a));
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* ans            = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm) |> X/IteratorExtras.foldLeftM(combineR, ac));
+        let* strm           = liftAction(_ -> getRowCursor(sheet, 0));
+        let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
 
@@ -857,9 +866,9 @@ namespace SheetIO/SheetReader {
     pub def rowsInRange(sheet: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* strm1          = liftAction(_ -> Iterator.drop(b, strm) |> Iterator.take(e - b));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(fmt)), strm1) |> X/IteratorExtras.sequenceToList);
+        let* strm           = liftAction(_ -> getRowCursor(sheet, b));
+        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm1) |> X/Cursor.toList!);
         return(xs)
 
     pub def rowEval(x: Row, 
@@ -874,9 +883,9 @@ namespace SheetIO/SheetReader {
     pub def namedRowsInRange(sheet: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
         let NamedRowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowIterator(sheet));
-        let* strm1          = liftAction(_ -> Iterator.drop(b, strm) |> Iterator.take(e - b));
-        let* xs             = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> X/IteratorExtras.sequenceToList);
+        let* strm           = liftAction(_ -> getRowCursor(sheet, b));
+        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm1) |> X/Cursor.toList!);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], 
@@ -901,9 +910,8 @@ namespace SheetIO/SheetReader {
         let* r0         = getRowAt(sheet, headerIndex);
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowIterator(sheet));
-        let* strm1      = liftAction(_ -> Iterator.drop(start, strm));
-        let* xs         = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> X/IteratorExtras.sequenceToList);
+        let* strm       = liftAction(_ -> getRowCursor(sheet, start));
+        let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
 
@@ -922,14 +930,13 @@ namespace SheetIO/SheetReader {
 
     pub def foldNamedRowsFrom(sheet: Sheet, headerIndex: Int32, start: Int32, 
                                 combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a]): SheetReader[b] =
-        let combineR    = (b, a) -> Ok(combine(b, a));
         let NamedRowEvaluator(f) = eval;
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* r0         = getRowAt(sheet, headerIndex);
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowIterator(sheet) |> Iterator.drop(start));
-        let* ans        = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm) |> X/IteratorExtras.foldLeftM(combineR, ac));
+        let* strm       = liftAction(_ -> getRowCursor(sheet, start));
+        let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
     pub def foldAllNamedRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a]): SheetReader[b] =

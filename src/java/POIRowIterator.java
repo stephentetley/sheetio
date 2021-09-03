@@ -42,6 +42,15 @@ public class POIRowIterator {
         this.iter = sheet.rowIterator();
     }
 
+    public POIRowIterator(Sheet sheet, int start) throws Exception {
+        Iterator<Row> iter1 = sheet.rowIterator();
+        while(iter1.hasNext() && start > 0){
+            iter1.next();
+            start--;
+        }
+        this.iter = iter1;
+    }
+
     public boolean hasNext() {
         return this.iter.hasNext();
     }
