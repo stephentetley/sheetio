@@ -810,13 +810,13 @@ namespace SheetIO/SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def getRowCursor(x: Sheet, start: Int32): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
-        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet, Int32) as newRowCursor;
+    def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
+        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowCursor;
         import flix.runtime.spt.sheetio.POIRowIterator.hasNext() as ffiHasNext;
         import flix.runtime.spt.sheetio.POIRowIterator.next() as ffiNext;
         try {
             let Sheet(x1)       = x;
-            let iter = newRowCursor(x1, start);
+            let iter = newRowCursor(x1);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
                 , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
@@ -831,7 +831,7 @@ namespace SheetIO/SheetReader {
     pub def allRows(sheet: Sheet, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet, 0));
+        let* strm           = liftAction(_ -> getRowCursor(sheet));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
@@ -840,8 +840,12 @@ namespace SheetIO/SheetReader {
     /// We need a more robust implementation than this...
     pub def allRowsFrom(sheet: Sheet, start: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] =         
         let RowEvaluator(f) = eval;
+        let checker         = row -> {
+            let ix = SheetIO/Internal/Row.getRowNum(row);
+            if (ix >= start) Some(row) else None
+        };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet, start));
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
@@ -857,7 +861,7 @@ namespace SheetIO/SheetReader {
     pub def foldAllRows(sheet: Sheet, combine: (b, a) -> b & ef, ac: b, eval: RowEvaluator[a]): SheetReader[b] =
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet, 0));
+        let* strm           = liftAction(_ -> getRowCursor(sheet));
         let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
@@ -865,10 +869,13 @@ namespace SheetIO/SheetReader {
 
     pub def rowsInRange(sheet: Sheet, b: Int32, e: Int32, eval: RowEvaluator[a]): SheetReader[List[a]] = 
         let RowEvaluator(f) = eval;
+        let checker         = row -> {
+            let ix = SheetIO/Internal/Row.getRowNum(row);
+            if (ix >= b and ix < e) Some(row) else None
+        };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet, b));
-        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm1) |> X/Cursor.toList!);
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
     pub def rowEval(x: Row, 
@@ -882,10 +889,13 @@ namespace SheetIO/SheetReader {
 
     pub def namedRowsInRange(sheet: Sheet, ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] = 
         let NamedRowEvaluator(f) = eval;
+        let checker         = row -> {
+            let ix = SheetIO/Internal/Row.getRowNum(row);
+            if (ix >= b and ix < e) Some(row) else None
+        };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet, b));
-        let* strm1          = liftAction(_ -> X/Cursor.take(e - b, strm));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm1) |> X/Cursor.toList!);
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
     pub def nameRowEval(x: Row, indices: Map[String, Int32], 
@@ -906,11 +916,15 @@ namespace SheetIO/SheetReader {
     ///
     pub def namedRowsFrom(sheet: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
         let NamedRowEvaluator(f)    = eval;
+        let checker         = row -> {
+            let ix = SheetIO/Internal/Row.getRowNum(row);
+            if (ix >= start) Some(row) else None
+        };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* r0         = getRowAt(sheet, headerIndex);
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowCursor(sheet, start));
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
         return(xs)
 
@@ -931,11 +945,15 @@ namespace SheetIO/SheetReader {
     pub def foldNamedRowsFrom(sheet: Sheet, headerIndex: Int32, start: Int32, 
                                 combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a]): SheetReader[b] =
         let NamedRowEvaluator(f) = eval;
+        let checker         = row -> {
+            let ix = SheetIO/Internal/Row.getRowNum(row);
+            if (ix >= start) Some(row) else None
+        };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* r0         = getRowAt(sheet, headerIndex);
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowCursor(sheet, start));
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));
         return(ans)
 
