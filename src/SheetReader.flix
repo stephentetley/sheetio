@@ -893,6 +893,8 @@ namespace SheetIO/SheetReader {
     /// Reader headers from row at `headerIndex` then read data rows from `start`.
     /// Note - might be wise to change back to flix-sandbox Cursor while stdlib Interator
     /// is in development.
+    /// `headerIndex` and `start` are zero indexed (as per POI rather than Excel).
+    ///
     pub def namedRowsFrom(sheet: Sheet, headerIndex: Int32, start: Int32, eval: NamedRowEvaluator[a]): SheetReader[List[a]] =   
         let NamedRowEvaluator(f)    = eval;
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
@@ -900,7 +902,7 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(r0, fmt, SheetIO/RowEvaluator.getHeaders());
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowIterator(sheet));
-        let* strm1      = liftAction(_ -> Iterator.drop(start - 1, strm));
+        let* strm1      = liftAction(_ -> Iterator.drop(start, strm));
         let* xs         = liftActionResult(_ -> Iterator.map(Result.flatMap(f(ixs, fmt)), strm1) |> X/IteratorExtras.sequenceToList);
         return(xs)
 
