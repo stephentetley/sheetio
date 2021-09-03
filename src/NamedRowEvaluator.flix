@@ -250,6 +250,7 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getRowNum(): NamedRowEvaluator[Int32] = 
         NamedRowEvaluator((_, _, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
 
+    /// Uses the default DataFormatter
     pub def getContentNamed(label: String): NamedRowEvaluator[String] =
         let* ix     = getIndex(label);
         let* fmt    = getDataFormatter();
