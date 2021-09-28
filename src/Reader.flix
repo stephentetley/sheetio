@@ -22,8 +22,8 @@ namespace SheetIO/Reader {
     use SheetIO.RowEvaluator;
 
     type alias XlsxSource = 
-        { sheet: String
-        , path: System.FilePath
+        { sheet :: String
+        , path :: System.FilePath
         }
 
 

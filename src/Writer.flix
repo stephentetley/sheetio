@@ -26,10 +26,10 @@ namespace SheetIO/Writer {
 
     /// TODO - rows should be t[a] with Foldable[t]...
     type alias WorkSheetWriter[row] = 
-        { sheetName: String
-        , headers: Option[Array[String]]
-        , setter: row -> RowSetter[Unit]
-        , rows: List[row]
+        { sheetName :: String
+        , headers :: Option[Array[String]]
+        , setter :: row -> RowSetter[Unit]
+        , rows :: List[row]
         } 
 
     /// Write a workbook containing a single sheet

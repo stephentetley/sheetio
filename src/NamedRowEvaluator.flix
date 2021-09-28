@@ -76,6 +76,14 @@ namespace SheetIO/NamedRowEvaluator {
             }
         )
 
+   pub def mapError(f: String -> String, ma: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
+        NamedRowEvaluator((ixs, fmt, row) ->
+            match apply1(ma, ixs, fmt, row) {
+                case Ok(a) => Ok(a)
+                case Err(msg) => Err(f(msg))
+            }
+        )
+
     /// TODO - row num is useful but we need a less ad-hoc API...
     pub def swapErrorWithRowNum(ma: NamedRowEvaluator[a], msgF: Int32 -> String): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, fmt, row) ->
@@ -371,7 +379,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
-        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label)) `swapError` "getLocalDateNamed"
+        mapError(s -> "getLocalDateNamed<<${s}>>",  map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label)))
 
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithFormat(label: String, fmt: Time/Format.DateFormatter): NamedRowEvaluator[Time.LocalDate] = 
