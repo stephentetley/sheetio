@@ -308,14 +308,14 @@ namespace SheetIO/RowEvaluator {
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithFormat(ix: Int32, fmt: Time/Format.DateTimeFormatter): RowEvaluator[Time.LocalDateTime] = 
         let* s = getStringAt(ix);
-        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeAtWithFormat")
+        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeAtWithFormat")
         
 
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDateTime] = 
         let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalDateTimeAtWithPattern - bad pattern");
         let* s      = getStringAt(ix);
-        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeAtWithPattern")
+        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeAtWithPattern")
 
     pub def getLocalDateAt(ix: Int32): RowEvaluator[Time.LocalDate] = 
         map(Time/LocalDateTime.toLocalDate, getLocalDateTimeAt(ix))
@@ -324,14 +324,14 @@ namespace SheetIO/RowEvaluator {
     /// Cell must be readable as a String
     pub def getLocalDateAtWithFormat(ix: Int32, fmt: Time/Format.DateFormatter): RowEvaluator[Time.LocalDate] = 
         let* s = getStringAt(ix);
-        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateAtWithFormat")
+        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateAtWithFormat")
         
 
     /// Cell must be readable as a String
     pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDate] = 
         let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateAtWithPattern - bad pattern");
         let* s      = getStringAt(ix);
-        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateAtWithPattern")
+        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateAtWithPattern")
         
 
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 

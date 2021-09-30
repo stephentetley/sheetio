@@ -368,14 +368,14 @@ namespace SheetIO/NamedRowEvaluator {
     /// Cell must be readable as a String
     pub def getLocalDateTimeNamedWithFormat(label: String, fmt: Time/Format.DateTimeFormatter): NamedRowEvaluator[Time.LocalDateTime] = 
         let* s = getStringNamed(label);
-        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalDateTimeNamedWithFormat - '${s}'")
+        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeNamedWithFormat - '${s}'")
         
 
     /// Cell must be readable as a String
     pub def getLocalTimeDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDateTime] = 
         let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalTimeDateNamedWithPattern - bad pattern");
         let* s      = getStringNamed(label);
-        liftOption(Time/LocalDateTime.parse(s, fmt), "getLocalTimeDateNamedWithPattern - '${s}'")
+        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalTimeDateNamedWithPattern - '${s}'")
 
 
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
@@ -384,14 +384,14 @@ namespace SheetIO/NamedRowEvaluator {
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithFormat(label: String, fmt: Time/Format.DateFormatter): NamedRowEvaluator[Time.LocalDate] = 
         let* s = getStringNamed(label);
-        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateNamedWithFormat - '${s}'")
+        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateNamedWithFormat - '${s}'")
         
 
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDate] = 
         let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateNamedWithPattern - bad pattern");
         let* s      = getStringNamed(label);
-        liftOption(Time/LocalDate.parse(s, fmt), "getLocalDateNamedWithPattern - '${s}'")
+        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateNamedWithPattern - '${s}'")
     
 
 
