@@ -22,7 +22,10 @@ namespace SheetIO/SheetParser {
 
     type alias SourcePosition = (Int32, Int32)
 
-    type alias ParseState[st] = {position: SourcePosition, userState: st}
+    type alias ParseState[st] = 
+        { position :: SourcePosition
+        , userState :: st
+        }
 
     type alias Failures = Chain[String]
 
@@ -40,7 +43,10 @@ namespace SheetIO/SheetParser {
 
     type alias SheetParser[ka1, ans] = GenSheetParser[ka1, Unit, ans]
 
-    type alias InternalError = {position: SourcePosition, messages: Chain[String]}
+    type alias InternalError = 
+        { position :: SourcePosition
+        , messages :: Chain[String]
+        }
     
     ///
     /// This is exposed so client code can implement wrappers over `run` etc. without
