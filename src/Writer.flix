@@ -25,7 +25,7 @@ namespace SheetIO/Writer {
     /// parametric on row so we could put them in a list.
 
     /// TODO - rows should be t[a] with Foldable[t]...
-    type alias WorkSheetWriter[row] = 
+    pub type alias WorkSheetWriter[row] = 
         { sheetName :: String
         , headers :: Option[Array[String]]
         , setter :: row -> RowSetter[Unit]
