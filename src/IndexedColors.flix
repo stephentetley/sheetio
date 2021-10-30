@@ -207,7 +207,7 @@ namespace SheetIO/IndexedColors {
     pub def getIndex(x: IndexedColors): Int16 = 
         import org.apache.poi.ss.usermodel.IndexedColors.getIndex();
         let x1 = toNative(x);
-        x1.getIndex() as & Pure
+        getIndex(x1) as & Pure
 
 
 }
