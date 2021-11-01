@@ -251,7 +251,8 @@ namespace SheetIO/RowEvaluator {
         step `swapError` "getSatifiesAt('${ix}')"
 
     pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[String] =
-        getSatifiesAt(ix, x -> not String.isEmpty(x)) `swapError` "getNonEmptyContentAt('${ix}')"
+        (getSatifiesAt(ix, x -> not String.isEmpty(String.trim(x))) `swapError` "getNonEmptyContentAt('${ix}')")
+            |> map(String.trim)
 
 
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =

@@ -309,9 +309,10 @@ namespace SheetIO/NamedRowEvaluator {
                     if (test(x)) return(x) else throwError("getSatifiesNamed('${label}') - failed");
         step `swapError` "getSatifiesNamed('${label}')"
 
-
+    /// Whitespace is counted as empty, answer is trimmed.
     pub def getNonEmptyContentNamed(label: String): NamedRowEvaluator[String] =
-        getSatifiesNamed(label, x -> not String.isEmpty(x)) `swapError` "getNonEmptyContentNamed('${label}')"
+        (getSatifiesNamed(label, x -> not String.isEmpty(String.trim(x))) `swapError` "getNonEmptyContentNamed('${label}')")
+            |> map(String.trim)
 
 
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =
