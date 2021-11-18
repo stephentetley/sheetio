@@ -20,13 +20,13 @@ def runtest(description: String, action: SheetReader[List[(String, Int32)]]): Un
 def test01(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allNamedRows};      
     let* s1     = getSheetNamed("From_row_1");
-    let* xs     = allNamedRows(s1, evalNamedRow());
+    let* xs     = allNamedRows(evalNamedRow(), s1);
     return(xs)
 
 def test02(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, namedRowsFrom};      
     let* s1     = getSheetNamed("From_row_3");
-    let* xs     = namedRowsFrom(s1, 2, 3, evalNamedRow());
+    let* xs     = namedRowsFrom(2, 3, evalNamedRow(), s1);
     return(xs)
 
 def evalNamedRow(): NamedRowEvaluator[(String, Int32)] = 
@@ -38,13 +38,13 @@ def evalNamedRow(): NamedRowEvaluator[(String, Int32)] =
 def test03(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRowsFrom};      
     let* s1     = getSheetNamed("From_row_1");
-    let* xs     = allRowsFrom(s1, 1, evalIndexedRow());
+    let* xs     = allRowsFrom(1, evalIndexedRow(), s1);
     return(xs)
 
 def test04(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRowsFrom};      
     let* s1     = getSheetNamed("From_row_3");
-    let* xs     = allRowsFrom(s1, 3, evalIndexedRow());
+    let* xs     = allRowsFrom(3, evalIndexedRow(), s1);
     return(xs)
 
 def evalIndexedRow(): RowEvaluator[(String, Int32)] = 
