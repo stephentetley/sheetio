@@ -2,7 +2,7 @@
 
 A Flix library built on top of Apache POI to read and write Excel files.
 
-`StreamingReader` is an experimental streaming reader for large files with homogeneous rows.
+`StreamingReader` is an experimental streaming reader for large files with homogeneous rows (it is currently broken).
 
 Depends on various modules in flix-sandbox:
 
