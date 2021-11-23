@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]
+    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure
 
 }
 
@@ -98,13 +98,13 @@ namespace SheetIO/FontSetter {
 
     pub def flatMap(k: a -> FontSetter[b], x: FontSetter[a]): FontSetter[b] = bind(x, k)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): FontSetter[a] =
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure): FontSetter[a] =
         FontSetter(r -> update(r))
 
-    pub def liftAction(fn: Unit ~> a): FontSetter[a] =
+    pub def liftAction(fn: Unit -> a & Impure): FontSetter[a] =
         FontSetter(_ -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): FontSetter[a] =
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): FontSetter[a] =
         FontSetter(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): FontSetter[a] = match x { 

@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type CellStyleSetter[a] = ##org.apache.poi.ss.usermodel.CellStyle ~> Result[a, String]
+    pub opaque type CellStyleSetter[a] = ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure
 
 }
 
@@ -82,13 +82,13 @@ namespace SheetIO/CellStyleSetter {
 
     pub def flatMap(k: a -> CellStyleSetter[b], x: CellStyleSetter[a]): CellStyleSetter[b] = bind(x, k)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle ~> Result[a, String]): CellStyleSetter[a] =
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure): CellStyleSetter[a] =
         CellStyleSetter(r -> update(r))
 
-    pub def liftAction(fn: Unit ~> a): CellStyleSetter[a] =
+    pub def liftAction(fn: Unit -> a & Impure): CellStyleSetter[a] =
         CellStyleSetter(_ -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): CellStyleSetter[a] =
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): CellStyleSetter[a] =
         CellStyleSetter(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): CellStyleSetter[a] = match x { 

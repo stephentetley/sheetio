@@ -29,9 +29,9 @@ namespace SheetIO/SheetParser {
 
     type alias Failures = Chain[String]
 
-    type alias FailK[ka1] = SourcePosition -> Failures ~> ka1
+    type alias FailK[ka1] = SourcePosition -> Failures -> ka1 & Impure
 
-    type alias SuccessK[ka1, st, ans] = ans -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures ~> ka1
+    type alias SuccessK[ka1, st, ans] = ans -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures -> ka1 & Impure
 
 
     /// `st` is the type of user state
@@ -39,7 +39,7 @@ namespace SheetIO/SheetParser {
     /// `ka1` is the continuation answer type - if Flix had user visible existentials it would 
     /// be hidden as an existential type. Generally it will always be represented with a type variable
     /// except in "run" functions.
-    pub opaque type GenSheetParser[ka1, st, ans] = SuccessK[ka1, st, ans] -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures ~> ka1
+    pub opaque type GenSheetParser[ka1, st, ans] = SuccessK[ka1, st, ans] -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures -> ka1 & Impure
 
     type alias SheetParser[ka1, ans] = GenSheetParser[ka1, Unit, ans]
 
@@ -233,7 +233,7 @@ namespace SheetIO/SheetParser {
             
         )
 
-    pub def liftSheetPrim(f: Sheet ~> Result[a, String]): GenSheetParser[ka1, st, a] =
+    pub def liftSheetPrim(f: Sheet -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] =
         use Chain.{singleton};
         GenSheetParser((sk, fk, st, sheet, errs) ->
             let ans = f(sheet);
@@ -243,11 +243,11 @@ namespace SheetIO/SheetParser {
             }
         )
 
-    pub def liftRowPrim(f: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): GenSheetParser[ka1, st, a] =
+    pub def liftRowPrim(f: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] =
         getRowNumber() >>= ix -> liftRowPrimHelper(ix, f)
 
     def liftRowPrimHelper(rowIx: Int32, 
-                        f: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): GenSheetParser[ka1, st, a] =
+                        f: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] =
         use Result.{flatMap};
         liftSheetPrim(sheet -> {
             let* rmax = SheetIO/Internal/Sheet.getLastRowNum(sheet);
@@ -259,11 +259,11 @@ namespace SheetIO/SheetParser {
             }
         })
 
-    pub def liftCellPrim(f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] =
+    pub def liftCellPrim(f: ##org.apache.poi.ss.usermodel.Cell -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] =
         getColumnNumber() >>= ix -> liftCellPrimHelper(ix, f)
 
     def liftCellPrimHelper(cellIx: Int32, 
-                            f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] =
+                            f: ##org.apache.poi.ss.usermodel.Cell -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] =
         use Result.{flatMap};
         liftRowPrim(row -> {
             let* cmax = SheetIO/Internal/Row.getLastCellNum(row);
@@ -448,7 +448,7 @@ namespace SheetIO/SheetParser {
         let (row, col) = xy;
         setSourcePosition(row, col + 1)
         
-    def readCellWith(fn: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): GenSheetParser[ka1, st, a] = 
+    def readCellWith(fn: ##org.apache.poi.ss.usermodel.Cell -> Result[a, String] & Impure): GenSheetParser[ka1, st, a] = 
         let* ans    = liftCellPrim(fn);
         let* _      = incColumnPos();
         return(ans)

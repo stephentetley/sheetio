@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]
+    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure
 
 }
 
@@ -256,13 +256,13 @@ namespace SheetIO/SheetReader {
             case None => melse
         })
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]): SheetReader[a] = 
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure): SheetReader[a] = 
         SheetReader(wb -> fn(wb))
 
-    pub def liftAction(fn: Unit ~> a): SheetReader[a] = 
+    pub def liftAction(fn: Unit -> a & Impure): SheetReader[a] = 
         SheetReader(_ -> { let a = fn(); Ok(a) })
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetReader[a] = 
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetReader[a] = 
         SheetReader(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): SheetReader[a] = match x { 

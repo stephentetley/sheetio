@@ -21,7 +21,7 @@ namespace SheetIO {
 
     use SheetIO.CellStyle;
 
-    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] ~> Result[a, String]
+    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure
 
 }
 
@@ -113,13 +113,13 @@ namespace SheetIO/RowSetter {
         kleisliLeft(f2, f1, x)
 
 
-    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] ~> Result[a, String]): RowSetter[a] =
+    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure): RowSetter[a] =
         RowSetter((r, style) -> fn(r, style))
 
-    pub def liftAction(fn: Unit ~> a): RowSetter[a] =
+    pub def liftAction(fn: Unit -> a & Impure): RowSetter[a] =
         RowSetter((_, _) -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): RowSetter[a] =
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): RowSetter[a] =
         RowSetter((_, _) -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): RowSetter[a] = match x { 

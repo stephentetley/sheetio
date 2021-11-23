@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) ~> Result[a, String]
+    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, String] & Impure
 
 }
 
@@ -137,14 +137,14 @@ namespace SheetIO/RowEvaluator {
 
 
 
-    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row ~> Result[a, String]): RowEvaluator[a] =
+    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): RowEvaluator[a] =
         RowEvaluator((_, row) -> fn(row))
 
 
-    pub def liftAction(fn: Unit ~> a): RowEvaluator[a] =
+    pub def liftAction(fn: Unit -> a & Impure): RowEvaluator[a] =
         RowEvaluator((_, _) -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): RowEvaluator[a] =
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): RowEvaluator[a] =
         RowEvaluator((_, _) -> fn())
 
 
@@ -169,7 +169,7 @@ namespace SheetIO/RowEvaluator {
 
     def withCell(row: ##org.apache.poi.ss.usermodel.Row,
                  ix: Int32, 
-                 f: ##org.apache.poi.ss.usermodel.Cell ~> Result[a, String]): Result[a, String] & Impure = 
+                 f: ##org.apache.poi.ss.usermodel.Cell -> Result[a, String] & Impure): Result[a, String] & Impure = 
         use Result.{flatMap};
         let* cell = SheetIO/Internal/Row.getCell(row, ix);
         f(cell)
@@ -375,7 +375,7 @@ namespace SheetIO/RowEvaluator {
 
 
 
-    def queryFontAt(ix: Int32, asks: ##org.apache.poi.ss.usermodel.Font ~> Result[a, String]): RowEvaluator[a] = 
+    def queryFontAt(ix: Int32, asks: ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure): RowEvaluator[a] = 
         use Result.flatMap;
         liftPrim(row -> 
             let* cell   = SheetIO/Internal/Row.getCell(row, ix);

@@ -20,7 +20,7 @@ namespace SheetIO {
     use SheetIO.CellStyle;
    
     pub opaque type SheetWriter[a] = 
-        ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors ~> Result[(Cursors, a), String]
+        ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors -> Result[(Cursors, a), String] & Impure
 
     type alias Cursors = Map[String, Int32]
 
@@ -239,13 +239,13 @@ namespace SheetIO/SheetWriter {
 
 
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook ~> Result[a, String]): SheetWriter[a] = 
+    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure): SheetWriter[a] = 
         SheetWriter((wb, _, s1) -> {let ans = fn(wb); Result.map(x -> (s1, x), ans)})
 
-    pub def liftAction(fn: Unit ~> a): SheetWriter[a] = 
+    pub def liftAction(fn: Unit -> a & Impure): SheetWriter[a] = 
         SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
 
-    pub def liftActionResult(fn: Unit ~> Result[a, String]): SheetWriter[a] = 
+    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetWriter[a] = 
         SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
     pub def liftOption(x: Option[a], errMsg: String): SheetWriter[a] = match x { 
