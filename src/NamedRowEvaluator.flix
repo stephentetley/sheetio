@@ -22,6 +22,24 @@ namespace SheetIO {
     pub opaque type NamedRowEvaluator[a] = 
         (Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, String] & Impure
 
+    instance Functor[NamedRowEvaluator] {
+        pub def map(f: a -> b & ef, o: NamedRowEvaluator[a]): NamedRowEvaluator[b] & ef = 
+            SheetIO/NamedRowEvaluator.map(f, o)
+    }
+
+    instance Applicative[NamedRowEvaluator] {
+        pub def point(x: a): NamedRowEvaluator[a] = 
+            SheetIO/NamedRowEvaluator.point(x)
+
+        pub def ap(f: NamedRowEvaluator[a -> b & ef], x: NamedRowEvaluator[a]) : NamedRowEvaluator[b] & ef = 
+            SheetIO/NamedRowEvaluator.ap(f, x)
+    }
+
+    instance Monad[NamedRowEvaluator] {
+        pub def flatMap(f: a -> NamedRowEvaluator[b] & ef, o: NamedRowEvaluator[a]): NamedRowEvaluator[b] & ef =
+            SheetIO/NamedRowEvaluator.flatMap(f, o)
+    }
+
 }
 
 namespace SheetIO/NamedRowEvaluator {
@@ -48,7 +66,7 @@ namespace SheetIO/NamedRowEvaluator {
         ans
 
 
-    pub def return(x: a): NamedRowEvaluator[a] =
+    pub def point(x: a): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _, _) -> Ok(x) as & Impure)
 
     def apply1(x: NamedRowEvaluator[a], 
@@ -173,7 +191,7 @@ namespace SheetIO/NamedRowEvaluator {
     /// Note - this returns default for all errors (i.e. unknown column which is a
     /// schema error). Might be better if it can just return default if cell is null...
     pub def withDefault(x: NamedRowEvaluator[a], d: a): NamedRowEvaluator[a] =
-        alt(x, return(d))
+        alt(x, point(d))
 
     pub def alt(ea: NamedRowEvaluator[a], eb: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, fmt, row) ->
@@ -222,17 +240,17 @@ namespace SheetIO/NamedRowEvaluator {
         NamedRowEvaluator((_, _, _) -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): NamedRowEvaluator[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): NamedRowEvaluator[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): NamedRowEvaluator[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -287,15 +305,15 @@ namespace SheetIO/NamedRowEvaluator {
     pub def isBlankNamed(label: String): NamedRowEvaluator[Bool] = 
         let* typ = getCellTypeNamed(label);
         match typ { 
-            case TyBlank => return(true)
-            case _ => return(false)
+            case TyBlank => point(true)
+            case _ => point(false)
         }
 
 
     pub def getBlankNamed(label: String): NamedRowEvaluator[Unit] = 
         let* typ = getCellTypeNamed(label);
         match typ { 
-            case TyBlank => return()
+            case TyBlank => point()
             case _ => throwError("getBlankNamed($label}) - not blank")
         }
     
@@ -307,7 +325,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[String] =
         let step = getContentNamed(label) >>= x -> 
-                    if (test(x)) return(x) else throwError("getSatifiesNamed('${label}') - failed");
+                    if (test(x)) point(x) else throwError("getSatifiesNamed('${label}') - failed");
         step `swapError` "getSatifiesNamed('${label}')"
 
     /// Whitespace is counted as empty, answer is trimmed.
@@ -318,7 +336,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[String] =
         let* x = isNullNamed(label);
-        if (x) return(d) else getStringNamed(label)
+        if (x) point(d) else getStringNamed(label)
 
 
     pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[String] =
@@ -364,7 +382,7 @@ namespace SheetIO/NamedRowEvaluator {
         use Time.LocalDateTime.{LocalDateTime};
         let* ix     = getIndex(label);
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
-        return(LocalDateTime(dt1))
+        point(LocalDateTime(dt1))
 
 
     /// Cell must be readable as a String
@@ -400,7 +418,7 @@ namespace SheetIO/NamedRowEvaluator {
     def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[a]): NamedRowEvaluator[Option[a]] = 
         let* x1 = isNullNamed(label);
         let* y1 = isBlankNamed(label);
-        if (x1 or y1) return(None) else map(Some, getter(label))
+        if (x1 or y1) point(None) else map(Some, getter(label))
 
     pub def getOptionStringNamed(label: String): NamedRowEvaluator[Option[String]] =
         getIfNotEmpty(label, getStringNamed)
@@ -718,7 +736,7 @@ namespace SheetIO/NamedRowEvaluator {
         map(f, p2)
 
     pub def <&(x: b, p2: NamedRowEvaluator[a]): NamedRowEvaluator[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: NamedRowEvaluator[a], k: a -> NamedRowEvaluator[b]): NamedRowEvaluator[b] = 

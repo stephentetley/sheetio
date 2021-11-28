@@ -19,6 +19,25 @@ namespace SheetIO {
 
     pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure
 
+
+    instance Functor[SheetReader] {
+        pub def map(f: a -> b & ef, o: SheetReader[a]): SheetReader[b] & ef = 
+            SheetIO/SheetReader.map(f, o)
+    }
+
+    instance Applicative[SheetReader] {
+        pub def point(x: a): SheetReader[a] = 
+            SheetIO/SheetReader.point(x)
+
+        pub def ap(f: SheetReader[a -> b & ef], x: SheetReader[a]) : SheetReader[b] & ef = 
+            SheetIO/SheetReader.ap(f, x)
+    }
+
+    instance Monad[SheetReader] {
+        pub def flatMap(f: a -> SheetReader[b] & ef, o: SheetReader[a]): SheetReader[b] & ef =
+            SheetIO/SheetReader.flatMap(f, o)
+    }
+
 }
 
 namespace SheetIO/SheetReader {
@@ -77,7 +96,7 @@ namespace SheetIO/SheetReader {
         let SheetReader(x1) = ma;
         x1(wb)
 
-    pub def return(x: a): SheetReader[a] = 
+    pub def point(x: a): SheetReader[a] = 
         SheetReader(_ -> Ok(x) as & Impure)
 
     pub def throwError(msg: String): SheetReader[a] =
@@ -104,15 +123,15 @@ namespace SheetIO/SheetReader {
         })
 
     /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: SheetReader[a]): SheetReader[b] = 
+    pub def map(fn: a -> b & ef, ma: SheetReader[a]): SheetReader[b] & ef = 
         SheetReader(wb -> 
             match apply1(ma, wb) { 
                 case Ok(a) => { let ans = fn(a) as & Impure; Ok(ans) }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def ap(mf: SheetReader[a -> b & ef], ma: SheetReader[a]): SheetReader[b] = 
+    pub def ap(mf: SheetReader[a -> b & ef], ma: SheetReader[a]): SheetReader[b] & ef = 
         SheetReader(wb -> 
             match apply1(mf, wb) { 
                 case Ok(f) => match apply1(ma, wb) { 
@@ -121,7 +140,7 @@ namespace SheetIO/SheetReader {
                 }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
     pub def seqLeft(ma: SheetReader[a], mb: SheetReader[b]): SheetReader[a] = 
         SheetReader(wb -> 
@@ -143,15 +162,16 @@ namespace SheetIO/SheetReader {
         )
 
 
-    pub def bind(ma: SheetReader[a], fn: a -> SheetReader[b]): SheetReader[b] = 
+    pub def bind(ma: SheetReader[a], fn: a -> SheetReader[b] & ef): SheetReader[b] & ef = 
         SheetReader(wb -> 
             match apply1(ma, wb) { 
                 case Ok(a) => apply1(fn(a), wb)
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def flatMap(fn: a -> SheetReader[b], ma: SheetReader[a]): SheetReader[b] = bind(ma, fn)
+    pub def flatMap(fn: a -> SheetReader[b] & ef, ma: SheetReader[a]): SheetReader[b] & ef = 
+        bind(ma, fn)
 
     pub def kleisliLeft(f1: a -> SheetReader[b], f2: b -> SheetReader[c], x: a): SheetReader[c] =
         SheetReader(wb -> 
@@ -174,10 +194,10 @@ namespace SheetIO/SheetReader {
         )
 
     pub def optional(ma: SheetReader[a]): SheetReader[Option[a]] = 
-        alt(map(Some, ma), return(None))
+        alt(map(Some, ma), point(None))
 
     pub def tryWithDefault(ma: SheetReader[a], d: a): SheetReader[a] = 
-        alt(ma, return(d))
+        alt(ma, point(d))
 
     pub def testM(ma: SheetReader[a]): SheetReader[Bool] =
         SheetReader(wb -> 
@@ -200,19 +220,19 @@ namespace SheetIO/SheetReader {
 
     pub def guard(x: Bool): SheetReader[Unit] = 
         match x { 
-            case true => return()
+            case true => point()
             case false => throwError("guard")
         }
 
     pub def whenTrue(x: Bool, ma: SheetReader[Unit]): SheetReader[Unit] = 
         match x { 
             case true => ma
-            case false => return()
+            case false => point()
         }
 
     pub def whenFalse(x: Bool, ma: SheetReader[Unit]): SheetReader[Unit] = 
         match x { 
-            case true => return()
+            case true => point()
             case false => ma
         }
 
@@ -226,12 +246,12 @@ namespace SheetIO/SheetReader {
     pub def whenSome(x: Option[a], f: a -> SheetReader[Unit]): SheetReader[Unit] = 
         match x { 
             case Some(a) => f(a)
-            case None => return()
+            case None => point()
         }
 
     pub def whenNone(x: Option[a], ma: SheetReader[Unit]): SheetReader[Unit] = 
         match x { 
-            case Some(_) => return()
+            case Some(_) => point()
             case None => ma
         }
 
@@ -266,17 +286,17 @@ namespace SheetIO/SheetReader {
         SheetReader(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): SheetReader[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): SheetReader[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetReader[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -482,7 +502,7 @@ namespace SheetIO/SheetReader {
         map(f, p2)
 
     pub def <&(x: b, p2: SheetReader[a]): SheetReader[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: SheetReader[a], k: a -> SheetReader[b]): SheetReader[b] = bind(ma, k)
@@ -509,7 +529,7 @@ namespace SheetIO/SheetReader {
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
                   o1: SheetReader[t1], 
-                  o2: SheetReader[t2]): SheetReader[u] =
+                  o2: SheetReader[t2]): SheetReader[u] & ef =
         ap(map(f, o1), o2)
 
 
@@ -521,7 +541,7 @@ namespace SheetIO/SheetReader {
     pub def lift3(f: (t1, t2, t3) -> u & ef, 
                   o1: SheetReader[t1], 
                   o2: SheetReader[t2], 
-                  o3: SheetReader[t3]): SheetReader[u] =
+                  o3: SheetReader[t3]): SheetReader[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -533,7 +553,7 @@ namespace SheetIO/SheetReader {
                   o1: SheetReader[t1], 
                   o2: SheetReader[t2], 
                   o3: SheetReader[t3], 
-                  o4: SheetReader[t4]): SheetReader[u] =
+                  o4: SheetReader[t4]): SheetReader[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -546,7 +566,7 @@ namespace SheetIO/SheetReader {
                   o2: SheetReader[t2], 
                   o3: SheetReader[t3], 
                   o4: SheetReader[t4], 
-                  o5: SheetReader[t5]): SheetReader[u] =
+                  o5: SheetReader[t5]): SheetReader[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -560,7 +580,7 @@ namespace SheetIO/SheetReader {
                   o3: SheetReader[t3],
                   o4: SheetReader[t4], 
                   o5: SheetReader[t5], 
-                  o6: SheetReader[t6]): SheetReader[u] =
+                  o6: SheetReader[t6]): SheetReader[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -575,7 +595,7 @@ namespace SheetIO/SheetReader {
                   o4: SheetReader[t4], 
                   o5: SheetReader[t5], 
                   o6: SheetReader[t6], 
-                  o7: SheetReader[t7]): SheetReader[u] =
+                  o7: SheetReader[t7]): SheetReader[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -591,7 +611,7 @@ namespace SheetIO/SheetReader {
                   o5: SheetReader[t5], 
                   o6: SheetReader[t6], 
                   o7: SheetReader[t7], 
-                  o8: SheetReader[t8]): SheetReader[u] =
+                  o8: SheetReader[t8]): SheetReader[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -608,7 +628,7 @@ namespace SheetIO/SheetReader {
                   o6: SheetReader[t6], 
                   o7: SheetReader[t7], 
                   o8: SheetReader[t8], 
-                  o9: SheetReader[t9]): SheetReader[u] =
+                  o9: SheetReader[t9]): SheetReader[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -626,7 +646,7 @@ namespace SheetIO/SheetReader {
                    o7: SheetReader[t7], 
                    o8: SheetReader[t8], 
                    o9: SheetReader[t9], 
-                   o10: SheetReader[t10]): SheetReader[u] =
+                   o10: SheetReader[t10]): SheetReader[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
@@ -833,7 +853,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
-        return(xs)
+        point(xs)
 
 
     /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
@@ -847,7 +867,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
-        return(xs)
+        point(xs)
 
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
@@ -863,7 +883,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
         let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.fold!(combine, ac));
-        return(ans)
+        point(ans)
 
 
 
@@ -876,7 +896,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
-        return(xs)
+        point(xs)
 
     pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
                     eval: RowEvaluator[a], 
@@ -896,7 +916,7 @@ namespace SheetIO/SheetReader {
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
-        return(xs)
+        point(xs)
 
     pub def nameRowEval(indices: Map[String, Int32], 
                         fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
@@ -926,7 +946,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
-        return(xs)
+        point(xs)
 
 
     /// Row 0 is read for the headers, all subsequent rows are *data*.
@@ -955,7 +975,7 @@ namespace SheetIO/SheetReader {
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));
-        return(ans)
+        point(ans)
 
     pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a], sheet: Sheet): SheetReader[b] =
         foldNamedRowsFrom(0, 1, combine, ac, eval, sheet)

@@ -23,6 +23,25 @@ namespace SheetIO {
 
     pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure
 
+    instance Functor[RowSetter] {
+        pub def map(f: a -> b & ef, o: RowSetter[a]): RowSetter[b] & ef = 
+            SheetIO/RowSetter.map(f, o)
+    }
+
+    instance Applicative[RowSetter] {
+        pub def point(x: a): RowSetter[a] = 
+            SheetIO/RowSetter.point(x)
+
+        pub def ap(f: RowSetter[a -> b & ef], x: RowSetter[a]): RowSetter[b] & ef = 
+            SheetIO/RowSetter.ap(f, x)
+    }
+
+    instance Monad[RowSetter] {
+        pub def flatMap(f: a -> RowSetter[b] & ef, o: RowSetter[a]): RowSetter[b] & ef =
+            SheetIO/RowSetter.flatMap(f, o)
+    }
+
+
 }
 
 namespace SheetIO/RowSetter {
@@ -32,7 +51,7 @@ namespace SheetIO/RowSetter {
     use SheetIO.RowSetter;
     use SheetIO.RowSetter.{RowSetter};
 
-    pub def return(x: a): RowSetter[a] =
+    pub def point(x: a): RowSetter[a] =
         RowSetter((_, _) -> Ok(x) as & Impure)
 
     def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, String] & Impure =
@@ -55,16 +74,16 @@ namespace SheetIO/RowSetter {
         })
 
 
-    pub def map(f: a -> b & ef, x: RowSetter[a]): RowSetter[b] =
+    pub def map(f: a -> b & ef, x: RowSetter[a]): RowSetter[b] & ef =
         RowSetter((r, style) -> match apply1(x, r, style) {
             case Ok(a) => {
                 let ans = f(a) as & Impure;
                 Ok(ans)
             }
             case Err(e) => Err(e)
-        })
+        }) as & ef
 
-    pub def ap(mf: RowSetter[a -> b & ef], ma: RowSetter[a]): RowSetter[b] =
+    pub def ap(mf: RowSetter[a -> b & ef], ma: RowSetter[a]): RowSetter[b] & ef =
         RowSetter((r, style) ->  match apply1(mf, r, style) {
             case Ok(f) => {
                 match apply1(ma, r, style) {
@@ -73,7 +92,7 @@ namespace SheetIO/RowSetter {
                 }
             }
             case Err(e1) => Err(e1)
-        })
+        }) as & ef
 
     pub def seqLeft(ma: RowSetter[a], mb: RowSetter[b]): RowSetter[a] =
         RowSetter((r, style) ->  match apply1(ma, r, style) {
@@ -91,14 +110,14 @@ namespace SheetIO/RowSetter {
         })
 
 
-    pub def bind(x: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] =
+    pub def bind(x: RowSetter[a], k: a -> RowSetter[b] & ef): RowSetter[b] & ef =
         RowSetter((r, style) -> 
             match apply1(x, r, style) {
-                case Ok(a) => {let ans = k(a); apply1(ans, r, style)}
+                case Ok(a) => {let ans = k(a) as & Impure; apply1(ans, r, style)}
                 case Err(e) => Err(e)
-            })
+            }) as & ef
 
-    pub def flatMap(k: a -> RowSetter[b], x: RowSetter[a]): RowSetter[b] = bind(x, k)
+    pub def flatMap(k: a -> RowSetter[b] & ef, x: RowSetter[a]): RowSetter[b] & ef = bind(x, k)
 
 
     pub def kleisliLeft(f1: a -> RowSetter[b], f2: b -> RowSetter[c], x: a): RowSetter[c] =
@@ -123,17 +142,17 @@ namespace SheetIO/RowSetter {
         RowSetter((_, _) -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): RowSetter[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
     
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): RowSetter[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): RowSetter[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -242,7 +261,7 @@ namespace SheetIO/RowSetter {
         
     def putHeadersHelper!(arr: Array[String], end: Int32, ix: Int32): RowSetter[Unit] =
         if (ix >= end)
-            return()
+            point()
         else {
             let* s1 = liftAction(_ -> arr[ix]);
             let* _  = putStringAt!(ix, s1);
@@ -296,7 +315,8 @@ namespace SheetIO/RowSetter {
     /// Returns an error if either `o1` or `o2` are errors.
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
-                  o1: RowSetter[t1], o2: RowSetter[t2]): RowSetter[u] =
+                  o1: RowSetter[t1], 
+                  o2: RowSetter[t2]): RowSetter[u] & ef =
         ap(map(f, o1), o2)
 
     ///
@@ -307,7 +327,7 @@ namespace SheetIO/RowSetter {
     pub def lift3(f: (t1, t2, t3) -> u & ef,
                   o1: RowSetter[t1],
                   o2: RowSetter[t2],
-                  o3: RowSetter[t3]): RowSetter[u] =
+                  o3: RowSetter[t3]): RowSetter[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -319,7 +339,7 @@ namespace SheetIO/RowSetter {
                   o1: RowSetter[t1],
                   o2: RowSetter[t2],
                   o3: RowSetter[t3],
-                  o4: RowSetter[t4]): RowSetter[u] =
+                  o4: RowSetter[t4]): RowSetter[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -332,7 +352,7 @@ namespace SheetIO/RowSetter {
                   o2: RowSetter[t2],
                   o3: RowSetter[t3],
                   o4: RowSetter[t4],
-                  o5: RowSetter[t5]): RowSetter[u] =
+                  o5: RowSetter[t5]): RowSetter[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -346,7 +366,7 @@ namespace SheetIO/RowSetter {
                   o3: RowSetter[t3],
                   o4: RowSetter[t4],
                   o5: RowSetter[t5],
-                  o6: RowSetter[t6]): RowSetter[u] =
+                  o6: RowSetter[t6]): RowSetter[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -361,7 +381,7 @@ namespace SheetIO/RowSetter {
                   o4: RowSetter[t4],
                   o5: RowSetter[t5],
                   o6: RowSetter[t6],
-                  o7: RowSetter[t7]): RowSetter[u] =
+                  o7: RowSetter[t7]): RowSetter[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -377,7 +397,7 @@ namespace SheetIO/RowSetter {
                       o5: RowSetter[t5],
                       o6: RowSetter[t6],
                       o7: RowSetter[t7],
-                      o8: RowSetter[t8]): RowSetter[u] =
+                      o8: RowSetter[t8]): RowSetter[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -394,7 +414,7 @@ namespace SheetIO/RowSetter {
                   o6: RowSetter[t6],
                   o7: RowSetter[t7],
                   o8: RowSetter[t8],
-                  o9: RowSetter[t9]): RowSetter[u] =
+                  o9: RowSetter[t9]): RowSetter[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -412,7 +432,7 @@ namespace SheetIO/RowSetter {
                    o7: RowSetter[t7],
                    o8: RowSetter[t8],
                    o9: RowSetter[t9],
-                   o10: RowSetter[t10]): RowSetter[u] =
+                   o10: RowSetter[t10]): RowSetter[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
@@ -425,11 +445,11 @@ namespace SheetIO/RowSetter {
 
 
     // Haskell's <$>
-    pub def <&>(f: a -> b, p2: RowSetter[a]): RowSetter[b] =
+    pub def <&>(f: a -> b & ef, p2: RowSetter[a]): RowSetter[b] & ef =
         map(f, p2)
 
     pub def <&(x: b, p2: RowSetter[a]): RowSetter[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: RowSetter[a], k: a -> RowSetter[b]): RowSetter[b] = 
@@ -505,15 +525,14 @@ namespace SheetIO/RowSetter {
     /// `startingAt` and `++>` form an idiom for building a RowSetter that writes successive cells
     /// without the cell index needing to be explicitly stated
 
-    pub def startingAt(i: Int32): RowSetter[Int32] = SheetIO/RowSetter.return(i)
+    pub def startingAt(i: Int32): RowSetter[Int32] = point(i)
 
 
     /// incrementing `bind`
-    pub def ++>(mi: RowSetter[Int32], mx: Int32 -> RowSetter[b]): RowSetter[Int32] = 
-        use SheetIO/RowSetter.{flatMap, return};
+    pub def ++>(mi: RowSetter[Int32], mx: Int32 -> RowSetter[b]): RowSetter[Int32] =
         let* ix = mi;
         let* _ = mx(ix);
-        return(ix + 1)
+        point(ix + 1)
 
 
 }

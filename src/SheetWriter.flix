@@ -22,6 +22,25 @@ namespace SheetIO {
     pub opaque type SheetWriter[a] = 
         ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors -> Result[(Cursors, a), String] & Impure
 
+
+    instance Functor[SheetWriter] {
+        pub def map(f: a -> b & ef, o: SheetWriter[a]): SheetWriter[b] & ef = 
+            SheetIO/SheetWriter.map(f, o)
+    }
+
+    instance Applicative[SheetWriter] {
+        pub def point(x: a): SheetWriter[a] = 
+            SheetIO/SheetWriter.point(x)
+
+        pub def ap(f: SheetWriter[a -> b & ef], x: SheetWriter[a]) : SheetWriter[b] & ef = 
+            SheetIO/SheetWriter.ap(f, x)
+    }
+
+    instance Monad[SheetWriter] {
+        pub def flatMap(f: a -> SheetWriter[b] & ef, o: SheetWriter[a]): SheetWriter[b] & ef =
+            SheetIO/SheetWriter.flatMap(f, o)
+    }
+
     type alias Cursors = Map[String, Int32]
 
 }
@@ -138,7 +157,7 @@ namespace SheetIO/SheetWriter {
         SheetWriter((_, style, s1) -> Ok((s1, style)) as & Impure)
 
 
-    pub def return(x: a): SheetWriter[a] = 
+    pub def point(x: a): SheetWriter[a] = 
         SheetWriter((_, _, s1) -> Ok((s1, x)) as & Impure)
 
     pub def throwError(msg: String): SheetWriter[a] =
@@ -158,20 +177,20 @@ namespace SheetIO/SheetWriter {
         })
 
     /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: SheetWriter[a]): SheetWriter[b] = 
+    pub def map(fn: a -> b & ef, ma: SheetWriter[a]): SheetWriter[b] & ef = 
         SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
             case Ok((s2, a)) => { let ans = fn(a) as & Impure; Ok((s2, ans)) }
             case Err(e) => Err(e)
-        })
+        }) as & ef
 
-    pub def ap(mf: SheetWriter[a -> b & ef], ma: SheetWriter[a]): SheetWriter[b] = 
+    pub def ap(mf: SheetWriter[a -> b & ef], ma: SheetWriter[a]): SheetWriter[b] & ef = 
         SheetWriter((wb, style, s1) -> match apply1(mf, wb, style, s1) { 
             case Ok((s2, f)) => match apply1(ma, wb, style, s2) { 
                 case Ok((s3, a)) => { let ans = f(a) as & Impure; Ok((s3, ans)) }
                 case Err(e) => Err(e)
             }
             case Err(e) => Err(e)
-        })
+        }) as & ef
 
     pub def seqLeft(ma: SheetWriter[a], mb: SheetWriter[b]): SheetWriter[a] = 
         SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
@@ -189,13 +208,13 @@ namespace SheetIO/SheetWriter {
         })
 
 
-    pub def bind(ma: SheetWriter[a], fn: a -> SheetWriter[b]): SheetWriter[b] = 
+    pub def bind(ma: SheetWriter[a], fn: a -> SheetWriter[b] & ef): SheetWriter[b] & ef = 
         SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
             case Ok((s2, a)) => apply1(fn(a), wb, style, s2)
             case Err(e) => Err(e)
-        })
+        }) as & ef
 
-    pub def flatMap(fn: a -> SheetWriter[b], ma: SheetWriter[a]): SheetWriter[b] = bind(ma, fn)
+    pub def flatMap(fn: a -> SheetWriter[b] & ef, ma: SheetWriter[a]): SheetWriter[b] & ef = bind(ma, fn)
 
     pub def kleisliLeft(f1: a -> SheetWriter[b], f2: b -> SheetWriter[c], x: a): SheetWriter[c] =
         SheetWriter((wb, style, s1) -> match apply1(f1(x), wb, style, s1) { 
@@ -209,31 +228,31 @@ namespace SheetIO/SheetWriter {
 
     pub def guard(x: Bool): SheetWriter[Unit] = 
         match x { 
-            case true => return()
+            case true => point()
             case false => throwError("guard")
         }
 
     pub def whenTrue(x: Bool, ma: SheetWriter[Unit]): SheetWriter[Unit] = 
         match x { 
             case true => ma
-            case false => return()
+            case false => point()
         }
 
     pub def whenFalse(x: Bool, ma: SheetWriter[Unit]): SheetWriter[Unit] = 
         match x { 
-            case true => return()
+            case true => point()
             case false => ma
         }
 
     pub def whenSome(x: Option[a], f: a -> SheetWriter[Unit]): SheetWriter[Unit] = 
         match x { 
             case Some(a) => f(a)
-            case None => return()
+            case None => point()
         }
 
     pub def whenNone(x: Option[a], ma: SheetWriter[Unit]): SheetWriter[Unit] = 
         match x { 
-            case Some(_) => return()
+            case Some(_) => point()
             case None => ma
         }
 
@@ -249,17 +268,17 @@ namespace SheetIO/SheetWriter {
         SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
     pub def liftOption(x: Option[a], errMsg: String): SheetWriter[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): SheetWriter[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetWriter[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -478,7 +497,7 @@ namespace SheetIO/SheetWriter {
         map(f, p2)
 
     pub def <&(x: b, p2: SheetWriter[a]): SheetWriter[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: SheetWriter[a], k: a -> SheetWriter[b]): SheetWriter[b] = bind(ma, k)
@@ -505,7 +524,7 @@ namespace SheetIO/SheetWriter {
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
                   o1: SheetWriter[t1], 
-                  o2: SheetWriter[t2]): SheetWriter[u] =
+                  o2: SheetWriter[t2]): SheetWriter[u] & ef =
         ap(map(f, o1), o2)
 
 
@@ -517,7 +536,7 @@ namespace SheetIO/SheetWriter {
     pub def lift3(f: (t1, t2, t3) -> u & ef, 
                   o1: SheetWriter[t1], 
                   o2: SheetWriter[t2], 
-                  o3: SheetWriter[t3]): SheetWriter[u] =
+                  o3: SheetWriter[t3]): SheetWriter[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -529,7 +548,7 @@ namespace SheetIO/SheetWriter {
                   o1: SheetWriter[t1], 
                   o2: SheetWriter[t2], 
                   o3: SheetWriter[t3], 
-                  o4: SheetWriter[t4]): SheetWriter[u] =
+                  o4: SheetWriter[t4]): SheetWriter[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -542,7 +561,7 @@ namespace SheetIO/SheetWriter {
                   o2: SheetWriter[t2], 
                   o3: SheetWriter[t3], 
                   o4: SheetWriter[t4], 
-                  o5: SheetWriter[t5]): SheetWriter[u] =
+                  o5: SheetWriter[t5]): SheetWriter[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -556,7 +575,7 @@ namespace SheetIO/SheetWriter {
                   o3: SheetWriter[t3],
                   o4: SheetWriter[t4], 
                   o5: SheetWriter[t5], 
-                  o6: SheetWriter[t6]): SheetWriter[u] =
+                  o6: SheetWriter[t6]): SheetWriter[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -571,7 +590,7 @@ namespace SheetIO/SheetWriter {
                   o4: SheetWriter[t4], 
                   o5: SheetWriter[t5], 
                   o6: SheetWriter[t6], 
-                  o7: SheetWriter[t7]): SheetWriter[u] =
+                  o7: SheetWriter[t7]): SheetWriter[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -587,7 +606,7 @@ namespace SheetIO/SheetWriter {
                   o5: SheetWriter[t5], 
                   o6: SheetWriter[t6], 
                   o7: SheetWriter[t7], 
-                  o8: SheetWriter[t8]): SheetWriter[u] =
+                  o8: SheetWriter[t8]): SheetWriter[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -604,7 +623,7 @@ namespace SheetIO/SheetWriter {
                   o6: SheetWriter[t6], 
                   o7: SheetWriter[t7], 
                   o8: SheetWriter[t8], 
-                  o9: SheetWriter[t9]): SheetWriter[u] =
+                  o9: SheetWriter[t9]): SheetWriter[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -622,7 +641,7 @@ namespace SheetIO/SheetWriter {
                    o7: SheetWriter[t7], 
                    o8: SheetWriter[t8], 
                    o9: SheetWriter[t9], 
-                   o10: SheetWriter[t10]): SheetWriter[u] =
+                   o10: SheetWriter[t10]): SheetWriter[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
@@ -812,7 +831,7 @@ namespace SheetIO/SheetWriter {
         let* style              = liftWorkbookPrim(createCellStyle >> Result.map(CellStyle));
         let CellStyle(style1)   = style;
         let* _                  = liftActionResult(_ -> mf(style1));
-        return(style)
+        point(style)
 
 
 
@@ -822,7 +841,7 @@ namespace SheetIO/SheetWriter {
         let* font               = liftWorkbookPrim(createFont >> Result.map(Font));
         let Font(font1)         = font;
         let* _                  = liftActionResult(_ -> mf(font1));
-        return(font)
+        point(font)
 
     // createRow
     def createRow(x: Sheet, ix: Int32): SheetWriter[Row] =
@@ -838,7 +857,7 @@ namespace SheetIO/SheetWriter {
         let Row(row1)   = row;
         let* style      = askStyle();
         let* _          = liftActionResult(_ -> mf(row1, style));
-        return()
+        point()
 
 
     pub def allRows(sheet: Sheet, rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
@@ -849,6 +868,6 @@ namespace SheetIO/SheetWriter {
     pub def allRowsWithHeaders(sheet: Sheet, headers: Array[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[Unit] = 
         let* _      = appendRow(sheet, SheetIO/RowSetter.putHeaders!(headers));
         let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
-        return()
+        point()
 
 }

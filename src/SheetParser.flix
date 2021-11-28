@@ -41,6 +41,9 @@ namespace SheetIO/SheetParser {
     /// except in "run" functions.
     pub opaque type GenSheetParser[ka1, st, ans] = SuccessK[ka1, st, ans] -> FailK[ka1] -> ParseState[st] -> Sheet -> Failures -> ka1 & Impure
 
+
+    /// TODO instances of Functor, Applicative, Monad (tricky due to heacy use of continuations...)
+
     type alias SheetParser[ka1, ans] = GenSheetParser[ka1, Unit, ans]
 
     type alias InternalError = 

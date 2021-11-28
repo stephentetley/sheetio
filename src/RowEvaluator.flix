@@ -19,6 +19,25 @@ namespace SheetIO {
 
     pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, String] & Impure
 
+
+    instance Functor[RowEvaluator] {
+        pub def map(f: a -> b & ef, o: RowEvaluator[a]): RowEvaluator[b] & ef = 
+            SheetIO/RowEvaluator.map(f, o)
+    }
+
+    instance Applicative[RowEvaluator] {
+        pub def point(x: a): RowEvaluator[a] = 
+            SheetIO/RowEvaluator.point(x)
+
+        pub def ap(f: RowEvaluator[a -> b & ef], x: RowEvaluator[a]) : RowEvaluator[b] & ef = 
+            SheetIO/RowEvaluator.ap(f, x)
+    }
+
+    instance Monad[RowEvaluator] {
+        pub def flatMap(f: a -> RowEvaluator[b] & ef, o: RowEvaluator[a]): RowEvaluator[b] & ef =
+            SheetIO/RowEvaluator.flatMap(f, o)
+    }
+
 }
 
 namespace SheetIO/RowEvaluator {
@@ -31,7 +50,7 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.DataFormatter;
     use SheetIO.DataFormatter.{DataFormatter};
     
-    pub def return(x: a): RowEvaluator[a] =
+    pub def point(x: a): RowEvaluator[a] =
         RowEvaluator((_, _) -> Ok(x) as & Impure)
 
     def apply1(x: RowEvaluator[a], 
@@ -51,7 +70,7 @@ namespace SheetIO/RowEvaluator {
             }
         )
 
-    pub def map(f: a -> b & ef, x: RowEvaluator[a]): RowEvaluator[b] =
+    pub def map(f: a -> b & ef, x: RowEvaluator[a]): RowEvaluator[b] & ef =
         RowEvaluator((fmt, row) ->
             match apply1(x, fmt, row) {
                 case Ok(a) => {
@@ -60,9 +79,9 @@ namespace SheetIO/RowEvaluator {
                 }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def ap(mf: RowEvaluator[a -> b & ef], ma: RowEvaluator[a]): RowEvaluator[b] =
+    pub def ap(mf: RowEvaluator[a -> b & ef], ma: RowEvaluator[a]): RowEvaluator[b] & ef =
         RowEvaluator((fmt, row) ->
             match apply1(mf, fmt, row) {
                 case Ok(f) => {
@@ -73,7 +92,7 @@ namespace SheetIO/RowEvaluator {
                 }
                 case Err(e1) => Err(e1)
             }
-        )
+        ) as & ef
     
     pub def seqLeft(ma: RowEvaluator[a], mb: RowEvaluator[b]): RowEvaluator[a] = 
         RowEvaluator((fmt, row) ->
@@ -94,15 +113,15 @@ namespace SheetIO/RowEvaluator {
             }
         )
 
-    pub def bind(x: RowEvaluator[a], k: a -> RowEvaluator[b]): RowEvaluator[b] =
+    pub def bind(x: RowEvaluator[a], k: a -> RowEvaluator[b] & ef): RowEvaluator[b] & ef =
         RowEvaluator((fmt, row) ->
             match apply1(x, fmt, row) {
-                case Ok(a) => { let ans = k(a); apply1(ans, fmt, row) }
+                case Ok(a) => { let ans = k(a) as & Impure; apply1(ans, fmt, row) }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def flatMap(k: a -> RowEvaluator[b], x: RowEvaluator[a]): RowEvaluator[b] = bind(x, k)
+    pub def flatMap(k: a -> RowEvaluator[b] & ef, x: RowEvaluator[a]): RowEvaluator[b] & ef = bind(x, k)
 
 
     pub def alt(ea: RowEvaluator[a], eb: RowEvaluator[a]): RowEvaluator[a] =
@@ -133,7 +152,7 @@ namespace SheetIO/RowEvaluator {
     /// Note - this returns the default value for any errors (i.e. unknown column which is a
     /// schema error), not just a "read" error if the cell type is wrong.
     pub def withDefault(x: RowEvaluator[a], d: a): RowEvaluator[a] =
-        alt(x, return(d))
+        alt(x, point(d))
 
 
 
@@ -149,18 +168,18 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def liftOption(x: Option[a], errMsg: String): RowEvaluator[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): RowEvaluator[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): RowEvaluator[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -225,8 +244,8 @@ namespace SheetIO/RowEvaluator {
     pub def isBlankAt(ix: Int32): RowEvaluator[Bool] = 
         let* typ = getCellTypeAt(ix);
         match typ { 
-            case TyBlank => return(true)
-            case _ => return(false)
+            case TyBlank => point(true)
+            case _ => point(false)
         } `swapError` "isBlankAt(${Int32.toString(ix)})"
 
 
@@ -234,7 +253,7 @@ namespace SheetIO/RowEvaluator {
         let errMsg = "getBlankAt(${Int32.toString(ix)})";
         let* typ = getCellTypeAt(ix);
         match typ { 
-            case TyBlank => return()
+            case TyBlank => point()
             case _ => throwError(errMsg + " - not blank")
         } `swapError` errMsg
 
@@ -247,7 +266,7 @@ namespace SheetIO/RowEvaluator {
     
     pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[String] =
         let step = getContentAt(ix) >>= x -> 
-                    if (test(x)) return(x) else throwError("getSatifiesAt('${ix}') - failed");
+                    if (test(x)) point(x) else throwError("getSatifiesAt('${ix}') - failed");
         step `swapError` "getSatifiesAt('${ix}')"
 
     pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[String] =
@@ -258,7 +277,7 @@ namespace SheetIO/RowEvaluator {
     pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[String] =
         let* x = isNullAt(ix);
         let* y = isBlankAt(ix);
-        if (x or y) return(d) else getStringAt(ix)
+        if (x or y) point(d) else getStringAt(ix)
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[String] =
         let DataFormatter(dfmt1) = dfmt;
@@ -277,7 +296,7 @@ namespace SheetIO/RowEvaluator {
     def getNumAt(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[a] =
         let* n = getNumericAt(ix);
         match conv(n) {
-            case Some(i) => return(i)
+            case Some(i) => point(i)
             case None => throwError(errMsg)
         }
 
@@ -303,7 +322,7 @@ namespace SheetIO/RowEvaluator {
     pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
         let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
-        return(LocalDateTime(dt1))
+        point(LocalDateTime(dt1))
 
 
     /// Cell must be readable as a String
@@ -338,7 +357,7 @@ namespace SheetIO/RowEvaluator {
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 
         let* x1 = isNullAt(ix);
         let* y1 = isBlankAt(ix);
-        if (x1 or y1) return(None) else map(Some, getter(ix))
+        if (x1 or y1) point(None) else map(Some, getter(ix))
 
     pub def getOptionStringAt(ix: Int32): RowEvaluator[Option[String]] =
         getIfNotEmpty(ix, getStringAt)
@@ -402,9 +421,9 @@ namespace SheetIO/RowEvaluator {
 
     pub def getHeaders(): RowEvaluator[Array[String]] =
         let* end    = getLastCellNum();
-        let* xs     = getHeadersHelper(end, 0, ks -> return(ks));
+        let* xs     = getHeadersHelper(end, 0, ks -> point(ks));
         let* arr    = liftAction(_ -> List.toArray(xs));
-        return(arr)
+        point(arr)
         
     // TODO not tail recursive as it uses let-syntax...
     def getHeadersHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
@@ -421,7 +440,7 @@ namespace SheetIO/RowEvaluator {
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
                   o1: RowEvaluator[t1], 
-                  o2: RowEvaluator[t2]): RowEvaluator[u] =
+                  o2: RowEvaluator[t2]): RowEvaluator[u] & ef =
         ap(map(f, o1), o2)
 
     ///
@@ -432,7 +451,7 @@ namespace SheetIO/RowEvaluator {
     pub def lift3(f: (t1, t2, t3) -> u & ef, 
                   o1: RowEvaluator[t1], 
                   o2: RowEvaluator[t2], 
-                  o3: RowEvaluator[t3]): RowEvaluator[u] =
+                  o3: RowEvaluator[t3]): RowEvaluator[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -444,7 +463,7 @@ namespace SheetIO/RowEvaluator {
                   o1: RowEvaluator[t1], 
                   o2: RowEvaluator[t2], 
                   o3: RowEvaluator[t3], 
-                  o4: RowEvaluator[t4]): RowEvaluator[u] =
+                  o4: RowEvaluator[t4]): RowEvaluator[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -457,7 +476,7 @@ namespace SheetIO/RowEvaluator {
                   o2: RowEvaluator[t2], 
                   o3: RowEvaluator[t3], 
                   o4: RowEvaluator[t4], 
-                  o5: RowEvaluator[t5]): RowEvaluator[u] =
+                  o5: RowEvaluator[t5]): RowEvaluator[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -471,7 +490,7 @@ namespace SheetIO/RowEvaluator {
                   o3: RowEvaluator[t3],
                   o4: RowEvaluator[t4], 
                   o5: RowEvaluator[t5], 
-                  o6: RowEvaluator[t6]): RowEvaluator[u] =
+                  o6: RowEvaluator[t6]): RowEvaluator[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -486,7 +505,7 @@ namespace SheetIO/RowEvaluator {
                   o4: RowEvaluator[t4], 
                   o5: RowEvaluator[t5], 
                   o6: RowEvaluator[t6], 
-                  o7: RowEvaluator[t7]): RowEvaluator[u] =
+                  o7: RowEvaluator[t7]): RowEvaluator[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -502,7 +521,7 @@ namespace SheetIO/RowEvaluator {
                   o5: RowEvaluator[t5], 
                   o6: RowEvaluator[t6], 
                   o7: RowEvaluator[t7], 
-                  o8: RowEvaluator[t8]): RowEvaluator[u] =
+                  o8: RowEvaluator[t8]): RowEvaluator[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -519,7 +538,7 @@ namespace SheetIO/RowEvaluator {
                   o6: RowEvaluator[t6], 
                   o7: RowEvaluator[t7], 
                   o8: RowEvaluator[t8], 
-                  o9: RowEvaluator[t9]): RowEvaluator[u] =
+                  o9: RowEvaluator[t9]): RowEvaluator[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -537,7 +556,7 @@ namespace SheetIO/RowEvaluator {
                    o7: RowEvaluator[t7], 
                    o8: RowEvaluator[t8], 
                    o9: RowEvaluator[t9], 
-                   o10: RowEvaluator[t10]): RowEvaluator[u] =
+                   o10: RowEvaluator[t10]): RowEvaluator[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 
@@ -673,7 +692,7 @@ namespace SheetIO/RowEvaluator {
         map(f, p2)
 
     pub def <&(x: b, p2: RowEvaluator[a]): RowEvaluator[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: RowEvaluator[a], k: a -> RowEvaluator[b]): RowEvaluator[b] = 

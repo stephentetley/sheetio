@@ -19,6 +19,25 @@ namespace SheetIO {
 
     pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure
 
+    instance Functor[FontSetter] {
+        pub def map(f: a -> b & ef, o: FontSetter[a]): FontSetter[b] & ef = 
+            SheetIO/FontSetter.map(f, o)
+    }
+
+    instance Applicative[FontSetter] {
+        pub def point(x: a): FontSetter[a] = 
+            SheetIO/FontSetter.point(x)
+
+        pub def ap(f: FontSetter[a -> b & ef], x: FontSetter[a]) : FontSetter[b] & ef = 
+            SheetIO/FontSetter.ap(f, x)
+    }
+
+    instance Monad[FontSetter] {
+        pub def flatMap(f: a -> FontSetter[b] & ef, o: FontSetter[a]): FontSetter[b] & ef =
+            SheetIO/FontSetter.flatMap(f, o)
+    }
+
+
 }
 
 namespace SheetIO/FontSetter {
@@ -26,7 +45,7 @@ namespace SheetIO/FontSetter {
     use SheetIO.FontSetter;
     use SheetIO.FontSetter.FontSetter;
 
-    pub def return(x: a): FontSetter[a] =
+    pub def point(x: a): FontSetter[a] =
         FontSetter(_ -> Ok(x) as & Impure)
 
     def apply1(x: FontSetter[a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, String] & Impure =
@@ -43,7 +62,7 @@ namespace SheetIO/FontSetter {
         })
 
 
-    pub def map(f: a -> b & ef, x: FontSetter[a]): FontSetter[b] =
+    pub def map(f: a -> b & ef, x: FontSetter[a]): FontSetter[b] & ef =
         FontSetter(r ->
             match apply1(x, r) {
                 case Ok(a) => {
@@ -52,9 +71,9 @@ namespace SheetIO/FontSetter {
                 }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def ap(mf: FontSetter[a -> b & ef], ma: FontSetter[a]): FontSetter[b] =
+    pub def ap(mf: FontSetter[a -> b & ef], ma: FontSetter[a]): FontSetter[b] & ef =
         FontSetter(r ->
             match apply1(mf, r) {
                 case Ok(f) => {
@@ -65,7 +84,7 @@ namespace SheetIO/FontSetter {
                 }
                 case Err(e1) => Err(e1)
             }
-        )
+        ) as & ef
     
     
     pub def seqLeft(ma: FontSetter[a], mb: FontSetter[b]): FontSetter[a] = 
@@ -88,15 +107,15 @@ namespace SheetIO/FontSetter {
         )
 
 
-    pub def bind(x: FontSetter[a], k: a -> FontSetter[b]): FontSetter[b] =
+    pub def bind(x: FontSetter[a], k: a -> FontSetter[b] & ef): FontSetter[b] & ef =
         FontSetter(r ->
             match apply1(x, r) {
-                case Ok(a) => { let ans = k(a); apply1(ans, r) }
+                case Ok(a) => { let ans = k(a) as & Impure; apply1(ans, r) }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def flatMap(k: a -> FontSetter[b], x: FontSetter[a]): FontSetter[b] = bind(x, k)
+    pub def flatMap(k: a -> FontSetter[b] & ef, x: FontSetter[a]): FontSetter[b] & ef = bind(x, k)
 
     def liftPrim(update: ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure): FontSetter[a] =
         FontSetter(r -> update(r))
@@ -108,18 +127,18 @@ namespace SheetIO/FontSetter {
         FontSetter(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): FontSetter[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): FontSetter[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): FontSetter[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -135,7 +154,7 @@ namespace SheetIO/FontSetter {
         map(f, p2)
 
     pub def <&(x: b, p2: FontSetter[a]): FontSetter[b] =
-        p2 *> return(x)
+        p2 *> point(x)
 
     /// Alias for `bind`
     pub def >>=(ma: FontSetter[a], k: a -> FontSetter[b]): FontSetter[b] = bind(ma, k)
@@ -154,7 +173,8 @@ namespace SheetIO/FontSetter {
     /// Returns an error if either `o1` or `o2` are errors.
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
-                  o1: FontSetter[t1], o2: FontSetter[t2]): FontSetter[u] =
+                  o1: FontSetter[t1], 
+                  o2: FontSetter[t2]): FontSetter[u] & ef =
         ap(map(f, o1), o2)
 
     ///
@@ -165,7 +185,7 @@ namespace SheetIO/FontSetter {
     pub def lift3(f: (t1, t2, t3) -> u & ef,
                   o1: FontSetter[t1],
                   o2: FontSetter[t2],
-                  o3: FontSetter[t3]): FontSetter[u] =
+                  o3: FontSetter[t3]): FontSetter[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -177,7 +197,7 @@ namespace SheetIO/FontSetter {
                   o1: FontSetter[t1],
                   o2: FontSetter[t2],
                   o3: FontSetter[t3],
-                  o4: FontSetter[t4]): FontSetter[u] =
+                  o4: FontSetter[t4]): FontSetter[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -190,7 +210,7 @@ namespace SheetIO/FontSetter {
                   o2: FontSetter[t2],
                   o3: FontSetter[t3],
                   o4: FontSetter[t4],
-                  o5: FontSetter[t5]): FontSetter[u] =
+                  o5: FontSetter[t5]): FontSetter[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -204,7 +224,7 @@ namespace SheetIO/FontSetter {
                   o3: FontSetter[t3],
                   o4: FontSetter[t4],
                   o5: FontSetter[t5],
-                  o6: FontSetter[t6]): FontSetter[u] =
+                  o6: FontSetter[t6]): FontSetter[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -219,7 +239,7 @@ namespace SheetIO/FontSetter {
                   o4: FontSetter[t4],
                   o5: FontSetter[t5],
                   o6: FontSetter[t6],
-                  o7: FontSetter[t7]): FontSetter[u] =
+                  o7: FontSetter[t7]): FontSetter[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -235,7 +255,7 @@ namespace SheetIO/FontSetter {
                       o5: FontSetter[t5],
                       o6: FontSetter[t6],
                       o7: FontSetter[t7],
-                      o8: FontSetter[t8]): FontSetter[u] =
+                      o8: FontSetter[t8]): FontSetter[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -252,7 +272,7 @@ namespace SheetIO/FontSetter {
                   o6: FontSetter[t6],
                   o7: FontSetter[t7],
                   o8: FontSetter[t8],
-                  o9: FontSetter[t9]): FontSetter[u] =
+                  o9: FontSetter[t9]): FontSetter[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -270,7 +290,7 @@ namespace SheetIO/FontSetter {
                    o7: FontSetter[t7],
                    o8: FontSetter[t8],
                    o9: FontSetter[t9],
-                   o10: FontSetter[t10]): FontSetter[u] =
+                   o10: FontSetter[t10]): FontSetter[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 

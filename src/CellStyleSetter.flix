@@ -19,6 +19,25 @@ namespace SheetIO {
 
     pub opaque type CellStyleSetter[a] = ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure
 
+
+    instance Functor[CellStyleSetter] {
+        pub def map(f: a -> b & ef, o: CellStyleSetter[a]): CellStyleSetter[b] & ef = 
+            SheetIO/CellStyleSetter.map(f, o)
+    }
+
+    instance Applicative[CellStyleSetter] {
+        pub def point(x: a): CellStyleSetter[a] = 
+            SheetIO/CellStyleSetter.point(x)
+
+        pub def ap(f: CellStyleSetter[a -> b & ef], x: CellStyleSetter[a]) : CellStyleSetter[b] & ef = 
+            SheetIO/CellStyleSetter.ap(f, x)
+    }
+
+    instance Monad[CellStyleSetter] {
+        pub def flatMap(f: a -> CellStyleSetter[b] & ef, o: CellStyleSetter[a]): CellStyleSetter[b] & ef =
+            SheetIO/CellStyleSetter.flatMap(f, o)
+    }
+
 }
 
 namespace SheetIO/CellStyleSetter {
@@ -31,7 +50,7 @@ namespace SheetIO/CellStyleSetter {
     use SheetIO.Font.Font;
     
 
-    pub def return(x: a): CellStyleSetter[a] =
+    pub def point(x: a): CellStyleSetter[a] =
         CellStyleSetter(_ -> Ok(x) as & Impure)
 
     def apply1(x: CellStyleSetter[a], r: ##org.apache.poi.ss.usermodel.CellStyle): Result[a, String] & Impure =
@@ -48,7 +67,7 @@ namespace SheetIO/CellStyleSetter {
         })
 
 
-    pub def map(f: a -> b & ef, x: CellStyleSetter[a]): CellStyleSetter[b] =
+    pub def map(f: a -> b & ef, x: CellStyleSetter[a]): CellStyleSetter[b] & ef =
         CellStyleSetter(r ->
             match apply1(x, r) {
                 case Ok(a) => {
@@ -57,9 +76,9 @@ namespace SheetIO/CellStyleSetter {
                 }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def ap(mf: CellStyleSetter[a -> b & ef], ma: CellStyleSetter[a]): CellStyleSetter[b] =
+    pub def ap(mf: CellStyleSetter[a -> b & ef], ma: CellStyleSetter[a]): CellStyleSetter[b] & ef =
         CellStyleSetter(r ->
             match apply1(mf, r) {
                 case Ok(f) => {
@@ -70,17 +89,18 @@ namespace SheetIO/CellStyleSetter {
                 }
                 case Err(e1) => Err(e1)
             }
-        )
+        ) as & ef
 
-    pub def bind(x: CellStyleSetter[a], k: a -> CellStyleSetter[b]): CellStyleSetter[b] =
+    pub def bind(x: CellStyleSetter[a], k: a -> CellStyleSetter[b] & ef): CellStyleSetter[b] & ef =
         CellStyleSetter(r ->
             match apply1(x, r) {
-                case Ok(a) => { let ans = k(a); apply1(ans, r) }
+                case Ok(a) => { let ans = k(a) as & Impure; apply1(ans, r) }
                 case Err(e) => Err(e)
             }
-        )
+        ) as & ef
 
-    pub def flatMap(k: a -> CellStyleSetter[b], x: CellStyleSetter[a]): CellStyleSetter[b] = bind(x, k)
+    pub def flatMap(k: a -> CellStyleSetter[b] & ef, x: CellStyleSetter[a]): CellStyleSetter[b] & ef = 
+        bind(x, k)
 
     def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure): CellStyleSetter[a] =
         CellStyleSetter(r -> update(r))
@@ -92,17 +112,17 @@ namespace SheetIO/CellStyleSetter {
         CellStyleSetter(_ -> fn())
 
     pub def liftOption(x: Option[a], errMsg: String): CellStyleSetter[a] = match x { 
-        case Some(x1) => return(x1)
+        case Some(x1) => point(x1)
         case None => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): CellStyleSetter[a] = match x { 
-        case Ok(x1) => return(x1)
+        case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): CellStyleSetter[a] = match x { 
-        case Success(x1) => return(x1)
+        case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
     }
 
@@ -112,7 +132,8 @@ namespace SheetIO/CellStyleSetter {
     /// Returns an error if either `o1` or `o2` are errors.
     ///
     pub def lift2(f: (t1, t2) -> u & ef, 
-                  o1: CellStyleSetter[t1], o2: CellStyleSetter[t2]): CellStyleSetter[u] =
+                  o1: CellStyleSetter[t1],
+                  o2: CellStyleSetter[t2]): CellStyleSetter[u] & ef =
         ap(map(f, o1), o2)
 
     ///
@@ -123,7 +144,7 @@ namespace SheetIO/CellStyleSetter {
     pub def lift3(f: (t1, t2, t3) -> u & ef,
                   o1: CellStyleSetter[t1],
                   o2: CellStyleSetter[t2],
-                  o3: CellStyleSetter[t3]): CellStyleSetter[u] =
+                  o3: CellStyleSetter[t3]): CellStyleSetter[u] & ef =
         ap(lift2(f, o1, o2), o3)
 
     ///
@@ -135,7 +156,7 @@ namespace SheetIO/CellStyleSetter {
                   o1: CellStyleSetter[t1],
                   o2: CellStyleSetter[t2],
                   o3: CellStyleSetter[t3],
-                  o4: CellStyleSetter[t4]): CellStyleSetter[u] =
+                  o4: CellStyleSetter[t4]): CellStyleSetter[u] & ef =
         ap(lift3(f, o1, o2, o3), o4)
 
     ///
@@ -148,7 +169,7 @@ namespace SheetIO/CellStyleSetter {
                   o2: CellStyleSetter[t2],
                   o3: CellStyleSetter[t3],
                   o4: CellStyleSetter[t4],
-                  o5: CellStyleSetter[t5]): CellStyleSetter[u] =
+                  o5: CellStyleSetter[t5]): CellStyleSetter[u] & ef =
         ap(lift4(f, o1, o2, o3, o4), o5)
 
     ///
@@ -162,7 +183,7 @@ namespace SheetIO/CellStyleSetter {
                   o3: CellStyleSetter[t3],
                   o4: CellStyleSetter[t4],
                   o5: CellStyleSetter[t5],
-                  o6: CellStyleSetter[t6]): CellStyleSetter[u] =
+                  o6: CellStyleSetter[t6]): CellStyleSetter[u] & ef =
         ap(lift5(f, o1, o2, o3, o4, o5), o6)
 
     ///
@@ -177,7 +198,7 @@ namespace SheetIO/CellStyleSetter {
                   o4: CellStyleSetter[t4],
                   o5: CellStyleSetter[t5],
                   o6: CellStyleSetter[t6],
-                  o7: CellStyleSetter[t7]): CellStyleSetter[u] =
+                  o7: CellStyleSetter[t7]): CellStyleSetter[u] & ef =
         ap(lift6(f, o1, o2, o3, o4, o5, o6), o7)
 
     ///
@@ -193,7 +214,7 @@ namespace SheetIO/CellStyleSetter {
                       o5: CellStyleSetter[t5],
                       o6: CellStyleSetter[t6],
                       o7: CellStyleSetter[t7],
-                      o8: CellStyleSetter[t8]): CellStyleSetter[u] =
+                      o8: CellStyleSetter[t8]): CellStyleSetter[u] & ef =
         ap(lift7(f, o1, o2, o3, o4, o5, o6, o7), o8)
 
     ///
@@ -210,7 +231,7 @@ namespace SheetIO/CellStyleSetter {
                   o6: CellStyleSetter[t6],
                   o7: CellStyleSetter[t7],
                   o8: CellStyleSetter[t8],
-                  o9: CellStyleSetter[t9]): CellStyleSetter[u] =
+                  o9: CellStyleSetter[t9]): CellStyleSetter[u] & ef =
         ap(lift8(f, o1, o2, o3, o4, o5, o6, o7, o8), o9)
 
     ///
@@ -228,7 +249,7 @@ namespace SheetIO/CellStyleSetter {
                    o7: CellStyleSetter[t7],
                    o8: CellStyleSetter[t8],
                    o9: CellStyleSetter[t9],
-                   o10: CellStyleSetter[t10]): CellStyleSetter[u] =
+                   o10: CellStyleSetter[t10]): CellStyleSetter[u] & ef =
         ap(lift9(f, o1, o2, o3, o4, o5, o6, o7, o8, o9), o10)
 
 

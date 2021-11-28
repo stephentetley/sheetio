@@ -46,17 +46,17 @@ namespace SheetIO/Writer {
 
 
     def writeSheet(sheetWriter: WorkSheetWriter[a]): SheetWriter[Unit] = 
-        use SheetIO/SheetWriter.{flatMap, return, createSheet, allRows, allRowsWithHeaders};
+        use SheetIO/SheetWriter.{flatMap, point, createSheet, allRows, allRowsWithHeaders};
         match sheetWriter.headers {
             case None => {
                 let* s1     = createSheet(sheetWriter.sheetName);
                 let* _      = allRows(s1, sheetWriter.rows, sheetWriter.setter);
-                return()
+                point()
             }
             case Some(headers) => {
                 let* s1     = createSheet(sheetWriter.sheetName);
                 let* _      = allRowsWithHeaders(s1, headers, sheetWriter.rows, sheetWriter.setter);
-                return()
+                point()
             }
         }
 

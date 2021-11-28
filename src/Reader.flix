@@ -30,50 +30,50 @@ namespace SheetIO/Reader {
     /// TODO arg orders to change...
 
     pub def allRows(eval: RowEvaluator[a], src: XlsxSource): Result[List[a], String] & Impure =
-        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRows};
+        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = allRows(eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
     pub def someRows(eval: RowEvaluator[Option[a]], src: XlsxSource): Result[List[a], String] & Impure =
-        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, someRows};
+        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, someRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = someRows(eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
 
     pub def allNamedRows(eval: NamedRowEvaluator[a], src: XlsxSource): Result[List[a], String] & Impure =
-        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allNamedRows};
+        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allNamedRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = allNamedRows(eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
     pub def someNamedRows(eval: NamedRowEvaluator[Option[a]], src: XlsxSource): Result[List[a], String] & Impure =
-        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, someNamedRows};
+        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, someNamedRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = someNamedRows(eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
     pub def foldAllRows(combine: (b, a) -> b & ef, 
                         ac: b, 
                         eval: RowEvaluator[a], src: XlsxSource): Result[b, String] & Impure =
-        use SheetIO/SheetReader.{flatMap, return, getSheetNamed, foldAllRows};
+        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, foldAllRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = foldAllRows(combine, ac, eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
@@ -93,11 +93,11 @@ namespace SheetIO/Reader {
                                 ac: b, 
                                 eval: NamedRowEvaluator[a],
                                 src: XlsxSource): Result[b, String] & Impure =
-        use SheetIO/SheetReader.{bind, flatMap, return, getSheetNamed, foldAllNamedRows};
+        use SheetIO/SheetReader.{bind, flatMap, point, getSheetNamed, foldAllNamedRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = foldAllNamedRows(combine, ac, eval, s1);
-            return(xs)
+            point(xs)
         };
         SheetIO/SheetReader.runXlsx(readStep(), src.path)
 
