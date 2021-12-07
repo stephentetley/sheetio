@@ -83,13 +83,13 @@ namespace SheetIO/CellType {
 
 
     pub def toNative(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        import flix.runtime.spt.sheetio.POIWrapper:get_NONE()          as get_NONE;
-        import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
-        import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
-        import get org.apache.poi.ss.usermodel.CellType:ERROR       as getERROR;
-        import get org.apache.poi.ss.usermodel.CellType:FORMULA     as getFORMULA;
-        import get org.apache.poi.ss.usermodel.CellType:NUMERIC     as getNUMERIC;
-        import get org.apache.poi.ss.usermodel.CellType:STRING      as getSTRING;
+        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE()          as get_NONE;
+        import static get org.apache.poi.ss.usermodel.CellType.BLANK       as getBLANK;
+        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN     as getBOOLEAN;
+        import static get org.apache.poi.ss.usermodel.CellType.ERROR       as getERROR;
+        import static get org.apache.poi.ss.usermodel.CellType.FORMULA     as getFORMULA;
+        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC     as getNUMERIC;
+        import static get org.apache.poi.ss.usermodel.CellType.STRING      as getSTRING;
         match x {
             case TyNone     => get_NONE()
             case TyBlank    => getBLANK()
@@ -108,13 +108,13 @@ namespace SheetIO/CellType {
         equals(x1, y1) as & Pure
 
     pub def fromNative(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
-        import flix.runtime.spt.sheetio.POIWrapper:get_NONE()      as get_NONE;
-        import get org.apache.poi.ss.usermodel.CellType:BLANK       as getBLANK;
-        import get org.apache.poi.ss.usermodel.CellType:BOOLEAN     as getBOOLEAN;
-        import get org.apache.poi.ss.usermodel.CellType:ERROR       as getERROR;
-        import get org.apache.poi.ss.usermodel.CellType:FORMULA     as getFORMULA;
-        import get org.apache.poi.ss.usermodel.CellType:NUMERIC     as getNUMERIC;
-        import get org.apache.poi.ss.usermodel.CellType:STRING      as getSTRING;
+        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE()      as get_NONE;
+        import static get org.apache.poi.ss.usermodel.CellType.BLANK       as getBLANK;
+        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN     as getBOOLEAN;
+        import static get org.apache.poi.ss.usermodel.CellType.ERROR       as getERROR;
+        import static get org.apache.poi.ss.usermodel.CellType.FORMULA     as getFORMULA;
+        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC     as getNUMERIC;
+        import static get org.apache.poi.ss.usermodel.CellType.STRING      as getSTRING;
         match x {
             case x1 if primEquals(x1, get_NONE())       => TyNone
             case x1 if primEquals(x1, getBLANK())       => TyBlank
