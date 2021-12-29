@@ -3,8 +3,8 @@ use SheetIO.SheetReader;
 def main(): Unit & Impure = 
     use SheetIO/SheetReader.{runXlsx};
     match runXlsx(test01(), System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
-        case Err(_) => Console.printLine("err")
-        case Ok() => Console.printLine("[done]")
+        case Err(_) => println("err")
+        case Ok() => println("[done]")
     }
 
 def sheeetStats(sheetName: String): SheetReader[Unit] = 
@@ -12,7 +12,7 @@ def sheeetStats(sheetName: String): SheetReader[Unit] =
     let* s1     = getSheet(sheetName);
     let* i1     = sheetFirstRowNum(s1);
     let* i2     = sheetLastRowNum(s1);
-    liftAction(_ -> Console.printLine("${sheetName}: rows=${Int32.toString(i1)}..${Int32.toString(i2)}"))
+    liftAction(_ -> println("${sheetName}: rows=${Int32.toString(i1)}..${Int32.toString(i2)}"))
 
 
 def test01(): SheetReader[Unit] = 

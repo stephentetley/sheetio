@@ -10,9 +10,9 @@ def main(_args: Array[String]): Int32 & Impure =
 
 def runtest(description: String, action: SheetReader[List[String]]): Unit & Impure =
     use SheetIO/SheetReader.runXlsx;
-    Console.printLine(description);
+    println(description);
     match runXlsx(action, System/FilePath.new("e:/coding/flix/sheetio/data/one_to_ten.xlsx")) { 
-        case Err(msg) => Console.printLine("Error: ${msg}")
+        case Err(msg) => println("Error: ${msg}")
         case Ok(xs) => List.foreach(println, xs)
     }
 

@@ -3,8 +3,8 @@ use SheetIO/SheetParser.{SheetParser1};
 def main(_args: Array[String]): Int32 & Impure = 
     let src = System/FilePath.new("E:/coding/flix/sheetio/data/functional_langs.xlsx");
     match SheetIO/SheetParser.runXlsx(parser1(), "Sheet1", (), src) { 
-        case Err(_) => Console.printLine("err")
-        case Ok(a) => Console.printLine("OK: ${a}")
+        case Err(_) => println("err")
+        case Ok(a) => println("OK: ${a}")
     };
     0
 

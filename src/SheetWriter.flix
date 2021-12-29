@@ -192,21 +192,6 @@ namespace SheetIO/SheetWriter {
             case Err(e) => Err(e)
         }) as & ef
 
-    pub def seqLeft(ma: SheetWriter[a], mb: SheetWriter[b]): SheetWriter[a] = 
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, a)) => match apply1(mb, wb, style, s2) {
-                case Ok((s3, _)) => Ok((s3, a))
-                case Err(e) => Err(e)
-            }
-            case Err(e) => Err(e)
-        })
-
-    pub def seqRight(ma: SheetWriter[a], mb: SheetWriter[b]): SheetWriter[b] = 
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, _)) => apply1(mb, wb, style, s2)
-            case Err(e) => Err(e)
-        })
-
 
     pub def bind(ma: SheetWriter[a], fn: a -> SheetWriter[b] & ef): SheetWriter[b] & ef = 
         SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
@@ -215,15 +200,6 @@ namespace SheetIO/SheetWriter {
         }) as & ef
 
     pub def flatMap(fn: a -> SheetWriter[b] & ef, ma: SheetWriter[a]): SheetWriter[b] & ef = bind(ma, fn)
-
-    pub def kleisliLeft(f1: a -> SheetWriter[b], f2: b -> SheetWriter[c], x: a): SheetWriter[c] =
-        SheetWriter((wb, style, s1) -> match apply1(f1(x), wb, style, s1) { 
-            case Ok((s2, b)) => apply1(f2(b), wb, style, s2)
-            case Err(e) => Err(e)
-        })
-
-    pub def kleisliRight(f1: b -> SheetWriter[c], f2: a -> SheetWriter[b], x: a): SheetWriter[c] =
-        kleisliLeft(f2, f1, x)
 
 
     pub def guard(x: Bool): SheetWriter[Unit] = 
@@ -485,37 +461,6 @@ namespace SheetIO/SheetWriter {
     /// `mapAccumX` is a synonym for `foldM`.
     ///
     pub def mapAccumX(mf: (ac, a) -> SheetWriter[ac], start: ac, xs: List[a]): SheetWriter[ac] = foldM(mf, start, xs)
-
-    /// Alias for `seqRight`
-    pub def *>(p1: SheetWriter[a], p2: SheetWriter[b]): SheetWriter[b] = seqRight(p1, p2)
-
-    /// Alias for `seqLeft`
-    pub def <*(p1: SheetWriter[a], p2: SheetWriter[b]): SheetWriter[a] = seqLeft(p1, p2)
-
-    // Haskell's <$>
-    pub def <&>(f: a -> b, p2: SheetWriter[a]): SheetWriter[b] =
-        map(f, p2)
-
-    pub def <&(x: b, p2: SheetWriter[a]): SheetWriter[b] =
-        p2 *> point(x)
-
-    /// Alias for `bind`
-    pub def >>=(ma: SheetWriter[a], k: a -> SheetWriter[b]): SheetWriter[b] = bind(ma, k)
-
-    /// Alias for `flatMap` (flipped `bind`)
-    pub def =<<(k: a -> SheetWriter[b], ma: SheetWriter[a]): SheetWriter[b] = flatMap(k, ma)
-
-
-    // Haskell's ap <*>
-    pub def <*>(mf: SheetWriter[a -> b], p2: SheetWriter[a]): SheetWriter[b] =
-        ap(mf, p2)
-
-    /// Alias for `kleisliLeft`
-    pub def >=>(f1: a -> SheetWriter[b], f2: b -> SheetWriter[c]): a -> SheetWriter[c] = x -> kleisliLeft(f1, f2, x)
-
-    /// Alias for `kleisliRight`
-    pub def <=<(f1: b -> SheetWriter[c], f2: a -> SheetWriter[b]): a -> SheetWriter[c] = x -> kleisliRight(f1, f2, x)
-
 
     ///
     /// Applies the binary function `f` to the values in `o1` and `o2`.

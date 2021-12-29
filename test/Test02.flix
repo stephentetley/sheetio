@@ -6,12 +6,12 @@ use SheetIO.SheetWriter;
 def main(): Unit & Impure = 
     
     match SheetIO/SheetReader.runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/BBMED.xlsx")) { 
-        case Err(e) => Console.printLine(System/Error.toString(e))
-        case Ok() => Console.printLine("[reader done]")
+        case Err(e) => println(System/Error.toString(e))
+        case Ok() => println("[reader done]")
     };
     match SheetIO/SheetWriter.runXlsx(test02(), System/FilePath.new("E:/coding/flix/sheetio/data/out1.xlsx")) { 
-        case Err(e) => Console.printLine("Error: " + System/Error.toString(e))
-        case Ok() => Console.printLine("[writer done]")
+        case Err(e) => println("Error: " + System/Error.toString(e))
+        case Ok() => println("[writer done]")
     }
 
 
@@ -19,13 +19,13 @@ def main(): Unit & Impure =
 def test01(): SheetReader[Unit] = 
     use SheetIO/SheetReader.{flatMap, return, getSheet, getRowAt, rowEval, liftAction, 
         sheetPhysicalNumberOfRows, sheetLastRowNum, rowsInRange};
-    let* _      = liftAction(_ -> Console.printLine("Running..."));        
+    let* _      = liftAction(_ -> println("Running..."));        
     let* s1     = getSheet("Sheet1");
     let* r0     = s1.getRowAt(0);
     let* hdrs   = rowEval(r0, evalHeaderRow());
     let* _      = liftAction(_ -> printHeaders(hdrs));
     let* end    = sheetPhysicalNumberOfRows(s1);
-    let* _      = liftAction(_ -> Console.printLine("End=${Int32.toString(end)}"));
+    let* _      = liftAction(_ -> println("End=${Int32.toString(end)}"));
     let* xs     = rowsInRange(s1, 1, end, evalAibExportRow());
     let* _      = liftAction(_ -> List.foreach(printAibExportRow, xs));
     return()
@@ -59,10 +59,10 @@ def evalAibExportRow(): RowEvaluator[AibExportRow] =
             } )
 
 def printHeaders(hdrs: Headers): Unit & Impure = 
-    Console.printLine(Array.formatWith(x -> x, ", ", hdrs))
+    println(Array.formatWith(x -> x, ", ", hdrs))
 
 def printAibExportRow(row: AibExportRow): Unit & Impure = 
-    Console.printLine("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")
+    println("{change=${row.change}, reference=${row.reference}, oldParentName=${row.oldParentName}}")
 
 
 

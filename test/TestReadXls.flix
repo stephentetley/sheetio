@@ -4,8 +4,8 @@ use SheetIO.NamedRowEvaluator;
 def main(_args: Array[String]): Int32 & Impure = 
     use SheetIO/SheetReader.{runHssf};
     match runHssf(test01(), System/FilePath.new("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
-        case Err(msg) => Console.printLine("Error: ${msg}")
-        case Ok(xs) => List.foreach(x -> { let (a,b) = x; Console.printLine("${a}, ${b}")} , xs)
+        case Err(msg) => println("Error: ${msg}")
+        case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
     };
     0
 

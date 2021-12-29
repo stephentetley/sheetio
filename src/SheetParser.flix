@@ -18,6 +18,9 @@
 
 namespace SheetIO/SheetParser {
 
+    use Applicative.{<*, *>};
+    use Monad.{>>=};
+
     type alias Sheet = ##org.apache.poi.ss.usermodel.Sheet
 
     type alias SourcePosition = (Int32, Int32)
@@ -61,7 +64,6 @@ namespace SheetIO/SheetParser {
             flatMap(f, o)
     }
 
-    /// TODO instances of Functor, Applicative, Monad (tricky due to heacy use of continuations...)
 
     type alias SheetParser[ka1, ans] = GenSheetParser[ka1, Unit, ans]
 
@@ -168,72 +170,9 @@ namespace SheetIO/SheetParser {
     pub def alt(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
         ifThenElse(p, point, q)
 
-    pub def seqLeft(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, a] =
-        let* a = p;
-        let* _ = q;
-        point(a)
-
-    pub def seqRight(p: GenSheetParser[ka1, st, a], q: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] =
-        let* _ = p;
-        let* b = q;
-        point(b)
-
-    pub def kleisliLeft(f1: a -> GenSheetParser[ka1, st, b], f2: b -> GenSheetParser[ka1, st, c], x: a): GenSheetParser[ka1, st, c] =
-        let* b  = f1(x);
-        let* c  = f2(b);
-        point(c)
-
-    pub def kleisliRight(f1: b -> GenSheetParser[ka1, st, c], f2: a -> GenSheetParser[ka1, st, b], x: a): GenSheetParser[ka1, st, c] =
-        kleisliLeft(f2, f1, x)
-
-
-    /// Alias for `seqRight`
-    pub def *>(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] = 
-        seqRight(p1, p2)
-
-    /// Alias for `seqLeft`
-    pub def <*(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, a] = 
-        seqLeft(p1, p2)
 
     pub def <!>(p1: GenSheetParser[ka1, st, a], p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, a] =
         alt(p1, p2)
-
-    // Haskell's <$>
-    pub def <&>(f: a -> b, p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
-        map(f, p2)
-
-    pub def <&(x: b, p1: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
-        p1 *> point(x)
-
-    pub def &>(p1: GenSheetParser[ka1, st, a], x: b): GenSheetParser[ka1, st, b] =
-        p1 *> point(x)
-
-    /// Flipped <&>
-    pub def <&&>(p2: GenSheetParser[ka1, st, a], f: a -> b): GenSheetParser[ka1, st, b] =
-        map(f, p2)
-
-
-    // Haskell's ap <*>
-    pub def <*>(mf: GenSheetParser[ka1, st, a -> b], p2: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
-        ap(mf, p2)
-
-    /// Flipped <*>
-    pub def <**>(p2: GenSheetParser[ka1, st, a], mf: GenSheetParser[ka1, st, a -> b]): GenSheetParser[ka1, st, b] =
-        ap(mf, p2)        
-
-
-    pub def >>=(p: GenSheetParser[ka1, st, a], k: a -> GenSheetParser[ka1, st, b]): GenSheetParser[ka1, st, b] =
-        bind(p, k)
-
-
-    pub def =<<(k: a -> GenSheetParser[ka1, st, b], p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, b] =
-        bind(p, k)
-
-    pub def >=>(f1: a -> GenSheetParser[ka1, st, b], f2: b -> GenSheetParser[ka1, st, c], x: a): GenSheetParser[ka1, st, c] =
-        kleisliLeft(f1, f2, x)
-
-    pub def <=<(f1: b -> GenSheetParser[ka1, st, c], f2: a -> GenSheetParser[ka1, st, b], x: a): GenSheetParser[ka1, st, c] = 
-        kleisliRight(f1, f2, x)
 
 
     pub def liftAction(f: Unit -> a & ef): GenSheetParser[ka1, st, a] =
@@ -592,7 +531,7 @@ namespace SheetIO/SheetParser {
 
     /// `p` is run with `lookahead`, no text is consumed
     pub def succeeds(p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, Bool] = 
-        alt(seqRight(lookahead(p), point(true)), point(false))
+        alt((lookahead(p) *> point(true)), point(false))
 
     pub def countWith(combine: (ac, a) -> ac, acc: ac, n: Int32, p: GenSheetParser[ka1, st, a]): GenSheetParser[ka1, st, ac] = 
         if (n <= 0)
@@ -660,7 +599,7 @@ namespace SheetIO/SheetParser {
                         acc: ac, 
                         p: GenSheetParser[ka1, st, a], 
                         sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, ac] = 
-        ifThenElse(seqRight(sep, p), x -> sepByWithHelper(combine, combine(acc, x), p, sep), point(acc))
+        ifThenElse((sep *> p), x -> sepByWithHelper(combine, combine(acc, x), p, sep), point(acc))
 
     pub def sepBy(p: GenSheetParser[ka1, st, a], sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, List[a]] = 
         use Chain.{empty, snoc, toList};
@@ -680,7 +619,7 @@ namespace SheetIO/SheetParser {
                         acc: ac, 
                         p: GenSheetParser[ka1, st, a], 
                         sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, ac] = 
-        manyWith(combine, acc, seqLeft(p, sep))
+        manyWith(combine, acc, (p <* sep))
 
     pub def endBy(p: GenSheetParser[ka1, st, a], sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, List[a]] = 
         use Chain.{empty, snoc, toList};
@@ -690,7 +629,7 @@ namespace SheetIO/SheetParser {
                         acc: ac, 
                         p: GenSheetParser[ka1, st, a], 
                         sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, ac] = 
-        bind(seqLeft(p, sep), x -> endByWith(combine, combine(acc, x), p, sep))
+        bind((p <* sep), x -> endByWith(combine, combine(acc, x), p, sep))
 
     pub def endBy1(p: GenSheetParser[ka1, st, a], sep: GenSheetParser[ka1, st, sep]): GenSheetParser[ka1, st, List[a]] = 
         use Chain.{empty, snoc, toList};

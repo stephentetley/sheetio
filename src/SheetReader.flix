@@ -142,26 +142,6 @@ namespace SheetIO/SheetReader {
             }
         ) as & ef
 
-    pub def seqLeft(ma: SheetReader[a], mb: SheetReader[b]): SheetReader[a] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => match apply1(mb, wb) {
-                    case Ok(_) => Ok(a)
-                    case Err(e) => Err(e)
-                }
-                case Err(e) => Err(e)
-            }
-        )
-
-    pub def seqRight(ma: SheetReader[a], mb: SheetReader[b]): SheetReader[b] = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(_) => apply1(mb, wb)
-                case Err(e) => Err(e)
-            }
-        )
-
-
     pub def bind(ma: SheetReader[a], fn: a -> SheetReader[b] & ef): SheetReader[b] & ef = 
         SheetReader(wb -> 
             match apply1(ma, wb) { 
@@ -172,17 +152,6 @@ namespace SheetIO/SheetReader {
 
     pub def flatMap(fn: a -> SheetReader[b] & ef, ma: SheetReader[a]): SheetReader[b] & ef = 
         bind(ma, fn)
-
-    pub def kleisliLeft(f1: a -> SheetReader[b], f2: b -> SheetReader[c], x: a): SheetReader[c] =
-        SheetReader(wb -> 
-            match apply1(f1(x), wb) { 
-                case Ok(b) => apply1(f2(b), wb)
-                case Err(e) => Err(e)
-            }
-        )
-
-    pub def kleisliRight(f1: b -> SheetReader[c], f2: a -> SheetReader[b], x: a): SheetReader[c] =
-        kleisliLeft(f2, f1, x)
 
 
     pub def alt(ma: SheetReader[a], mb: SheetReader[a]): SheetReader[a] =
@@ -486,40 +455,6 @@ namespace SheetIO/SheetReader {
     /// `mapAccumX` is a synonym for `foldM`.
     ///
     pub def mapAccumX(mf: (ac, a) -> SheetReader[ac], start: ac, xs: List[a]): SheetReader[ac] = foldM(mf, start, xs)
-
-    /// Alias for `seqRight`
-    pub def *>(p1: SheetReader[a], p2: SheetReader[b]): SheetReader[b] = seqRight(p1, p2)
-
-    /// Alias for `seqLeft`
-    pub def <*(p1: SheetReader[a], p2: SheetReader[b]): SheetReader[a] = seqLeft(p1, p2)
-
-    /// Haskell's <|>
-    pub def <!>(p1: SheetReader[a], p2: SheetReader[a]): SheetReader[a] =
-        alt(p1, p2)
-
-    // Haskell's <$>
-    pub def <&>(f: a -> b, p2: SheetReader[a]): SheetReader[b] =
-        map(f, p2)
-
-    pub def <&(x: b, p2: SheetReader[a]): SheetReader[b] =
-        p2 *> point(x)
-
-    /// Alias for `bind`
-    pub def >>=(ma: SheetReader[a], k: a -> SheetReader[b]): SheetReader[b] = bind(ma, k)
-
-    /// Alias for `flatMap` (flipped `bind`)
-    pub def =<<(k: a -> SheetReader[b], ma: SheetReader[a]): SheetReader[b] = flatMap(k, ma)
-
-
-    // Haskell's ap <*>
-    pub def <*>(mf: SheetReader[a -> b], p2: SheetReader[a]): SheetReader[b] =
-        ap(mf, p2)
-
-    /// Alias for `kleisliLeft`
-    pub def >=>(f1: a -> SheetReader[b], f2: b -> SheetReader[c]): a -> SheetReader[c] = x -> kleisliLeft(f1, f2, x)
-
-    /// Alias for `kleisliRight`
-    pub def <=<(f1: b -> SheetReader[c], f2: a -> SheetReader[b]): a -> SheetReader[c] = x -> kleisliRight(f1, f2, x)
 
 
     ///

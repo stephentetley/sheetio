@@ -42,6 +42,8 @@ namespace SheetIO {
 
 namespace SheetIO/RowEvaluator {
 
+    use Monad.{>>=};
+
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
 
@@ -94,24 +96,6 @@ namespace SheetIO/RowEvaluator {
             }
         ) as & ef
     
-    pub def seqLeft(ma: RowEvaluator[a], mb: RowEvaluator[b]): RowEvaluator[a] = 
-        RowEvaluator((fmt, row) ->
-            match apply1(ma, fmt, row) { 
-                case Ok(a) => match apply1(mb, fmt, row) {
-                    case Ok(_) => Ok(a)
-                    case Err(e) => Err(e)
-                }
-                case Err(e) => Err(e)
-            }
-        )
-
-    pub def seqRight(ma: RowEvaluator[a], mb: RowEvaluator[b]): RowEvaluator[b] = 
-        RowEvaluator((fmt, row) ->
-            match apply1(ma, fmt, row) { 
-                case Ok(_) => apply1(mb, fmt, row)
-                case Err(e) => Err(e)
-            }
-        )
 
     pub def bind(x: RowEvaluator[a], k: a -> RowEvaluator[b] & ef): RowEvaluator[b] & ef =
         RowEvaluator((fmt, row) ->
@@ -132,16 +116,6 @@ namespace SheetIO/RowEvaluator {
             }
         )
 
-    pub def kleisliLeft(f1: a -> RowEvaluator[b], f2: b -> RowEvaluator[c], x: a): RowEvaluator[c] =
-        RowEvaluator((fmt, row) -> 
-            match apply1(f1(x), fmt, row) { 
-                case Ok(b) => apply1(f2(b), fmt, row)
-                case Err(e) => Err(e)
-            }
-        )
-
-    pub def kleisliRight(f1: b -> RowEvaluator[c], f2: a -> RowEvaluator[b], x: a): RowEvaluator[c] =
-        kleisliLeft(f2, f1, x)
 
     pub def optional(x: RowEvaluator[a]): RowEvaluator[Option[a]] =
         RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
@@ -680,40 +654,6 @@ namespace SheetIO/RowEvaluator {
         lift10((x1, x2, x3, x4, x5, x6, x7, x8, x9, x10) -> (x1, x2, x3, x4, x5, x6, x7, x8, x9, x10), 
                 o1, o2, o3, o4, o5, o6, o7, o8, o9, o10)
 
-
-    /// Alias for `seqRight`
-    pub def *>(p1: RowEvaluator[a], p2: RowEvaluator[b]): RowEvaluator[b] = seqRight(p1, p2)
-
-    /// Alias for `seqLeft`
-    pub def <*(p1: RowEvaluator[a], p2: RowEvaluator[b]): RowEvaluator[a] = seqLeft(p1, p2)
-
-    // Haskell's <$>
-    pub def <&>(f: a -> b, p2: RowEvaluator[a]): RowEvaluator[b] =
-        map(f, p2)
-
-    pub def <&(x: b, p2: RowEvaluator[a]): RowEvaluator[b] =
-        p2 *> point(x)
-
-    /// Alias for `bind`
-    pub def >>=(ma: RowEvaluator[a], k: a -> RowEvaluator[b]): RowEvaluator[b] = 
-        bind(ma, k)
-
-    /// Alias for `flatMap` (flipped `bind`)
-    pub def =<<(k: a -> RowEvaluator[b], ma: RowEvaluator[a]): RowEvaluator[b] = 
-        flatMap(k, ma)
-
-
-    // Haskell's ap <*>
-    pub def <*>(mf: RowEvaluator[a -> b], p2: RowEvaluator[a]): RowEvaluator[b] =
-        ap(mf, p2)
-
-    /// Alias for `kleisliLeft`
-    pub def >=>(f1: a -> RowEvaluator[b], f2: b -> RowEvaluator[c]): a -> RowEvaluator[c] = 
-        x -> kleisliLeft(f1, f2, x)
-
-    /// Alias for `kleisliRight`
-    pub def <=<(f1: b -> RowEvaluator[c], f2: a -> RowEvaluator[b]): a -> RowEvaluator[c] = 
-        x -> kleisliRight(f1, f2, x)
 
 
 }

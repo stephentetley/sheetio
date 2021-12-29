@@ -11,10 +11,10 @@ def main(_args: Array[String]): Int32 & Impure =
 
 def runtest(description: String, action: SheetReader[List[(String, Int32)]]): Unit & Impure =
     use SheetIO/SheetReader.runXlsx;
-    Console.printLine(description);
+    println(description);
     match runXlsx(action, System/FilePath.new("e:/coding/flix/sheetio/data/row_starts.xlsx")) { 
-        case Err(msg) => Console.printLine("Error: ${msg}")
-        case Ok(xs) => List.foreach(x -> { let (a,b) = x; Console.printLine("${a}, ${b}")} , xs)
+        case Err(msg) => println("Error: ${msg}")
+        case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
     }
 
 def test01(): SheetReader[List[(String, Int32)]] = 
