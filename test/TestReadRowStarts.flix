@@ -30,10 +30,8 @@ def test02(): SheetReader[List[(String, Int32)]] =
     point(xs)
 
 def evalNamedRow(): NamedRowEvaluator[(String, Int32)] = 
-    use SheetIO/NamedRowEvaluator.{tuple2, getContentNamed, getInt32Named};
-    tuple2( getContentNamed("Lang")
-          , getInt32Named("Year")
-          )
+    use SheetIO/NamedRowEvaluator.{getContentNamed, getInt32Named};
+    Applicative.product(getContentNamed("Lang"), getInt32Named("Year"))
 
 def test03(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRowsFrom};      
@@ -48,8 +46,6 @@ def test04(): SheetReader[List[(String, Int32)]] =
     point(xs)
 
 def evalIndexedRow(): RowEvaluator[(String, Int32)] = 
-    use SheetIO/RowEvaluator.{tuple2, getContentAt, getInt32At};
-    tuple2( getContentAt(0)
-          , getInt32At(1)
-          )
+    use SheetIO/RowEvaluator.{getContentAt, getInt32At};
+    Applicative.product(getContentAt(0), getInt32At(1))
 
