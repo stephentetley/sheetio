@@ -628,7 +628,7 @@ namespace SheetIO/SheetReader {
         };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* r0         = getRowAt(sheet, headerIndex);
-        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getHeaders(), r0);
+        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), r0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
@@ -657,7 +657,7 @@ namespace SheetIO/SheetReader {
         };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* r0         = getRowAt(sheet, headerIndex);
-        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getHeaders(), r0);
+        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), r0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
         let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));

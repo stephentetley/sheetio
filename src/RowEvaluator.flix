@@ -393,19 +393,18 @@ namespace SheetIO/RowEvaluator {
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
 
-    pub def getHeaders(): RowEvaluator[Array[String]] =
+    pub def getRowContents(): RowEvaluator[Array[String]] =
         let* end    = getLastCellNum();
-        let* xs     = getHeadersHelper(end, 0, ks -> point(ks));
+        let* xs     = getRowContentsHelper(end, 0, ks -> point(ks));
         let* arr    = liftAction(_ -> List.toArray(xs));
         point(arr)
         
-    // TODO not tail recursive as it uses let-syntax...
-    def getHeadersHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
+    // Should be tail recursive as bind is in the contiuation
+    def getRowContentsHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
         if (ix > end)
             k(Nil)
         else 
-            let* s = getStringAt(ix);
-            getHeadersHelper(end, ix + 1, ss -> k(s :: ss))
+            getRowContentsHelper(end, ix + 1, ss -> getContentAt(ix) >>= s -> k(s :: ss))
 
 
 }

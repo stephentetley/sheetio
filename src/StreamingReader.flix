@@ -110,7 +110,7 @@ namespace SheetIO/StreamingReader {
     
     pub def namedRowIterator(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
         let NamedRowEvaluator(eval1) = eval;
-        let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getHeaders();
+        let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getRowContents();
         let fmt = SheetIO/Internal/DataFormatter.new();
         let src1 = if (headersLine > 0) Iterator.drop(headersLine - 1, src) else src;
         match Iterator.head(src1) {
