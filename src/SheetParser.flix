@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-
+/// DEPRECATED - too complicated / fragile for random access reading.
+/// Needs a simpler alternative.
 
 namespace SheetIO/SheetParser {
 

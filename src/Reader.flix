@@ -27,8 +27,6 @@ namespace SheetIO/Reader {
         }
 
 
-    /// TODO arg orders to change...
-
     pub def allRows(eval: RowEvaluator[a], src: XlsxSource): Result[List[a], String] & Impure =
         use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRows};
         let readStep = () -> { 

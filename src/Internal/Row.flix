@@ -70,4 +70,15 @@ namespace SheetIO/Internal/Row {
             case _: ##java.lang.Exception => Err("getLastCellNum")
         }
 
+
+    /// Number of cells used - do not use for trying to find end.
+    pub def getPhysicalNumberOfCells(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
+        import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(); 
+        try {
+            let ans = getPhysicalNumberOfCells(row);
+            Ok(ans)
+        } catch {
+            case _: ##java.lang.Exception => Err("getPhysicalNumberOfCells")
+        }
+
 }
