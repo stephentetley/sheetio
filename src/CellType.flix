@@ -71,7 +71,7 @@ namespace SheetIO {
     }
 
     instance Hash[CellType] {
-        pub def hash(x: CellType): Int = SheetIO/CellType.hashCode(x)
+        pub def hash(x: CellType): Int32 = SheetIO/CellType.hashCode(x)
     }
 
 }
