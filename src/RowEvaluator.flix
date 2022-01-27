@@ -295,8 +295,11 @@ namespace SheetIO/RowEvaluator {
 
     pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
-        let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
-        point(LocalDateTime(dt1))
+        let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+        if (Object.isNull(dt))
+            throwError("getLocalDateTimeAt - null")
+        else
+            point(LocalDateTime(dt))
 
 
     /// Cell must be readable as a String
@@ -394,17 +397,35 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getRowContents(): RowEvaluator[Array[String]] =
+        getRowContentsWith(getContentAt)
+
+    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[a]): RowEvaluator[Array[a]] =
         let* end    = getLastCellNum();
-        let* xs     = getRowContentsHelper(end, 0, ks -> point(ks));
+        let* xs     = getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks));
         let* arr    = liftAction(_ -> List.toArray(xs));
         point(arr)
         
     // Should be tail recursive as bind is in the contiuation
-    def getRowContentsHelper(end: Int32, ix: Int32, k: List[String] -> RowEvaluator[List[String]]): RowEvaluator[List[String]] =
+    def getRowContentsWithHelper(evalCell: Int32 -> RowEvaluator[a], 
+                                    end: Int32, 
+                                    ix: Int32, 
+                                    k: List[a] -> RowEvaluator[List[a]]): RowEvaluator[List[a]] =
         if (ix > end)
             k(Nil)
         else 
-            getRowContentsHelper(end, ix + 1, ss -> getContentAt(ix) >>= s -> k(s :: ss))
+            getRowContentsWithHelper(evalCell, end, ix + 1, ss -> evalCell(ix) >>= s -> k(s :: ss))
+
+    /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
+    /// This should avoid date mangling.
+    pub def getRowContentsIsoLocalDateTime(): RowEvaluator[Array[String]] =
+        let eval = ix -> alt(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
+        getRowContentsWith(eval)
+
+    def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[String] = 
+        let fmt = Time/Format/DateTimeFormatter.iso_local_date_time();
+        let* dt = getLocalDateTimeAt(ix);
+        let s   = Time/LocalDateTime.format(fmt, dt);
+        point(s)
 
 
 }
