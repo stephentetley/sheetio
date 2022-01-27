@@ -353,12 +353,30 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getFloat64Named(label: String): NamedRowEvaluator[Float64] = 
         getNumNamed(label, x -> Some(x), "getFloat64Named('${label}')")
 
-    /// Note will fail if CellType is String.
+
+
+    def isDateFormattedNamed(label: String): NamedRowEvaluator[Bool] = 
+        let* ix     = getIndex(label);
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DateUtil.isCellDateFormatted))
+
+    /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
+    /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
+    /// Note - will fail if CellType is String.
     pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
+        let* ctype  = getCellTypeNamed(label);
         let* ix     = getIndex(label);
-        let* dt1 = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
-        point(LocalDateTime(dt1))
+        if (ctype == TyNumeric) {
+            let* dtCell = isDateFormattedNamed(label);
+            if (dtCell) {
+                let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+                if (Object.isNull(dt))
+                    throwError("getLocalDateTimeAt - null")
+                else
+                    point(LocalDateTime(dt))
+            } else throwError("getLocalDateTimeAt - not a date")
+        } else throwError("getLocalDateTimeAt - not a date / not a numeric cell")
+
 
 
     /// Cell must be readable as a String

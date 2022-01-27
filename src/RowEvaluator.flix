@@ -293,13 +293,26 @@ namespace SheetIO/RowEvaluator {
     pub def getFloat64At(ix: Int32): RowEvaluator[Float64] = 
         getNumAt(ix, x -> Some(x), "getFloat64At")
 
+
+    def isDateFormattedAt(ix: Int32): RowEvaluator[Bool] = 
+        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DateUtil.isCellDateFormatted))
+
+    /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
+    /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
     pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
-        let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
-        if (Object.isNull(dt))
-            throwError("getLocalDateTimeAt - null")
-        else
-            point(LocalDateTime(dt))
+        let* ctype = getCellTypeAt(ix);
+        if (ctype == TyNumeric) {
+            let* dtCell = isDateFormattedAt(ix);
+            if (dtCell) {
+                let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+                if (Object.isNull(dt))
+                    throwError("getLocalDateTimeAt - null")
+                else
+                    point(LocalDateTime(dt))
+            } else throwError("getLocalDateTimeAt - not a date")
+        } else throwError("getLocalDateTimeAt - not a date / not a numeric cell")
+
 
 
     /// Cell must be readable as a String
