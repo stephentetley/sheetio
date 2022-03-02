@@ -16,9 +16,9 @@
 
 namespace SheetIO/Internal/DateUtil {
 
-    /// Should test we have a NUMERIC cell first...
+    /// Caller should test we have a NUMERIC cell first...
     pub def isCellDateFormatted(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] & Impure = 
-        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell);
+        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool & Impure;
         try { 
             let ans = isCellDateFormatted(cell);
             Ok(ans)

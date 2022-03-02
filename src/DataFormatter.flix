@@ -34,7 +34,7 @@ namespace SheetIO/DataFormatter {
     /// Returns a new mutable DataFormatter.
     ///
     pub def new(): DataFormatter & Impure =
-        import new org.apache.poi.ss.usermodel.DataFormatter() as newDataFormatter;
+        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
         DataFormatter(newDataFormatter())
 
     ///
@@ -42,7 +42,7 @@ namespace SheetIO/DataFormatter {
     ///
     pub def newWithLocale(x: I18n.Locale): DataFormatter & Impure =
         use I18n.Locale.{Locale};
-        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale) as newDataFormatter;
+        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
         let Locale(x1) = x;
         DataFormatter(newDataFormatter(x1))
         

@@ -255,7 +255,7 @@ namespace SheetIO/SheetWriter {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetWriter[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
     pub def localCellStyle(style: CellStyle, mx: SheetWriter[a]): SheetWriter[a] = 

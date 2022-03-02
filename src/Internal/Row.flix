@@ -17,12 +17,12 @@
 namespace SheetIO/Internal/Row {
 
     pub def getRowNum(row: ##org.apache.poi.ss.usermodel.Row): Int32 & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getRowNum(); 
+        import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 & Impure; 
         getRowNum(row)
     
     pub def getCell(row: ##org.apache.poi.ss.usermodel.Row, 
                     ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getCell(Int32); 
+        import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell & Impure; 
         try {
             let ans = getCell(row, ix);
             Ok(ans)
@@ -31,7 +31,7 @@ namespace SheetIO/Internal/Row {
         }
 
     pub def getSheet(row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getSheet(); 
+        import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet & Impure; 
         try {
             let ans = getSheet(row);
             Ok(ans)
@@ -41,7 +41,7 @@ namespace SheetIO/Internal/Row {
 
     pub def createCell(row: ##org.apache.poi.ss.usermodel.Row, 
                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.createCell(Int32); 
+        import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell & Impure; 
         try {
             let ans = createCell(row, ix);
             Ok(ans)
@@ -51,7 +51,7 @@ namespace SheetIO/Internal/Row {
 
 
     pub def getFirstCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getFirstCellNum(); 
+        import org.apache.poi.ss.usermodel.Row.getFirstCellNum(): Int16 & Impure; 
         try {
             let ans = getFirstCellNum(row);
             Ok(Int16.toInt32(ans))
@@ -62,7 +62,7 @@ namespace SheetIO/Internal/Row {
 
     /// As per Java - index of last cell **plus 1**.
     pub def getLastCellNum(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getLastCellNum(); 
+        import org.apache.poi.ss.usermodel.Row.getLastCellNum(): Int16 & Impure; 
         try {
             let ans = getLastCellNum(row);
             Ok(Int16.toInt32(ans))
@@ -73,7 +73,7 @@ namespace SheetIO/Internal/Row {
 
     /// Number of cells used - do not use for trying to find end.
     pub def getPhysicalNumberOfCells(row: ##org.apache.poi.ss.usermodel.Row): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(); 
+        import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(): Int32 & Impure; 
         try {
             let ans = getPhysicalNumberOfCells(row);
             Ok(ans)

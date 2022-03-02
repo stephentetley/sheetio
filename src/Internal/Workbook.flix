@@ -20,7 +20,7 @@ namespace SheetIO/Internal/Workbook {
 
     pub def createSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                         name: String): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createSheet(String); 
+        import org.apache.poi.ss.usermodel.Workbook.createSheet(String): ##org.apache.poi.ss.usermodel.Sheet & Impure; 
         try {
             let ans = createSheet(wb, name);
             Ok(ans)
@@ -30,7 +30,7 @@ namespace SheetIO/Internal/Workbook {
 
 
     pub def getNumberOfSheets(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(); 
+        import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(): Int32 & Impure; 
         try {
             let ans = getNumberOfSheets(wb);
             Ok(ans)
@@ -39,7 +39,7 @@ namespace SheetIO/Internal/Workbook {
         }
 
     pub def getSheetName(wb: ##org.apache.poi.ss.usermodel.Workbook, ix: Int32): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32); 
+        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32): String & Impure; 
         try {
             let ans = getSheetName(wb, ix);
             Ok(ans)
@@ -49,7 +49,7 @@ namespace SheetIO/Internal/Workbook {
 
     pub def getSheet(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                      name: String): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheet(String); 
+        import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet & Impure; 
         try {
             let ans = getSheet(wb, name);
             if (Object.isNull(ans))
@@ -62,7 +62,7 @@ namespace SheetIO/Internal/Workbook {
 
     pub def getSheetAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32); 
+        import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet & Impure; 
         try {
             let ans = getSheetAt(wb, ix);
             Ok(ans)
@@ -72,7 +72,7 @@ namespace SheetIO/Internal/Workbook {
 
     pub def getFontAt(wb: ##org.apache.poi.ss.usermodel.Workbook, 
                      idx: Int32): Result[##org.apache.poi.ss.usermodel.Font, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32); 
+        import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32): ##org.apache.poi.ss.usermodel.Font & Impure; 
         try {
             let ans = getFontAt(wb, idx);
             if (Object.isNull(ans))
@@ -85,7 +85,7 @@ namespace SheetIO/Internal/Workbook {
 
 
     pub def createCellStyle(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.CellStyle, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createCellStyle(); 
+        import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle & Impure; 
         try {
             let ans = createCellStyle(wb);
             Ok(ans)
@@ -94,7 +94,7 @@ namespace SheetIO/Internal/Workbook {
         }
 
     pub def createFont(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.Font, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createFont(); 
+        import org.apache.poi.ss.usermodel.Workbook.createFont(): ##org.apache.poi.ss.usermodel.Font & Impure; 
         try {
             let ans = createFont(wb);
             Ok(ans)
@@ -103,7 +103,7 @@ namespace SheetIO/Internal/Workbook {
         }
 
     pub def createDataFormat(wb: ##org.apache.poi.ss.usermodel.Workbook): Result[##org.apache.poi.ss.usermodel.DataFormat, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Workbook.createDataFormat(); 
+        import org.apache.poi.ss.usermodel.Workbook.createDataFormat(): ##org.apache.poi.ss.usermodel.DataFormat & Impure; 
         try {
             let ans = createDataFormat(wb);
             Ok(ans)
@@ -114,7 +114,7 @@ namespace SheetIO/Internal/Workbook {
     /// Orphan - DataFormat not used enough to warrant a module.
     pub def getFormat(dfmt: ##org.apache.poi.ss.usermodel.DataFormat,
                       format: String): Result[Int16, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormat.getFormat(String); 
+        import org.apache.poi.ss.usermodel.DataFormat.getFormat(String): Int16 & Impure; 
         try {
             let ans = getFormat(dfmt, format);
             Ok(ans)

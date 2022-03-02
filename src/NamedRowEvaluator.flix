@@ -226,7 +226,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): NamedRowEvaluator[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls

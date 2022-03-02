@@ -19,7 +19,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setFontName(font: ##org.apache.poi.ss.usermodel.Font,
                         value: String): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontName(String); 
+        import org.apache.poi.ss.usermodel.Font.setFontName(String): Unit & Impure; 
         try {
             let ans = setFontName(font, value);
             Ok(ans)
@@ -29,7 +29,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setFontHeight(font: ##org.apache.poi.ss.usermodel.Font,
                           value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16); 
+        import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16): Unit & Impure; 
         try {
             let ans = setFontHeight(font, value);
             Ok(ans)
@@ -39,7 +39,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setFontHeightInPoints(font: ##org.apache.poi.ss.usermodel.Font,
                                   value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16); 
+        import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16): Unit & Impure; 
         try {
             let ans = setFontHeightInPoints(font, value);
             Ok(ans)
@@ -49,7 +49,7 @@ namespace SheetIO/Internal/Font {
 
     
     pub def getBold(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getBold(); 
+        import org.apache.poi.ss.usermodel.Font.getBold(): Bool & Impure;
         try {
             let ans = getBold(font);
             Ok(ans)
@@ -59,7 +59,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setBold(font: ##org.apache.poi.ss.usermodel.Font,
                     value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setBold(Bool); 
+        import org.apache.poi.ss.usermodel.Font.setBold(Bool): Unit & Impure; 
         try {
             let ans = setBold(font, value);
             Ok(ans)
@@ -69,7 +69,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setItalic(font: ##org.apache.poi.ss.usermodel.Font,
                       value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setItalic(Bool); 
+        import org.apache.poi.ss.usermodel.Font.setItalic(Bool): Unit & Impure; 
         try {
             let ans = setItalic(font, value);
             Ok(ans)
@@ -79,7 +79,7 @@ namespace SheetIO/Internal/Font {
 
     
     pub def getItalic(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getItalic(); 
+        import org.apache.poi.ss.usermodel.Font.getItalic(): Bool & Impure; 
         try {
             let ans = getItalic(font);
             Ok(ans)
@@ -89,7 +89,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setStrikeout(font: ##org.apache.poi.ss.usermodel.Font,
                          value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool); 
+        import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool): Unit & Impure; 
         try {
             let ans = setStrikeout(font, value);
             Ok(ans)
@@ -98,7 +98,7 @@ namespace SheetIO/Internal/Font {
         }
     
     pub def getStrikeout(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getStrikeout(); 
+        import org.apache.poi.ss.usermodel.Font.getStrikeout(): Bool & Impure; 
         try {
             let ans = getStrikeout(font);
             Ok(ans)
@@ -108,7 +108,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setColor(font: ##org.apache.poi.ss.usermodel.Font,
                      value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setColor(Int16); 
+        import org.apache.poi.ss.usermodel.Font.setColor(Int16): Unit & Impure; 
         try {
             let ans = setColor(font, value);
             Ok(ans)
@@ -118,7 +118,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setTypeOffset(font: ##org.apache.poi.ss.usermodel.Font,
                           value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16); 
+        import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16): Unit & Impure; 
         try {
             let ans = setTypeOffset(font, value);
             Ok(ans)
@@ -128,7 +128,7 @@ namespace SheetIO/Internal/Font {
 
     pub def setUnderline(font: ##org.apache.poi.ss.usermodel.Font,
                          value: Int8): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setUnderline(Int8); 
+        import org.apache.poi.ss.usermodel.Font.setUnderline(Int8): Unit & Impure; 
         try {
             let ans = setUnderline(font, value);
             Ok(ans)

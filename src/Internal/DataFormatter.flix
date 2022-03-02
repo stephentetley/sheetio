@@ -18,14 +18,14 @@ namespace SheetIO/Internal/DataFormatter {
 
 
     pub def new(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure = 
-        import new org.apache.poi.ss.usermodel.DataFormatter() as newDataFormatter;
+        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
         newDataFormatter()
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
     pub def formatCellValue(formatter: ##org.apache.poi.ss.usermodel.DataFormatter,
                             cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell); 
+        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & Impure; 
         try {
             let ans = formatCellValue(formatter, cell);
             Ok(ans)

@@ -18,7 +18,7 @@ namespace SheetIO/Internal/Cell {
 
 
     pub def getCellType(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellType, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getCellType(); 
+        import org.apache.poi.ss.usermodel.Cell.getCellType(): ##org.apache.poi.ss.usermodel.CellType & Impure; 
         try {
             let ans = getCellType(cell);
             Ok(ans)
@@ -28,7 +28,7 @@ namespace SheetIO/Internal/Cell {
 
     pub def setCellType(cell: ##org.apache.poi.ss.usermodel.Cell, 
                         typ: ##org.apache.poi.ss.usermodel.CellType): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellType(##org.apache.poi.ss.usermodel.CellType); 
+        import org.apache.poi.ss.usermodel.Cell.setCellType(##org.apache.poi.ss.usermodel.CellType): Unit & Impure; 
         try {
             let ans = setCellType(cell, typ);
             Ok(ans)
@@ -38,7 +38,7 @@ namespace SheetIO/Internal/Cell {
 
      
     pub def getBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(); 
+        import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(): Bool & Impure; 
         try {
             let ans = getBooleanCellValue(cell);
             Ok(ans)
@@ -48,7 +48,7 @@ namespace SheetIO/Internal/Cell {
 
 
     pub def getStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getStringCellValue(); 
+        import org.apache.poi.ss.usermodel.Cell.getStringCellValue(): String & Impure; 
         try {
             let ans = getStringCellValue(cell);
             if (not Object.isNull(ans)) Ok(ans) else Ok("")
@@ -57,7 +57,7 @@ namespace SheetIO/Internal/Cell {
         }
 
     pub def getNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Float64, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(); 
+        import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 & Impure; 
         try {
             let ans = getNumericCellValue(cell);
             Ok(ans)
@@ -67,7 +67,7 @@ namespace SheetIO/Internal/Cell {
 
 
     pub def getLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##java.time.LocalDateTime, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(); 
+        import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime & Impure; 
         try {
             let ans = getLocalDateTimeCellValue(cell);
             Ok(ans)
@@ -77,7 +77,7 @@ namespace SheetIO/Internal/Cell {
 
 
     pub def setBooleanCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool); 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool): Unit & Impure; 
         try {
             let ans = setCellValue(cell, value);
             Ok(ans)
@@ -86,7 +86,7 @@ namespace SheetIO/Internal/Cell {
         }
 
     pub def setNumericCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, value: Float64): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64); 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64): Unit & Impure; 
         try {
             let ans = setCellValue(cell, value);
             Ok(ans)
@@ -96,7 +96,7 @@ namespace SheetIO/Internal/Cell {
 
     pub def setStringCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
                                value: String): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(String); 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(String): Unit & Impure;
         try {
             let ans = setCellValue(cell, value);
             Ok(ans)
@@ -107,7 +107,7 @@ namespace SheetIO/Internal/Cell {
 
     pub def setLocalDateTimeCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
                                       value: ##java.time.LocalDateTime): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime); 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime): Unit & Impure;
         try {
             let ans = setCellValue(cell, value);
             Ok(ans)
@@ -117,7 +117,7 @@ namespace SheetIO/Internal/Cell {
 
     pub def setLocalDateCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, 
                                   value: ##java.time.LocalDate): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate); 
+        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate): Unit & Impure;
         try {
             let ans = setCellValue(cell, value);
             Ok(ans)
@@ -128,7 +128,7 @@ namespace SheetIO/Internal/Cell {
 
     pub def setCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell, 
                          style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle); 
+        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle): Unit & Impure; 
         try {
             let ans = setCellStyle(cell, style);
             Ok(ans)
@@ -137,7 +137,7 @@ namespace SheetIO/Internal/Cell {
         }
 
    pub def getCellStyle(cell: ##org.apache.poi.ss.usermodel.Cell): Result[##org.apache.poi.ss.usermodel.CellStyle, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Cell.getCellStyle(); 
+        import org.apache.poi.ss.usermodel.Cell.getCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle & Impure; 
         try {
             let ans = getCellStyle(cell);
             Ok(ans)

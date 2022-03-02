@@ -154,7 +154,7 @@ namespace SheetIO/RowEvaluator {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): RowEvaluator[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
@@ -174,8 +174,8 @@ namespace SheetIO/RowEvaluator {
         RowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
 
     def decodeColumn(s: String): Result[Int32, String] & Impure = 
-        import new org.apache.poi.ss.util.CellAddress(String) as newCellAddress; 
-        import org.apache.poi.ss.util.CellAddress.getColumn(); 
+        import new org.apache.poi.ss.util.CellAddress(String): ##org.apache.poi.ss.util.CellAddress & Impure as newCellAddress; 
+        import org.apache.poi.ss.util.CellAddress.getColumn(): Int32 & Impure; 
         try {
             let addr = newCellAddress(s + "1");
             Ok(getColumn(addr))

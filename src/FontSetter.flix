@@ -119,7 +119,7 @@ namespace SheetIO/FontSetter {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): FontSetter[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
 

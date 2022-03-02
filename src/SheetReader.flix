@@ -266,7 +266,7 @@ namespace SheetIO/SheetReader {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetReader[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
 
@@ -517,9 +517,9 @@ namespace SheetIO/SheetReader {
     /// than trying to use `getLastRowNum` to find the end.
     ///
     def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
-        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet) as newRowCursor;
-        import flix.runtime.spt.sheetio.POIRowIterator.hasNext() as ffiHasNext;
-        import flix.runtime.spt.sheetio.POIRowIterator.next() as ffiNext;
+        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flix.runtime.spt.sheetio.POIRowIterator & Impure as newRowCursor;
+        import flix.runtime.spt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
+        import flix.runtime.spt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
         try {
             let Sheet(x1)       = x;
             let iter = newRowCursor(x1);

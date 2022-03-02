@@ -123,7 +123,7 @@ namespace SheetIO/CellStyleSetter {
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): CellStyleSetter[a] = match x { 
         case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nel.toList(es)))
+        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
 

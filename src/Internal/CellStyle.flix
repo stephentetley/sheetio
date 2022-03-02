@@ -18,7 +18,7 @@ namespace SheetIO/Internal/CellStyle {
 
     pub def setFont(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                     font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font); 
+        import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit & Impure; 
         try {
             let ans = setFont(style, font);
             Ok(ans)
@@ -27,7 +27,7 @@ namespace SheetIO/Internal/CellStyle {
         }
 
     pub def getFontIndexAsInt(style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.getFontIndexAsInt(); 
+        import org.apache.poi.ss.usermodel.CellStyle.getFontIndexAsInt(): Int32 & Impure; 
         try {
             let ans = getFontIndexAsInt(style);
             Ok(ans)
@@ -37,7 +37,7 @@ namespace SheetIO/Internal/CellStyle {
 
     pub def setWrapText(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                         value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool); 
+        import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool): Unit & Impure; 
         try {
             let ans = setWrapText(style, value);
             Ok(ans)
@@ -47,7 +47,7 @@ namespace SheetIO/Internal/CellStyle {
     
     pub def setIndention(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                          value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16); 
+        import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16): Unit & Impure; 
         try {
             let ans = setIndention(style, value);
             Ok(ans)
@@ -58,7 +58,7 @@ namespace SheetIO/Internal/CellStyle {
     
     pub def setFillForegroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                                    value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16); 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16): Unit & Impure; 
         try {
             let ans = setFillForegroundColor(style, value);
             Ok(ans)
@@ -69,7 +69,7 @@ namespace SheetIO/Internal/CellStyle {
     /// Note must set foreground color first
     pub def setFillBackgroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                                    value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16); 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16): Unit & Impure; 
         try {
             let ans = setFillBackgroundColor(style, value);
             Ok(ans)
@@ -80,7 +80,7 @@ namespace SheetIO/Internal/CellStyle {
 
     pub def setShrinkToFit(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                            value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool); 
+        import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool): Unit & Impure; 
         try {
             let ans = setShrinkToFit(style, value);
             Ok(ans)
@@ -90,7 +90,7 @@ namespace SheetIO/Internal/CellStyle {
 
     pub def setDataFormat(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                           value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16); 
+        import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16): Unit & Impure; 
         try {
             let ans = setDataFormat(style, value);
             Ok(ans)
@@ -100,7 +100,7 @@ namespace SheetIO/Internal/CellStyle {
 
     pub def cloneStyleFrom(style: ##org.apache.poi.ss.usermodel.CellStyle, 
                            styleToClone: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle); 
+        import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle): Unit & Impure; 
         try {
             let ans = cloneStyleFrom(style, styleToClone);
             Ok(ans)

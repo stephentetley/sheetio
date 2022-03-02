@@ -21,7 +21,7 @@ namespace SheetIO {
     ///
     /// CellType
     ///
-    pub enum CellType {
+    pub enum CellType with Eq, Order, ToString{
         case TyNone,
         case TyBlank,
         case TyBoolean,
@@ -31,18 +31,6 @@ namespace SheetIO {
         case TyString
     }
 
-
-    instance ToString[CellType] {
-        pub def toString(x: CellType): String = match x {
-            case TyNone => "TyNone"
-            case TyBlank => "TyBlank"
-            case TyBoolean => "TyBoolean"
-            case TyError => "TyError"
-            case TyFormula => "TyFormula"
-            case TyNumeric => "TyNumeric"
-            case TyString => "TyString"
-        }
-    }
 
     instance FromString[CellType] {
         pub def fromString(x: String): Option[CellType] = match x {
@@ -54,19 +42,6 @@ namespace SheetIO {
             case "TyNumeric" => Some(TyNumeric)
             case "TyString" => Some(TyString)
             case _ => None
-        }
-    }
-
-    instance Eq[CellType] {
-        pub def eq(x: CellType, y: CellType): Bool = match (x, y) {
-            case (TyNone, TyNone) => true
-            case (TyBlank, TyBlank) => true
-            case (TyBoolean, TyBoolean) => true
-            case (TyError, TyError) => true
-            case (TyFormula, TyFormula) => true
-            case (TyNumeric, TyNumeric) => true
-            case (TyString, TyString) => true
-            case (_, _) => false
         }
     }
 
@@ -83,13 +58,13 @@ namespace SheetIO/CellType {
 
 
     pub def toNative(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE()          as get_NONE;
-        import static get org.apache.poi.ss.usermodel.CellType.BLANK       as getBLANK;
-        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN     as getBOOLEAN;
-        import static get org.apache.poi.ss.usermodel.CellType.ERROR       as getERROR;
-        import static get org.apache.poi.ss.usermodel.CellType.FORMULA     as getFORMULA;
-        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC     as getNUMERIC;
-        import static get org.apache.poi.ss.usermodel.CellType.STRING      as getSTRING;
+        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
+        import static get org.apache.poi.ss.usermodel.CellType.BLANK: ##org.apache.poi.ss.usermodel.CellType & Pure as getBLANK;
+        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN: ##org.apache.poi.ss.usermodel.CellType & Pure as getBOOLEAN;
+        import static get org.apache.poi.ss.usermodel.CellType.ERROR: ##org.apache.poi.ss.usermodel.CellType & Pure as getERROR;
+        import static get org.apache.poi.ss.usermodel.CellType.FORMULA: ##org.apache.poi.ss.usermodel.CellType & Pure as getFORMULA;
+        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC: ##org.apache.poi.ss.usermodel.CellType & Pure as getNUMERIC;
+        import static get org.apache.poi.ss.usermodel.CellType.STRING: ##org.apache.poi.ss.usermodel.CellType & Pure as getSTRING;
         match x {
             case TyNone     => get_NONE()
             case TyBlank    => getBLANK()
@@ -98,23 +73,23 @@ namespace SheetIO/CellType {
             case TyFormula  => getFORMULA()
             case TyNumeric  => getNUMERIC()
             case TyString   => getSTRING() 
-        } as & Pure
+        }
 
 
     def primEquals(x: ##org.apache.poi.ss.usermodel.CellType, y: ##org.apache.poi.ss.usermodel.CellType): Bool =
-        import java.lang.Object.equals(##java.lang.Object);
+        import java.lang.Object.equals(##java.lang.Object): Bool & Pure;
         let x1 = x as ##java.lang.Object;
         let y1 = y as ##java.lang.Object;
-        equals(x1, y1) as & Pure
+        equals(x1, y1)
 
     pub def fromNative(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
-        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE()      as get_NONE;
-        import static get org.apache.poi.ss.usermodel.CellType.BLANK       as getBLANK;
-        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN     as getBOOLEAN;
-        import static get org.apache.poi.ss.usermodel.CellType.ERROR       as getERROR;
-        import static get org.apache.poi.ss.usermodel.CellType.FORMULA     as getFORMULA;
-        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC     as getNUMERIC;
-        import static get org.apache.poi.ss.usermodel.CellType.STRING      as getSTRING;
+        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
+        import static get org.apache.poi.ss.usermodel.CellType.BLANK: ##org.apache.poi.ss.usermodel.CellType & Pure as getBLANK;
+        import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN: ##org.apache.poi.ss.usermodel.CellType & Pure as getBOOLEAN;
+        import static get org.apache.poi.ss.usermodel.CellType.ERROR: ##org.apache.poi.ss.usermodel.CellType & Pure as getERROR;
+        import static get org.apache.poi.ss.usermodel.CellType.FORMULA: ##org.apache.poi.ss.usermodel.CellType & Pure as getFORMULA;
+        import static get org.apache.poi.ss.usermodel.CellType.NUMERIC: ##org.apache.poi.ss.usermodel.CellType & Pure as getNUMERIC;
+        import static get org.apache.poi.ss.usermodel.CellType.STRING: ##org.apache.poi.ss.usermodel.CellType & Pure as getSTRING;
         match x {
             case x1 if primEquals(x1, get_NONE())       => TyNone
             case x1 if primEquals(x1, getBLANK())       => TyBlank
@@ -123,7 +98,7 @@ namespace SheetIO/CellType {
             case x1 if primEquals(x1, getFORMULA())     => TyFormula
             case x1 if primEquals(x1, getNUMERIC())     => TyNumeric
             case x1 if primEquals(x1, getSTRING())      => TyString
-        } as & Pure
+        }
 
 
     ///
@@ -160,9 +135,9 @@ namespace SheetIO/CellType {
     pub def compare(x: CellType, y: CellType): Int32 = Int32.compare(toInt32(x), toInt32(y))
 
     pub def hashCode(x: CellType): Int32 =
-        import java.lang.Enum.hashCode();
+        import java.lang.Enum.hashCode(): Int32 & Pure;
         let x1 = toNative(x) as ##java.lang.Enum;
-        hashCode(x1) as & Pure
+        hashCode(x1)
 
 
     pub def format (x: CellType): String = match x {
