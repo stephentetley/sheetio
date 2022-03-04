@@ -29,10 +29,10 @@ namespace SheetIO/StreamingReader {
     type alias POIRow = ##org.apache.poi.ss.usermodel.Row
 
 
-    pub opaque type StreamingReaderHandle[a] = (##flix.runtime.spt.sheetio.StreamingRowIterator, Iterator[Result[a, String]])
+    pub opaque type StreamingReaderHandle[a] = (##flixspt.sheetio.StreamingRowIterator, Iterator[Result[a, String]])
 
     pub def close(handle: StreamingReaderHandle[a]): Result[Unit, String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowIterator.close();
+        import flixspt.sheetio.StreamingRowIterator.close();
         let StreamingReaderHandle((x1, _)) = handle;
         try {
             close(x1);
@@ -50,9 +50,9 @@ namespace SheetIO/StreamingReader {
     /// Returns a new StreamingReader Handle (iterator and a "close" handle).
     ///
     pub def newStreamingReaderHandle(src: System.FilePath, sheetName: String): Result[StreamingReaderHandle[POIRow], String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowIterator:createIteratorWithSheetName(##java.nio.file.Path, String);
-        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext();
-        import flix.runtime.spt.sheetio.StreamingRowIterator.next();
+        import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetName(##java.nio.file.Path, String);
+        import flixspt.sheetio.StreamingRowIterator.hasNext();
+        import flixspt.sheetio.StreamingRowIterator.next();
         try {
             let FilePath(src1) = src;
             let primIter = createIteratorWithSheetName(src1, sheetName);
@@ -76,9 +76,9 @@ namespace SheetIO/StreamingReader {
     /// Returns a new StreamingReader Handle for sheet at `ix`.
     ///
     pub def newStreamingReaderHandleWithIndex(src: System.FilePath, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] & Impure =
-        import flix.runtime.spt.sheetio.StreamingRowIterator:createIteratorWithSheetNumber(##java.nio.file.Path, Int32);
-        import flix.runtime.spt.sheetio.StreamingRowIterator.hasNext();
-        import flix.runtime.spt.sheetio.StreamingRowIterator.next();
+        import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetNumber(##java.nio.file.Path, Int32);
+        import flixspt.sheetio.StreamingRowIterator.hasNext();
+        import flixspt.sheetio.StreamingRowIterator.next();
         try {
             let FilePath(src1) = src;
             let primIter = createIteratorWithSheetNumber(src1, sheetIndex);

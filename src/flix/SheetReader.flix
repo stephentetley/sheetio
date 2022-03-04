@@ -517,9 +517,9 @@ namespace SheetIO/SheetReader {
     /// than trying to use `getLastRowNum` to find the end.
     ///
     def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
-        import new flix.runtime.spt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flix.runtime.spt.sheetio.POIRowIterator & Impure as newRowCursor;
-        import flix.runtime.spt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
-        import flix.runtime.spt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
+        import new flixspt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flixspt.sheetio.POIRowIterator & Impure as newRowCursor;
+        import flixspt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
+        import flixspt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
         try {
             let Sheet(x1)       = x;
             let iter = newRowCursor(x1);

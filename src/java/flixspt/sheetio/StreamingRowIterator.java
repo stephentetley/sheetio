@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package flix.runtime.spt.sheetio;
+package flixspt.sheetio;
 
 import java.io.IOException;
 import java.nio.file.Path;

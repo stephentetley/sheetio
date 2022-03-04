@@ -20,3 +20,8 @@ Java Dependencies - sheetio needs these jars (mostly from org.apache):
 * SparseBitSet-1.2.jar
 * xmlbeans-4.0.0.jar
 * excel-streaming-reader-3.1.1.jar    [com.github.pjfanning]
+
+* sheetiojava-1.1.jar
+
+`sheetiojava-1.1.jar` is a jar of the Java sources in `src/java`.
+

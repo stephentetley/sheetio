@@ -58,7 +58,7 @@ namespace SheetIO/CellType {
 
 
     pub def toNative(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
+        import static flixspt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
         import static get org.apache.poi.ss.usermodel.CellType.BLANK: ##org.apache.poi.ss.usermodel.CellType & Pure as getBLANK;
         import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN: ##org.apache.poi.ss.usermodel.CellType & Pure as getBOOLEAN;
         import static get org.apache.poi.ss.usermodel.CellType.ERROR: ##org.apache.poi.ss.usermodel.CellType & Pure as getERROR;
@@ -83,7 +83,7 @@ namespace SheetIO/CellType {
         equals(x1, y1)
 
     pub def fromNative(x: ##org.apache.poi.ss.usermodel.CellType): CellType = 
-        import static flix.runtime.spt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
+        import static flixspt.sheetio.POIWrapper.get_NONE(): ##org.apache.poi.ss.usermodel.CellType & Pure as get_NONE;
         import static get org.apache.poi.ss.usermodel.CellType.BLANK: ##org.apache.poi.ss.usermodel.CellType & Pure as getBLANK;
         import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN: ##org.apache.poi.ss.usermodel.CellType & Pure as getBOOLEAN;
         import static get org.apache.poi.ss.usermodel.CellType.ERROR: ##org.apache.poi.ss.usermodel.CellType & Pure as getERROR;
