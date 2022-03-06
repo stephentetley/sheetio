@@ -1,6 +1,10 @@
+
+namespace Test01 {
+
 use SheetIO.SheetReader;
 
-def main(): Unit & Impure = 
+@test
+def testAll(): Unit & Impure = 
     use SheetIO/SheetReader.{runXlsx};
     match runXlsx(test01(), System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
         case Err(_) => println("err")
@@ -8,16 +12,16 @@ def main(): Unit & Impure =
     }
 
 def sheeetStats(sheetName: String): SheetReader[Unit] = 
-    use SheetIO/SheetReader.{flatMap, return, getSheet, sheetFirstRowNum, sheetLastRowNum, liftAction};
-    let* s1     = getSheet(sheetName);
-    let* i1     = sheetFirstRowNum(s1);
-    let* i2     = sheetLastRowNum(s1);
+    use SheetIO/SheetReader.{flatMap, getSheetNamed, getFirstRowNum, getLastRowNum, liftAction};
+    let* s1     = getSheetNamed(sheetName);
+    let* i1     = getFirstRowNum(s1);
+    let* i2     = getLastRowNum(s1);
     liftAction(_ -> println("${sheetName}: rows=${Int32.toString(i1)}..${Int32.toString(i2)}"))
 
 
 def test01(): SheetReader[Unit] = 
-    use SheetIO/SheetReader.{flatMap, return, getSheetNames, mapX, liftAction};
+    use SheetIO/SheetReader.{flatMap, getSheetNames, mapX};
     let* xs      = getSheetNames();
     mapX(sheeetStats, xs)
 
-
+}

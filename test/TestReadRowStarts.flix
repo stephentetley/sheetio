@@ -1,8 +1,12 @@
+
+namespace TestReadRowStarts {
+
 use SheetIO.SheetReader;
 use SheetIO.NamedRowEvaluator;
 use SheetIO.RowEvaluator;
 
-def main(_args: Array[String]): Int32 & Impure = 
+@test
+def testAll(_args: Array[String]): Int32 & Impure = 
     runtest("test01...", test01());
     runtest("test02...", test02());
     runtest("test03...", test03());
@@ -26,7 +30,7 @@ def test01(): SheetReader[List[(String, Int32)]] =
 def test02(): SheetReader[List[(String, Int32)]] = 
     use SheetIO/SheetReader.{flatMap, point, getSheetNamed, namedRowsFrom};      
     let* s1     = getSheetNamed("From_row_3");
-    let* xs     = namedRowsFrom(2, 3, evalNamedRow(), s1);
+    let* xs     = namedRowsFrom({headerIndex = 2, start = 3}, evalNamedRow(), s1);
     point(xs)
 
 def evalNamedRow(): NamedRowEvaluator[(String, Int32)] = 
@@ -49,3 +53,4 @@ def evalIndexedRow(): RowEvaluator[(String, Int32)] =
     use SheetIO/RowEvaluator.{getContentAt, getInt32At};
     Applicative.product(getContentAt(0), getInt32At(1))
 
+}

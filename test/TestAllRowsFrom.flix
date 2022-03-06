@@ -1,7 +1,11 @@
+
+namespace TestAllRowsFrom {
+
 use SheetIO.SheetReader;
 use SheetIO.RowEvaluator;
 
-def main(_args: Array[String]): Int32 & Impure = 
+@test
+def testAll(): Int32 & Impure = 
     runtest("test 0...", test01(0));
     runtest("test 1...", test01(1));
     runtest("test 2...", test01(2));
@@ -17,11 +21,13 @@ def runtest(description: String, action: SheetReader[List[String]]): Unit & Impu
     }
 
 def test01(start: Int32): SheetReader[List[String]] = 
-    use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allRowsFrom};      
+    use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRowsFrom};      
     let* s1     = getSheetNamed("one_to_ten");
-    let* xs     = allRowsFrom(s1, start, evalRow());
-    return(xs)
+    let* xs     = allRowsFrom(start, evalRow(), s1);
+    point(xs)
 
 def evalRow(): RowEvaluator[String] = 
     SheetIO/RowEvaluator.getContentAt(0)
 
+
+}

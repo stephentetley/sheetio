@@ -1,7 +1,11 @@
+
+namespace TestReadXls {
+
 use SheetIO.SheetReader;
 use SheetIO.NamedRowEvaluator;
 
-def main(_args: Array[String]): Int32 & Impure = 
+@test
+def testAll(): Int32 & Impure = 
     use SheetIO/SheetReader.{runHssf};
     match runHssf(test01(), System/FilePath.new("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
         case Err(msg) => println("Error: ${msg}")
@@ -10,15 +14,13 @@ def main(_args: Array[String]): Int32 & Impure =
     0
 
 pub def test01(): SheetReader[List[(String, String)]] = 
-    use SheetIO/SheetReader.{flatMap, return, getSheetNamed, allNamedRows};      
+    use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allNamedRows};      
     let* s1     = getSheetNamed("Sheet1");
-    let* xs     = allNamedRows(s1, evalRow());
-    return(xs)
+    let* xs     = allNamedRows(evalRow(), s1);
+    point(xs)
 
 def evalRow(): NamedRowEvaluator[(String, String)] = 
-    use SheetIO/NamedRowEvaluator.{tuple2, getStringNamed};
-    tuple2( getStringNamed("Apache")
-          , getStringNamed("Format")
-          )
+    use SheetIO/NamedRowEvaluator.{getStringNamed};
+    Applicative.product(getStringNamed("Apache"), getStringNamed("Format"))
 
-
+}
