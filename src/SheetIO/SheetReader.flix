@@ -601,7 +601,7 @@ namespace SheetIO/SheetReader {
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
         point(xs)
 
     pub def nameRowEval(indices: Map[String, Int32], 
@@ -609,7 +609,7 @@ namespace SheetIO/SheetReader {
                         eval: NamedRowEvaluator[a], x: Row): SheetReader[a] =
         let NamedRowEvaluator(f) = eval;
         let Row(x1) = x;
-        liftActionResult(_ -> f(indices, fmt, x1))
+        liftActionResult(_ -> f(indices, fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
 
 
 
@@ -631,7 +631,7 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.toList!);
+        let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
         point(xs)
 
 
@@ -660,7 +660,7 @@ namespace SheetIO/SheetReader {
         let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt), strm) |> X/Cursor.fold!(combine, ac));
+        let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.fold!(combine, ac));
         point(ans)
 
     pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a], sheet: Sheet): SheetReader[b] =

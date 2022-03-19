@@ -19,9 +19,11 @@
 
 namespace SheetIO {
 
+    use SheetIO.EvalError;
 
+    /// Includes Map[columName: String => index: Int32]
     pub opaque type NamedRowEvaluator[a] = 
-        (Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, String] & Impure
+        (Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure
 
     instance Functor[NamedRowEvaluator] {
         pub def map(f: a -> b & ef, o: NamedRowEvaluator[a]): NamedRowEvaluator[b] & ef = 
@@ -50,6 +52,8 @@ namespace SheetIO/NamedRowEvaluator {
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
+    use SheetIO.EvalError;
+
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
     use SheetIO.DataFormatter;
@@ -75,18 +79,18 @@ namespace SheetIO/NamedRowEvaluator {
     def apply1(x: NamedRowEvaluator[a], 
                ixs: Map[String, Int32], 
                fmt: ##org.apache.poi.ss.usermodel.DataFormatter,
-               row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
+               row: ##org.apache.poi.ss.usermodel.Row): Result[a, EvalError] & Impure =
         let NamedRowEvaluator(f) = x;
         f(ixs, fmt, row)
 
     pub def throwError(msg: String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _, _) -> Err(msg) as & Impure)
+        NamedRowEvaluator((_, _, row) -> Err(SheetIO/EvalError.create(row, msg)) as & Impure)
 
     /// TODO - row num is useful but we need a less ad-hoc API...
     pub def throwErrorWithRowNum(msgF: Int32 -> String): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _, row) -> 
             let msg = msgF(SheetIO/Internal/Row.getRowNum(row));
-            Err(msg)
+            Err(SheetIO/EvalError.create(row, msg))
         )
 
 
@@ -94,27 +98,15 @@ namespace SheetIO/NamedRowEvaluator {
         NamedRowEvaluator((ixs, fmt, row) ->
             match apply1(ma, ixs, fmt, row) {
                 case Ok(a) => Ok(a)
-                case Err(_) => Err(msg)
+                case Err(_) => Err(SheetIO/EvalError.create(row, msg))
             }
         )
 
    pub def mapError(f: String -> String, ma: NamedRowEvaluator[a]): NamedRowEvaluator[a] =
         NamedRowEvaluator((ixs, fmt, row) ->
             match apply1(ma, ixs, fmt, row) {
-                case Ok(a) => Ok(a)
-                case Err(msg) => Err(f(msg))
-            }
-        )
-
-    /// TODO - row num is useful but we need a less ad-hoc API...
-    pub def swapErrorWithRowNum(ma: NamedRowEvaluator[a], msgF: Int32 -> String): NamedRowEvaluator[a] =
-        NamedRowEvaluator((ixs, fmt, row) ->
-            match apply1(ma, ixs, fmt, row) {
-                case Ok(a) => Ok(a)
-                case Err(_) => { 
-                    let msg = msgF(SheetIO/Internal/Row.getRowNum(row));
-                    Err(msg)
-                }
+                case Ok(a)    => Ok(a)
+                case Err(err) => Err({message = f(err.message) | err})
             }
         )
 
@@ -190,8 +182,8 @@ namespace SheetIO/NamedRowEvaluator {
                    row: ##org.apache.poi.ss.usermodel.Row, 
                    mf: a -> NamedRowEvaluator[b], 
                    xs: List[a], 
-                   fk: String -> Result[List[b], String], 
-                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
+                   fk: EvalError -> Result[List[b], EvalError], 
+                   sk: List[b] -> Result[List[b], EvalError]): Result[List[b], EvalError] & Impure =
         match xs {
             case Nil => sk(Nil)
             case x :: rs => {
@@ -205,14 +197,14 @@ namespace SheetIO/NamedRowEvaluator {
         
         
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _, row) -> fn(row))
+        NamedRowEvaluator((_, _, row) -> fn(row)  |> Result.mapErr(SheetIO/EvalError.create(row)))
 
 
     pub def liftAction(fn: Unit -> a & Impure): NamedRowEvaluator[a] =
         NamedRowEvaluator((_, _, _) -> let x = fn(); Ok(x))
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _, _) -> fn())
+        NamedRowEvaluator((_, _, row) -> fn() |> Result.mapErr(SheetIO/EvalError.create(row)))
 
     pub def liftOption(x: Option[a], errMsg: String): NamedRowEvaluator[a] = match x { 
         case Some(x1) => point(x1)
@@ -233,9 +225,9 @@ namespace SheetIO/NamedRowEvaluator {
     // // so FactIO's API indexes from 0.
     
     def getIndex(label: String): NamedRowEvaluator[Int32] =
-        NamedRowEvaluator((ixs, _, _) -> match Map.get(label, ixs) {
+        NamedRowEvaluator((ixs, _, row) -> match Map.get(label, ixs) {
             case Some(ix) => Ok(ix) as & Impure
-            case None => Err("getIndex - '${label}'") as & Impure
+            case None => Err(SheetIO/EvalError.create(row, "getIndex - '${label}'")) as & Impure
         })
 
     def getDataFormatter(): NamedRowEvaluator[##org.apache.poi.ss.usermodel.DataFormatter] =
@@ -290,7 +282,7 @@ namespace SheetIO/NamedRowEvaluator {
         let* typ = getCellTypeNamed(label);
         match typ { 
             case TyBlank => point()
-            case _ => throwError("getBlankNamed($label}) - not blank")
+            case _       => throwError("getBlankNamed($label}) - not blank")
         }
     
     pub def getStringNamed(label: String): NamedRowEvaluator[String] =
@@ -435,7 +427,7 @@ namespace SheetIO/NamedRowEvaluator {
         getIfNotEmpty(label, getFloat32Named)
     
     pub def getOptionFloat64Named(label: String): NamedRowEvaluator[Option[Float64]] = 
-        getIfNotEmpty(label, getFloat64Named) `swapErrorWithRowNum` (i -> "getOptionFloat64Named('${label}') - row: ${i}")
+        getIfNotEmpty(label, getFloat64Named) `swapError` ("getOptionFloat64Named('${label}')")
 
     pub def getOptionLocalDateTimeNamed(label: String): NamedRowEvaluator[Option[Time.LocalDateTime]] = 
         getIfNotEmpty(label, getLocalDateTimeNamed)
