@@ -197,7 +197,7 @@ namespace SheetIO/NamedRowEvaluator {
         
         
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): NamedRowEvaluator[a] =
-        NamedRowEvaluator((_, _, row) -> fn(row)  |> Result.mapErr(SheetIO/EvalError.create(row)))
+        NamedRowEvaluator((_, _, row) -> fn(row) |> Result.mapErr(SheetIO/EvalError.create(row)))
 
 
     pub def liftAction(fn: Unit -> a & Impure): NamedRowEvaluator[a] =

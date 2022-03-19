@@ -538,7 +538,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
         point(xs)
 
 
@@ -552,7 +552,7 @@ namespace SheetIO/SheetReader {
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
         point(xs)
 
 
@@ -568,7 +568,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.fold!(combine, ac));
+        let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.fold!(combine, ac));
         point(ans)
 
 
@@ -581,7 +581,7 @@ namespace SheetIO/SheetReader {
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt), strm) |> X/Cursor.toList!);
+        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
         point(xs)
 
     pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
@@ -589,7 +589,7 @@ namespace SheetIO/SheetReader {
                     x: Row): SheetReader[a] =
         let RowEvaluator(f) = eval;
         let Row(x1) = x;
-        liftActionResult(_ -> f(fmt, x1))
+        liftActionResult(_ -> f(fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
 
 
 

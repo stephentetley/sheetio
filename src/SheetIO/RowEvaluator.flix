@@ -17,7 +17,10 @@
 
 namespace SheetIO {
 
-    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, String] & Impure
+
+    use SheetIO.EvalError;
+    
+    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure
 
 
     instance Functor[RowEvaluator] {
@@ -47,6 +50,7 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
 
+    use SheetIO.EvalError;
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
     use SheetIO.DataFormatter;
@@ -57,18 +61,18 @@ namespace SheetIO/RowEvaluator {
 
     def apply1(x: RowEvaluator[a], 
                 fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-                row: ##org.apache.poi.ss.usermodel.Row): Result[a, String] & Impure =
+                row: ##org.apache.poi.ss.usermodel.Row): Result[a, EvalError] & Impure =
         let RowEvaluator(f) = x;
         f(fmt, row)
 
     pub def throwError(msg: String): RowEvaluator[a] =
-        RowEvaluator((_, _) -> Err(msg) as & Impure)
+        RowEvaluator((_, row) -> Err(SheetIO/EvalError.create(row, msg)) as & Impure)
 
     pub def swapError(ma: RowEvaluator[a], msg: String): RowEvaluator[a] =
         RowEvaluator((fmt, row) ->
             match apply1(ma, fmt, row) {
                 case Ok(a) => Ok(a)
-                case Err(_) => Err(msg)
+                case Err(_) => Err(SheetIO/EvalError.create(row, msg))
             }
         )
 
@@ -131,14 +135,14 @@ namespace SheetIO/RowEvaluator {
 
 
     def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & Impure): RowEvaluator[a] =
-        RowEvaluator((_, row) -> fn(row))
+        RowEvaluator((_, row) -> fn(row) |> Result.mapErr(SheetIO/EvalError.create(row)))
 
 
     pub def liftAction(fn: Unit -> a & Impure): RowEvaluator[a] =
         RowEvaluator((_, _) -> let x = fn(); Ok(x))
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): RowEvaluator[a] =
-        RowEvaluator((_, _) -> fn())
+        RowEvaluator((_, row) -> fn() |> Result.mapErr(SheetIO/EvalError.create(row)))
 
 
     pub def liftOption(x: Option[a], errMsg: String): RowEvaluator[a] = match x { 
