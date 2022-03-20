@@ -244,6 +244,12 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getRowNum(): NamedRowEvaluator[Int32] = 
         NamedRowEvaluator((_, _, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
 
+    pub def getSheetName(): NamedRowEvaluator[String] = 
+        NamedRowEvaluator((_, _, row) -> 
+            Result.flatMap(SheetIO/Internal/Sheet.getSheetName, SheetIO/Internal/Row.getSheet(row)) 
+                |> Result.mapErr(SheetIO/EvalError.create(row)))
+
+
     /// Uses the default DataFormatter
     pub def getContentNamed(label: String): NamedRowEvaluator[String] =
         let* ix     = getIndex(label);

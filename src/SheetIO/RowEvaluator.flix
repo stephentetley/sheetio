@@ -177,6 +177,12 @@ namespace SheetIO/RowEvaluator {
     pub def getRowNum(): RowEvaluator[Int32] = 
         RowEvaluator((_, row) -> Ok(SheetIO/Internal/Row.getRowNum(row)))
 
+    pub def getSheetName(): RowEvaluator[String] = 
+        RowEvaluator((_, row) -> 
+            Result.flatMap(SheetIO/Internal/Sheet.getSheetName, SheetIO/Internal/Row.getSheet(row)) 
+                |> Result.mapErr(SheetIO/EvalError.create(row)))
+
+
     def decodeColumn(s: String): Result[Int32, String] & Impure = 
         import new org.apache.poi.ss.util.CellAddress(String): ##org.apache.poi.ss.util.CellAddress & Impure as newCellAddress; 
         import org.apache.poi.ss.util.CellAddress.getColumn(): Int32 & Impure; 
