@@ -6,7 +6,7 @@ use SheetIO.SheetReader;
 @test
 def testAll(): Unit & Impure = 
     use SheetIO/SheetReader.{runXlsx};
-    match runXlsx(test01(), System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
+    match runXlsx(test01(), FlixSandbox/System/FilePath.new("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
         case Err(_) => println("err")
         case Ok() => println("[done]")
     }

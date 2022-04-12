@@ -40,8 +40,8 @@ namespace SheetIO/DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(x: I18n.Locale): DataFormatter & Impure =
-        use I18n.Locale.{Locale};
+    pub def newWithLocale(x: FlixSandbox/I18n.Locale): DataFormatter & Impure =
+        use FlixSandbox/I18n.Locale.{Locale};
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
         let Locale(x1) = x;
         DataFormatter(newDataFormatter(x1))

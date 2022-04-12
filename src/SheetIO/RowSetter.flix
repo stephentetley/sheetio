@@ -331,19 +331,5 @@ namespace SheetIO/RowSetter {
         }
 
 
-    /// This is an experiment - don't use...
-    /// `startingAt` and `++>` form an idiom for building a RowSetter that writes successive cells
-    /// without the cell index needing to be explicitly stated
-
-    pub def startingAt(i: Int32): RowSetter[Int32] = point(i)
-
-    /// This is an experiment - don't use...
-    /// incrementing `bind`
-    pub def ++>(mi: RowSetter[Int32], mx: Int32 -> RowSetter[b]): RowSetter[Int32] =
-        let* ix = mi;
-        let* _ = mx(ix);
-        point(ix + 1)
-
-
 }
 

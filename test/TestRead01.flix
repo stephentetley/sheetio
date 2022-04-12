@@ -8,11 +8,11 @@ use SheetIO.RowEvaluator;
 @test
 def testAll(): Int32 & Impure = 
     use SheetIO/SheetReader.{runXlsx};
-    match runXlsx(test01(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
+    match runXlsx(test01(), FlixSandbox/System/FilePath.new("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
         case Err(e) => println("Error: ${e}")
         case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test01: ${a}, ${b}")} , xs)
     };
-    match runXlsx(test02(), System/FilePath.new("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
+    match runXlsx(test02(), FlixSandbox/System/FilePath.new("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
         case Err(e) => println("Error: ${e}")
         case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test02: ${a}, ${b}")} , xs)
     };

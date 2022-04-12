@@ -44,7 +44,7 @@ namespace SheetIO/SheetReader {
 
     use ToString.toString;
 
-    use X.Cursor;
+    use FlixSandbox/Deprecated.Cursor;
 
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
@@ -60,11 +60,11 @@ namespace SheetIO/SheetReader {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runXlsx(ma: SheetReader[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runXssf(ma: SheetReader[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = toString(path);
@@ -78,7 +78,7 @@ namespace SheetIO/SheetReader {
         }
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetReader[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: SheetReader[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1 = toString(path);
@@ -525,12 +525,12 @@ namespace SheetIO/SheetReader {
             let iter = newRowCursor(x1);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
-                , next      = X/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , next      = FlixSandbox/Deprecated/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
                 , finalize  = () -> () as & Impure
             };
-            X/Cursor.makeCursor(cursorAlg)
+            FlixSandbox/Deprecated/Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => X/Cursor.failure("newPOIRowStream")
+            case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
         }
 
     /// Use rowiterator...
@@ -538,7 +538,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
+        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
 
 
@@ -551,8 +551,8 @@ namespace SheetIO/SheetReader {
             if (ix >= start) Some(row) else None
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
 
 
@@ -568,7 +568,7 @@ namespace SheetIO/SheetReader {
         let RowEvaluator(f) = eval;
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* ans            = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.fold!(combine, ac));
+        let* ans            = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.fold!(combine, ac));
         point(ans)
 
 
@@ -580,8 +580,8 @@ namespace SheetIO/SheetReader {
             if (ix >= b and ix < e) Some(row) else None
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
 
     pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
@@ -600,8 +600,8 @@ namespace SheetIO/SheetReader {
             if (ix >= b and ix < e) Some(row) else None
         };
         let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
+        let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
 
     pub def nameRowEval(indices: Map[String, Int32], 
@@ -630,8 +630,8 @@ namespace SheetIO/SheetReader {
         let* row0       = getRowAt(sheet, r.headerIndex);
         let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* xs         = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.toList!);
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* xs         = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
 
 
@@ -659,8 +659,8 @@ namespace SheetIO/SheetReader {
         let* row0       = getRowAt(sheet, r.headerIndex);
         let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
         let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
-        let* strm       = liftAction(_ -> getRowCursor(sheet) |> X/Cursor.filterMap(checker));
-        let* ans        = liftActionResult(_ -> X/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> X/Cursor.fold!(combine, ac));
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* ans        = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.fold!(combine, ac));
         point(ans)
 
     pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a], sheet: Sheet): SheetReader[b] =

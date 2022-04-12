@@ -72,13 +72,13 @@ namespace SheetIO/SheetWriter {
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: SheetWriter[a], 
-                    path: System.FilePath): Result[a, String] & Impure = 
+                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
     pub def runXssf(ma: SheetWriter[a], 
-                    path: System.FilePath): Result[a, String] & Impure = 
+                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let outpath     = toString(path);
@@ -89,11 +89,11 @@ namespace SheetIO/SheetWriter {
         Ok(ans)
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runAppendXlsx(ma: SheetWriter[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         runAppendXssf(ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXssf(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runAppendXssf(ma: SheetWriter[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = toString(path);
@@ -109,11 +109,11 @@ namespace SheetIO/SheetWriter {
 
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: SheetWriter[a], 
-                            template: System.FilePath, 
-                            outPath: System.FilePath): Result[a, String] & Impure =
+                            template: FlixSandbox/System.FilePath, 
+                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let* _          = System/Directory.copy(template, outPath);
+        let* _          = FlixSandbox/System/Directory.copy(template, outPath);
         let path1       = toString(outPath);
         let* wb         = openXSSFWorkbook(path1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());        
@@ -123,7 +123,7 @@ namespace SheetIO/SheetWriter {
 
                     
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetWriter[a], path: System.FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: SheetWriter[a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1       = toString(path);
@@ -134,11 +134,11 @@ namespace SheetIO/SheetWriter {
         Ok(ans)
 
     pub def runTemplateHssf(ma: SheetWriter[a], 
-                            template: System.FilePath, 
-                            outPath: System.FilePath): Result[a, String] & Impure =
+                            template: FlixSandbox/System.FilePath, 
+                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
-        let* _          = System/Directory.copy(template, outPath);
+        let* _          = FlixSandbox/System/Directory.copy(template, outPath);
         let outPath1    = toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
         let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
@@ -478,11 +478,15 @@ namespace SheetIO/SheetWriter {
         use SheetIO/Internal/Workbook.{createSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, createSheet(x1, name))) 
 
+    
+    
+    /// Although this is `SheetWriter` some introspection (reading) is needed, 
+    /// e.g. if we are writing to a template file
+
     pub def getSheetNamed(name: String): SheetWriter[Sheet] =
         use SheetIO/Internal/Workbook.{getSheet};
         liftWorkbookPrim(x1 -> Result.map(Sheet, getSheet(x1, name))) 
     
-    /// TEMP <<<
     pub def getSheetNames(): SheetWriter[List[String]] =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0, n);
@@ -495,8 +499,7 @@ namespace SheetIO/SheetWriter {
     def getSheetNameWb(ix: Int32): SheetWriter[String] =
         use SheetIO/Internal/Workbook.{getSheetName};
         liftWorkbookPrim(x1 -> getSheetName(x1, ix))
-   
-    /// TEMP >>>
+
 
     pub def createDataFormat(): SheetWriter[DataFormat] =
         use SheetIO/Internal/Workbook.{createDataFormat};
