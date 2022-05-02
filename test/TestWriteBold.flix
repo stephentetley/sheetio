@@ -7,7 +7,7 @@ use SheetIO.CellStyle;
 
 @test
 def testAll(_argsv: Array[String]): Int32 & Impure = 
-    match SheetIO/SheetWriter.runXlsx(write1(), FlixSandbox/System/FilePath.new("E:/coding/flix/sheetio/data/bold_out1.xlsx")) { 
+    match SheetIO/SheetWriter.runXlsx(write1(), FlixSandbox/System/FilePath.filePath("E:/coding/flix/sheetio/data/bold_out1.xlsx")) { 
         case Err(e) => {println("Error: ${e}"); 1}
         case Ok() => {println("[writer done]"); 0}
     }

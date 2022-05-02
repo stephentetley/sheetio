@@ -7,7 +7,7 @@ use SheetIO.NamedRowEvaluator;
 @test
 def testAll(): Int32 & Impure = 
     use SheetIO/SheetReader.{runHssf};
-    match runHssf(test01(), FlixSandbox/System/FilePath.new("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
+    match runHssf(test01(), FlixSandbox/System/FilePath.filePath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
         case Err(msg) => println("Error: ${msg}")
         case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
     };

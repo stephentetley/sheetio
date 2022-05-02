@@ -47,6 +47,8 @@ namespace SheetIO/RowEvaluator {
 
     use Monad.{>>=};
 
+    use Time/Format.DateTimeFormatter;
+
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
 
@@ -150,11 +152,15 @@ namespace SheetIO/RowEvaluator {
         case None => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): RowEvaluator[a] = match x { 
+    pub def liftResult(x: Result[a, String]): RowEvaluator[a] = match x { 
+        case Ok(x1)   => point(x1)
+        case Err(msg) => throwError(msg)
+    }
+
+    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): RowEvaluator[a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
-
 
     pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): RowEvaluator[a] = match x { 
         case Success(x1) => point(x1)
@@ -326,32 +332,32 @@ namespace SheetIO/RowEvaluator {
 
 
     /// Cell must be readable as a String
-    pub def getLocalDateTimeAtWithFormat(ix: Int32, fmt: Time/Format.DateTimeFormatter): RowEvaluator[Time.LocalDateTime] = 
+    pub def getLocalDateTimeAtWithFormat(ix: Int32, fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): RowEvaluator[Time.LocalDateTime] = 
         let* s = getStringAt(ix);
-        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeAtWithFormat")
+        liftResult(Time/LocalDateTime.parse(fmt, s))
         
 
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDateTime] = 
-        let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalDateTimeAtWithPattern - bad pattern");
+        let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringAt(ix);
-        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeAtWithPattern")
+        liftResult(Time/LocalDateTime.parse(fmt, s))
 
     pub def getLocalDateAt(ix: Int32): RowEvaluator[Time.LocalDate] = 
         map(Time/LocalDateTime.toLocalDate, getLocalDateTimeAt(ix))
 
 
     /// Cell must be readable as a String
-    pub def getLocalDateAtWithFormat(ix: Int32, fmt: Time/Format.DateFormatter): RowEvaluator[Time.LocalDate] = 
+    pub def getLocalDateAtWithFormat(ix: Int32, fmt: DateTimeFormatter[Time/Format.DateFormat]): RowEvaluator[Time.LocalDate] = 
         let* s = getStringAt(ix);
-        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateAtWithFormat")
+        liftResult(Time/LocalDate.parse(fmt, s))
         
 
     /// Cell must be readable as a String
     pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[Time.LocalDate] = 
-        let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateAtWithPattern - bad pattern");
+        let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringAt(ix);
-        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateAtWithPattern")
+        liftResult(Time/LocalDate.parse(fmt, s))
         
 
     def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[a]): RowEvaluator[Option[a]] = 

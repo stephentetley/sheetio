@@ -49,6 +49,8 @@ namespace SheetIO/NamedRowEvaluator {
 
     use Monad.{>>=};
     
+    use Time/Format.DateTimeFormatter;
+
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
@@ -211,7 +213,12 @@ namespace SheetIO/NamedRowEvaluator {
         case None => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): NamedRowEvaluator[a] = match x { 
+    pub def liftResult(x: Result[a, String]): NamedRowEvaluator[a] = match x { 
+        case Ok(x1)   => point(x1)
+        case Err(msg) => throwError(msg)
+    }
+    
+    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): NamedRowEvaluator[a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
@@ -378,32 +385,32 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     /// Cell must be readable as a String
-    pub def getLocalDateTimeNamedWithFormat(label: String, fmt: Time/Format.DateTimeFormatter): NamedRowEvaluator[Time.LocalDateTime] = 
+    pub def getLocalDateTimeNamedWithFormat(label: String, fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): NamedRowEvaluator[Time.LocalDateTime] = 
         let* s = getStringNamed(label);
-        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalDateTimeNamedWithFormat - '${s}'")
+        liftResult(Time/LocalDateTime.parse(fmt, s))
         
 
     /// Cell must be readable as a String
     pub def getLocalTimeDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDateTime] = 
-        let* fmt    = liftOption(Time/Format/DateTimeFormatter.ofPattern(patt), "getLocalTimeDateNamedWithPattern - bad pattern");
+        let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringNamed(label);
-        liftOption(Time/LocalDateTime.parse(fmt, s), "getLocalTimeDateNamedWithPattern - '${s}'")
+        liftResult(Time/LocalDateTime.parse(fmt, s))
 
 
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[Time.LocalDate] = 
         mapError(s -> "getLocalDateNamed<<${s}>>",  map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label)))
 
     /// Cell must be readable as a String
-    pub def getLocalDateNamedWithFormat(label: String, fmt: Time/Format.DateFormatter): NamedRowEvaluator[Time.LocalDate] = 
+    pub def getLocalDateNamedWithFormat(label: String, fmt: DateTimeFormatter[Time/Format.DateFormat]): NamedRowEvaluator[Time.LocalDate] = 
         let* s = getStringNamed(label);
-        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateNamedWithFormat - '${s}'")
+        liftResult(Time/LocalDate.parse(fmt, s))
         
 
     /// Cell must be readable as a String
     pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[Time.LocalDate] = 
-        let* fmt    = liftOption(Time/Format/DateFormatter.ofPattern(patt), "getLocalDateNamedWithPattern - bad pattern");
+        let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringNamed(label);
-        liftOption(Time/LocalDate.parse(fmt, s), "getLocalDateNamedWithPattern - '${s}'")
+        liftResult(Time/LocalDate.parse(fmt, s))
     
 
 

@@ -16,7 +16,7 @@ def testAll(_args: Array[String]): Int32 & Impure =
 def runtest(description: String, action: SheetReader[List[(String, Int32)]]): Unit & Impure =
     use SheetIO/SheetReader.runXlsx;
     println(description);
-    match runXlsx(action, FlixSandbox/System/FilePath.new("e:/coding/flix/sheetio/data/row_starts.xlsx")) { 
+    match runXlsx(action, FlixSandbox/System/FilePath.filePath("e:/coding/flix/sheetio/data/row_starts.xlsx")) { 
         case Err(msg) => println("Error: ${msg}")
         case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
     }
