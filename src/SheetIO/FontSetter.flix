@@ -112,7 +112,13 @@ namespace SheetIO/FontSetter {
     }
 
 
-    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): FontSetter[a] = match x { 
+    pub def liftResult(x: Result[a, String]): FontSetter[a] = match x { 
+        case Ok(x1) => point(x1)
+        case Err(msg) => throwError(msg)
+    }
+
+
+    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): FontSetter[a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }

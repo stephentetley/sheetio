@@ -116,7 +116,12 @@ namespace SheetIO/CellStyleSetter {
         case None => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, e], makeErrMsg: e -> String): CellStyleSetter[a] = match x { 
+    pub def liftResult(x: Result[a, String]): CellStyleSetter[a] = match x { 
+        case Ok(x1)   => point(x1)
+        case Err(msg) => throwError(msg)
+    }
+
+    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): CellStyleSetter[a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
