@@ -19,6 +19,8 @@ namespace SheetIO {
 
     use SheetIO.CellStyle;
    
+    type alias Cursors = Map[String, Int32]
+    
     pub opaque type SheetWriter[a] = 
         ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors -> Result[(Cursors, a), String] & Impure
 
@@ -41,7 +43,6 @@ namespace SheetIO {
             SheetIO/SheetWriter.flatMap(f, o)
     }
 
-    type alias Cursors = Map[String, Int32]
 
 }
 

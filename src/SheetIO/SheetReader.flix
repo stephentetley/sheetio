@@ -563,7 +563,7 @@ namespace SheetIO/SheetReader {
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
     pub def someRows(eval: RowEvaluator[Option[a]], sheet: Sheet): SheetReader[List[a]] = 
-        let postprocess = xs -> List.foldRight((x, fac) -> match x {
+        let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
                 case None => fac()
                 case Some(x1) => x1 :: fac()
             }, Nil, xs);
@@ -646,7 +646,7 @@ namespace SheetIO/SheetReader {
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
     pub def someNamedRows(eval: NamedRowEvaluator[Option[a]], sheet: Sheet): SheetReader[List[a]] = 
-        let postprocess = xs -> List.foldRight((x, fac) -> match x {
+        let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
                 case None => fac()
                 case Some(x1) => x1 :: fac()
             }, Nil, xs);

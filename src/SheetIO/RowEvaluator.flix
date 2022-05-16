@@ -431,7 +431,7 @@ namespace SheetIO/RowEvaluator {
     pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[a]): RowEvaluator[Array[a]] =
         let* end    = getLastCellNum();
         let* xs     = getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks));
-        let* arr    = liftAction(_ -> List.toArray(xs));
+        let* arr    = liftAction(_ -> List.toArray(xs, static));
         point(arr)
         
     // Should be tail recursive as bind is in the contiuation
