@@ -21,7 +21,7 @@ namespace SheetIO {
 
     use SheetIO.CellStyle;
 
-    pub opaque type RowSetter[a] = ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure
+    pub enum RowSetter[a](##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure)
 
     instance Functor[RowSetter] {
         pub def map(f: a -> b & ef, o: RowSetter[a]): RowSetter[b] & ef = 

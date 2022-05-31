@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type FontSetter[a] = ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure
+    pub enum FontSetter[a](##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure)
 
     instance Functor[FontSetter] {
         pub def map(f: a -> b & ef, o: FontSetter[a]): FontSetter[b] & ef = 

@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type CellStyleSetter[a] = ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure
+    pub enum CellStyleSetter[a](##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & Impure)
 
 
     instance Functor[CellStyleSetter] {

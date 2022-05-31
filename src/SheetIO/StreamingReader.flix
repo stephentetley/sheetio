@@ -33,7 +33,7 @@ namespace SheetIO/StreamingReader {
     type alias POIRow = ##org.apache.poi.ss.usermodel.Row
 
 
-    pub opaque type StreamingReaderHandle[a] = (##flixspt.sheetio.StreamingRowIterator, Iterator[Result[a, String]])
+    pub enum StreamingReaderHandle[a]((##flixspt.sheetio.StreamingRowIterator, Iterator[Result[a, String]]))
 
     pub def close(handle: StreamingReaderHandle[a]): Result[Unit, String] & Impure =
         import flixspt.sheetio.StreamingRowIterator.close();

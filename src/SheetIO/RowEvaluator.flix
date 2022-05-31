@@ -20,7 +20,7 @@ namespace SheetIO {
 
     use SheetIO.EvalError;
     
-    pub opaque type RowEvaluator[a] = (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure
+    pub enum RowEvaluator[a]((##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure)
 
 
     instance Functor[RowEvaluator] {

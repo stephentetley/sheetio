@@ -20,15 +20,15 @@ namespace SheetIO {
 
     /// TODO - do we really need to wrap these?
     
-    pub opaque type Sheet = ##org.apache.poi.ss.usermodel.Sheet
+    pub enum Sheet(##org.apache.poi.ss.usermodel.Sheet)
 
-    pub opaque type Row = ##org.apache.poi.ss.usermodel.Row
+    pub enum Row(##org.apache.poi.ss.usermodel.Row)
 
-    pub opaque type CellStyle = ##org.apache.poi.ss.usermodel.CellStyle
+    pub enum CellStyle(##org.apache.poi.ss.usermodel.CellStyle)
 
-    pub opaque type DataFormat = ##org.apache.poi.ss.usermodel.DataFormat
+    pub enum DataFormat(##org.apache.poi.ss.usermodel.DataFormat)
 
-    pub opaque type Font = ##org.apache.poi.ss.usermodel.Font
+    pub enum Font(##org.apache.poi.ss.usermodel.Font)
 
 }
 

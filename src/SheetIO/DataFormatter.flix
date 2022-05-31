@@ -21,7 +21,7 @@ namespace SheetIO {
     ///
     /// CellType
     ///
-    pub opaque type DataFormatter = ##org.apache.poi.ss.usermodel.DataFormatter
+    pub enum DataFormatter(##org.apache.poi.ss.usermodel.DataFormatter)
 
 }
 

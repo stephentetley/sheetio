@@ -17,7 +17,7 @@
 
 namespace SheetIO {
 
-    pub opaque type SheetReader[a] = ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure
+    pub enum SheetReader[a](##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure)
 
 
     instance Functor[SheetReader] {

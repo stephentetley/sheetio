@@ -22,8 +22,7 @@ namespace SheetIO {
     use SheetIO.EvalError;
 
     /// Includes Map[columName: String => index: Int32]
-    pub opaque type NamedRowEvaluator[a] = 
-        (Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure
+    pub enum NamedRowEvaluator[a]((Map[String, Int32], ##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & Impure)
 
     instance Functor[NamedRowEvaluator] {
         pub def map(f: a -> b & ef, o: NamedRowEvaluator[a]): NamedRowEvaluator[b] & ef = 
