@@ -633,8 +633,10 @@ namespace SheetIO/SheetReader {
         };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* row0       = getRowAt(sheet, r.headerIndex);
-        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
-        let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
+        let* ixs        = region r1 {
+            let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
+            point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
+        };
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
         let* xs         = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
         point(xs)
@@ -662,11 +664,14 @@ namespace SheetIO/SheetReader {
         };
         let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
         let* row0       = getRowAt(sheet, r.headerIndex);
-        let* hdrs       = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(), row0);
-        let* ixs        = liftAction(_ -> SheetIO/NamedRowEvaluator.makeHeaders(hdrs));
+        let* ixs        = region r1 { 
+            let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
+            point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
+        };
         let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
         let* ans        = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.fold!(combine, ac));
         point(ans)
+
 
     pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[a], sheet: Sheet): SheetReader[b] =
         foldNamedRowsFrom({headerIndex = 0, start = 1}, combine, ac, eval, sheet)

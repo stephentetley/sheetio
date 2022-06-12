@@ -425,13 +425,13 @@ namespace SheetIO/RowEvaluator {
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
 
-    pub def getRowContents(): RowEvaluator[Array[String]] =
-        getRowContentsWith(getContentAt)
+    pub def getRowContents(r: Region[r]): RowEvaluator[Array[String, r]] \ Write(r) =
+        getRowContentsWith(getContentAt, r)
 
-    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[a]): RowEvaluator[Array[a]] =
+    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[a], r: Region[r]): RowEvaluator[Array[a, r]] \ Write(r) =
         let* end    = getLastCellNum();
         let* xs     = getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks));
-        let* arr    = liftAction(_ -> List.toArray(xs, static));
+        let arr     = List.toArray(xs, r);
         point(arr)
         
     // Should be tail recursive as bind is in the contiuation
@@ -446,9 +446,9 @@ namespace SheetIO/RowEvaluator {
 
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
-    pub def getRowContentsIsoLocalDateTime(): RowEvaluator[Array[String]] =
+    pub def getRowContentsIsoLocalDateTime(r: Region[r]): RowEvaluator[Array[String, r]] \ Write(r) =
         let eval = ix -> alt(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
-        getRowContentsWith(eval)
+        getRowContentsWith(eval, r)
 
     def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[String] = 
         let fmt = Time/Format/DateTimeFormatter.iso_local_date_time();

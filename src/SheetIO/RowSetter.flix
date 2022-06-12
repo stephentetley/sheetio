@@ -234,17 +234,16 @@ namespace SheetIO/RowSetter {
         liftPrim(step)
 
 
-    pub def putHeaders!(arr: Array[String]): RowSetter[Unit] = 
-        putHeadersHelper!(arr, Array.length(arr), 0)
+    pub def putHeaders!(l: List[String]): RowSetter[Unit] = 
+        putHeadersHelper!(l, 0)
         
-    def putHeadersHelper!(arr: Array[String], end: Int32, ix: Int32): RowSetter[Unit] =
-        if (ix >= end)
-            point()
-        else {
-            let* s1 = liftAction(_ -> arr[ix]);
-            let* _  = putStringAt!(ix, s1);
-            putHeadersHelper!(arr, end, ix + 1)
+    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[Unit] = match l {
+        case Nil => point()
+        case s :: rs => {
+            let* _  = putStringAt!(ix, s);
+            putHeadersHelper!(rs, ix + 1)
         }
+    }
 
     pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[Unit] = match x {
         case Some(s) => putStringAt!(ix, s)
