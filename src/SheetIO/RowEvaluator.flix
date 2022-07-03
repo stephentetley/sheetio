@@ -424,14 +424,14 @@ namespace SheetIO/RowEvaluator {
     pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[Bool] = 
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
-
+    /// Change to List?
     pub def getRowContents(r: Region[r]): RowEvaluator[Array[String, r]] \ Write(r) =
         getRowContentsWith(getContentAt, r)
 
     pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[a], r: Region[r]): RowEvaluator[Array[a, r]] \ Write(r) =
         let* end    = getLastCellNum();
         let* xs     = getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks));
-        let arr     = List.toArray(xs, r);
+        let arr     = List.toArray(r, xs);
         point(arr)
         
     // Should be tail recursive as bind is in the contiuation

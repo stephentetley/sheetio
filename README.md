@@ -4,12 +4,16 @@ A Flix library built on top of Apache POI to read and write Excel files.
 
 `StreamingReader` is an experimental streaming reader for large files with homogeneous rows (it is currently broken).
 
-Depends on various modules in flix-sandbox:
+Flix dependencies (*.pkg files included in the folder `lib`)
 
+https://github.com/stephentetley/flix-time
 https://github.com/stephentetley/flix-sandbox
+https://github.com/stephentetley/charset-locale
+https://github.com/stephentetley/charset-locale
 
-Java Dependencies - sheetio needs these jars (mostly from org.apache):
+Java dependencies - sheetio needs these jars (mostly from org.apache):
 
+* commons-io-2.11.0.jar
 * commons-codec-1.15.jar
 * commons-collections4-4.4.jar
 * commons-math3-3.6.1.jar
