@@ -16,37 +16,46 @@
 
 namespace SheetIO/Internal/Row {
 
-    pub def getRowNum(row: ##org.apache.poi.ss.usermodel.Row): Int32 & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 & Impure; 
+    pub def getRowNum(_: Region[r], row: ##org.apache.poi.ss.usermodel.Row): Int32 \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 & r; 
         getRowNum(row)
     
-    pub def getCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                    ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell & Impure; 
+    pub def getCell(_: Region[r], 
+                    ix: Int32, 
+                    row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Cell, String] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell & r; 
         try {
             let ans = getCell(row, ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getCell")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("getCell: ${getMessage(ex)}") 
         }
 
-    pub def getSheet(row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Sheet, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet & Impure; 
+    pub def getSheet(_: Region[r], 
+                    row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Sheet, String] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet & r; 
         try {
             let ans = getSheet(row);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getSheet")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("getSheet: ${getMessage(ex)}") 
         }
 
-    pub def createCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                       ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell & Impure; 
+    pub def createCell!(_: Region[r], 
+                        ix: Int32,
+                        row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Cell, String] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell & r; 
         try {
             let ans = createCell(row, ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("createCell")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("createCell!: ${getMessage(ex)}") 
         }
 
 

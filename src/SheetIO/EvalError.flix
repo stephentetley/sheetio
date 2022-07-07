@@ -29,15 +29,15 @@ namespace SheetIO/EvalError {
 
     use SheetIO.EvalError;
 
-    pub def create(row: ##org.apache.poi.ss.usermodel.Row, msg: String):  EvalError & Impure = 
-        let rownum = SheetIO/Internal/Row.getRowNum(row);
-        match Result.flatMap(SheetIO/Internal/Sheet.getSheetName, SheetIO/Internal/Row.getSheet(row)) {
+    pub def create(r: Region[r], row: ##org.apache.poi.ss.usermodel.Row, msg: String): EvalError \ Read(r) = 
+        let rownum = SheetIO/Internal/Row.getRowNum(r, row);
+        match Result.flatMap(SheetIO/Internal/Sheet.getSheetName(r), SheetIO/Internal/Row.getSheet(r, row)) {
             case Err(_) => {message = msg, sheet = "***", rowNumber = rownum}
             case Ok(s1) => {message = msg, sheet = s1, rowNumber = rownum}
         }
 
-    pub def toString(r: EvalError): String = 
-        String.unlines(r.message :: "Sheet: ${r.sheet}, Row: ${r.rowNumber}" :: Nil)
+    pub def toString(err: EvalError): String = 
+        String.unlines(err.message :: "Sheet: ${err.sheet}, Row: ${err.rowNumber}" :: Nil)
 
 }
 

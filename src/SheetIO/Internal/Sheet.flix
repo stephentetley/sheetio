@@ -16,13 +16,15 @@
 
 namespace SheetIO/Internal/Sheet {
 
-    pub def getSheetName(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String & Impure; 
+    pub def getSheetName(_: Region[r], sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String & r; 
         try {
             let ans = getSheetName(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getSheetName [Sheet]")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("getSheetName: ${getMessage(ex)}") 
         }
 
     pub def getFirstRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
