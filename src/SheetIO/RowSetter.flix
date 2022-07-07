@@ -181,94 +181,81 @@ namespace SheetIO/RowSetter {
 
 
     pub def putBlankAt!(ix: Int32): RowSetter[r, Unit] \ Write(r) =
-        let* cell   = createOrGetCell(ix);
-        let* _      = liftPrim((r, _, _) -> SheetIO/Internal/Cell.setBlank!(r, cell));
-        point()
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.setBlank!(r, cell))
         
-        /// use SheetIO.CellType.{TyBlank};
-        /// use Result.flatMap;
-        /// let step = (row, style) -> {
-        ///     let* cell   = createOrGetCell(row, style, ix);
-        ///     let typ1    = SheetIO/CellType.toNative(TyBlank);
-        ///     let* _      = SheetIO/Internal/Cell.setCellType(cell, typ1);
-        ///     Ok()
-        /// };
-        /// liftPrim(step)
-
-/*
-    pub def putStringAt!(ix: Int32, value: String): RowSetter[r, Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setStringCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step)
-
-    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[r, Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setBooleanCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step)
-
-    def putNumericAt!(ix: Int32, errMsg: String, value: Float64): RowSetter[r, Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step) `swapError` errMsg
-
-    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putInt8At!", Int8.toFloat64(n))
-
-    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putInt16At!", Int16.toFloat64(n))
-
-    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putInt32At!", Int32.toFloat64(n))
-
-    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putInt64At!", Int64.toFloat64(n))
-
-    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putFloat32At!", Float32.toFloat64(n))
-
-    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[r, Unit] =
-        putNumericAt!(ix, "putFloat64At!", n)
 
 
-    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, Unit] =
+    pub def putStringAt!(ix: Int32, value: String): RowSetter[r, Unit] \ Write(r) =
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.setCellValueString!(r, value, cell))
+
+
+    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[r, Unit] \ Write(r) =
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.setCellValueBoolean!(r, value, cell))
+
+
+
+    def putNumericAt!(ix: Int32, value: Float64): RowSetter[r, Unit] \ Write(r) =
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.setCellValueDouble!(r, value, cell))
+
+    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putInt8At"), 
+            putNumericAt!(ix, Int8.toFloat64(n))
+        )
+
+    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putInt16At"), 
+            putNumericAt!(ix, Int16.toFloat64(n))
+        )
+
+    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putInt32At"), 
+            putNumericAt!(ix, Int32.toFloat64(n))
+        )
+
+    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putInt64At"),
+            putNumericAt!(ix, Int64.toFloat64(n))
+        )
+
+    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putFloat32At"),
+            putNumericAt!(ix, Float32.toFloat64(n))
+        )
+
+    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[r, Unit] \ Write(r) =
+        mapError(
+            String.replaceFirstMatch(regex = "setCellValueDouble", to = "putFloat64At"),
+            putNumericAt!(ix, n)
+        )
+
+
+    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, Unit] \ Write(r) =
         use Time.LocalDateTime.{LocalDateTime};
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell               = createOrGetCell(row, style, ix);
-            let  LocalDateTime(dt1) = dt;
-            let* _                  = SheetIO/Internal/Cell.setLocalDateTimeCellValue(cell, dt1);
-            Ok()
-        };
-        liftPrim(step)
+        let  LocalDateTime(dt1) = dt;
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
-    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, Unit] =
+
+
+    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, Unit] \ Write(r) =
         use Time.LocalDate.{LocalDate};
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell           = createOrGetCell(row, style, ix);
-            let  LocalDate(dt1) = dt;
-            let* _              = SheetIO/Internal/Cell.setLocalDateCellValue(cell, dt1);
-            Ok()
-        };
-        liftPrim(step)
-
-
-    pub def putHeaders!(l: List[String]): RowSetter[r, Unit] = 
+        let  LocalDate(dt1) = dt;
+        let* cell = createOrGetCell( ix);
+        liftPrim((r, _, _) ->SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
+ 
+    pub def putHeaders!(l: List[String]): RowSetter[r, Unit] \ Write(r) = 
         putHeadersHelper!(l, 0)
         
-    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[r, Unit] = match l {
+    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[r, Unit] \ Write(r) = match l {
         case Nil => point()
         case s :: rs => {
             let* _  = putStringAt!(ix, s);
@@ -276,47 +263,47 @@ namespace SheetIO/RowSetter {
         }
     }
 
-    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[r, Unit] = match x {
+    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(s) => putStringAt!(ix, s)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[r, Unit] = match x {
+    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(b) => putBoolAt!(ix, b)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[r, Unit] = match x {
+    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt8At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
         }
 
-    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[r, Unit] = match x {
+    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt16At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[r, Unit] = match x {
+    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt32At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[r, Unit] = match x {
+    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt64At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[r, Unit] = match x {
+    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putFloat32At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[r, Unit] = match x {
+    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putFloat64At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-
+/*
 
     pub def mapM(mf: a -> RowSetter[r, b], xs: List[a]): RowSetter[r, List[b]] =
         RowSetter((r, style) ->
