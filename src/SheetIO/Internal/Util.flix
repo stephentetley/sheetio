@@ -14,16 +14,19 @@
  * limitations under the License.
  */
 
-namespace SheetIO/Internal/DateUtil {
+namespace SheetIO/Internal/Util {
 
     /// Caller should test we have a NUMERIC cell first...
-    pub def isCellDateFormatted(cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] & Impure = 
-        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool & Impure;
+    pub def isCellDateFormatted(_: Region[r], 
+                                cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] \ Read(r) = 
+        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool & r;
         try { 
             let ans = isCellDateFormatted(cell);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("isCellDateFormatted")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("isCellDateFormatted: ${getMessage(ex)}") 
         }
 
 }

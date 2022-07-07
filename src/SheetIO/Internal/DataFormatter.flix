@@ -17,20 +17,23 @@
 namespace SheetIO/Internal/DataFormatter {
 
 
-    pub def new(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure = 
-        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
+    pub def new(_: Region[r]): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
+        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
         newDataFormatter()
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
-    pub def formatCellValue(formatter: ##org.apache.poi.ss.usermodel.DataFormatter,
-                            cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & Impure; 
+    pub def formatCellValue(_: Region[r],
+                            cell: ##org.apache.poi.ss.usermodel.Cell, 
+                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, String] \Read(r) = 
+        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & r; 
         try {
             let ans = formatCellValue(formatter, cell);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("formatCellValue")
+            case ex: ##java.lang.Exception => 
+                import java.lang.Throwable.getMessage(): String & r;                
+                Err("formatCellValue: ${getMessage(ex)}") 
         }
 
 }

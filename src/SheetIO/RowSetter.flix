@@ -143,22 +143,6 @@ namespace SheetIO/RowSetter {
     }
 
 
-    /// def createOrGetCell(r: Region[r], 
-    ///                     ix: Int32,
-    ///                     style: Option[CellStyle], 
-    ///                     row: ##org.apache.poi.ss.usermodel.Row): Result[##org.apache.poi.ss.usermodel.Cell, String] & r = 
-    ///     use Result.{flatMap};
-    ///     use SheetIO/Internal/Row.{getCell, createCell!};
-    ///     let* cell   = match getCell(r, ix, row) {
-    ///                     case Ok(a)  => if (not Object.isNull(a)) Ok(a) else createCell!(r, ix, row)
-    ///                     case Err(_) => createCell!(r, ix, row)
-    ///                 };
-    ///     let* _      = match style { 
-    ///                     case Some(x) => {let CellStyle(style1) = x; SheetIO/Internal/Cell.setCellStyle!(r, style1, cell)}
-    ///                     case None    => Ok() as & r
-    ///                 };
-    ///     Ok(cell)
-
 
     def createOrGetCell(ix: Int32): RowSetter[r, ##org.apache.poi.ss.usermodel.Cell] \ Write(r) = 
         use SheetIO/Internal/Row.{getCell, createCell!};
