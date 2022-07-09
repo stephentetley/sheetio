@@ -39,8 +39,8 @@ namespace SheetIO/Internal/Sheet {
 
     /// Gets the last row number - this row could be "empty" if cells in the row have been written to but then cleared.
     pub def getLastRowNum(r: Region[r], 
-                            sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 & Impure;
+                            sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 & r;
         try {
             let ans = getLastRowNum(sheet);
             Ok(ans)
@@ -50,8 +50,8 @@ namespace SheetIO/Internal/Sheet {
 
     /// Number of rows used - do not use for trying to find end.
     pub def getPhysicalNumberOfRows(r: Region[r], 
-                                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 & Impure; 
+                                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 & r; 
         try {
             let ans = getPhysicalNumberOfRows(sheet);
             Ok(ans)
@@ -60,8 +60,8 @@ namespace SheetIO/Internal/Sheet {
         }
 
     pub def getWorkbook(r: Region[r], 
-                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, PrimError] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook & Impure;
+                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook & r;
         try {
             let ans = getWorkbook(sheet);
             Ok(ans)
@@ -72,8 +72,8 @@ namespace SheetIO/Internal/Sheet {
 
     pub def getRow(r: Region[r],
                     ix: Int32,
-                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row & Impure; 
+                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row & r; 
         try {
             let ans = getRow(sheet, ix);
             Ok(ans)
@@ -83,8 +83,8 @@ namespace SheetIO/Internal/Sheet {
 
     pub def createRow(r: Region[r],
                         ix: Int32,
-                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row & Impure; 
+                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row & r; 
         try {
             let ans = createRow(sheet, ix);
             Ok(ans)

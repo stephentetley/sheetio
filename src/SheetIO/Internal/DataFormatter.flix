@@ -28,7 +28,7 @@ namespace SheetIO/Internal/DataFormatter {
     /// This is a "getter" despite its name.
     pub def formatCellValue(r: Region[r],
                             cell: ##org.apache.poi.ss.usermodel.Cell, 
-                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, PrimError] \Read(r) = 
+                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, PrimError] \ Read(r) = 
         import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & r; 
         try {
             let ans = formatCellValue(formatter, cell);
