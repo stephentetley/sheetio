@@ -17,8 +17,7 @@
 
 namespace SheetIO {
 
-
-    use SheetIO.EvalError;
+    use SheetIO/Internal/EvalError.{EvalError};
     
     pub enum RowEvaluator[r: Region, a: Type](
         (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & r)
@@ -54,7 +53,8 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
 
-    use SheetIO.EvalError;
+    use SheetIO/Internal/PrimError.{PrimError};
+    use SheetIO/Internal/EvalError.{EvalError};
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
     use SheetIO.DataFormatter;
@@ -68,6 +68,7 @@ namespace SheetIO/RowEvaluator {
         let RowEvaluator(f) = x;
         f(fmt, row)
 
+/*
     pub def throwError(msg: String): RowEvaluator[r, a] =
         RowEvaluator((_, row) -> Err(SheetIO/EvalError.create(() as Region[r], row, msg)))
 
@@ -78,6 +79,7 @@ namespace SheetIO/RowEvaluator {
                 case Err(_) => Err(SheetIO/EvalError.create(() as Region[r], row, msg))
             }
         )
+*/
 
     pub def map(f: a -> b & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
         RowEvaluator((fmt, row) ->
@@ -136,7 +138,7 @@ namespace SheetIO/RowEvaluator {
         alt(x, point(d))
 
 
-
+/*
 
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.DataFormatter -> ##org.apache.poi.ss.usermodel.Row -> Result[a, String] & ef): RowEvaluator[r, a] & ef =
         RowEvaluator((fmt, row) -> 
@@ -233,11 +235,12 @@ namespace SheetIO/RowEvaluator {
         let* cell = getCellAt(ix);
         if (Object.isNull(cell)) point() else throwError("getNullAt(${ix})")
 
-/*
 
-    pub def getCellTypeAt(ix: Int32): RowEvaluator[r, CellType] =
-        map(SheetIO/CellType.fromNative, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
-            `swapError` "getCellTypeAt(${Int32.toString(ix)})"
+
+    pub def getCellTypeAt(ix: Int32): RowEvaluator[r, CellType] \ Read(r) =
+        let* cell = getCellAt(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.getCellType(r, cell)) |> map(SheetIO/CellType.fromNative)
+
 
     pub def isBlankAt(ix: Int32): RowEvaluator[r, Bool] = 
         let* typ = getCellTypeAt(ix);
@@ -281,21 +284,22 @@ namespace SheetIO/RowEvaluator {
         let DataFormatter(dfmt1) = dfmt;
         liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/DataFormatter.formatCellValue(dfmt1, cell)))
 
-*/
+
 
     pub def getBoolAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) =
         let* cell = getCellAt(ix);
         liftPrim((r, _, _) -> SheetIO/Internal/Cell.getBooleanCellValue(r, cell))
 
 
-/*
+
     /// Error if the cell type is String or cell value is not a readable double.
     /// Returns 0 for blank cells.
-    pub def getNumericAt(ix: Int32): RowEvaluator[r, Float64] =
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue))
+    pub def getNumericAt(ix: Int32): RowEvaluator[r, Float64] \ Read(r) =
+        let* cell = getCellAt(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Cell.getNumericCellValue(r, cell))
 
 
-    def getNumAt(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[r, a] =
+    def getNumAt(ix: Int32, conv: Float64 -> Option[a], errMsg: String): RowEvaluator[r, a] \ Read(r) =
         let* n = getNumericAt(ix);
         match conv(n) {
             case Some(i) => point(i)
@@ -303,37 +307,40 @@ namespace SheetIO/RowEvaluator {
         }
 
 
-    pub def getInt8At(ix: Int32): RowEvaluator[r, Int8] =
+    pub def getInt8At(ix: Int32): RowEvaluator[r, Int8] \ Read(r) =
         getNumAt(ix, Float64.tryToInt8, "getInt8At")
 
-    pub def getInt16At(ix: Int32): RowEvaluator[r, Int16] =
+    pub def getInt16At(ix: Int32): RowEvaluator[r, Int16] \ Read(r) =
         getNumAt(ix, Float64.tryToInt16, "getInt16At")
 
-    pub def getInt32At(ix: Int32): RowEvaluator[r, Int32] =
+    pub def getInt32At(ix: Int32): RowEvaluator[r, Int32] \ Read(r) =
         getNumAt(ix, Float64.tryToInt32, "getInt32At")
 
-    pub def getInt64At(ix: Int32): RowEvaluator[r, Int64] =
+    pub def getInt64At(ix: Int32): RowEvaluator[r, Int64] \ Read(r) =
         getNumAt(ix, Float64.tryToInt64, "getInt64At")
 
-    pub def getFloat32At(ix: Int32): RowEvaluator[r, Float32] =
+    pub def getFloat32At(ix: Int32): RowEvaluator[r, Float32] \ Read(r) =
         getNumAt(ix, Float64.tryToFloat32, "getFloat32At")
     
-    pub def getFloat64At(ix: Int32): RowEvaluator[r, Float64] = 
+    pub def getFloat64At(ix: Int32): RowEvaluator[r, Float64] \ Read(r) = 
         getNumAt(ix, x -> Some(x), "getFloat64At")
 
 
-    def isDateFormattedAt(ix: Int32): RowEvaluator[r, Bool] = 
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DateUtil.isCellDateFormatted))
+    def isDateFormattedAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) = 
+        let* cell = getCellAt(ix);
+        liftPrim((r, _, _) -> SheetIO/Internal/Util.isCellDateFormatted(r, cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
-    pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[r, Time.LocalDateTime] = 
+    ///
+    pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[r, Time.LocalDateTime] \ Read(r) = 
         use Time.LocalDateTime.{LocalDateTime};
         let* ctype = getCellTypeAt(ix);
         if (ctype == TyNumeric) {
             let* dtCell = isDateFormattedAt(ix);
             if (dtCell) {
-                let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+                let* cell = getCellAt(ix);
+                let* dt = liftPrim((r, _, _) -> SheetIO/Internal/Cell.getLocalDateTimeCellValue(r, cell));
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeAt - null")
                 else

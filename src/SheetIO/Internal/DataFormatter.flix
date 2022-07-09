@@ -16,6 +16,7 @@
 
 namespace SheetIO/Internal/DataFormatter {
 
+    use SheetIO/Internal/PrimError.{PrimError};
 
     pub def new(_: Region[r]): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
@@ -23,17 +24,17 @@ namespace SheetIO/Internal/DataFormatter {
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
-    pub def formatCellValue(_: Region[r],
+
+    /// This is a "getter" despite its name.
+    pub def formatCellValue(r: Region[r],
                             cell: ##org.apache.poi.ss.usermodel.Cell, 
-                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, String] \Read(r) = 
+                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, PrimError] \Read(r) = 
         import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & r; 
         try {
             let ans = formatCellValue(formatter, cell);
             Ok(ans)
         } catch {
-            case ex: ##java.lang.Exception => 
-                import java.lang.Throwable.getMessage(): String & r;                
-                Err("formatCellValue: ${getMessage(ex)}") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "formatCellValue", ex)
         }
 
 }

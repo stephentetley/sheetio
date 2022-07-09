@@ -17,7 +17,9 @@
 
 namespace SheetIO {
 
-    pub enum CellStyleSetter[r: Region, a: Type](##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & r)
+    use SheetIO/Internal/PrimError.{PrimError};
+
+    pub enum CellStyleSetter[r: Region, a: Type](##org.apache.poi.ss.usermodel.CellStyle -> Result[a, PrimError] & r)
 
 
     instance Functor[CellStyleSetter[r]] {
@@ -44,6 +46,8 @@ namespace SheetIO/CellStyleSetter {
 
     use SheetIO.CellStyleSetter;
     use SheetIO.CellStyleSetter.{CellStyleSetter};
+
+    use SheetIO/Internal/PrimError.{PrimError};
     use SheetIO.CellStyle;
     use SheetIO.CellStyle.{CellStyle};
     use SheetIO.Font;
@@ -53,7 +57,7 @@ namespace SheetIO/CellStyleSetter {
     pub def point(x: a): CellStyleSetter[r, a] =
         CellStyleSetter(_ -> Ok(x) as & r)
 
-    def apply1(x: CellStyleSetter[r, a], r: ##org.apache.poi.ss.usermodel.CellStyle): Result[a, String] & r =
+    def apply1(x: CellStyleSetter[r, a], r: ##org.apache.poi.ss.usermodel.CellStyle): Result[a, PrimError] & r =
         let CellStyleSetter(f) = x;
         f(r)
 
@@ -61,13 +65,13 @@ namespace SheetIO/CellStyleSetter {
         CellStyleSetter(_ -> Ok(() as Region[r]) as & r)
 
 
-    pub def throwError(errMsg: String): CellStyleSetter[r, a] =
-        CellStyleSetter(_ -> Err(errMsg) as & r)
+    pub def throwError(msg: String): CellStyleSetter[r, a] =
+        CellStyleSetter(_ -> Err({source = msg, exnMessage = ""}) as & r)
 
      pub def mapError(f: String -> String, ma: CellStyleSetter[r, a]): CellStyleSetter[r, a] =
-        CellStyleSetter(r -> match apply1(ma, r) { 
+        CellStyleSetter(s -> match apply1(ma, s) { 
             case Ok(p1) => Ok(p1)
-            case Err(e) => Err(f(e))
+            case Err(e) => let src = e.source; Err({source = f(src) | e})
         })
 
 
@@ -107,14 +111,14 @@ namespace SheetIO/CellStyleSetter {
     pub def bind(x: CellStyleSetter[r, a], k: a -> CellStyleSetter[r, b] & ef): CellStyleSetter[r, b] & ef =
         flatMap(k, x)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, String] & ef): CellStyleSetter[r, a] & ef=
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, PrimError] & ef): CellStyleSetter[r, a] & ef=
         CellStyleSetter(r -> update(r) as & r) as & ef
 
     pub def liftAction(fn: Unit -> a & ef): CellStyleSetter[r, a] & ef=
         CellStyleSetter(_ -> let x = fn() as & r; Ok(x)) as & ef
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & ef): CellStyleSetter[r, a] & ef=
-        CellStyleSetter(_ -> fn() as & r) as & ef
+        CellStyleSetter(_ -> let ans = fn() as & r; Result.mapErr(s -> {source = s, exnMessage = ""}, ans)) as & ef
 
     pub def liftOption(x: Option[a], errMsg: String): CellStyleSetter[r, a] = match x { 
         case Some(x1) => point(x1)

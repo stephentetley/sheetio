@@ -17,7 +17,9 @@
 
 namespace SheetIO {
 
-    pub enum FontSetter[r: Region, a: Type](##org.apache.poi.ss.usermodel.Font -> Result[a, String] & r)
+    use SheetIO/Internal/PrimError.{PrimError};
+
+    pub enum FontSetter[r: Region, a: Type](##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & r)
 
     instance Functor[FontSetter[r]] {
         pub def map(f: a -> b & ef, o: FontSetter[r, a]): FontSetter[r, b] & ef = 
@@ -45,23 +47,25 @@ namespace SheetIO/FontSetter {
     use SheetIO.FontSetter;
     use SheetIO.FontSetter.FontSetter;
 
+    use SheetIO/Internal/PrimError.{PrimError};
+
     pub def point(x: a): FontSetter[r, a] =
         FontSetter(_ -> Ok(x) as & r)
 
-    def apply1(x: FontSetter[r, a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, String] & r =
+    def apply1(x: FontSetter[r, a], r: ##org.apache.poi.ss.usermodel.Font): Result[a, PrimError] & r =
         let FontSetter(f) = x;
         f(r)
 
     def getFontSetterRegion(): FontSetter[r, Region[r]] = 
         FontSetter(_ -> Ok(() as Region[r]) as & r)
 
-    pub def throwError(errMsg: String): FontSetter[r, a] =
-        FontSetter(_ -> Err(errMsg) as & r)
+    pub def throwError(msg: String): FontSetter[r, a] =
+        FontSetter(_ -> Err({source = msg, exnMessage = ""}) as & r)
 
     pub def mapError(f: String -> String, ma: FontSetter[r, a]): FontSetter[r, a] =
-        FontSetter(r -> match apply1(ma, r) { 
+        FontSetter(s -> match apply1(ma, s) { 
             case Ok(p1) => Ok(p1)
-            case Err(e) => Err(f(e))
+            case Err(e) => let src = e.source; Err({source = f(src) | e})
         })
 
 
@@ -101,18 +105,18 @@ namespace SheetIO/FontSetter {
 
     pub def bind(x: FontSetter[r, a], k: a -> FontSetter[r, b] & ef): FontSetter[r, b] & ef = flatMap(k, x)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & ef): FontSetter[r, a] & ef=
+    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): FontSetter[r, a] & ef=
         FontSetter(r -> update(r) as & r) as & ef
 
     pub def liftAction(fn: Unit -> a & ef): FontSetter[r, a] & ef =
         FontSetter(_ -> let x = fn() as & r; Ok(x)) as & ef
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & ef): FontSetter[r, a] & ef =
-        FontSetter(_ -> fn() as & r) as & ef
+        FontSetter(_ -> let ans = fn() as & r; Result.mapErr(s -> {source = s, exnMessage = ""}, ans)) as & ef
 
-    pub def liftOption(x: Option[a], errMsg: String): FontSetter[r, a] = match x { 
+    pub def liftOption(errMsg: String, x: Option[a]): FontSetter[r, a] = match x { 
         case Some(x1) => point(x1)
-        case None => throwError(errMsg)
+        case None     => throwError(errMsg)
     }
 
 

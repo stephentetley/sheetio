@@ -20,7 +20,9 @@ namespace SheetIO/Writer {
 
     use SheetIO.RowSetter;
     use SheetIO.SheetWriter;
-    
+
+/*
+
     /// Note - this isn't very satisfactory. Ideally WorkSheetWriter would not be 
     /// parametric on row so we could put them in a list.
 
@@ -45,7 +47,7 @@ namespace SheetIO/Writer {
         SheetIO/SheetWriter.runAppendXlsx(writeSheet(sheetWriter), path)
 
 
-    def writeSheet(sheetWriter: WorkSheetWriter[a]): SheetWriter[Unit] = 
+    def writeSheet(sheetWriter: WorkSheetWriter[a]): SheetWriter[r, Unit] = 
         use SheetIO/SheetWriter.{flatMap, point, createSheet, allRows, allRowsWithHeaders};
         match sheetWriter.headers {
             case None => {
@@ -60,5 +62,5 @@ namespace SheetIO/Writer {
             }
         }
 
-
+*/
 }

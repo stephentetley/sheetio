@@ -20,9 +20,10 @@
 namespace SheetIO {
 
     use SheetIO.CellStyle;
+    use SheetIO/Internal/EvalError.{EvalError};
 
     pub enum RowSetter[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & r)
+        ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, EvalError] & r)
 
     instance Functor[RowSetter[r]] {
         pub def map(f: a -> b & ef, o: RowSetter[r, a]): RowSetter[r, b] & ef = 
@@ -47,15 +48,17 @@ namespace SheetIO {
 
 namespace SheetIO/RowSetter {
 
-    use SheetIO.CellStyle;
-    use SheetIO.CellStyle.{CellStyle};
     use SheetIO.RowSetter;
     use SheetIO.RowSetter.{RowSetter};
+    
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
+    use SheetIO/Internal/EvalError.{EvalError};
 
     pub def point(x: a): RowSetter[r, a] =
         RowSetter((_, _) -> Ok(x) as & r)
 
-    def apply1(x: RowSetter[r, a], row: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, String] & r =
+    def apply1(x: RowSetter[r, a], row: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, EvalError] & r =
         let RowSetter(f) = x;
         f(row, style)
 
@@ -65,6 +68,7 @@ namespace SheetIO/RowSetter {
     /// def getRowSetterRegion(): RowSetter[r, Region[r]] = 
     ///     RowSetter((_, _) -> Ok(() as Region[r]) as & r)
 
+/*
     pub def throwError(errMsg: String): RowSetter[r, a] =
         RowSetter((_, _) -> Err(errMsg) as & r)
 
@@ -79,7 +83,7 @@ namespace SheetIO/RowSetter {
             case Ok(a) => Ok(a)
             case Err(_) => Err(errMsg)
         })
-
+*/
 
     pub def map(f: a -> b & ef, x: RowSetter[r, a]): RowSetter[r, b] & ef =
         RowSetter((row, style) -> match apply1(x, row, style) {
@@ -112,6 +116,8 @@ namespace SheetIO/RowSetter {
 
     pub def bind(x: RowSetter[r, a], k: a -> RowSetter[r, b] & ef): RowSetter[r, b] & ef =
         flatMap(k, x)
+
+/*
 
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & ef): RowSetter[r, a] & ef =
         RowSetter((row, style) -> {let r = () as Region[r]; fn(r, row, style) as & r}) as & ef
@@ -287,7 +293,7 @@ namespace SheetIO/RowSetter {
         case None    => putBlankAt!(ix)
     }
 
-/*
+
 
     pub def mapM(mf: a -> RowSetter[r, b], xs: List[a]): RowSetter[r, List[b]] =
         RowSetter((r, style) ->

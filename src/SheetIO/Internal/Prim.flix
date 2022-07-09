@@ -17,6 +17,9 @@
 
 namespace SheetIO/Internal/Prim {
 
+
+    use SheetIO/Internal/PrimError.{PrimError};
+    
     // XSSF (OOXML) concretely
 
     ///

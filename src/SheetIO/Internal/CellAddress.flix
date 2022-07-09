@@ -16,22 +16,21 @@
 
 namespace SheetIO/Internal/CellAddress {
 
+    use SheetIO/Internal/PrimError.{PrimError};
 
     pub def new(_: Region[r], s: String): ##org.apache.poi.ss.util.CellAddress \ Write(r) = 
         import new org.apache.poi.ss.util.CellAddress(String): ##org.apache.poi.ss.util.CellAddress & r as newCellAddress; 
         newCellAddress(s)
 
 
-    pub def getColumn(_: Region[r],
-                        addr: ##org.apache.poi.ss.util.CellAddress): Result[Int32, String] \Read(r) = 
+    pub def getColumn(r: Region[r],
+                        addr: ##org.apache.poi.ss.util.CellAddress): Result[Int32, PrimError] \ Read(r) = 
         import org.apache.poi.ss.util.CellAddress.getColumn(): Int32 & r; 
         try {
             let ans = getColumn(addr);
             Ok(ans)
         } catch {
-            case ex: ##java.lang.Exception => 
-                import java.lang.Throwable.getMessage(): String & r;                
-                Err("getColumn: ${getMessage(ex)}") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getColumn", ex) 
         }
 
 }

@@ -16,17 +16,30 @@
 
 namespace SheetIO/Internal/Util {
 
+    use SheetIO/Internal/PrimError.{PrimError};
+
+
     /// Caller should test we have a NUMERIC cell first...
-    pub def isCellDateFormatted(_: Region[r], 
-                                cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, String] \ Read(r) = 
+    pub def isCellDateFormatted(r: Region[r], 
+                                cell: ##org.apache.poi.ss.usermodel.Cell): Result[Bool, PrimError] \ Read(r) = 
         import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool & r;
         try { 
             let ans = isCellDateFormatted(cell);
             Ok(ans)
         } catch {
-            case ex: ##java.lang.Exception => 
-                import java.lang.Throwable.getMessage(): String & r;                
-                Err("isCellDateFormatted: ${getMessage(ex)}") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "isCellDateFormatted", ex)
+        }
+
+    /// Orphan - DataFormat not used enough to warrant a module.
+    pub def getFormat(r: Region[r],
+                        format: String, 
+                        dfmt: ##org.apache.poi.ss.usermodel.DataFormat): Result[Int16, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.DataFormat.getFormat(String): Int16 & r; 
+        try {
+            let ans = getFormat(dfmt, format);
+            Ok(ans)
+        } catch {
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getFormat", ex)
         }
 
 }
