@@ -20,7 +20,8 @@ namespace SheetIO {
     use SheetIO/Internal/EvalError.{EvalError};
     
     pub enum RowEvaluator[r: Region, a: Type](
-        (##org.apache.poi.ss.usermodel.DataFormatter, ##org.apache.poi.ss.usermodel.Row) -> Result[a, EvalError] & r)
+        ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, EvalError] & r
+    )
 
 
     instance Functor[RowEvaluator[r]] {
@@ -63,21 +64,21 @@ namespace SheetIO/RowEvaluator {
     pub def point(x: a): RowEvaluator[r, a] = RowEvaluator((_, _) -> Ok(x) as & r)
 
     def apply1(x: RowEvaluator[r, a], 
-                fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-                row: ##org.apache.poi.ss.usermodel.Row): Result[a, EvalError] & r =
+                row: ##org.apache.poi.ss.usermodel.Row, 
+                fmt: ##org.apache.poi.ss.usermodel.DataFormatter): Result[a, EvalError] & r =
         let RowEvaluator(f) = x;
-        f(fmt, row)
+        f(row, fmt)
 
 
     pub def throwError(msg: String): RowEvaluator[r, a] =
-        RowEvaluator((_, row) -> 
+        RowEvaluator((row, _) -> 
             Err(SheetIO/Internal/EvalError.create(() as Region[r], row, {source = msg, exnMessage = ""}))
         )
 
 
     pub def swapError(msg: String, ma: RowEvaluator[r, a]): RowEvaluator[r, a] =
-        RowEvaluator((fmt, row) ->
-            match apply1(ma, fmt, row) {
+        RowEvaluator((row, fmt) ->
+            match apply1(ma, row, fmt) {
                 case Ok(a)    => Ok(a)
                 case Err(err) => Err({source = msg | err})
             }
@@ -85,8 +86,8 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def map(f: a -> b & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
-        RowEvaluator((fmt, row) ->
-            match apply1(x, fmt, row) {
+        RowEvaluator((row, fmt) ->
+            match apply1(x, row, fmt) {
                 case Ok(a) => {
                     let ans = f(a) as & r;
                     Ok(ans)
@@ -96,10 +97,10 @@ namespace SheetIO/RowEvaluator {
         ) as & ef
 
     pub def ap(mf: RowEvaluator[r, a -> b & ef], ma: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
-        RowEvaluator((fmt, row) ->
-            match apply1(mf, fmt, row) {
+        RowEvaluator((row, fmt) ->
+            match apply1(mf, row, fmt) {
                 case Ok(f) => {
-                    match apply1(ma, fmt, row) {
+                    match apply1(ma, row, fmt) {
                         case Ok(a) => Ok(f(a) as & r)
                         case Err(e2) => Err(e2)
                     }
@@ -110,9 +111,9 @@ namespace SheetIO/RowEvaluator {
     
 
     pub def bind(x: RowEvaluator[r, a], k: a -> RowEvaluator[r, b] & ef): RowEvaluator[r, b] & ef =
-        RowEvaluator((fmt, row) ->
-            match apply1(x, fmt, row) {
-                case Ok(a) => {let ans = k(a) as & r; apply1(ans, fmt, row)}
+        RowEvaluator((row, fmt) ->
+            match apply1(x, row, fmt) {
+                case Ok(a) => {let ans = k(a) as & r; apply1(ans, row, fmt)}
                 case Err(e) => Err(e)
             }
         ) as & ef
@@ -121,16 +122,16 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def alt(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
-        RowEvaluator((fmt, row) ->
-            match apply1(ea, fmt, row) {
+        RowEvaluator((row, fmt) ->
+            match apply1(ea, row, fmt) {
                 case Ok(a) => Ok(a)
-                case Err(_) => apply1(eb, fmt, row)
+                case Err(_) => apply1(eb, row, fmt)
             }
         )
 
 
     pub def optional(x: RowEvaluator[r, a]): RowEvaluator[r, Option[a]] =
-        RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
+        RowEvaluator((row, fmt) -> match apply1(x, row, fmt) {
             case Ok(a)  => Ok(Some(a))
             case Err(_) => Ok(None)
         })
@@ -144,7 +145,7 @@ namespace SheetIO/RowEvaluator {
 
 
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, PrimError] & ef): RowEvaluator[r, a] & ef =
-        RowEvaluator((fmt, row) -> 
+        RowEvaluator((row, fmt) -> 
             let r = () as Region[r];
             {fn(r, row, fmt) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
         )  as & ef
@@ -158,7 +159,7 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & ef): RowEvaluator[r, a] & ef=
-        RowEvaluator((_, row) -> 
+        RowEvaluator((row, _) -> 
             let r = () as Region[r]; 
             {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.create(r, row, {source = s, exnMessage = ""}))
         ) as & ef
@@ -196,17 +197,13 @@ namespace SheetIO/RowEvaluator {
         let* cell = getCellAt(ix);
         liftPrim((r, _, fmt) -> fn(r, cell, fmt))
 
-    /// def getDataFormatter(): RowEvaluator[r, ##org.apache.poi.ss.usermodel.DataFormatter] = 
-    ///     RowEvaluator((fmt, _) -> Ok(fmt) as & Impure)
-
     pub def getRowNum(): RowEvaluator[r, Int32] \ Read(r) = 
         liftPrim((r, row, _) -> Ok(SheetIO/Internal/Row.getRowNum(r, row)))
 
-/*
 
     pub def getSheetName(): RowEvaluator[r, String] \ Read(r) = 
         use Result.{flatMap};
-        liftPrim((r, _, row) -> {
+        liftPrim((r, row, _) -> {
             let* sheet = SheetIO/Internal/Row.getSheet(r, row);
             SheetIO/Internal/Sheet.getSheetName(r, sheet)
         })
@@ -214,14 +211,13 @@ namespace SheetIO/RowEvaluator {
 
     /// Get the column index from the column identifier "A", "B", ... "AA", "AB", ...
     pub def getColumnIndex(s: String): RowEvaluator[r, Int32] = 
-        use Result.{flatMap};
-        liftResult(
-            region r {            
-                let addr = SheetIO/Internal/CellAddress.new(r, s + "1");
-                SheetIO/Internal/CellAddress.getColumn(r, addr)
+        liftPrim((_, _, _) -> 
+            region r1 {
+                let addr = SheetIO/Internal/CellAddress.new(r1, s + "1");
+                SheetIO/Internal/CellAddress.getColumn(r1, addr)
             }
         )
-*/        
+
 
     /// Uses the default DataFormatter
     pub def getContentAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
@@ -231,8 +227,6 @@ namespace SheetIO/RowEvaluator {
     /// Uses the default DataFormatter
     pub def getTrimmedContentAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
         map(String.trim, getContentAt(ix))
-
-
 
     pub def isNullAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) = 
         Object.isNull <$> getCellAt(ix)
@@ -275,18 +269,18 @@ namespace SheetIO/RowEvaluator {
                     if (test(x)) point(x) else throwError("getSatifiesAt(${ix})");
         step() |> swapError("getSatifiesAt(${ix})")
 
-/*
-    pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[r, String] =
-        (getSatifiesAt(ix, x -> not String.isEmpty(String.trim(x))) `swapError` "getNonEmptyContentAt('${ix}')")
+
+    pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
+        getSatifiesAt(ix, x -> not String.isEmpty(String.trim(x)))
             |> map(String.trim)
+            |> swapError("getNonEmptyContentAt(${ix})")
 
 
-    pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[r, String] =
+    pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[r, String] \ Read(r) =
         let* x = isNullAt(ix);
         let* y = isBlankAt(ix);
         if (x or y) point(d) else getStringAt(ix)
 
-*/
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[r, String] \Read(r) =
         let DataFormatter(dfmt1) = dfmt;
@@ -480,12 +474,12 @@ namespace SheetIO/RowEvaluator {
         else 
             getRowContentsWithHelper(evalCell, end, ix + 1, ss -> evalCell(ix) >>= s -> k(s :: ss))
 
-/*
+
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
-    pub def getRowContentsIsoLocalDateTime(r: Region[r]): RowEvaluator[r, Array[String, r]] \ { Read(r), Write(r) } =
+    pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r1, Array[String, r2]] \ { Read(r1), Write(r2) } =
         let eval = ix -> alt(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
-        getRowContentsWith(eval, r)
+        getRowContentsWith(r, eval)
 
     def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, String] \ Read(r) = 
         let fmt = Time/Format/DateTimeFormatter.iso_local_date_time();
@@ -493,6 +487,6 @@ namespace SheetIO/RowEvaluator {
         let s   = Time/LocalDateTime.format(fmt, dt);
         point(s)
 
-*/
+
 
 }
