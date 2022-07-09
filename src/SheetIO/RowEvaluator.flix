@@ -254,7 +254,7 @@ namespace SheetIO/RowEvaluator {
         let* typ = getCellTypeAt(ix);
         match typ { 
             case TyBlank => point()
-            case _ => throwError(errMsg)
+            case _       => throwError(errMsg)
         } |> swapError(errMsg)
 
     /// Error if the cell type is numeric.
@@ -264,10 +264,11 @@ namespace SheetIO/RowEvaluator {
 
 
     /// TODO - wrong name or should return Bool...
-    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[r, String] \ Read(r) =
+    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[r, String] \ Read(r) =    
+        let errMsg = "getSatifiesAt(${ix})";
         let step = () -> getContentAt(ix) >>= x -> 
-                    if (test(x)) point(x) else throwError("getSatifiesAt(${ix})");
-        step() |> swapError("getSatifiesAt(${ix})")
+                    if (test(x)) point(x) else throwError(errMsg);
+        step() |> swapError(errMsg)
 
 
     pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
@@ -367,7 +368,9 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getLocalDateAt(ix: Int32): RowEvaluator[r, Time.LocalDate] \ Read(r) = 
-        map(Time/LocalDateTime.toLocalDate, getLocalDateTimeAt(ix))
+        getLocalDateTimeAt(ix)
+            |> map(Time/LocalDateTime.toLocalDate)
+            |> swapError("getLocalDateAt(${ix})")
 
 
 

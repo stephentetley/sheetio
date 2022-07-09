@@ -245,109 +245,115 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub def isNullNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) = 
         Object.isNull <$> getCellNamed(label)
-/*
-    pub def getNullNamed(label: String): NamedRowEvaluator[r, Unit] =
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, ans -> if (Object.isNull(ans)) (Ok() as & Impure) else Err("getNullNamed")))
+
+    pub def getNullNamed(label: String): NamedRowEvaluator[r, Unit] \ Read(r) = 
+        let* cell = getCellNamed(label);
+        if (Object.isNull(cell)) point() else throwError("getNullNamed(${label})")
 
 
-    pub def getCellTypeNamed(label: String): NamedRowEvaluator[r, CellType] =
-        let* ix     = getIndex(label);
-        map(SheetIO/CellType.fromNative, liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getCellType)))
-            `swapError` "getCellTypeNamed('${label}')"
+    pub def getCellTypeNamed(label: String): NamedRowEvaluator[r, CellType] \ Read(r) =
+        liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/Cell.getCellType(r, cell)) |> map(SheetIO/CellType.fromNative)
 
-    pub def isBlankNamed(label: String): NamedRowEvaluator[r, Bool] = 
+    pub def isBlankNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) = 
         let* typ = getCellTypeNamed(label);
         match typ { 
             case TyBlank => point(true)
             case _ => point(false)
-        }
+        } |> swapError("isBlankNamed(${label})")
 
 
-    pub def getBlankNamed(label: String): NamedRowEvaluator[r, Unit] = 
+    pub def getBlankNamed(label: String): NamedRowEvaluator[r, Unit] \ Read(r) =
+        let errMsg = "isBlankNamed(${label})";
         let* typ = getCellTypeNamed(label);
         match typ { 
             case TyBlank => point()
-            case _       => throwError("getBlankNamed($label}) - not blank")
-        }
-    
-    pub def getStringNamed(label: String): NamedRowEvaluator[r, String] =
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getStringCellValue)) `swapError` "getStringNamed('${label}')"
+            case _       => throwError(errMsg)
+        } |> swapError(errMsg)
+
+
+    pub def getStringNamed(label: String): NamedRowEvaluator[r, String] \ Read(r) =
+        liftPrimCell(label, (r, row, _) -> SheetIO/Internal/Cell.getStringCellValue(r, row))
+            |> swapError("getStringNamed(${label})")
             
 
+    pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[r, String] \ Read(r) =
+        let errMsg = "getSatifiesNamed(${label})";
+        let step = () -> getContentNamed(label) >>= x -> 
+                    if (test(x)) point(x) else throwError(errMsg);
+        step() |> swapError(errMsg)
 
-    pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[r, String] =
-        let step = getContentNamed(label) >>= x -> 
-                    if (test(x)) point(x) else throwError("getSatifiesNamed('${label}') - failed");
-        step `swapError` "getSatifiesNamed('${label}')"
+
 
     /// Whitespace is counted as empty, answer is trimmed.
-    pub def getNonEmptyContentNamed(label: String): NamedRowEvaluator[r, String] =
-        (getSatifiesNamed(label, x -> not String.isEmpty(String.trim(x))) `swapError` "getNonEmptyContentNamed('${label}')")
+    pub def getNonEmptyContentNamed(label: String): NamedRowEvaluator[r, String] \ Read(r) =
+        getSatifiesNamed(label, x -> not String.isEmpty(String.trim(x)))
             |> map(String.trim)
+            |> swapError("getSatifiesNamed(${label})")
 
 
-    pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[r, String] =
+    pub def getStringNamedWithDefault(label: String, d: String): NamedRowEvaluator[r, String] \ Read(r) =
         let* x = isNullNamed(label);
-        if (x) point(d) else getStringNamed(label)
+        let* y = isBlankNamed(label);
+        if (x or y) point(d) else getStringNamed(label)
 
 
-    pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[r, String] =
-        let* ix     = getIndex(label);
+    pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[r, String] \ Read(r) =
         let DataFormatter(dfmt1) = dfmt;
-        liftPrim(x -> withCell(x, ix, cell -> SheetIO/Internal/DataFormatter.formatCellValue(dfmt1, cell)))
+        liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, dfmt1))
 
-
-    pub def getBoolNamed(label: String): NamedRowEvaluator[r, Bool] =
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getBooleanCellValue)) `swapError` "getNumericNamed('${label}')"
+    pub def getBoolNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) =
+        liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/Cell.getBooleanCellValue(r, cell))
     
 
-    pub def getNumericNamed(label: String): NamedRowEvaluator[r, Float64] =
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getNumericCellValue)) `swapError` "getNumericNamed('${label}')"
+    pub def getNumericNamed(label: String): NamedRowEvaluator[r, Float64] \ Read(r) =
+        liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/Cell.getNumericCellValue(r, cell))
 
-    def getNumNamed(label: String, conv: Float64 -> Option[a], errMsg: String): NamedRowEvaluator[r, a] =
+    def getNumNamed(label: String, conv: Float64 -> Option[a]): NamedRowEvaluator[r, a] \ Read(r) =
         let* n = getNumericNamed(label);
-        liftOption(conv(n), errMsg)
+        match conv(n) {
+            case Some(d) => point(d)
+            case None    => throwError("getNumNamed")
+        }
 
 
-    pub def getInt8Named(label: String): NamedRowEvaluator[r, Int8] =
-        getNumNamed(label, Float64.tryToInt8, "getInt8Named('${label}')")
+    pub def getInt8Named(label: String): NamedRowEvaluator[r, Int8] \ Read(r) =
+        getNumNamed(label, Float64.tryToInt8) 
+            |> swapError("getInt8Named(${label})")
 
-    pub def getInt16Named(label: String): NamedRowEvaluator[r, Int16] =
-        getNumNamed(label, Float64.tryToInt16, "getInt16Named('${label}')")
+    pub def getInt16Named(label: String): NamedRowEvaluator[r, Int16] \ Read(r) =
+        getNumNamed(label, Float64.tryToInt16) 
+            |> swapError("getInt16Named(${label})")
 
-    pub def getInt32Named(label: String): NamedRowEvaluator[r, Int32] =
-        getNumNamed(label, Float64.tryToInt32, "getInt32Named('${label}')")
+    pub def getInt32Named(label: String): NamedRowEvaluator[r, Int32] \ Read(r) =
+        getNumNamed(label, Float64.tryToInt32) 
+            |> swapError("getInt32Named(${label})")
 
-    pub def getInt64Named(label: String): NamedRowEvaluator[r, Int64] =
-        getNumNamed(label, Float64.tryToInt64, "getInt64Named('${label}')")
+    pub def getInt64Named(label: String): NamedRowEvaluator[r, Int64] \ Read(r) =
+        getNumNamed(label, Float64.tryToInt64) 
+            |> swapError("getInt64Named(${label})")
 
-    pub def getFloat32Named(label: String): NamedRowEvaluator[r, Float32] =
-        getNumNamed(label, Float64.tryToFloat32, "getFloat32Named('${label}')")
+    pub def getFloat32Named(label: String): NamedRowEvaluator[r, Float32] \ Read(r) =
+        getNumNamed(label, Float64.tryToFloat32) 
+            |> swapError("getFloat32Named(${label})")
     
-    pub def getFloat64Named(label: String): NamedRowEvaluator[r, Float64] = 
-        getNumNamed(label, x -> Some(x), "getFloat64Named('${label}')")
+    pub def getFloat64Named(label: String): NamedRowEvaluator[r, Float64] \ Read(r) = 
+        getNumericNamed(label) 
+            |> swapError("getFloat64Named(${label})")
 
 
-
-    def isDateFormattedNamed(label: String): NamedRowEvaluator[r, Bool] = 
-        let* ix     = getIndex(label);
-        liftPrim(x -> withCell(x, ix, SheetIO/Internal/DateUtil.isCellDateFormatted))
+    def isDateFormattedNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) =
+        liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/Util.isCellDateFormatted(r, cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
     /// Note - will fail if CellType is String.
-    pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[r, Time.LocalDateTime] = 
+    pub def getLocalDateTimeNamed(label: String): NamedRowEvaluator[r, Time.LocalDateTime] \ Read(r)= 
         use Time.LocalDateTime.{LocalDateTime};
-        let* ctype  = getCellTypeNamed(label);
-        let* ix     = getIndex(label);
+        let* ctype = getCellTypeNamed(label);
         if (ctype == TyNumeric) {
             let* dtCell = isDateFormattedNamed(label);
             if (dtCell) {
-                let* dt = liftPrim(x -> withCell(x, ix, SheetIO/Internal/Cell.getLocalDateTimeCellValue));
+                let* dt = liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/Cell.getLocalDateTimeCellValue(r, cell));
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeAt - null")
                 else
@@ -356,120 +362,106 @@ namespace SheetIO/NamedRowEvaluator {
         } else throwError("getLocalDateTimeAt - not a date / not a numeric cell")
 
 
-
     /// Cell must be readable as a String
-    pub def getLocalDateTimeNamedWithFormat(label: String, fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): NamedRowEvaluator[r, Time.LocalDateTime] = 
+    pub def getLocalDateTimeNamedWithFormat(label: String, 
+                                            fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): NamedRowEvaluator[r, Time.LocalDateTime] \ Read(r) = 
         let* s = getStringNamed(label);
         liftResult(Time/LocalDateTime.parse(fmt, s))
-        
+       
 
     /// Cell must be readable as a String
-    pub def getLocalTimeDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[r, Time.LocalDateTime] = 
+    pub def getLocalTimeDateNamedWithPattern(label: String, 
+                                                patt: String): NamedRowEvaluator[r, Time.LocalDateTime] \ Read(r) = 
         let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringNamed(label);
         liftResult(Time/LocalDateTime.parse(fmt, s))
 
 
-    pub def getLocalDateNamed(label: String): NamedRowEvaluator[r, Time.LocalDate] = 
-        mapError(s -> "getLocalDateNamed<<${s}>>",  map(Time/LocalDateTime.toLocalDate, getLocalDateTimeNamed(label)))
+    pub def getLocalDateNamed(label: String): NamedRowEvaluator[r, Time.LocalDate] \ Read(r) = 
+        getLocalDateTimeNamed(label)
+            |> map(Time/LocalDateTime.toLocalDate)
+            |> swapError("getLocalDateNamed(${label})")
 
     /// Cell must be readable as a String
-    pub def getLocalDateNamedWithFormat(label: String, fmt: DateTimeFormatter[Time/Format.DateFormat]): NamedRowEvaluator[r, Time.LocalDate] = 
+    pub def getLocalDateNamedWithFormat(label: String, 
+                                        fmt: DateTimeFormatter[Time/Format.DateFormat]): NamedRowEvaluator[r, Time.LocalDate] \ Read(r) = 
         let* s = getStringNamed(label);
         liftResult(Time/LocalDate.parse(fmt, s))
         
 
     /// Cell must be readable as a String
-    pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[r, Time.LocalDate] = 
+    pub def getLocalDateNamedWithPattern(label: String, patt: String): NamedRowEvaluator[r, Time.LocalDate] \ Read(r) = 
         let* fmt    = liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringNamed(label);
         liftResult(Time/LocalDate.parse(fmt, s))
     
 
 
-    def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[r, a]): NamedRowEvaluator[r, Option[a]] = 
+    def getIfNotEmpty(label: String, getter: String -> NamedRowEvaluator[r, a] \ Read(r)): NamedRowEvaluator[r, Option[a]] \ Read(r) = 
         let* x1 = isNullNamed(label);
         let* y1 = isBlankNamed(label);
         if (x1 or y1) point(None) else map(Some, getter(label))
 
-    pub def getOptionStringNamed(label: String): NamedRowEvaluator[r, Option[String]] =
+    pub def getOptionStringNamed(label: String): NamedRowEvaluator[r, Option[String]] \ Read(r) =
         getIfNotEmpty(label, getStringNamed)
 
 
-
-    pub def getOptionInt8Named(label: String): NamedRowEvaluator[r, Option[Int8]] =
+    pub def getOptionInt8Named(label: String): NamedRowEvaluator[r, Option[Int8]] \ Read(r) =
         getIfNotEmpty(label, getInt8Named)
 
-    pub def getOptionInt16Named(label: String): NamedRowEvaluator[r, Option[Int16]] =
+    pub def getOptionInt16Named(label: String): NamedRowEvaluator[r, Option[Int16]] \ Read(r) =
         getIfNotEmpty(label, getInt16Named)
 
-    pub def getOptionInt32Named(label: String): NamedRowEvaluator[r, Option[Int32]] =
+    pub def getOptionInt32Named(label: String): NamedRowEvaluator[r, Option[Int32]] \ Read(r) =
         getIfNotEmpty(label, getInt32Named)
 
-    pub def getOptionInt64Named(label: String): NamedRowEvaluator[r, Option[Int64]] =
+    pub def getOptionInt64Named(label: String): NamedRowEvaluator[r, Option[Int64]] \ Read(r) =
         getIfNotEmpty(label, getInt64Named)
 
-    pub def getOptionFloat32Named(label: String): NamedRowEvaluator[r, Option[Float32]] =
+    pub def getOptionFloat32Named(label: String): NamedRowEvaluator[r, Option[Float32]] \ Read(r) =
         getIfNotEmpty(label, getFloat32Named)
     
-    pub def getOptionFloat64Named(label: String): NamedRowEvaluator[r, Option[Float64]] = 
-        getIfNotEmpty(label, getFloat64Named) `swapError` ("getOptionFloat64Named('${label}')")
+    pub def getOptionFloat64Named(label: String): NamedRowEvaluator[r, Option[Float64]] \ Read(r) = 
+        getIfNotEmpty(label, getFloat64Named)
+            |> swapError("getOptionFloat64Named(${label})")
 
-    pub def getOptionLocalDateTimeNamed(label: String): NamedRowEvaluator[r, Option[Time.LocalDateTime]] = 
+
+    pub def getOptionLocalDateTimeNamed(label: String): NamedRowEvaluator[r, Option[Time.LocalDateTime]] \ Read(r) = 
         getIfNotEmpty(label, getLocalDateTimeNamed)
 
 
 
 
-    def queryFontAt(ix: Int32, asks: ##org.apache.poi.ss.usermodel.Font -> Result[a, String] & Impure): NamedRowEvaluator[r, a] = 
+    def queryFontAt(ix: Int32, 
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): NamedRowEvaluator[r, a] \ { Read(r), ef } = 
         use Result.flatMap;
-        liftPrim(row -> 
-            let* cell   = SheetIO/Internal/Row.getCell(row, ix);
-            let* style  = SheetIO/Internal/Cell.getCellStyle(cell);
-            let* idx    = SheetIO/Internal/CellStyle.getFontIndexAsInt(style);
-            let* sheet  = SheetIO/Internal/Row.getSheet(row);
-            let* wb     = SheetIO/Internal/Sheet.getWorkbook(sheet);
-            let* font   = SheetIO/Internal/Workbook.getFontAt(wb, idx);
-            let* ans    = asks(font); 
+        liftPrim((r, row, _) -> 
+            let* cell   = SheetIO/Internal/Row.getCell(r, ix, row);
+            let* style  = SheetIO/Internal/Cell.getCellStyle(r, cell);
+            let* idx    = SheetIO/Internal/CellStyle.getFontIndexAsInt(r, style);
+            let* sheet  = SheetIO/Internal/Row.getSheet(r, row);
+            let* wb     = SheetIO/Internal/Sheet.getWorkbook(r, sheet);
+            let* font   = SheetIO/Internal/Workbook.getFontAt(r, idx, wb);
+            let* ans    = fn(r, font); 
             Ok(ans)
         )
 
 
-    pub def getIsBoldNamed(label: String): NamedRowEvaluator[r, Bool] = 
+    pub def getIsBoldNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) = 
         let* ix = getIndex(label);
         queryFontAt(ix, SheetIO/Internal/Font.getBold)
 
-
-    pub def getIsItalicNamed(label: String): NamedRowEvaluator[r, Bool] = 
+    pub def getIsItalicNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) = 
         let* ix = getIndex(label);
         queryFontAt(ix, SheetIO/Internal/Font.getItalic)
 
-    pub def getIsStrikeoutNamed(label: String): NamedRowEvaluator[r, Bool] = 
+    pub def getIsStrikeoutNamed(label: String): NamedRowEvaluator[r, Bool] \ Read(r) = 
         let* ix = getIndex(label);
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
 
-    pub def optional(x: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, Option[a]] =
-        NamedRowEvaluator((row, fmt, ixs) ->
-            match apply1(x, row, fmt, ixs) {
-                case Ok(a) => Ok(Some(a))
-                case Err(_) => Ok(None)
-            }
-        )
 
-    /// Note - this returns default for all errors (i.e. unknown column which is a
-    /// schema error). Might be better if it can just return default if cell is null...
-    pub def withDefault(x: NamedRowEvaluator[r, a], d: a): NamedRowEvaluator[r, a] =
-        alt(x, point(d))
-
-    pub def alt(ea: NamedRowEvaluator[r, a], eb: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
-        NamedRowEvaluator((row, fmt, ixs) ->
-            match apply1(ea, row, fmt, ixs) {
-                case Ok(a) => Ok(a)
-                case Err(_) => apply1(eb, row, fmt, ixs) 
-            }
-        )
-
+/*
 
     pub def mapM(mf: a -> NamedRowEvaluator[r, b], xs: List[a]): NamedRowEvaluator[r, List[b]] =
         NamedRowEvaluator((row, fmt, ixs) ->
@@ -496,9 +488,8 @@ namespace SheetIO/NamedRowEvaluator {
                 }
             }
         }
-        
-
 
 */
+
 }
 
