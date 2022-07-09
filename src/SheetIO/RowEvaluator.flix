@@ -68,18 +68,21 @@ namespace SheetIO/RowEvaluator {
         let RowEvaluator(f) = x;
         f(fmt, row)
 
-/*
-    pub def throwError(msg: String): RowEvaluator[r, a] =
-        RowEvaluator((_, row) -> Err(SheetIO/EvalError.create(() as Region[r], row, msg)))
 
-    pub def swapError(ma: RowEvaluator[r, a], msg: String): RowEvaluator[r, a] =
+    pub def throwError(msg: String): RowEvaluator[r, a] =
+        RowEvaluator((_, row) -> 
+            Err(SheetIO/Internal/EvalError.create(() as Region[r], row, {source = msg, exnMessage = ""}))
+        )
+
+
+    pub def swapError(msg: String, ma: RowEvaluator[r, a]): RowEvaluator[r, a] =
         RowEvaluator((fmt, row) ->
             match apply1(ma, fmt, row) {
-                case Ok(a)  => Ok(a)
-                case Err(_) => Err(SheetIO/EvalError.create(() as Region[r], row, msg))
+                case Ok(a)    => Ok(a)
+                case Err(err) => Err({source = msg | err})
             }
         )
-*/
+
 
     pub def map(f: a -> b & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
         RowEvaluator((fmt, row) ->

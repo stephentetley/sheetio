@@ -61,23 +61,20 @@ namespace SheetIO/CellStyleSetter {
         let CellStyleSetter(f) = x;
         f(r)
 
-    def getCellStyleSetterRegion(): CellStyleSetter[r, Region[r]] = 
-        CellStyleSetter(_ -> Ok(() as Region[r]) as & r)
-
 
     pub def throwError(msg: String): CellStyleSetter[r, a] =
         CellStyleSetter(_ -> Err({source = msg, exnMessage = ""}) as & r)
 
      pub def mapError(f: String -> String, ma: CellStyleSetter[r, a]): CellStyleSetter[r, a] =
         CellStyleSetter(s -> match apply1(ma, s) { 
-            case Ok(p1) => Ok(p1)
-            case Err(e) => let src = e.source; Err({source = f(src) | e})
+            case Ok(a)    => Ok(a)
+            case Err(err) => Err({source = f(err.source) | err})
         })
 
 
     pub def map(f: a -> b & ef, x: CellStyleSetter[r, a]): CellStyleSetter[r, b] & ef =
-        CellStyleSetter(r ->
-            match apply1(x, r) {
+        CellStyleSetter(s ->
+            match apply1(x, s) {
                 case Ok(a) => {
                     let ans = f(a) as & r;
                     Ok(ans)
@@ -87,11 +84,11 @@ namespace SheetIO/CellStyleSetter {
         ) as & ef
 
     pub def ap(mf: CellStyleSetter[r, a -> b & ef], ma: CellStyleSetter[r, a]): CellStyleSetter[r, b] & ef =
-        CellStyleSetter(r ->
-            match apply1(mf, r) {
-                case Ok(f) => {
-                    match apply1(ma, r) {
-                        case Ok(a) => Ok(f(a) as & r)
+        CellStyleSetter(s ->
+            match apply1(mf, s) {
+                case Ok(f)   => {
+                    match apply1(ma, s) {
+                        case Ok(a)   => Ok(f(a) as & r)
                         case Err(e2) => Err(e2)
                     }
                 }
@@ -101,9 +98,9 @@ namespace SheetIO/CellStyleSetter {
 
     
     pub def flatMap(k: a -> CellStyleSetter[r, b] & ef, x: CellStyleSetter[r, a]): CellStyleSetter[r, b] & ef = 
-        CellStyleSetter(r ->
-            match apply1(x, r) {
-                case Ok(a) => { let ans = k(a) as & r; apply1(ans, r) }
+        CellStyleSetter(s ->
+            match apply1(x, s) {
+                case Ok(a)  => { let ans = k(a) as & r; apply1(ans, s) }
                 case Err(e) => Err(e)
             }
         ) as & ef
@@ -111,8 +108,12 @@ namespace SheetIO/CellStyleSetter {
     pub def bind(x: CellStyleSetter[r, a], k: a -> CellStyleSetter[r, b] & ef): CellStyleSetter[r, b] & ef =
         flatMap(k, x)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, PrimError] & ef): CellStyleSetter[r, a] & ef=
-        CellStyleSetter(r -> update(r) as & r) as & ef
+    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.CellStyle -> Result[a, PrimError] & ef): CellStyleSetter[r, a] & ef=
+        CellStyleSetter(s -> 
+            let r = () as Region[r];
+            fn(r, s) as & r
+        )  as & ef
+
 
     pub def liftAction(fn: Unit -> a & ef): CellStyleSetter[r, a] & ef=
         CellStyleSetter(_ -> let x = fn() as & r; Ok(x)) as & ef
@@ -120,9 +121,9 @@ namespace SheetIO/CellStyleSetter {
     pub def liftActionResult(fn: Unit -> Result[a, String] & ef): CellStyleSetter[r, a] & ef=
         CellStyleSetter(_ -> let ans = fn() as & r; Result.mapErr(s -> {source = s, exnMessage = ""}, ans)) as & ef
 
-    pub def liftOption(x: Option[a], errMsg: String): CellStyleSetter[r, a] = match x { 
+    pub def liftOption(errMsg: String, x: Option[a]): CellStyleSetter[r, a] = match x { 
         case Some(x1) => point(x1)
-        case None => throwError(errMsg)
+        case None     => throwError(errMsg)
     }
 
     pub def liftResult(x: Result[a, String]): CellStyleSetter[r, a] = match x { 
@@ -143,38 +144,30 @@ namespace SheetIO/CellStyleSetter {
 
     pub def setFont!(font: Font): CellStyleSetter[r, Unit] \ Write(r) =    
         let Font(font1) = font; 
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setFont!(r, font1))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setFont!(r, font1))
 
 
     pub def setWrapText!(x: Bool): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setWrapText!(r, x))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setWrapText!(r, x))
 
 
     pub def setIndention!(x: Int16): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setIndention!(r, x))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setIndention!(r, x))
 
     pub def setFillForegroundColor!(x: Int16): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setFillForegroundColor!(r, x))
+        liftPrim(r-> SheetIO/Internal/CellStyle.setFillForegroundColor!(r, x))
     
     pub def setFillBackgroundColor!(x: Int16): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setFillBackgroundColor!(r, x))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setFillBackgroundColor!(r, x))
 
     pub def setShrinkToFit!(x: Bool): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setShrinkToFit!(r, x))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setShrinkToFit!(r, x))
 
     pub def setDataFormat!(x: Int16): CellStyleSetter[r, Unit] \ Write(r) =
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.setDataFormat!(r, x))
+        liftPrim(r -> SheetIO/Internal/CellStyle.setDataFormat!(r, x))
 
     pub def cloneStyleFrom!(x: CellStyle): CellStyleSetter[r, Unit] \ Write(r) =
         let CellStyle(x1) = x;
-        let* r = getCellStyleSetterRegion();
-        liftPrim(SheetIO/Internal/CellStyle.cloneStyleFrom!(r, x1))
+        liftPrim(r -> SheetIO/Internal/CellStyle.cloneStyleFrom!(r, x1))
 
 }

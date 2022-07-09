@@ -56,16 +56,13 @@ namespace SheetIO/FontSetter {
         let FontSetter(f) = x;
         f(r)
 
-    def getFontSetterRegion(): FontSetter[r, Region[r]] = 
-        FontSetter(_ -> Ok(() as Region[r]) as & r)
-
     pub def throwError(msg: String): FontSetter[r, a] =
         FontSetter(_ -> Err({source = msg, exnMessage = ""}) as & r)
 
-    pub def mapError(f: String -> String, ma: FontSetter[r, a]): FontSetter[r, a] =
+    pub def swapError(errSrc: String, ma: FontSetter[r, a]): FontSetter[r, a] =
         FontSetter(s -> match apply1(ma, s) { 
-            case Ok(p1) => Ok(p1)
-            case Err(e) => let src = e.source; Err({source = f(src) | e})
+            case Ok(x1)   => Ok(x1)
+            case Err(err) => Err({source = errSrc | err})
         })
 
 
@@ -105,8 +102,11 @@ namespace SheetIO/FontSetter {
 
     pub def bind(x: FontSetter[r, a], k: a -> FontSetter[r, b] & ef): FontSetter[r, b] & ef = flatMap(k, x)
 
-    def liftPrim(update: ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): FontSetter[r, a] & ef=
-        FontSetter(r -> update(r) as & r) as & ef
+    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): FontSetter[r, a] & ef=
+        FontSetter(s -> 
+            let r = () as Region[r];
+            fn(r, s) as & r
+        )  as & ef
 
     pub def liftAction(fn: Unit -> a & ef): FontSetter[r, a] & ef =
         FontSetter(_ -> let x = fn() as & r; Ok(x)) as & ef
@@ -138,33 +138,26 @@ namespace SheetIO/FontSetter {
 
 
     pub def setFontName!(x: String): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setFontName!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setFontName!(r, x))
 
 
     pub def setFontHeight!(x: Int16): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setFontHeight!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setFontHeight!(r, x))
 
     pub def setFontHeightInPoints!(x: Int16): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setFontHeightInPoints!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setFontHeightInPoints!(r, x))
 
     pub def setBold!(x: Bool): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setBold!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setBold!(r, x))
 
     pub def setItalic!(x: Bool): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setItalic!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setItalic!(r, x))
 
     pub def setStrikeout!(x: Bool): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setStrikeout!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setStrikeout!(r, x))
     
     pub def setColor!(x: Int16): FontSetter[r, Unit] \ Write(r) = 
-        let* r = getFontSetterRegion();
-        liftPrim(SheetIO/Internal/Font.setColor!(r, x))
+        liftPrim(r -> SheetIO/Internal/Font.setColor!(r, x))
 
     /// TODO others need enums...
 
