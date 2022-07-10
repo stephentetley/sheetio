@@ -18,17 +18,17 @@
 
 namespace SheetIO {
 
-    /// TODO - do we really need to wrap these?
+    /// Mutable objects with regions...
     
-    pub enum Sheet(##org.apache.poi.ss.usermodel.Sheet)
+    pub enum Sheet[_: Region](##org.apache.poi.ss.usermodel.Sheet)
 
-    pub enum Row(##org.apache.poi.ss.usermodel.Row)
+    pub enum Row[_: Region](##org.apache.poi.ss.usermodel.Row)
 
-    pub enum CellStyle(##org.apache.poi.ss.usermodel.CellStyle)
+    pub enum CellStyle[_: Region](##org.apache.poi.ss.usermodel.CellStyle)
 
-    pub enum DataFormat(##org.apache.poi.ss.usermodel.DataFormat)
+    pub enum DataFormat[_: Region](##org.apache.poi.ss.usermodel.DataFormat)
 
-    pub enum Font(##org.apache.poi.ss.usermodel.Font)
+    pub enum Font[_: Region](##org.apache.poi.ss.usermodel.Font)
 
 }
 

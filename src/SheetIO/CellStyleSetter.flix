@@ -142,7 +142,7 @@ namespace SheetIO/CellStyleSetter {
     }
 
 
-    pub def setFont!(font: Font): CellStyleSetter[r, Unit] \ Write(r) =    
+    pub def setFont!(font: Font[r]): CellStyleSetter[r, Unit] \ Write(r) =    
         let Font(font1) = font; 
         liftPrim(r -> SheetIO/Internal/CellStyle.setFont!(r, font1))
 
@@ -166,7 +166,7 @@ namespace SheetIO/CellStyleSetter {
     pub def setDataFormat!(x: Int16): CellStyleSetter[r, Unit] \ Write(r) =
         liftPrim(r -> SheetIO/Internal/CellStyle.setDataFormat!(r, x))
 
-    pub def cloneStyleFrom!(x: CellStyle): CellStyleSetter[r, Unit] \ Write(r) =
+    pub def cloneStyleFrom!(x: CellStyle[r]): CellStyleSetter[r, Unit] \ Write(r) =
         let CellStyle(x1) = x;
         liftPrim(r -> SheetIO/Internal/CellStyle.cloneStyleFrom!(r, x1))
 

@@ -34,7 +34,11 @@ namespace SheetIO/Internal/EvalError {
             let  rowNum = SheetIO/Internal/Row.getRowNum(r, row);
             Ok({sheet = sheetName, rowNumber = rowNum, source = prim.source, exnMessage = prim.exnMessage})
         };
-        step() |> Result.getWithDefault({sheet = "***", rowNumber = 0, source = prim.source, exnMessage = prim.exnMessage})
+        step() |> Result.getWithDefault({sheet = "", rowNumber = 0, source = prim.source, exnMessage = prim.exnMessage})
+
+
+    pub def emptyEvalError(prim: PrimError): EvalError = 
+        {sheet = "", rowNumber = 0, source = prim.source, exnMessage = prim.exnMessage}
 
 
     pub def getText(err: EvalError): String =

@@ -23,7 +23,7 @@ namespace SheetIO {
     use SheetIO/Internal/EvalError.{EvalError};
 
     pub enum RowSetter[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, EvalError] & r)
+        ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle[r]] -> Result[a, EvalError] & r)
 
     instance Functor[RowSetter[r]] {
         pub def map(f: a -> b & ef, o: RowSetter[r, a]): RowSetter[r, b] & ef = 
@@ -59,7 +59,7 @@ namespace SheetIO/RowSetter {
     pub def point(x: a): RowSetter[r, a] =
         RowSetter((_, _) -> Ok(x) as & r)
 
-    def apply1(x: RowSetter[r, a], row: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, EvalError] & r =
+    def apply1(x: RowSetter[r, a], row: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle[r]]): Result[a, EvalError] & r =
         let RowSetter(f) = x;
         f(row, style)
 
@@ -114,7 +114,7 @@ namespace SheetIO/RowSetter {
 
 
 
-    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, PrimError] & ef): RowSetter[r, a] & ef =
+    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle[r]] -> Result[a, PrimError] & ef): RowSetter[r, a] & ef =
         RowSetter((row, style) -> 
             let r = () as Region[r]; 
             {fn(r, row, style) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
@@ -155,7 +155,7 @@ namespace SheetIO/RowSetter {
 
 
 
-
+    /// This sets the CellStyle...
     def createOrGetCell(ix: Int32): RowSetter[r, ##org.apache.poi.ss.usermodel.Cell] \ Write(r) = 
         use SheetIO/Internal/Row.{getCell, createCell!};
         use Result.{flatMap};
@@ -173,12 +173,12 @@ namespace SheetIO/RowSetter {
         liftPrim(body)
 
     def liftPrimCell(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Cell -> Option[CellStyle] -> Result[a, PrimError] & ef): RowSetter[r, a] \ { Write(r), ef } =
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Cell -> Option[CellStyle[r]] -> Result[a, PrimError] & ef): RowSetter[r, a] \ { Write(r), ef } =
         let* cell = createOrGetCell(ix);
         liftPrim((r, _, style) -> fn(r, cell, style))
 
 
-    pub def localCellStyle(style: CellStyle, mx: RowSetter[r, a]): RowSetter[r, a] = 
+    pub def localCellStyle(style: CellStyle[r], mx: RowSetter[r, a]): RowSetter[r, a] = 
         RowSetter((row, _) -> apply1(mx, row, Some(style)))
 
 
@@ -236,7 +236,7 @@ namespace SheetIO/RowSetter {
     pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, Unit] \ Write(r) =
         use Time.LocalDate.{LocalDate};
         let  LocalDate(dt1) = dt;
-        liftPrimCell(ix, (r, cell, _) ->SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
  
     pub def putHeaders!(l: List[String]): RowSetter[r, Unit] \ Write(r) = 
         putHeadersHelper!(l, 0)
