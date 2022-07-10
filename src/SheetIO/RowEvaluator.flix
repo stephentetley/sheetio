@@ -18,9 +18,10 @@
 namespace SheetIO {
 
     use SheetIO/Internal/EvalError.{EvalError};
+    use SheetIO.DataFormatter;
     
     pub enum RowEvaluator[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, EvalError] & r
+        ##org.apache.poi.ss.usermodel.Row -> DataFormatter[r] -> Result[a, EvalError] & r
     )
 
 
@@ -65,7 +66,7 @@ namespace SheetIO/RowEvaluator {
 
     def apply1(x: RowEvaluator[r, a], 
                 row: ##org.apache.poi.ss.usermodel.Row, 
-                fmt: ##org.apache.poi.ss.usermodel.DataFormatter): Result[a, EvalError] & r =
+                fmt: DataFormatter[r]): Result[a, EvalError] & r =
         let RowEvaluator(f) = x;
         f(row, fmt)
 
@@ -147,7 +148,8 @@ namespace SheetIO/RowEvaluator {
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, PrimError] & ef): RowEvaluator[r, a] & ef =
         RowEvaluator((row, fmt) -> 
             let r = () as Region[r];
-            {fn(r, row, fmt) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
+            let DataFormatter(fmt1) = fmt;
+            {fn(r, row, fmt1) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
         )  as & ef
 
 
@@ -283,7 +285,7 @@ namespace SheetIO/RowEvaluator {
         if (x or y) point(d) else getStringAt(ix)
 
 
-    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[r, String] \Read(r) =
+    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter[r]): RowEvaluator[r, String] \Read(r) =
         let DataFormatter(dfmt1) = dfmt;
         liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, dfmt1))
 

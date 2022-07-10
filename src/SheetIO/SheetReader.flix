@@ -277,7 +277,7 @@ namespace SheetIO/SheetReader {
         case Err(msg) => throwError(msg)
     }
 
-    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): SheetReader[r, a] = match x { 
+    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): SheetReader[r, a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
@@ -336,6 +336,26 @@ namespace SheetIO/SheetReader {
     pub def getRowAt(ix: Int32, s: Sheet[r]): SheetReader[r, Row[r]] \ Read(r) =
         let Sheet(s1) = s;
         liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getRow(r, ix, s1) |> Result.map(Row))
+
+
+    ///
+    /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
+    /// than trying to use `getLastRowNum` to find the end.
+    ///
+    def getRowIterator(s: Sheet[r]): Iterator[Row[r], r] \ Read(r) =
+        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
+        let Sheet(s1) = s;
+        let iter = rowIterator(s1);
+        Interop/RawIterator.new(() as Region[r], iter) |> Interop/RawIterator.iterator
+
+    pub def allRows(eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, List[a]] \ { Read(r) }=
+        let RowEvaluator(f) = eval;
+        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
+        let* iter           = liftAction(_ -> getRowIterator(sheet));
+        let* xs             = SheetReader(_ -> iter |> Iterator.map(row -> {let Row(row1) = row; f(row1 , fmt)}) |> Result.sequence);
+        point(xs)
+
+
 
 /*
     ///

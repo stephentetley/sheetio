@@ -20,10 +20,11 @@
 namespace SheetIO {
 
     use SheetIO/Internal/EvalError.{EvalError};
+    use SheetIO.DataFormatter;
 
     /// Includes Map[columName: String => index: Int32]
     pub enum NamedRowEvaluator[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Map[String, Int32] -> Result[a, EvalError] & r
+        ##org.apache.poi.ss.usermodel.Row -> DataFormatter[r] -> Map[String, Int32] -> Result[a, EvalError] & r
     )
 
     instance Functor[NamedRowEvaluator[r]] {
@@ -83,7 +84,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     def apply1(x: NamedRowEvaluator[r, a],
                row: ##org.apache.poi.ss.usermodel.Row, 
-               fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
+               fmt: DataFormatter[r], 
                ixs: Map[String, Int32]): Result[a, EvalError] & r =
         let NamedRowEvaluator(f) = x;
         f(row, fmt, ixs)
@@ -163,7 +164,8 @@ namespace SheetIO/NamedRowEvaluator {
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, PrimError] & ef): NamedRowEvaluator[r, a] & ef =
         NamedRowEvaluator((row, fmt, _) -> 
             let r = () as Region[r];
-            {fn(r, row, fmt) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
+            let DataFormatter(fmt1) = fmt;
+            {fn(r, row, fmt1) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
         )  as & ef
 
      
@@ -297,7 +299,7 @@ namespace SheetIO/NamedRowEvaluator {
         if (x or y) point(d) else getStringNamed(label)
 
 
-    pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowEvaluator[r, String] \ Read(r) =
+    pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter[r]): NamedRowEvaluator[r, String] \ Read(r) =
         let DataFormatter(dfmt1) = dfmt;
         liftPrimCell(label, (r, cell, _) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, dfmt1))
 

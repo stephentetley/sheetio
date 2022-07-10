@@ -22,8 +22,18 @@ namespace SheetIO/Internal/DataFormatter {
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
         newDataFormatter()
 
-    /// TODO - it would be useful to allow users to make custom DataFormatters...
 
+    ///
+    /// Returns a new mutable DataFormatter.
+    ///
+    pub def newWithLocale(_: Region[r], x: I18n.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
+        use I18n.Locale.{Locale};
+        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
+        let Locale(x1) = x;
+        newDataFormatter(x1)
+
+
+    /// TODO - it would be useful to allow users to make custom DataFormatters...
 
     /// This is a "getter" despite its name.
     pub def formatCellValue(r: Region[r],
