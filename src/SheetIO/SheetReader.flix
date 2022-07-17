@@ -20,7 +20,7 @@ namespace SheetIO {
     use SheetIO/Internal/EvalError.{EvalError};
     
     pub enum SheetReader[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Workbook -> Result[a, EvalError] & r
+        ##org.apache.poi.ss.usermodel.Sheet -> Result[a, EvalError] & r
     )
 
     instance Functor[SheetReader[r]] {
@@ -47,7 +47,6 @@ namespace SheetIO/SheetReader {
 
     use ToString.toString;
 
-    use FlixSandbox/Deprecated.Cursor;
 
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
@@ -65,40 +64,7 @@ namespace SheetIO/SheetReader {
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
 
-    /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: SheetReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        runXssf(ma, path)
-    
-    /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: SheetReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
-        use Result.{flatMap};
-        let path1 = toString(path);
-        match openXSSFWorkbook(path1) { 
-            case Err(e) => Err("runXssf(${path1}): ${e}")
-            case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-                let* _ = closeXSSFWorkbook(wb);
-                ans         
-            }
-        }
-
-    /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
-        use Result.{flatMap};
-        let path1 = toString(path);
-        match openHSSFWorkbook(path1) { 
-            case Err(e) => Err("runHssf(${path1}): ${e}")
-            case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-                let* _ = closeHSSFWorkbook(wb);
-                ans         
-            }
-        }
-
-
-    def apply1(ma: SheetReader[r, a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, EvalError] & r = 
+    def apply1(ma: SheetReader[r, a], wb: ##org.apache.poi.ss.usermodel.Sheet): Result[a, EvalError] & r = 
         let SheetReader(x1) = ma;
         x1(wb)
 
@@ -256,10 +222,10 @@ namespace SheetIO/SheetReader {
             case None => melse
         })
 
-    def liftWorkbookPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Workbook -> Result[a, PrimError] & ef): SheetReader[r, a] & ef = 
-        SheetReader(wb -> 
+    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Sheet -> Result[a, PrimError] & ef): SheetReader[r, a] & ef = 
+        SheetReader(s -> 
             let r = () as Region[r];
-            {fn(r, wb) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
+            {fn(r, s) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
         )  as & ef
 
 
@@ -294,70 +260,44 @@ namespace SheetIO/SheetReader {
 
 
     // SheetReader
-
-    pub def getNumberOfSheets(): SheetReader[r, Int32] \ Read(r) =
-        liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
-
-    pub def getSheetNames(): SheetReader[r, List[String]] \ Read(r) =
-        let* n  = getNumberOfSheets();
-        let ixs = List.range(0,n);
-        Traversable.traverse(getSheetNameWb, ixs)      
-
-
-    def getSheetNameWb(ix: Int32): SheetReader[r, String] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
-
-
-    pub def getSheetNamed(name: String): SheetReader[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheet(r, name, wb) |> Result.map(Sheet)) 
-
-
-    pub def getSheetAt(ix: Int32): SheetReader[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
-
+ 
     /// TODO - the SheetReader monad is dealing with both Sheet and Workbook functions.
     /// This was useful at first but is probably not the right abstraction...
 
-    pub def getSheetName(s: Sheet[r]): SheetReader[r, String] \ Read(r) =
-        let Sheet(s1) = s;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getSheetName(r, s1))
+    pub def getSheetName(): SheetReader[r, String] \ Read(r) =
+        liftPrim(SheetIO/Internal/Sheet.getSheetName)
 
-    pub def getFirstRowNum(s: Sheet[r]): SheetReader[r, Int32] \ Read(r) =
-        let Sheet(s1) = s;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getFirstRowNum(r, s1))
+    pub def getFirstRowNum(): SheetReader[r, Int32] \ Read(r) =
+        liftPrim(SheetIO/Internal/Sheet.getFirstRowNum)
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
-    pub def getLastRowNum(s: Sheet[r]): SheetReader[r, Int32] \ Read(r) =
-        let Sheet(s1) = s;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getLastRowNum(r, s1))
+    pub def getLastRowNum(): SheetReader[r, Int32] \ Read(r) =
+        liftPrim(SheetIO/Internal/Sheet.getLastRowNum)
 
 
-    pub def getPhysicalNumberOfRows(s: Sheet[r]): SheetReader[r, Int32] \ Read(r) =
-        let Sheet(s1) = s;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getPhysicalNumberOfRows(r, s1))
+    pub def getPhysicalNumberOfRows(): SheetReader[r, Int32] \ Read(r) =
+        liftPrim(SheetIO/Internal/Sheet.getPhysicalNumberOfRows)
 
 
-    pub def getRowAt(ix: Int32, s: Sheet[r]): SheetReader[r, Row[r]] \ Read(r) =
-        let Sheet(s1) = s;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Sheet.getRow(r, ix, s1) |> Result.map(Row))
+    pub def getRowAt(ix: Int32): SheetReader[r, Row[r]] \ Read(r) =
+        liftPrim(r -> SheetIO/Internal/Sheet.getRow(r, ix)) |> map(Row)
 
 
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def getRowIterator(s: Sheet[r]): Iterator[Row[r], r] \ Read(r) =
+    def getRowIterator(): SheetReader[r, Iterator[Row[r], r]] \ Read(r) =
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
-        let Sheet(s1) = s;
-        let iter = rowIterator(s1);
-        CollectionInterop/RawIterator.new(() as Region[r], iter) |> CollectionInterop/RawIterator.iterator
+        let* iter = liftPrim((_, s) -> rowIterator(s) |> Ok);
+        CollectionInterop/RawIterator.new(() as Region[r], iter) |> CollectionInterop/RawIterator.iterator |> point
 
 
-    pub def foldAllRows(f: (b, a) -> b & ef, s: b, eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, b] \ { Read(r), ef } =
+    pub def foldAllRows(f: (b, a) -> b & ef, s: b, eval: RowEvaluator[r, a]): SheetReader[r, b] \ { Read(r), ef } =
         let RowEvaluator(eval1) = eval;
-        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
-        let* rowIter        = liftAction(_ -> getRowIterator(sheet));
+        let* fmt            = liftPrim((r, _) -> SheetIO/DataFormatter.new(r) |> Ok);
+        let* rowIter        = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
             case None => point(s1)
             case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
@@ -367,10 +307,10 @@ namespace SheetIO/SheetReader {
         };
         loop(s)
 
-    pub def foldAllRowsWithIndex(f: (b, a, Int32) -> b & ef, s: b, eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, b] \ { Read(r), ef } =
+    pub def foldAllRowsWithIndex(f: (b, a, Int32) -> b & ef, s: b, eval: RowEvaluator[r, a]): SheetReader[r, b] \ { Read(r), ef } =
         let RowEvaluator(eval1) = eval;
-        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
-        let* rowIter        = liftAction(_ -> getRowIterator(sheet));
+        let* fmt            = liftPrim((r, _) -> SheetIO/DataFormatter.new(r) |> Ok);
+        let* rowIter        = getRowIterator();
         def loop(s1, ix) = match Iterator.next(rowIter) {
             case None => point(s1)
             case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
@@ -382,8 +322,8 @@ namespace SheetIO/SheetReader {
 
 
 
-    pub def allRows(eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, List[a]] \ { Read(r) }=
-        foldAllRows((k, a) -> ks -> k(a :: ks), ks -> ks, eval, sheet) |> map(k -> k(Nil))
+    pub def allRows(eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) }=
+        foldAllRows((k, a) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
 
 
