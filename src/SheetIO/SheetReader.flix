@@ -294,75 +294,57 @@ namespace SheetIO/SheetReader {
         CollectionInterop/RawIterator.new(() as Region[r], iter) |> CollectionInterop/RawIterator.iterator |> point
 
 
-    pub def foldAllRows(f: (b, a) -> b & ef, s: b, eval: RowEvaluator[r, a]): SheetReader[r, b] \ { Read(r), ef } =
+
+    /// This might be expressive enough to write all traversals with...
+    def foldRowsTraversal(range: {start :: Int32, end :: Int32}, 
+                            skipErrors: Bool,
+                            f: (b, a, Int32) -> b & ef, 
+                            s: b, 
+                            eval: RowEvaluator[r, a]): SheetReader[r, b] \ { Read(r), ef } =
         let RowEvaluator(eval1) = eval;
         let* fmt            = liftPrim((r, _) -> SheetIO/DataFormatter.new(r) |> Ok);
         let* rowIter        = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
             case None => point(s1)
-            case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
-                case Err(e1) => throwEvalError(e1)
-                case Ok(ans) => loop(f(s1, ans))
+            case Some(row1) => {
+                let primRow = SheetIO/Common.getRow(row1);
+                let* rownum = liftPrim((r, _) -> SheetIO/Internal/Row.getRowNum(r, primRow) |> Ok);
+                if (rownum >= range.start and rownum < range.end) 
+                    match eval1(SheetIO/Common.getRow(row1), fmt) {
+                        case Err(e1) => if (not skipErrors) throwEvalError(e1) else loop(s1)
+                        case Ok(ans) => loop(f(s1, ans, rownum))
+                    }
+                else 
+                    loop(s1)
+
             }
         };
         loop(s)
 
-    pub def foldAllRowsWithIndex(f: (b, a, Int32) -> b & ef, s: b, eval: RowEvaluator[r, a]): SheetReader[r, b] \ { Read(r), ef } =
-        let RowEvaluator(eval1) = eval;
-        let* fmt            = liftPrim((r, _) -> SheetIO/DataFormatter.new(r) |> Ok);
-        let* rowIter        = getRowIterator();
-        def loop(s1, ix) = match Iterator.next(rowIter) {
-            case None => point(s1)
-            case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
-                case Err(e1) => throwEvalError(e1)
-                case Ok(ans) => loop(f(s1, ans, ix), ix+1)
-            }
-        };
-        loop(s, 0)
 
 
 
-    pub def allRows(eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) }=
-        foldAllRows((k, a) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+    pub def allRows(eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
+        let* end = getPhysicalNumberOfRows();
+        foldRowsTraversal({start = 0, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-
-
-/*
-    ///
-    /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
-    /// than trying to use `getLastRowNum` to find the end.
-    ///
-    def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
-        import new flixspt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flixspt.sheetio.POIRowIterator & Impure as newRowCursor;
-        import flixspt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
-        import flixspt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
-        try {
-            let Sheet(x1)       = x;
-            let iter = newRowCursor(x1);
-            let cursorAlg =  {
-                  hasNext   = () -> ffiHasNext(iter)
-                , next      = FlixSandbox/Deprecated/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
-                , finalize  = () -> () as & Impure
-            };
-            FlixSandbox/Deprecated/Cursor.makeCursor(cursorAlg)
-        } catch {
-            case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
-        }
-
+    /// rows where `eval` fails are discounted...
+    pub def someRows(eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
+        let* end = getPhysicalNumberOfRows();
+        foldRowsTraversal({start = 0, end = end}, true, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
     /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
     /// We need a more robust implementation than this...
 
-    pub def allRowsFrom(start: Int32, eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] =         
-        let RowEvaluator(f) = eval;
-        let checker         = row -> {
-            let ix = SheetIO/Internal/Row.getRowNum(row);
-            if (ix >= start) Some(row) else None
-        };
-        let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
-        point(xs)
+    pub def allRowsFrom(start: Int32, eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
+        let* end = getPhysicalNumberOfRows();
+        foldRowsTraversal({start = start, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+
+    pub def rowsInRange(range: {start :: Int32, end :: Int32}, eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
+        foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+
+/*
+
 
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
@@ -374,16 +356,7 @@ namespace SheetIO/SheetReader {
         map(postprocess, allRows(eval, sheet))
 
 
-    pub def rowsInRange(b: Int32, e: Int32, eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] = 
-        let RowEvaluator(f) = eval;
-        let checker         = row -> {
-            let ix = SheetIO/Internal/Row.getRowNum(row);
-            if (ix >= b and ix < e) Some(row) else None
-        };
-        let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
-        point(xs)
+    
 
     pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
                     eval: RowEvaluator[r, a], 
@@ -471,6 +444,28 @@ namespace SheetIO/SheetReader {
 
     pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, b] =
         foldNamedRowsFrom({headerIndex = 0, start = 1}, combine, ac, eval, sheet)
+
+
+    ///
+    /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
+    /// than trying to use `getLastRowNum` to find the end.
+    ///
+    def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
+        import new flixspt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flixspt.sheetio.POIRowIterator & Impure as newRowCursor;
+        import flixspt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
+        import flixspt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
+        try {
+            let Sheet(x1)       = x;
+            let iter = newRowCursor(x1);
+            let cursorAlg =  {
+                  hasNext   = () -> ffiHasNext(iter)
+                , next      = FlixSandbox/Deprecated/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , finalize  = () -> () as & Impure
+            };
+            FlixSandbox/Deprecated/Cursor.makeCursor(cursorAlg)
+        } catch {
+            case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
+        }
 
     pub def mapM(mf: a -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] =
         SheetReader(wb ->
