@@ -31,7 +31,9 @@ namespace SheetIO {
     pub enum Font[_: Region](##org.apache.poi.ss.usermodel.Font)
 
 
-    instance Interop.Marshal[Row[r]] {
+
+
+    instance CollectionInterop.Marshal[Row[r]] {
         pub def toJavaObject(x: Row[r]): ##java.lang.Object = 
             let Row(r1) = x;
             r1 as ##java.lang.Object
@@ -43,3 +45,13 @@ namespace SheetIO {
 
 }
 
+namespace SheetIO/Common {
+
+    use SheetIO.Row;
+    use SheetIO.Row.{Row};
+
+    pub def getRow(row: Row[_]): ##org.apache.poi.ss.usermodel.Row =
+        let Row(row1) = row;
+        row1
+
+}

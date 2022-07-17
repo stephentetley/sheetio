@@ -110,6 +110,11 @@ namespace SheetIO/SheetReader {
         SheetReader(_ -> 
             Err(SheetIO/Internal/EvalError.emptyEvalError({source = msg, exnMessage = ""})) as & r
         )
+    
+    def throwEvalError(e: EvalError): SheetReader[r, a] =
+        SheetReader(_ -> 
+            Err(e) as & r
+        )
 
 
     pub def swapError(ma: SheetReader[r, a], msg: String): SheetReader[r, a] =
@@ -346,14 +351,39 @@ namespace SheetIO/SheetReader {
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
         let Sheet(s1) = s;
         let iter = rowIterator(s1);
-        Interop/RawIterator.new(() as Region[r], iter) |> Interop/RawIterator.iterator
+        CollectionInterop/RawIterator.new(() as Region[r], iter) |> CollectionInterop/RawIterator.iterator
+
+
+    pub def foldAllRows(f: (b, a) -> b & ef, s: b, eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, b] \ { Read(r), ef } =
+        let RowEvaluator(eval1) = eval;
+        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
+        let* rowIter        = liftAction(_ -> getRowIterator(sheet));
+        def loop(s1) = match Iterator.next(rowIter) {
+            case None => point(s1)
+            case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
+                case Err(e1) => throwEvalError(e1)
+                case Ok(ans) => loop(f(s1, ans))
+            }
+        };
+        loop(s)
+
+    pub def foldAllRowsWithIndex(f: (b, a, Int32) -> b & ef, s: b, eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, b] \ { Read(r), ef } =
+        let RowEvaluator(eval1) = eval;
+        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
+        let* rowIter        = liftAction(_ -> getRowIterator(sheet));
+        def loop(s1, ix) = match Iterator.next(rowIter) {
+            case None => point(s1)
+            case Some(row1) => match eval1(SheetIO/Common.getRow(row1), fmt) {
+                case Err(e1) => throwEvalError(e1)
+                case Ok(ans) => loop(f(s1, ans, ix), ix+1)
+            }
+        };
+        loop(s, 0)
+
+
 
     pub def allRows(eval: RowEvaluator[r, a], sheet: Sheet[r]): SheetReader[r, List[a]] \ { Read(r) }=
-        let RowEvaluator(f) = eval;
-        let* fmt            = liftAction(_ -> SheetIO/DataFormatter.new(() as Region[r]));
-        let* iter           = liftAction(_ -> getRowIterator(sheet));
-        let* xs             = SheetReader(_ -> iter |> Iterator.map(row -> {let Row(row1) = row; f(row1 , fmt)}) |> Result.sequence);
-        point(xs)
+        foldAllRows((k, a) -> ks -> k(a :: ks), ks -> ks, eval, sheet) |> map(k -> k(Nil))
 
 
 
@@ -379,17 +409,10 @@ namespace SheetIO/SheetReader {
             case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
         }
 
-    /// Use rowiterator...
-    pub def allRows(eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] =         
-        let RowEvaluator(f) = eval;
-        let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
-        point(xs)
-
 
     /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
     /// We need a more robust implementation than this...
+
     pub def allRowsFrom(start: Int32, eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] =         
         let RowEvaluator(f) = eval;
         let checker         = row -> {
@@ -409,14 +432,6 @@ namespace SheetIO/SheetReader {
                 case Some(x1) => x1 :: fac()
             }, Nil, xs);
         map(postprocess, allRows(eval, sheet))
-
-    pub def foldAllRows(combine: (b, a) -> b & ef, ac: b, eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, b] =
-        let RowEvaluator(f) = eval;
-        let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* strm           = liftAction(_ -> getRowCursor(sheet));
-        let* ans            = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.fold!(combine, ac));
-        point(ans)
-
 
 
     pub def rowsInRange(b: Int32, e: Int32, eval: RowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] = 
