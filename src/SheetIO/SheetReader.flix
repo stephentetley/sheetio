@@ -310,13 +310,12 @@ namespace SheetIO/SheetReader {
                 let primRow = SheetIO/Common.getRow(row1);
                 let* rownum = liftPrim((r, _) -> SheetIO/Internal/Row.getRowNum(r, primRow) |> Ok);
                 if (rownum >= range.start and rownum < range.end) 
-                    match eval1(SheetIO/Common.getRow(row1), fmt) {
+                    match eval1(fmt, primRow) {
                         case Err(e1) => if (not skipErrors) throwEvalError(e1) else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
                 else 
                     loop(s1)
-
             }
         };
         loop(s)
@@ -342,6 +341,25 @@ namespace SheetIO/SheetReader {
 
     pub def rowsInRange(range: {start :: Int32, end :: Int32}, eval: RowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
         foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+
+
+/*
+    /// Reader headers from row at `headerIndex` then read data rows from `start`.
+    /// Note - might be wise to change back to flix-sandbox Cursor while stdlib Interator
+    /// is in development.
+    /// `headerIndex` and `start` are zero indexed (as per POI rather than Excel).
+    ///
+    pub def namedRowsFrom(r: {headerIndex :: Int32}, start :: Int32}, eval: NamedRowEvaluator[r, a]): SheetReader[r, List[a]] =   
+        let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
+        let* row0       = getRowAt(sheet, r.headerIndex);
+        let* ixs        = region r1 {
+            let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
+            point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
+        };
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
+        let* xs         = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
+        point(xs)
+*/
 
 /*
 

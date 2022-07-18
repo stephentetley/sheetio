@@ -21,7 +21,7 @@ namespace SheetIO {
     use SheetIO.DataFormatter;
     
     pub enum RowEvaluator[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Row -> DataFormatter[r] -> Result[a, EvalError] & r
+        DataFormatter[r] -> ##org.apache.poi.ss.usermodel.Row -> Result[a, EvalError] & r
     )
 
 
@@ -65,21 +65,21 @@ namespace SheetIO/RowEvaluator {
     pub def point(x: a): RowEvaluator[r, a] = RowEvaluator((_, _) -> Ok(x) as & r)
 
     def apply1(x: RowEvaluator[r, a], 
-                row: ##org.apache.poi.ss.usermodel.Row, 
-                fmt: DataFormatter[r]): Result[a, EvalError] & r =
+                fmt: DataFormatter[r], 
+                row: ##org.apache.poi.ss.usermodel.Row): Result[a, EvalError] & r =
         let RowEvaluator(f) = x;
-        f(row, fmt)
+        f(fmt, row)
 
 
     pub def throwError(msg: String): RowEvaluator[r, a] =
-        RowEvaluator((row, _) -> 
+        RowEvaluator((_, row) -> 
             Err(SheetIO/Internal/EvalError.create(() as Region[r], row, {source = msg, exnMessage = ""}))
         )
 
 
     pub def swapError(msg: String, ma: RowEvaluator[r, a]): RowEvaluator[r, a] =
-        RowEvaluator((row, fmt) ->
-            match apply1(ma, row, fmt) {
+        RowEvaluator((fmt, row) ->
+            match apply1(ma, fmt, row) {
                 case Ok(a)    => Ok(a)
                 case Err(err) => Err({source = msg | err})
             }
@@ -87,8 +87,8 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def map(f: a -> b & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
-        RowEvaluator((row, fmt) ->
-            match apply1(x, row, fmt) {
+        RowEvaluator((fmt, row) ->
+            match apply1(x, fmt, row) {
                 case Ok(a) => {
                     let ans = f(a) as & r;
                     Ok(ans)
@@ -98,10 +98,10 @@ namespace SheetIO/RowEvaluator {
         ) as & ef
 
     pub def ap(mf: RowEvaluator[r, a -> b & ef], ma: RowEvaluator[r, a]): RowEvaluator[r, b] & ef =
-        RowEvaluator((row, fmt) ->
-            match apply1(mf, row, fmt) {
+        RowEvaluator((fmt, row) ->
+            match apply1(mf, fmt, row) {
                 case Ok(f) => {
-                    match apply1(ma, row, fmt) {
+                    match apply1(ma, fmt, row) {
                         case Ok(a) => Ok(f(a) as & r)
                         case Err(e2) => Err(e2)
                     }
@@ -112,9 +112,9 @@ namespace SheetIO/RowEvaluator {
     
 
     pub def bind(x: RowEvaluator[r, a], k: a -> RowEvaluator[r, b] & ef): RowEvaluator[r, b] & ef =
-        RowEvaluator((row, fmt) ->
-            match apply1(x, row, fmt) {
-                case Ok(a) => {let ans = k(a) as & r; apply1(ans, row, fmt)}
+        RowEvaluator((fmt, row) ->
+            match apply1(x, fmt, row) {
+                case Ok(a) => {let ans = k(a) as & r; apply1(ans, fmt, row)}
                 case Err(e) => Err(e)
             }
         ) as & ef
@@ -123,16 +123,16 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def alt(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
-        RowEvaluator((row, fmt) ->
-            match apply1(ea, row, fmt) {
+        RowEvaluator((fmt, row) ->
+            match apply1(ea, fmt, row) {
                 case Ok(a) => Ok(a)
-                case Err(_) => apply1(eb, row, fmt)
+                case Err(_) => apply1(eb, fmt, row)
             }
         )
 
 
     pub def optional(x: RowEvaluator[r, a]): RowEvaluator[r, Option[a]] =
-        RowEvaluator((row, fmt) -> match apply1(x, row, fmt) {
+        RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
             case Ok(a)  => Ok(Some(a))
             case Err(_) => Ok(None)
         })
@@ -145,11 +145,11 @@ namespace SheetIO/RowEvaluator {
 
 
 
-    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Row -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, PrimError] & ef): RowEvaluator[r, a] & ef =
-        RowEvaluator((row, fmt) -> 
+    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.DataFormatter -> ##org.apache.poi.ss.usermodel.Row -> Result[a, PrimError] & ef): RowEvaluator[r, a] & ef =
+        RowEvaluator((fmt, row) -> 
             let r = () as Region[r];
             let DataFormatter(fmt1) = fmt;
-            {fn(r, row, fmt1) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
+            {fn(r, fmt1, row) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
         )  as & ef
 
 
@@ -161,7 +161,7 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def liftActionResult(fn: Unit -> Result[a, String] & ef): RowEvaluator[r, a] & ef=
-        RowEvaluator((row, _) -> 
+        RowEvaluator((_, row) -> 
             let r = () as Region[r]; 
             {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.create(r, row, {source = s, exnMessage = ""}))
         ) as & ef
@@ -192,20 +192,20 @@ namespace SheetIO/RowEvaluator {
     // // so FactIO's API indexes from 0.
 
     def getCellAt(ix: Int32): RowEvaluator[r, ##org.apache.poi.ss.usermodel.Cell] \ Read(r) = 
-        liftPrim((r, row, _) -> SheetIO/Internal/Row.getCell(r, ix, row))
+        liftPrim((r, _, row) -> SheetIO/Internal/Row.getCell(r, ix, row))
 
     def liftPrimCell(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Cell -> ##org.apache.poi.ss.usermodel.DataFormatter -> Result[a, PrimError] & ef): RowEvaluator[r, a] \ { Write(r), ef } =
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.DataFormatter -> ##org.apache.poi.ss.usermodel.Cell -> Result[a, PrimError] & ef): RowEvaluator[r, a] \ { Write(r), ef } =
         let* cell = getCellAt(ix);
-        liftPrim((r, _, fmt) -> fn(r, cell, fmt))
+        liftPrim((r, fmt, _) -> fn(r, fmt, cell))
 
     pub def getRowNum(): RowEvaluator[r, Int32] \ Read(r) = 
-        liftPrim((r, row, _) -> Ok(SheetIO/Internal/Row.getRowNum(r, row)))
+        liftPrim((r, _, row) -> Ok(SheetIO/Internal/Row.getRowNum(r, row)))
 
 
     pub def getSheetName(): RowEvaluator[r, String] \ Read(r) = 
         use Result.{flatMap};
-        liftPrim((r, row, _) -> {
+        liftPrim((r, _, row) -> {
             let* sheet = SheetIO/Internal/Row.getSheet(r, row);
             SheetIO/Internal/Sheet.getSheetName(r, sheet)
         })
@@ -223,7 +223,7 @@ namespace SheetIO/RowEvaluator {
 
     /// Uses the default DataFormatter
     pub def getContentAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
-        liftPrimCell(ix, (r, cell, fmt) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, fmt))
+        liftPrimCell(ix, (r, fmt, cell) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, fmt))
 
 
     /// Uses the default DataFormatter
@@ -240,7 +240,7 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getCellTypeAt(ix: Int32): RowEvaluator[r, CellType] \ Read(r) =
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.getCellType(r, cell)) |> map(SheetIO/CellType.fromNative)
+        liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/Cell.getCellType(r, cell)) |> map(SheetIO/CellType.fromNative)
 
 
     pub def isBlankAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) = 
@@ -261,7 +261,7 @@ namespace SheetIO/RowEvaluator {
 
     /// Error if the cell type is numeric.
     pub def getStringAt(ix: Int32): RowEvaluator[r, String] \ Read(r) =
-        liftPrimCell(ix, (r, row, _) -> SheetIO/Internal/Cell.getStringCellValue(r, row))
+        liftPrimCell(ix, (r, _, row) -> SheetIO/Internal/Cell.getStringCellValue(r, row))
             |> swapError("getStringAt(${ix})")
 
 
@@ -287,17 +287,17 @@ namespace SheetIO/RowEvaluator {
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter[r]): RowEvaluator[r, String] \Read(r) =
         let DataFormatter(dfmt1) = dfmt;
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, dfmt1))
+        liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/DataFormatter.formatCellValue(r, cell, dfmt1))
 
 
     pub def getBoolAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) =
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.getBooleanCellValue(r, cell))
+        liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/Cell.getBooleanCellValue(r, cell))
 
 
     /// Error if the cell type is String or cell value is not a readable double.
     /// Returns 0 for blank cells.
     pub def getNumericAt(ix: Int32): RowEvaluator[r, Float64] \ Read(r) =
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.getNumericCellValue(r, cell))
+        liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/Cell.getNumericCellValue(r, cell))
 
 
     def getNumAt(ix: Int32, conv: Float64 -> Option[a]): RowEvaluator[r, a] \ Read(r) =
@@ -334,7 +334,7 @@ namespace SheetIO/RowEvaluator {
 
 
     def isDateFormattedAt(ix: Int32): RowEvaluator[r, Bool] \ Read(r) = 
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Util.isCellDateFormatted(r, cell))
+        liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/Util.isCellDateFormatted(r, cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
@@ -345,7 +345,7 @@ namespace SheetIO/RowEvaluator {
         if (ctype == TyNumeric) {
             let* dtCell = isDateFormattedAt(ix);
             if (dtCell) {
-                let* dt = liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.getLocalDateTimeCellValue(r, cell));
+                let* dt = liftPrimCell(ix, (r, _, cell) -> SheetIO/Internal/Cell.getLocalDateTimeCellValue(r, cell));
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeAt - null")
                 else
@@ -423,16 +423,16 @@ namespace SheetIO/RowEvaluator {
 
         
     pub def getFirstCellNum(): RowEvaluator[r, Int32] \ Read(r) =
-        liftPrim((r, row, _) -> SheetIO/Internal/Row.getFirstCellNum(r, row))
+        liftPrim((r, _, row) -> SheetIO/Internal/Row.getFirstCellNum(r, row))
 
     pub def getLastCellNum(): RowEvaluator[r, Int32] \ Read(r) =
-        liftPrim((r, row, _) -> SheetIO/Internal/Row.getLastCellNum(r, row))
+        liftPrim((r, _, row) -> SheetIO/Internal/Row.getLastCellNum(r, row))
             |> map(n -> if (n > 0) n - 1 else n)
 
     def queryFontAt(ix: Int32, 
                     fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): RowEvaluator[r, a] \ { Read(r), ef } = 
         use Result.flatMap;
-        liftPrim((r, row, _) -> 
+        liftPrim((r, _, row) -> 
             let* cell   = SheetIO/Internal/Row.getCell(r, ix, row);
             let* style  = SheetIO/Internal/Cell.getCellStyle(r, cell);
             let* ixf    = SheetIO/Internal/CellStyle.getFontIndexAsInt(r, style);
