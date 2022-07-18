@@ -67,7 +67,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     /// Duplicate column names are allowed - subsequent key duplicates are named with a suffixed index:
     /// "name", "name.1", "name.2", , "name.3" ...
-    pub def makeHeaders(names: Array[String, r]): Map[String, Int32] \ Read(r) =
+    pub def makeHeaders(names: List[String]): Map[String, Int32] =
         let step = (acc, key) -> { 
             let (col, counts, indices) = acc; 
             match Map.get(key, counts) {
@@ -75,7 +75,7 @@ namespace SheetIO/NamedRowEvaluator {
                 case Some(i) => (col + 1, Map.insert(key, i + 1, counts), Map.insert("${key}.${i}", col, indices))
             }
         };        
-        let (_, _, ans) = Array.foldLeft(step, (0, Map.empty(), Map.empty()), names);
+        let (_, _, ans) = List.foldLeft(step, (0, Map.empty(), Map.empty()), names);
         ans
 
 
