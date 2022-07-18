@@ -64,9 +64,13 @@ namespace SheetIO/SheetReader {
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
 
-    def apply1(ma: SheetReader[r, a], wb: ##org.apache.poi.ss.usermodel.Sheet): Result[a, EvalError] & r = 
+    def apply1(ma: SheetReader[r, a], primSheet: ##org.apache.poi.ss.usermodel.Sheet): Result[a, EvalError] & r = 
         let SheetReader(x1) = ma;
-        x1(wb)
+        x1(primSheet)
+
+    pub def evaluate(ma: SheetReader[r, a], sheet: Sheet[r]): Result[a, EvalError] & r = 
+        let Sheet(sheet1) = sheet;
+        apply1(ma, sheet1)
 
     pub def point(x: a): SheetReader[r, a] = 
         SheetReader(_ -> Ok(x) as & r)

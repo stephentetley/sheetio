@@ -51,6 +51,8 @@ namespace SheetIO/WorkbookReader {
     use SheetIO.WorkbookReader;
     use SheetIO.WorkbookReader.{WorkbookReader};
 
+    
+
     use SheetIO/Internal/EvalError.{EvalError};
     use SheetIO/Internal/PrimError.{PrimError};
 
@@ -58,11 +60,11 @@ namespace SheetIO/WorkbookReader {
     use SheetIO.Row.{Row};
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
-
+    use SheetIO.Sheet;
+    use SheetIO.Sheet.{Sheet};
+    use SheetIO.SheetReader;
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: WorkbookReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
@@ -242,6 +244,9 @@ namespace SheetIO/WorkbookReader {
 
     pub def getSheetAt(ix: Int32): WorkbookReader[r, Sheet[r]] \ Read(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
+
+    pub def withSheetReader(eval: SheetReader[r, a], sheet: Sheet[r]): WorkbookReader[r, a] =
+        WorkbookReader(_ -> SheetIO/SheetReader.evaluate(eval, sheet))
 
     /// TODO - the SheetReader monad is dealing with both Sheet and Workbook functions.
     /// This was useful at first but is probably not the right abstraction...
