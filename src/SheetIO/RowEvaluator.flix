@@ -43,6 +43,15 @@ namespace SheetIO {
             SheetIO/RowEvaluator.flatMap(f, o)
     }
 
+    instance MonadZero[RowEvaluator[r]] {
+        pub def empty(): RowEvaluator[r, a] = SheetIO/RowEvaluator.throwError("empty")
+    }
+
+    instance MonadOr[RowEvaluator[r]] {
+        pub def orelse(a: RowEvaluator[r, a], b: RowEvaluator[r, a]): RowEvaluator[r, a] =
+            SheetIO/RowEvaluator.morelse(a, b)
+    }
+
 }
 
 namespace SheetIO/RowEvaluator {
@@ -122,7 +131,7 @@ namespace SheetIO/RowEvaluator {
     pub def flatMap(k: a -> RowEvaluator[r, b] & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef = bind(x, k)
 
 
-    pub def alt(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
+    pub def morelse(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
         RowEvaluator((fmt, row) ->
             match apply1(ea, fmt, row) {
                 case Ok(a) => Ok(a)
@@ -131,16 +140,16 @@ namespace SheetIO/RowEvaluator {
         )
 
 
-    pub def optional(x: RowEvaluator[r, a]): RowEvaluator[r, Option[a]] =
-        RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
-            case Ok(a)  => Ok(Some(a))
-            case Err(_) => Ok(None)
-        })
+    /// pub def optional(x: RowEvaluator[r, a]): RowEvaluator[r, Option[a]] =
+    ///     RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
+    ///         case Ok(a)  => Ok(Some(a))
+    ///         case Err(_) => Ok(None)
+    ///     })
 
-    /// Note - this returns the default value for any errors (i.e. unknown column which is a
-    /// schema error), not just a "read" error if the cell type is wrong.
-    pub def withDefault(x: RowEvaluator[r, a], d: a): RowEvaluator[r, a] =
-        alt(x, point(d))
+    /// /// Note - this returns the default value for any errors (i.e. unknown column which is a
+    /// /// schema error), not just a "read" error if the cell type is wrong.
+    /// pub def withDefault(x: RowEvaluator[r, a], d: a): RowEvaluator[r, a] =
+    ///     alt(x, point(d))
 
 
 
@@ -483,7 +492,7 @@ namespace SheetIO/RowEvaluator {
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
     pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r1, Array[String, r2]] \ { Read(r1), Write(r2) } =
-        let eval = ix -> alt(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
+        let eval = ix -> MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
         getRowContentsWith(r, eval)
 
     def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, String] \ Read(r) = 
