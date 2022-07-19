@@ -388,6 +388,11 @@ namespace SheetIO/SheetReader {
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = 1, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
+    pub def allNamedRowsFrom(pos: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a]): SheetReader[r, List[a]] \ { Read(r) } =
+        let* headers = getHeaders(pos.headerIndex);
+        let* end = getPhysicalNumberOfRows();
+        foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+
 
 /*
     /// Reader headers from row at `headerIndex` then read data rows from `start`.
