@@ -14,99 +14,104 @@
  * limitations under the License.
  */
 
-/*
+
 namespace SheetIO {
 
-    use SheetIO.CellStyle;
-   
-    type alias Cursors = Map[String, Int32]
+    use SheetIO/Internal/EvalError.{EvalError};
     
-    pub enum SheetWriter[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors -> Result[(Cursors, a), String] & r)
+    pub enum WorkbookWriter[r: Region, a: Type](
+        ##org.apache.poi.ss.usermodel.Workbook -> Result[a, EvalError] & r)
 
 
-    instance Functor[SheetWriter[r]] {
-        pub def map(f: a -> b & ef, o: SheetWriter[r, a]): SheetWriter[r, b] & ef = 
-            SheetIO/SheetWriter.map(f, o)
+    instance Functor[WorkbookWriter[r]] {
+        pub def map(f: a -> b & ef, o: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
+            SheetIO/WorkbookWriter.map(f, o)
     }
 
-    instance Applicative[SheetWriter[r]] {
-        pub def point(x: a): SheetWriter[r, a] = 
-            SheetIO/SheetWriter.point(x)
+    instance Applicative[WorkbookWriter[r]] {
+        pub def point(x: a): WorkbookWriter[r, a] = 
+            SheetIO/WorkbookWriter.point(x)
 
-        pub def ap(f: SheetWriter[r, a -> b & ef], x: SheetWriter[r, a]) : SheetWriter[r, b] & ef = 
-            SheetIO/SheetWriter.ap(f, x)
+        pub def ap(f: WorkbookWriter[r, a -> b & ef], x: WorkbookWriter[r, a]) : WorkbookWriter[r, b] & ef = 
+            SheetIO/WorkbookWriter.ap(f, x)
     }
 
-    instance Monad[SheetWriter[r]] {
-        pub def flatMap(f: a -> SheetWriter[r, b] & ef, o: SheetWriter[r, a]): SheetWriter[r, b] & ef =
-            SheetIO/SheetWriter.flatMap(f, o)
+    instance Monad[WorkbookWriter[r]] {
+        pub def flatMap(f: a -> WorkbookWriter[r, b] & ef, o: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef =
+            SheetIO/WorkbookWriter.flatMap(f, o)
     }
 
 
 }
 
-namespace SheetIO/SheetWriter {
+namespace SheetIO/WorkbookWriter {
 
-    use ToString.toString;
+    use SheetIO.WorkbookWriter;
+    use SheetIO.WorkbookWriter.{WorkbookWriter};
 
-    use SheetIO.CellStyle;
-    use SheetIO.CellStyle.{CellStyle};
-    use SheetIO.CellStyleSetter;
-    use SheetIO.CellStyleSetter.{CellStyleSetter};
-    use SheetIO.DataFormat;
-    use SheetIO.DataFormat.{DataFormat};
-    use SheetIO.Font;
-    use SheetIO.Font.{Font};
-    use SheetIO.FontSetter;
-    use SheetIO.FontSetter.{FontSetter};
-    use SheetIO.Row;
-    use SheetIO.Row.{Row};
-    use SheetIO.RowSetter;
-    use SheetIO.RowSetter.{RowSetter};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
 
-    use SheetIO.SheetWriter;
-    use SheetIO.SheetWriter.{SheetWriter};
-    use SheetIO.Cursors;
+    use SheetIO/Internal/EvalError.{EvalError};
+
+    /// use SheetIO.CellStyle;
+    /// use SheetIO.CellStyle.{CellStyle};
+    /// use SheetIO.CellStyleSetter;
+    /// use SheetIO.CellStyleSetter.{CellStyleSetter};
+    /// use SheetIO.DataFormat;
+    /// use SheetIO.DataFormat.{DataFormat};
+    /// use SheetIO.Font;
+    /// use SheetIO.Font.{Font};
+    /// use SheetIO.FontSetter;
+    /// use SheetIO.FontSetter.{FontSetter};
+    /// use SheetIO.Row;
+    /// use SheetIO.Row.{Row};
+    /// use SheetIO.RowSetter;
+    /// use SheetIO.RowSetter.{RowSetter};
+    /// use SheetIO.Sheet;
+    /// use SheetIO.Sheet.{Sheet};
+
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: SheetWriter[r, a], 
+    pub def runXlsx(ma: WorkbookWriter[r, a], 
                     path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(ma: SheetWriter[r, a], 
+    pub def runXssf(ma: WorkbookWriter[r, a], 
                     path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let outpath     = toString(path);
-        let* wb         = newXSSFWorkbook();
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-        let* _          = writeXSSFWorkbook(wb, outpath);
-        let* _          = closeXSSFWorkbook(wb);
-        Ok(ans)
+        region r {
+            let outpath = ToString.toString(path);
+            let* wb     = newXSSFWorkbook(r) |> Result.mapErr(SheetIO/Internal/PrimError.getText);
+            let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+            let* _      = writeXSSFWorkbook(wb, outpath);
+            let* _      = closeXSSFWorkbook(wb);
+            Ok(ans)
+        }
+
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: SheetWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runAppendXlsx(ma: WorkbookWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         runAppendXssf(ma, path)
     
+
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXssf(ma: SheetWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    /// Calls "open" not "new"...
+    pub def runAppendXssf(ma: WorkbookWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let path1 = toString(path);
+        let path1 = ToString.toString(path);
         match openXSSFWorkbook(path1) { 
             case Err(e) => Err("runAppendXssf('${path1}'): ${e}")
             case Ok(wb) => {
-                let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-                let* _          = writeXSSFWorkbook(wb, path1);
-                let* _          = closeXSSFWorkbook(wb);
+                let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+                let* _      = writeXSSFWorkbook(wb, path1);
+                let* _      = closeXSSFWorkbook(wb);
                 Ok(ans)
             }
         }
+/*
 
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: SheetWriter[r, a], 
@@ -146,26 +151,23 @@ namespace SheetIO/SheetWriter {
         let* _          = writeHSSFWorkbook(wb, outPath1);
         let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
+*/
 
-    def apply1(ma: SheetWriter[r, a], 
-               wb: ##org.apache.poi.ss.usermodel.Workbook, 
-               style: Option[CellStyle],
-               s1: Cursors): Result[(Cursors, a), String] & Impure = 
-        let SheetWriter(x1) = ma;
-        x1(wb, style, s1)
+    def apply1(ma: WorkbookWriter[r, a], 
+               wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, EvalError] & r = 
+        let WorkbookWriter(f1) = ma;
+        f1(wb)
 
-    pub def askStyle(): SheetWriter[r, Option[CellStyle]] = 
-        SheetWriter((_, style, s1) -> Ok((s1, style)) as & Impure)
+    pub def point(x: a): WorkbookWriter[r, a] = 
+        WorkbookWriter(_ -> Ok(x) as & r)
 
+    pub def throwError(msg: String): WorkbookWriter[r, a] =
+        WorkbookWriter(_ -> 
+            Err(SheetIO/Internal/EvalError.emptyEvalError({source = msg, exnMessage = ""})) as & r
+        )
 
-    pub def point(x: a): SheetWriter[r, a] = 
-        SheetWriter((_, _, s1) -> Ok((s1, x)) as & Impure)
-
-    pub def throwError(msg: String): SheetWriter[r, a] =
-        SheetWriter((_, _, _) -> Err(msg) as & Impure)
-
-
-    pub def catchError(ma: SheetWriter[r, a], handle: String -> SheetWriter[r, a]): SheetWriter[r, a] =
+/*
+    pub def catchError(ma: WorkbookWriter[r, a], handle: String -> WorkbookWriter[r, a]): WorkbookWriter[r, a] =
         SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
             case Ok((s2, a)) => Ok((s2, a))
             case Err(e) => apply1(handle(e), wb, style, s1)
@@ -176,31 +178,34 @@ namespace SheetIO/SheetWriter {
             case Ok((s2, a)) => Ok((s2, a))
             case Err(e) => Err(f(e))
         })
+*/
 
     /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: SheetWriter[r, a]): SheetWriter[r, b] & ef = 
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, a)) => { let ans = fn(a) as & Impure; Ok((s2, ans)) }
+    pub def map(fn: a -> b & ef, ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
+        WorkbookWriter(wb -> match apply1(ma, wb) { 
+            case Ok(a) => { let a1 = fn(a) as & r; Ok(a1) }
             case Err(e) => Err(e)
         }) as & ef
 
-    pub def ap(mf: SheetWriter[r, a -> b & ef], ma: SheetWriter[r, a]): SheetWriter[r, b] & ef = 
-        SheetWriter((wb, style, s1) -> match apply1(mf, wb, style, s1) { 
-            case Ok((s2, f)) => match apply1(ma, wb, style, s2) { 
-                case Ok((s3, a)) => { let ans = f(a) as & Impure; Ok((s3, ans)) }
+    pub def ap(mf: WorkbookWriter[r, a -> b & ef], ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
+        WorkbookWriter(wb -> 
+            match apply1(mf, wb) { 
+                case Ok(f)  => match apply1(ma, wb) { 
+                    case Ok(a)  => { let ans = f(a) as & r; Ok(ans) }
+                    case Err(e) => Err(e)
+                }
                 case Err(e) => Err(e)
             }
+        ) as & ef
+
+
+    pub def flatMap(fn: a -> WorkbookWriter[r, b] & ef, ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
+        WorkbookWriter(wb -> match apply1(ma, wb) { 
+            case Ok(a) => apply1(fn(a) as & r, wb)
             case Err(e) => Err(e)
         }) as & ef
 
-
-    pub def bind(ma: SheetWriter[r, a], fn: a -> SheetWriter[r, b] & ef): SheetWriter[r, b] & ef = 
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, a)) => apply1(fn(a), wb, style, s2)
-            case Err(e) => Err(e)
-        }) as & ef
-
-    pub def flatMap(fn: a -> SheetWriter[r, b] & ef, ma: SheetWriter[r, a]): SheetWriter[r, b] & ef = bind(ma, fn)
+/*
 
 
     pub def guard(x: Bool): SheetWriter[r, Unit] = 
@@ -506,5 +511,5 @@ namespace SheetIO/SheetWriter {
         let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
         point()
 
-}
 */
+}
