@@ -14,20 +14,28 @@
  * limitations under the License.
  */
 
+class MonadOr[m: Type -> Type] with Monad[m] {
 
-namespace MonadTemp/MonadExtra {
-
-    use Applicative.{*>};
-    use Applicative.{point};
-
-    pub def mapM(f: a -> m[b], t: t[a]): m[t[b]] with Monad[m], Traversable[t] = 
-        Traversable.traverse(f, t)
-
-    pub def mapM_(f: a -> m[b], t: t[a]): m[Unit] with Monad[m], Foldable[t] = 
-        Foldable.foreachM(f, t)
-
-    pub def sequence(t: t[m[a]]): m[t[a]] with Monad[m], Traversable[t] = 
-        Traversable.sequence(t)
-
+    ///
+    /// "Left catch" / left biased choice
+    ///
+    pub def orelse(a: m[a], b: m[a]): m[a]
 
 }
+
+namespace MonadOr {
+
+    use Functor.{<$>};
+    use Applicative.{point};
+
+    pub def <|>(a: m[a], b: m[a]): m[a] with MonadOr[m] = orelse(a, b)
+
+    pub def optional(ma: m[a]): m[Option[a]] with MonadOr[m] = 
+        orelse(Some <$> ma, point(None))
+
+    pub def withDefault(d: a, x: m[a]): m[a] with MonadOr[m] =
+        x <|> point(d)
+
+}
+
+

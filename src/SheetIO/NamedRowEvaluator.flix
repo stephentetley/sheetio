@@ -45,6 +45,15 @@ namespace SheetIO {
             SheetIO/NamedRowEvaluator.flatMap(f, o)
     }
 
+    instance MonadZero[NamedRowEvaluator[r]] {
+        pub def empty(): NamedRowEvaluator[r, a] = SheetIO/NamedRowEvaluator.throwError("empty")
+    }
+
+    instance MonadOr[NamedRowEvaluator[r]] {
+        pub def orelse(a: NamedRowEvaluator[r, a], b: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
+            SheetIO/NamedRowEvaluator.orelse(a, b)
+    }
+
 }
 
 namespace SheetIO/NamedRowEvaluator {
@@ -140,26 +149,13 @@ namespace SheetIO/NamedRowEvaluator {
     pub def bind(x: NamedRowEvaluator[r, a], k: a -> NamedRowEvaluator[r, b] & ef): NamedRowEvaluator[r, b] & ef =
         flatMap(k, x)
 
-    pub def alt(ma: NamedRowEvaluator[r, a], mb: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
-        NamedRowEvaluator((ixs, fmt, row) ->
-            match apply1(ma, ixs, fmt, row) {
+    pub def orelse(ea: NamedRowEvaluator[r, a], eb: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
+        NamedRowEvaluator((ixs, fmt, row) -> 
+            match apply1(ea, ixs, fmt, row) {
                 case Ok(a)  => Ok(a)
-                case Err(_) => apply1(mb, ixs, fmt, row)
+                case Err(_) => apply1(eb, ixs, fmt, row)
             }
         )
-
-
-    pub def optional(ma: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, Option[a]] =
-        NamedRowEvaluator((ixs, fmt, row) -> match apply1(ma, ixs, fmt, row) {
-            case Ok(a)  => Ok(Some(a))
-            case Err(_) => Ok(None)
-        })
-
-    /// Note - this returns the default value for any errors (i.e. unknown column which is a
-    /// schema error), not just a "read" error if the cell type is wrong.
-    pub def withDefault(x: NamedRowEvaluator[r, a], d: a): NamedRowEvaluator[r, a] =
-        alt(x, point(d))
-
    
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.DataFormatter -> ##org.apache.poi.ss.usermodel.Row -> Result[a, PrimError] & ef): NamedRowEvaluator[r, a] & ef =
         NamedRowEvaluator((_, fmt, row) -> 
@@ -463,35 +459,6 @@ namespace SheetIO/NamedRowEvaluator {
 
 
 
-/*
-
-    pub def mapM(mf: a -> NamedRowEvaluator[r, b], xs: List[a]): NamedRowEvaluator[r, List[b]] =
-        NamedRowEvaluator((ixs, fmt, row) ->
-            mapMHelper(ixs, fmt, row, mf, xs, e -> Err(e), ys -> Ok(ys))
-        )
-
-    ///
-    /// Helper function for `mapM`.
-    ///
-    def mapMHelper(ixs: Map[String, Int32], 
-                   fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-                   row: ##org.apache.poi.ss.usermodel.Row, 
-                   mf: a -> NamedRowEvaluator[r, b], 
-                   xs: List[a], 
-                   fk: EvalError -> Result[List[b], EvalError], 
-                   sk: List[b] -> Result[List[b], EvalError]): Result[List[b], EvalError] & Impure =
-        match xs {
-            case Nil => sk(Nil)
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, ixs, fmt, row) {
-                    case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(ixs, fmt, row, mf, rs, fk, ks -> sk(x1 :: ks))
-                }
-            }
-        }
-
-*/
 
 }
 

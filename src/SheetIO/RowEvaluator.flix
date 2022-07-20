@@ -49,7 +49,7 @@ namespace SheetIO {
 
     instance MonadOr[RowEvaluator[r]] {
         pub def orelse(a: RowEvaluator[r, a], b: RowEvaluator[r, a]): RowEvaluator[r, a] =
-            SheetIO/RowEvaluator.morelse(a, b)
+            SheetIO/RowEvaluator.orelse(a, b)
     }
 
 }
@@ -131,27 +131,13 @@ namespace SheetIO/RowEvaluator {
     pub def flatMap(k: a -> RowEvaluator[r, b] & ef, x: RowEvaluator[r, a]): RowEvaluator[r, b] & ef = bind(x, k)
 
 
-    pub def morelse(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
+    pub def orelse(ea: RowEvaluator[r, a], eb: RowEvaluator[r, a]): RowEvaluator[r, a] =
         RowEvaluator((fmt, row) ->
             match apply1(ea, fmt, row) {
                 case Ok(a) => Ok(a)
                 case Err(_) => apply1(eb, fmt, row)
             }
         )
-
-
-    /// pub def optional(x: RowEvaluator[r, a]): RowEvaluator[r, Option[a]] =
-    ///     RowEvaluator((fmt, row) -> match apply1(x, fmt, row) {
-    ///         case Ok(a)  => Ok(Some(a))
-    ///         case Err(_) => Ok(None)
-    ///     })
-
-    /// /// Note - this returns the default value for any errors (i.e. unknown column which is a
-    /// /// schema error), not just a "read" error if the cell type is wrong.
-    /// pub def withDefault(x: RowEvaluator[r, a], d: a): RowEvaluator[r, a] =
-    ///     alt(x, point(d))
-
-
 
 
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.DataFormatter -> ##org.apache.poi.ss.usermodel.Row -> Result[a, PrimError] & ef): RowEvaluator[r, a] & ef =

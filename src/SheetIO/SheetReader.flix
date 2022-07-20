@@ -535,52 +535,6 @@ namespace SheetIO/SheetReader {
         } catch {
             case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
         }
-
-    pub def mapM(mf: a -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] =
-        SheetReader(wb ->
-            mapMHelper(wb, mf, xs, e -> Err(e), ys -> Ok(ys))
-        )
-
-    ///
-    /// Helper function for `mapM`.
-    ///
-    def mapMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   mf: a -> SheetReader[r, b], 
-                   xs: List[a], 
-                   fk: String -> Result[List[b], String], 
-                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
-        match xs {
-            case Nil => sk(Nil)
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, wb) {
-                    case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(wb, mf, rs, fk, ks -> sk(x1 :: ks))
-                }
-            }
-        }
-
-    pub def mapX(mf: a -> SheetReader[r, b], xs: List[a]): SheetReader[r, Unit] =
-        SheetReader(wb ->
-            mapXHelper(wb, mf, xs, e -> Err(e), _ -> Ok())
-        )
-
-    def mapXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                   mf: a -> SheetReader[r, b], 
-                   xs: List[a], 
-                   fk: String -> Result[Unit, String], 
-                   sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
-        match xs {
-            case Nil => sk()
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, wb) {
-                    case Err(e) => fk(e)
-                    case Ok(_) => mapXHelper(wb, mf, rs, fk, sk)
-                }
-            }
-        }
-
     pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] =
         SheetReader(wb ->
             mapWithIndexMHelper(wb, mf, 0, xs, e -> Err(e), ys -> Ok(ys))
@@ -628,26 +582,6 @@ namespace SheetIO/SheetReader {
             }
         }
 
-
-    pub def sequence(xs: List[SheetReader[r, a]]): SheetReader[r, List[a]] =
-        SheetReader(wb ->
-            sequenceHelper(wb, xs, e -> Err(e), ks -> Ok(ks))
-        )
-
-    ///
-    /// Helper function for `sequence`.
-    ///
-    def sequenceHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                       xs: List[SheetReader[r, a]], 
-                       fk: String -> Result[List[a], String], 
-                       sk: List[a] -> Result[List[a], String]): Result[List[a], String] & Impure =
-        match xs {
-            case Nil => sk(Nil)
-            case mx :: rs => match apply1(mx, wb) {
-                case Err(e) => fk(e)
-                case Ok(x) => sequenceHelper(wb, rs, fk, ks -> sk(x :: ks))
-            }
-        }
 
     ///
     /// Returns `(v1 :: v2 :: ... v :: vn)` if each of `f(xs_i)` is successful.

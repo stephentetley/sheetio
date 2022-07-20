@@ -43,6 +43,14 @@ namespace SheetIO {
             SheetIO/RowSetter.flatMap(f, o)
     }
 
+    instance MonadZero[RowSetter[r]] {
+        pub def empty(): RowSetter[r, a] = SheetIO/RowSetter.throwError("empty")
+    }
+
+    instance MonadOr[RowSetter[r]] {
+        pub def orelse(a: RowSetter[r, a], b: RowSetter[r, a]): RowSetter[r, a] =
+            SheetIO/RowSetter.orelse(a, b)
+    }
 
 }
 
@@ -109,8 +117,14 @@ namespace SheetIO/RowSetter {
             }) as & ef
 
 
-    pub def bind(x: RowSetter[r, a], k: a -> RowSetter[r, b] & ef): RowSetter[r, b] & ef =
-        flatMap(k, x)
+
+    pub def orelse(ma: RowSetter[r, a], mb: RowSetter[r, a]): RowSetter[r, a] =
+        RowSetter((row, style) -> 
+            match apply1(ma, row, style) {
+                case Ok(a)  => Ok(a)
+                case Err(_) => apply1(mb, row, style)
+            }
+        )
 
 
 
@@ -289,55 +303,5 @@ namespace SheetIO/RowSetter {
         case None    => putBlankAt!(ix)
     }
 
-/*
-
-    pub def mapM(mf: a -> RowSetter[r, b], xs: List[a]): RowSetter[r, List[b]] =
-        RowSetter((r, style) ->
-            mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
-        )
-
-    ///
-    /// Helper function for `mapM`.
-    ///
-    def mapMHelper(row: ##org.apache.poi.ss.usermodel.Row, 
-                   style: Option[CellStyle], 
-                   mf: a -> RowSetter[r, b], 
-                   xs: List[a], 
-                   fk: String -> Result[List[b], String], 
-                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
-        match xs {
-            case Nil => sk(Nil)
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, row, style) {
-                    case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(row, style, mf, rs, fk, ks -> sk(x1 :: ks))
-                }
-            }
-        }
-
-    pub def mapX(mf: a -> RowSetter[r, b], xs: List[a]): RowSetter[r, Unit] =
-        RowSetter((r, style) ->
-            mapXHelper(r, style, mf, xs, e -> Err(e), _ -> Ok())
-        )
-
-    def mapXHelper(row: ##org.apache.poi.ss.usermodel.Row, 
-                   style: Option[CellStyle],
-                   mf: a -> RowSetter[r, b], 
-                   xs: List[a], 
-                   fk: String -> Result[Unit, String], 
-                   sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
-        match xs {
-            case Nil => sk()
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, row, style) {
-                    case Err(e) => fk(e)
-                    case Ok(_) => mapXHelper(row, style, mf, rs, fk, sk)
-                }
-            }
-        }
-
-*/
 }
 
