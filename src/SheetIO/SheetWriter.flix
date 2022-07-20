@@ -14,17 +14,19 @@
  * limitations under the License.
  */
 
-/*
+
 namespace SheetIO {
 
     use SheetIO.CellStyle;
+    use SheetIO/Internal/EvalError.{EvalError};
    
-    type alias Cursors = Map[String, Int32]
+    /// TODO - track cursor or not?
+    type alias Cursor = Int32
     
     pub enum SheetWriter[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Workbook -> Option[CellStyle] -> Cursors -> Result[(Cursors, a), String] & r)
+        Option[CellStyle[r]] -> Cursor -> ##org.apache.poi.ss.usermodel.Sheet -> Result[(a, Cursor), EvalError] & r)
 
-
+/*
     instance Functor[SheetWriter[r]] {
         pub def map(f: a -> b & ef, o: SheetWriter[r, a]): SheetWriter[r, b] & ef = 
             SheetIO/SheetWriter.map(f, o)
@@ -42,110 +44,36 @@ namespace SheetIO {
         pub def flatMap(f: a -> SheetWriter[r, b] & ef, o: SheetWriter[r, a]): SheetWriter[r, b] & ef =
             SheetIO/SheetWriter.flatMap(f, o)
     }
-
+*/
 
 }
 
 namespace SheetIO/SheetWriter {
 
-    use ToString.toString;
-
-    use SheetIO.CellStyle;
-    use SheetIO.CellStyle.{CellStyle};
-    use SheetIO.CellStyleSetter;
-    use SheetIO.CellStyleSetter.{CellStyleSetter};
-    use SheetIO.DataFormat;
-    use SheetIO.DataFormat.{DataFormat};
-    use SheetIO.Font;
-    use SheetIO.Font.{Font};
-    use SheetIO.FontSetter;
-    use SheetIO.FontSetter.{FontSetter};
-    use SheetIO.Row;
-    use SheetIO.Row.{Row};
-    use SheetIO.RowSetter;
-    use SheetIO.RowSetter.{RowSetter};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
-
     use SheetIO.SheetWriter;
     use SheetIO.SheetWriter.{SheetWriter};
-    use SheetIO.Cursors;
+    use SheetIO.Cursor;
 
-    /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: SheetWriter[r, a], 
-                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        runXssf(ma, path)
 
-    /// Excel 2007 OOXML (.xlsx) format.
-    /// Path is for a *new* file...
-    pub def runXssf(ma: SheetWriter[r, a], 
-                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
-        use Result.{flatMap};
-        let outpath     = toString(path);
-        let* wb         = newXSSFWorkbook();
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-        let* _          = writeXSSFWorkbook(wb, outpath);
-        let* _          = closeXSSFWorkbook(wb);
-        Ok(ans)
 
-    /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: SheetWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        runAppendXssf(ma, path)
-    
-    /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXssf(ma: SheetWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
-        use Result.{flatMap};
-        let path1 = toString(path);
-        match openXSSFWorkbook(path1) { 
-            case Err(e) => Err("runAppendXssf('${path1}'): ${e}")
-            case Ok(wb) => {
-                let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-                let* _          = writeXSSFWorkbook(wb, path1);
-                let* _          = closeXSSFWorkbook(wb);
-                Ok(ans)
-            }
-        }
+    /// use SheetIO.CellStyle;
+    /// use SheetIO.CellStyle.{CellStyle};
+    /// use SheetIO.CellStyleSetter;
+    /// use SheetIO.CellStyleSetter.{CellStyleSetter};
+    /// use SheetIO.DataFormat;
+    /// use SheetIO.DataFormat.{DataFormat};
+    /// use SheetIO.Font;
+    /// use SheetIO.Font.{Font};
+    /// use SheetIO.FontSetter;
+    /// use SheetIO.FontSetter.{FontSetter};
+    /// use SheetIO.Row;
+    /// use SheetIO.Row.{Row};
+    /// use SheetIO.RowSetter;
+    /// use SheetIO.RowSetter.{RowSetter};
+    /// use SheetIO.Sheet;
+    /// use SheetIO.Sheet.{Sheet};
 
-    /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
-    pub def runTemplateXssf(ma: SheetWriter[r, a], 
-                            template: FlixSandbox/System.FilePath, 
-                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
-        use Result.{flatMap};
-        let* _          = FlixSandbox/System/Directory.copy(template, outPath);
-        let path1       = toString(outPath);
-        let* wb         = openXSSFWorkbook(path1);
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());        
-        let* _          = writeXSSFWorkbook(wb, path1);
-        let* _          = closeXSSFWorkbook(wb);
-        Ok(ans)
-
-                    
-    /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: SheetWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
-        use Result.{flatMap};
-        let path1       = toString(path);
-        let* wb         = newHSSFWorkbook();
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-        let* _          = writeHSSFWorkbook(wb, path1);
-        let* _          = closeHSSFWorkbook(wb);
-        Ok(ans)
-
-    pub def runTemplateHssf(ma: SheetWriter[r, a], 
-                            template: FlixSandbox/System.FilePath, 
-                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
-        use Result.{flatMap};
-        use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
-        let* _          = FlixSandbox/System/Directory.copy(template, outPath);
-        let outPath1    = toString(outPath);
-        let* wb         = openHSSFWorkbook(outPath1);
-        let* (_, ans)   = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook, None, Map.empty());
-        let* _          = writeHSSFWorkbook(wb, outPath1);
-        let* _          = closeHSSFWorkbook(wb);
-        Ok(ans)
+/*
 
     def apply1(ma: SheetWriter[r, a], 
                wb: ##org.apache.poi.ss.usermodel.Workbook, 
@@ -322,18 +250,6 @@ namespace SheetIO/SheetWriter {
         }
 
 
-    ///
-    /// Returns `(v1 :: v2 :: ... v :: vn)` if each of `f(xs_i)` is successful.
-    /// Otherwise fails with the first error encountered.
-    ///
-    /// `traverse` is a synonym for `mapM`.
-    ///
-    pub def traverse(f: a -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, List[b]] = mapM(f, xs)
-
-    ///
-    /// `traverseX` is a synonym for `mapX`.
-    ///
-    pub def traverseX(f: a -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, Unit] = mapX(f, xs)
 
     ///
     /// `forM` is `mapM` with its arguments flipped.
@@ -411,31 +327,13 @@ namespace SheetIO/SheetWriter {
 
     
 
-    pub def createSheet(name: String): SheetWriter[r, Sheet] =
-        use SheetIO/Internal/Workbook.{createSheet};
-        liftWorkbookPrim(x1 -> Result.map(Sheet, createSheet(x1, name))) 
 
     
     
     /// Although this is `SheetWriter` some introspection (reading) is needed, 
     /// e.g. if we are writing to a template file
 
-    pub def getSheetNamed(name: String): SheetWriter[r, Sheet] =
-        use SheetIO/Internal/Workbook.{getSheet};
-        liftWorkbookPrim(x1 -> Result.map(Sheet, getSheet(x1, name))) 
-    
-    pub def getSheetNames(): SheetWriter[r, List[String]] =
-        let* n  = getNumberOfSheets();
-        let ixs = List.range(0, n);
-        mapM(getSheetNameWb, ixs)      
-    
-    def getNumberOfSheets(): SheetWriter[r, Int32] =
-        use SheetIO/Internal/Workbook.{getNumberOfSheets};
-        liftWorkbookPrim(getNumberOfSheets)
 
-    def getSheetNameWb(ix: Int32): SheetWriter[r, String] =
-        use SheetIO/Internal/Workbook.{getSheetName};
-        liftWorkbookPrim(x1 -> getSheetName(x1, ix))
 
 
     pub def createDataFormat(): SheetWriter[r, DataFormat] =
@@ -505,6 +403,5 @@ namespace SheetIO/SheetWriter {
         let* _      = appendRow(sheet, SheetIO/RowSetter.putHeaders!(headers));
         let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
         point()
-
-}
 */
+}
