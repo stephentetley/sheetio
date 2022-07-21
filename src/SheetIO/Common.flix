@@ -43,6 +43,17 @@ namespace SheetIO {
 
     }
 
+    instance CollectionInterop.Marshal[CellStyle[r]] {
+        pub def toJavaObject(x: CellStyle[r]): ##java.lang.Object = 
+            let CellStyle(r1) = x;
+            r1 as ##java.lang.Object
+
+        pub def fromJavaObject(o: ##java.lang.Object): CellStyle[r] = 
+            CellStyle(o as ##org.apache.poi.ss.usermodel.CellStyle)
+
+    }
+
+
 }
 
 namespace SheetIO/Common {
