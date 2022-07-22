@@ -58,6 +58,8 @@ namespace SheetIO/SheetWriter {
     use SheetIO/Internal/PrimError.{PrimError};
     use SheetIO.Row;
     use SheetIO.Row.{Row};
+    use SheetIO.RowSetter;
+    use SheetIO.RowSetter.{RowSetter};
 
     def apply1(ma: SheetWriter[r, a], 
                style: Option[CellStyle[r]], 
@@ -125,6 +127,16 @@ namespace SheetIO/SheetWriter {
             {fn(r, sheet) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
         )  as & ef
 
+
+    pub def liftAction(fn: Unit -> a & ef): SheetWriter[r, a] & ef = 
+        SheetWriter((_, _) -> {fn() as & r} |> Ok) as & ef
+
+    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): SheetWriter[r, a] & ef = 
+        SheetWriter((_, _) -> 
+            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.emptyEvalError({ source = s, exnMessage = ""}))
+        ) as & ef
+
+
 /*
     pub def guard(x: Bool): SheetWriter[r, Unit] = 
         match x { 
@@ -158,14 +170,6 @@ namespace SheetIO/SheetWriter {
 
 
 
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure): SheetWriter[r, a] = 
-        SheetWriter((wb, _, s1) -> {let ans = fn(wb); Result.map(x -> (s1, x), ans)})
-
-    pub def liftAction(fn: Unit -> a & Impure): SheetWriter[r, a] = 
-        SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
-
-    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetWriter[r, a] = 
-        SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
     pub def liftOption(x: Option[a], errMsg: String): SheetWriter[r, a] = match x { 
         case Some(x1) => point(x1)
@@ -369,29 +373,34 @@ namespace SheetIO/SheetWriter {
         point(font)
 */
     // createRow
-    def createRow(ix: Int32): SheetWriter[r, Row[r]] \ Write(r) =
+    def createRow!(ix: Int32): SheetWriter[r, Row[r]] \ Write(r) =
         liftSheetPrim((r, sheet) -> SheetIO/Internal/Sheet.createRow(r, ix, sheet) |> Result.map(Row))
-/*
 
-    pub def appendRow(ix: Int32, mx: RowSetter[a]): SheetWriter[r, Unit] =
+    pub def setRow!(ix: Int32, mx: RowSetter[r, a]): SheetWriter[r, Unit] \ Write(r) =
         let RowSetter(mf) = mx;
-        let* name       = getSheetName(x);
-        let* ix         = getCursorAndIncr(name);
-        let* row        = createRow(x, ix);
+        let* row        = createRow!(ix);
         let Row(row1)   = row;
         let* style      = askStyle();
-        let* _          = liftActionResult(_ -> mf(row1, style));
+        let* _          = SheetWriter((_,_) -> mf(style, row1));
         point()
 
 
-    pub def allRows(sheet: Sheet, rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[r, Unit] = 
-        mapX(r -> appendRow(sheet, writer(r)), rows)
+
+    pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, Unit] \ Write(r) = 
+        SheetIO/Internal/Util.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)
+
+    pub def allRowsForm!(start: Int32, writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, Unit] \ Write(r) = 
+        SheetIO/Internal/Util.foreachMWithIndex((ix, a) -> setRow!(ix + start, writer(a)), rows)
 
 
-    /// Row 0 is read for the headers, all subsequent rows are *data*.
-    pub def allRowsWithHeaders(sheet: Sheet, headers: List[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[r, Unit] = 
-        let* _      = appendRow(sheet, SheetIO/RowSetter.putHeaders!(headers));
-        let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
+    /// Headers are written to Row 0, all subsequent rows are *data*.
+    pub def allRowsWithHeaders(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, Unit] \ Write(r)  = 
+        let* _      = setRow!(0, SheetIO/RowSetter.putHeaders!(headers));
+        let* _      = allRowsForm!(1, writer, rows);
         point()
-*/
+
+
+
+
+
 }
