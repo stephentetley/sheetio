@@ -146,8 +146,6 @@ namespace SheetIO/NamedRowEvaluator {
         ) as & ef
 
 
-    pub def bind(x: NamedRowEvaluator[r, a], k: a -> NamedRowEvaluator[r, b] & ef): NamedRowEvaluator[r, b] & ef =
-        flatMap(k, x)
 
     pub def orelse(ea: NamedRowEvaluator[r, a], eb: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
         NamedRowEvaluator((ixs, fmt, row) -> 

@@ -41,6 +41,16 @@ namespace SheetIO {
             SheetIO/WorkbookReader.flatMap(f, o)
     }
 
+    instance MonadZero[WorkbookReader[r]] {
+        pub def empty(): WorkbookReader[r, a] = SheetIO/WorkbookReader.throwError("empty")
+    }
+
+    instance MonadOr[WorkbookReader[r]] {
+        pub def orelse(a: WorkbookReader[r, a], b: WorkbookReader[r, a]): WorkbookReader[r, a] =
+            SheetIO/WorkbookReader.orelse(a, b)
+    }
+
+
 }
 
 namespace SheetIO/WorkbookReader {
@@ -160,7 +170,7 @@ namespace SheetIO/WorkbookReader {
         flatMap(fn, ma)
 
 
-    pub def alt(ma: WorkbookReader[r, a], mb: WorkbookReader[r, a]): WorkbookReader[r, a] =
+    pub def orelse(ma: WorkbookReader[r, a], mb: WorkbookReader[r, a]): WorkbookReader[r, a] =
         WorkbookReader(wb -> 
             match apply1(ma, wb) { 
                 case Ok(a)  => Ok(a)
@@ -248,7 +258,5 @@ namespace SheetIO/WorkbookReader {
     pub def withSheetReader(eval: SheetReader[r, a], sheet: Sheet[r]): WorkbookReader[r, a] =
         WorkbookReader(_ -> SheetIO/SheetReader.evaluate(eval, sheet))
 
-    /// TODO - the SheetReader monad is dealing with both Sheet and Workbook functions.
-    /// This was useful at first but is probably not the right abstraction...
 
 }

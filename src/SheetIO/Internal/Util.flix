@@ -43,14 +43,6 @@ namespace SheetIO/Internal/Util {
         }
 
 
-    /// TODO - look at a `FoldableWithIndex` class...
-    pub def foreachMWithIndex(mf: (Int32, a) -> m[b] & ef, l: List[a]): m[Unit] & ef with Monad[m] = 
-        use Applicative.{point};
-        def loop(_, ix, ll) = match ll {
-            case Nil     => point()
-            case x :: rs => loop(Functor.ignore(mf(ix, x)), ix+1, rs)
-        };
-        loop(point(), 0, l)
 
 }
 

@@ -41,11 +41,20 @@ namespace SheetIO {
             SheetIO/SheetReader.flatMap(f, o)
     }
 
+    instance MonadZero[SheetReader[r]] {
+        pub def empty(): SheetReader[r, a] = SheetIO/SheetReader.throwError("empty")
+    }
+
+    instance MonadOr[SheetReader[r]] {
+        pub def orelse(a: SheetReader[r, a], b: SheetReader[r, a]): SheetReader[r, a] =
+            SheetIO/SheetReader.orelse(a, b)
+    }
+
 }
 
 namespace SheetIO/SheetReader {
 
-    use ToString.toString;
+    use Monad.{>>=};
 
 
     use SheetIO.SheetReader;
@@ -130,12 +139,8 @@ namespace SheetIO/SheetReader {
                 case Err(e) => Err(e)
             }
         ) as & ef
-  
-  pub def bind(ma: SheetReader[r, a], fn: a -> SheetReader[r, b] & ef): SheetReader[r, b] & ef = 
-        flatMap(fn, ma)
 
-
-    pub def alt(ma: SheetReader[r, a], mb: SheetReader[r, a]): SheetReader[r, a] =
+    pub def orelse(ma: SheetReader[r, a], mb: SheetReader[r, a]): SheetReader[r, a] =
         SheetReader(wb -> 
             match apply1(ma, wb) { 
                 case Ok(a)  => Ok(a)
@@ -143,11 +148,6 @@ namespace SheetIO/SheetReader {
             }
         )
 
-    pub def optional(ma: SheetReader[r, a]): SheetReader[r, Option[a]] = 
-        alt(map(Some, ma), point(None))
-
-    pub def tryWithDefault(ma: SheetReader[r, a], d: a): SheetReader[r, a] = 
-        alt(ma, point(d))
 
     pub def testM(ma: SheetReader[r, a]): SheetReader[r, Bool] =
         SheetReader(wb -> 
@@ -174,57 +174,10 @@ namespace SheetIO/SheetReader {
             case false => throwError("guard")
         }
 
-    pub def whenTrue(x: Bool, ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        match x { 
-            case true => ma
-            case false => point()
-        }
-
-    pub def whenFalse(x: Bool, ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        match x { 
-            case true => point()
-            case false => ma
-        }
-
-    pub def whenTrueM(mx: SheetReader[r, Bool], ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        bind(mx, x -> whenTrue(x, ma))
-
-    pub def whenFalseM(mx: SheetReader[r, Bool], ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        bind(mx, x -> whenFalse(x, ma))
 
 
-    pub def whenSome(x: Option[a], f: a -> SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        match x { 
-            case Some(a) => f(a)
-            case None => point()
-        }
-
-    pub def whenNone(x: Option[a], ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        match x { 
-            case Some(_) => point()
-            case None => ma
-        }
-
-    pub def whenSomeM(mx: SheetReader[r, Option[a]], f: a -> SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        bind(mx, x -> whenSome(x, f))
-            
-
-    pub def whenNoneM(mx: SheetReader[r, Option[a]], ma: SheetReader[r, Unit]): SheetReader[r, Unit] = 
-        bind(mx, x -> whenNone(x, ma))
 
 
-    pub def ifSomeM(mx: SheetReader[r, Option[a]], mthen: a -> SheetReader[r, b], melse: SheetReader[r, b]): SheetReader[r, b] = 
-        bind(mx, x -> match x { 
-            case Some(a) => mthen(a)
-            case None => melse
-        })
-            
-
-    pub def ifNoneM(mx: SheetReader[r, Option[a]], mthen: SheetReader[r, b], melse: SheetReader[r, b]): SheetReader[r, b] = 
-        bind(mx, x -> match x { 
-            case Some(_) => mthen
-            case None => melse
-        })
 
     def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Sheet -> Result[a, PrimError] & ef): SheetReader[r, a] & ef = 
         SheetReader(s -> 
@@ -535,6 +488,7 @@ namespace SheetIO/SheetReader {
         } catch {
             case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
         }
+
     pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] =
         SheetReader(wb ->
             mapWithIndexMHelper(wb, mf, 0, xs, e -> Err(e), ys -> Ok(ys))

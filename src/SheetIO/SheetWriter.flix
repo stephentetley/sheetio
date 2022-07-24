@@ -60,12 +60,20 @@ namespace SheetIO/SheetWriter {
     use SheetIO.Row.{Row};
     use SheetIO.RowSetter;
     use SheetIO.RowSetter.{RowSetter};
+    use SheetIO.Sheet;
+    use SheetIO.Sheet.{Sheet};
 
     def apply1(ma: SheetWriter[r, a], 
                style: Option[CellStyle[r]], 
                sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[a, EvalError] & r = 
         let SheetWriter(f1) = ma;
         f1(style, sheet)
+
+    pub def write(ma: SheetWriter[r, a], sheet: Sheet[r]): Result[a, EvalError] & r = 
+        let Sheet(sheet1) = sheet;
+        apply1(ma, None, sheet1)
+
+
 
     pub def askStyle(): SheetWriter[r, Option[CellStyle[r]]] = 
         SheetWriter((style, _) -> Ok(style) as & r) 
@@ -335,9 +343,6 @@ namespace SheetIO/SheetWriter {
 
 
 
-    pub def createDataFormat(): SheetWriter[r, DataFormat] =
-        use SheetIO/Internal/Workbook.{createDataFormat};
-        liftWorkbookPrim(x1 -> Result.map(DataFormat, createDataFormat(x1)))
 
     pub def getFormat(x: DataFormat, format: String): SheetWriter[r, Int16] =
         use SheetIO/Internal/Workbook.{getFormat};
@@ -354,23 +359,9 @@ namespace SheetIO/SheetWriter {
         SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as & Impure)
 
 
-    pub def createCellStyle(mx: CellStyleSetter[r, a]): SheetWriter[r, CellStyle] =
-        use SheetIO/Internal/Workbook.{createCellStyle};
-        let CellStyleSetter(mf) = mx;
-        let* style              = liftWorkbookPrim(createCellStyle >> Result.map(CellStyle));
-        let CellStyle(style1)   = style;
-        let* _                  = liftActionResult(_ -> mf(style1));
-        point(style)
 
 
 
-    pub def createFont(mx: FontSetter[r, a]): SheetWriter[r, Font] =
-        use SheetIO/Internal/Workbook.{createFont};
-        let FontSetter(mf)      = mx;
-        let* font               = liftWorkbookPrim(createFont >> Result.map(Font));
-        let Font(font1)         = font;
-        let* _                  = liftActionResult(_ -> mf(font1));
-        point(font)
 */
     // createRow
     def createRow!(ix: Int32): SheetWriter[r, Row[r]] \ Write(r) =
@@ -387,14 +378,14 @@ namespace SheetIO/SheetWriter {
 
 
     pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, Unit] \ Write(r) = 
-        SheetIO/Internal/Util.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)
+        FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)
 
     pub def allRowsForm!(start: Int32, writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, Unit] \ Write(r) = 
-        SheetIO/Internal/Util.foreachMWithIndex((ix, a) -> setRow!(ix + start, writer(a)), rows)
+        FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix + start, writer(a)), rows)
 
 
     /// Headers are written to Row 0, all subsequent rows are *data*.
-    pub def allRowsWithHeaders(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, Unit] \ Write(r)  = 
+    pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, Unit] \ Write(r)  = 
         let* _      = setRow!(0, SheetIO/RowSetter.putHeaders!(headers));
         let* _      = allRowsForm!(1, writer, rows);
         point()

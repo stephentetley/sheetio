@@ -49,12 +49,21 @@ namespace SheetIO/WorkbookWriter {
     use SheetIO.WorkbookWriter;
     use SheetIO.WorkbookWriter.{WorkbookWriter};
 
-
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
+    use SheetIO.CellStyleSetter;
+    use SheetIO.CellStyleSetter.{CellStyleSetter};
+    use SheetIO.DataFormat;
+    use SheetIO.DataFormat.{DataFormat};
+    use SheetIO.Font;
+    use SheetIO.Font.{Font};
+    use SheetIO.FontSetter;
+    use SheetIO.FontSetter.{FontSetter};    
     use SheetIO/Internal/EvalError.{EvalError};
     use SheetIO/Internal/PrimError.{PrimError};
     use SheetIO.Sheet;
     use SheetIO.Sheet.{Sheet};
-
+    use SheetIO.SheetWriter;
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: WorkbookWriter[r, a], 
@@ -198,6 +207,14 @@ namespace SheetIO/WorkbookWriter {
             {fn(r, wb) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
         )  as & ef
 
+    pub def liftAction(fn: Unit -> a & ef): WorkbookWriter[r, a] & ef = 
+        WorkbookWriter(_ -> { let a = fn() as & r; Ok(a)}) as & ef
+
+
+    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): WorkbookWriter[r, a] & ef = 
+        WorkbookWriter(_ -> 
+            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.emptyEvalError({ source = s, exnMessage = ""}))
+        ) as & ef
 
 
     pub def createSheet(name: String): WorkbookWriter[r, Sheet[r]] \ Write(r) =
@@ -210,6 +227,33 @@ namespace SheetIO/WorkbookWriter {
     pub def getSheetAt(ix: Int32): WorkbookWriter[r, Sheet[r]] \ Read(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
 
+    pub def getFormat(x: DataFormat[r], format: String): WorkbookWriter[r, Int16] \ Read(r) =
+        let DataFormat(x1) = x;
+        liftWorkbookPrim((r, _) -> SheetIO/Internal/Util.getFormat(r, format, x1))
+
+
+    pub def createDataFormat(): WorkbookWriter[r, DataFormat[r]] \ Write(r) =
+        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createDataFormat(r, wb) |> Result.map(DataFormat))
+
+
+    pub def createFont(mx: FontSetter[r, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
+        use SheetIO/Internal/Workbook.{createFont};
+        let FontSetter(mf)      = mx;
+        let* font               = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
+        let* _                  = WorkbookWriter(_ -> mf(font) |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError));
+        point(Font(font))
+
+
+    pub def createCellStyle(mx: CellStyleSetter[r, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
+        use SheetIO/Internal/Workbook.{createCellStyle};
+        let CellStyleSetter(mf) = mx;
+        let* style              = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
+        let* _                  = WorkbookWriter(_ -> mf(style) |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError));
+        point(CellStyle(style))
+
+    pub def withSheetWriter(writer: SheetWriter[r, a], sheet: Sheet[r]): WorkbookWriter[r, a] =
+        WorkbookWriter(_ -> SheetIO/SheetWriter.write(writer, sheet))
+
 
 /*
 
@@ -220,34 +264,7 @@ namespace SheetIO/WorkbookWriter {
             case false => throwError("guard")
         }
 
-    pub def whenTrue(x: Bool, ma: SheetWriter[r, Unit]): SheetWriter[r, Unit] = 
-        match x { 
-            case true => ma
-            case false => point()
-        }
 
-    pub def whenFalse(x: Bool, ma: SheetWriter[r, Unit]): SheetWriter[r, Unit] = 
-        match x { 
-            case true => point()
-            case false => ma
-        }
-
-    pub def whenSome(x: Option[a], f: a -> SheetWriter[r, Unit]): SheetWriter[r, Unit] = 
-        match x { 
-            case Some(a) => f(a)
-            case None => point()
-        }
-
-    pub def whenNone(x: Option[a], ma: SheetWriter[r, Unit]): SheetWriter[r, Unit] = 
-        match x { 
-            case Some(_) => point()
-            case None => ma
-        }
-
-
-
-    def liftWorkbookPrim(fn: ##org.apache.poi.ss.usermodel.Workbook -> Result[a, String] & Impure): SheetWriter[r, a] = 
-        SheetWriter((wb, _, s1) -> {let ans = fn(wb); Result.map(x -> (s1, x), ans)})
 
     pub def liftAction(fn: Unit -> a & Impure): SheetWriter[r, a] = 
         SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
