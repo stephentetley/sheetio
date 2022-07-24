@@ -16,96 +16,108 @@
 
 namespace SheetIO/Internal/CellStyle {
 
-    pub def setFont(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit & Impure; 
+
+    use SheetIO/Internal/PrimError.{PrimError};
+    
+    pub def setFont!(r: Region[r],
+                    font: ##org.apache.poi.ss.usermodel.Font,
+                    style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] & r = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit & r; 
         try {
             let ans = setFont(style, font);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFont")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFont!", ex)
         }
 
-    pub def getFontIndexAsInt(style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.getFontIndexAsInt(): Int32 & Impure; 
+    pub def getFontIndexAsInt(r: Region[r], 
+                                style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Int32, PrimError] & r = 
+        import org.apache.poi.ss.usermodel.CellStyle.getFontIndexAsInt(): Int32 & r; 
         try {
             let ans = getFontIndexAsInt(style);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getFontIndexAsInt")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getFontIndexAsInt", ex)
         }
 
-    pub def setWrapText(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                        value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool): Unit & Impure; 
+    pub def setWrapText!(r: Region[r], 
+                        value: Bool,
+                        style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool): Unit & r; 
         try {
             let ans = setWrapText(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setWrapText")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setWrapText!", ex)              
         }
     
-    pub def setIndention(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                         value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16): Unit & Impure; 
+    pub def setIndention!(r: Region[r], 
+                            value: Int16,
+                            style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16): Unit & r; 
         try {
             let ans = setIndention(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setIndention")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setIndention!", ex)             
         }
     
     
-    pub def setFillForegroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                                   value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16): Unit & Impure; 
+    pub def setFillForegroundColor!(r: Region[r], 
+                                    value: Int16, 
+                                    style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16): Unit & r; 
         try {
             let ans = setFillForegroundColor(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFillForegroundColor")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFillForegroundColor!", ex)
         }
 
     /// Note must set foreground color first
-    pub def setFillBackgroundColor(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                                   value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16): Unit & Impure; 
+    pub def setFillBackgroundColor!(r: Region[r], 
+                                   value: Int16,
+                                   style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16): Unit & r; 
         try {
             let ans = setFillBackgroundColor(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFillBackgroundColor")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFillBackgroundColor!", ex)
         }
 
 
-    pub def setShrinkToFit(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                           value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool): Unit & Impure; 
+    pub def setShrinkToFit!(r: Region[r], 
+                           value: Bool, 
+                           style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool): Unit & r; 
         try {
             let ans = setShrinkToFit(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setShrinkToFit") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setShrinkToFit!", ex)
         }
 
-    pub def setDataFormat(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                          value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16): Unit & Impure; 
+    pub def setDataFormat!(r: Region[r], 
+                            value: Int16, 
+                            style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16): Unit & r; 
         try {
             let ans = setDataFormat(style, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setDataFormat") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setDataFormat!", ex)
         }
 
-    pub def cloneStyleFrom(style: ##org.apache.poi.ss.usermodel.CellStyle, 
-                           styleToClone: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle): Unit & Impure; 
+    pub def cloneStyleFrom!(r: Region[r], 
+                            styleToClone: ##org.apache.poi.ss.usermodel.CellStyle, 
+                            style: ##org.apache.poi.ss.usermodel.CellStyle): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle): Unit & r; 
         try {
             let ans = cloneStyleFrom(style, styleToClone);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("cloneStyleFrom") 
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "cloneStyleFrom!", ex)
         }
 
 }

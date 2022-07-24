@@ -19,9 +19,9 @@
 namespace SheetIO {
 
     ///
-    /// CellType
+    /// DataFormatter
     ///
-    pub enum DataFormatter(##org.apache.poi.ss.usermodel.DataFormatter)
+    pub enum DataFormatter[_: Region](##org.apache.poi.ss.usermodel.DataFormatter)
 
 }
 
@@ -33,17 +33,13 @@ namespace SheetIO/DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def new(): DataFormatter & Impure =
-        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
-        DataFormatter(newDataFormatter())
+    pub def new(r: Region[r]): DataFormatter[r] \ Write(r) =
+        DataFormatter(SheetIO/Internal/DataFormatter.new(r))
 
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(x: I18n.Locale): DataFormatter & Impure =
-        use I18n.Locale.{Locale};
-        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
-        let Locale(x1) = x;
-        DataFormatter(newDataFormatter(x1))
+    pub def newWithLocale(r: Region[r], l: I18n.Locale): DataFormatter[r] \ Write(r) =
+        DataFormatter(SheetIO/Internal/DataFormatter.newWithLocale(r, l))
         
 }

@@ -16,21 +16,35 @@
 
 namespace SheetIO/Internal/DataFormatter {
 
+    use SheetIO/Internal/PrimError.{PrimError};
 
-    pub def new(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure = 
-        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & Impure as newDataFormatter;
+    pub def new(_: Region[r]): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
+        import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
         newDataFormatter()
+
+
+    ///
+    /// Returns a new mutable DataFormatter.
+    ///
+    pub def newWithLocale(_: Region[r], x: I18n.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
+        use I18n.Locale.{Locale};
+        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
+        let Locale(x1) = x;
+        newDataFormatter(x1)
+
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
-    pub def formatCellValue(formatter: ##org.apache.poi.ss.usermodel.DataFormatter,
-                            cell: ##org.apache.poi.ss.usermodel.Cell): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & Impure; 
+    /// This is a "getter" despite its name.
+    pub def formatCellValue(r: Region[r],
+                            cell: ##org.apache.poi.ss.usermodel.Cell, 
+                            formatter: ##org.apache.poi.ss.usermodel.DataFormatter): Result[String, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String & r; 
         try {
             let ans = formatCellValue(formatter, cell);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("formatCellValue")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "formatCellValue", ex)
         }
 
 }

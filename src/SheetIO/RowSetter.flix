@@ -20,74 +20,88 @@
 namespace SheetIO {
 
     use SheetIO.CellStyle;
+    use SheetIO/Internal/EvalError.{EvalError};
 
-    pub enum RowSetter[a](##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure)
+    pub enum RowSetter[r: Region, a: Type](
+        Option[CellStyle[r]] -> ##org.apache.poi.ss.usermodel.Row -> Result[a, EvalError] & r)
 
-    instance Functor[RowSetter] {
-        pub def map(f: a -> b & ef, o: RowSetter[a]): RowSetter[b] & ef = 
+    instance Functor[RowSetter[r]] {
+        pub def map(f: a -> b & ef, o: RowSetter[r, a]): RowSetter[r, b] & ef = 
             SheetIO/RowSetter.map(f, o)
     }
 
-    instance Applicative[RowSetter] {
-        pub def point(x: a): RowSetter[a] = 
+    instance Applicative[RowSetter[r]] {
+        pub def point(x: a): RowSetter[r, a] = 
             SheetIO/RowSetter.point(x)
 
-        pub def ap(f: RowSetter[a -> b & ef], x: RowSetter[a]): RowSetter[b] & ef = 
+        pub def ap(f: RowSetter[r, a -> b & ef], x: RowSetter[r, a]): RowSetter[r, b] & ef = 
             SheetIO/RowSetter.ap(f, x)
     }
 
-    instance Monad[RowSetter] {
-        pub def flatMap(f: a -> RowSetter[b] & ef, o: RowSetter[a]): RowSetter[b] & ef =
+    instance Monad[RowSetter[r]] {
+        pub def flatMap(f: a -> RowSetter[r, b] & ef, o: RowSetter[r, a]): RowSetter[r, b] & ef =
             SheetIO/RowSetter.flatMap(f, o)
     }
 
+    instance MonadZero[RowSetter[r]] {
+        pub def empty(): RowSetter[r, a] = SheetIO/RowSetter.throwError("empty")
+    }
+
+    instance MonadOr[RowSetter[r]] {
+        pub def orelse(a: RowSetter[r, a], b: RowSetter[r, a]): RowSetter[r, a] =
+            SheetIO/RowSetter.orelse(a, b)
+    }
 
 }
 
 namespace SheetIO/RowSetter {
 
-    use SheetIO.CellStyle;
-    use SheetIO.CellStyle.{CellStyle};
     use SheetIO.RowSetter;
     use SheetIO.RowSetter.{RowSetter};
+    
+    use SheetIO.CellStyle;
+    use SheetIO.CellStyle.{CellStyle};
+    use SheetIO/Internal/EvalError.{EvalError};
+    use SheetIO/Internal/PrimError.{PrimError};
 
-    pub def point(x: a): RowSetter[a] =
-        RowSetter((_, _) -> Ok(x) as & Impure)
+    pub def point(x: a): RowSetter[r, a] =
+        RowSetter((_, _) -> Ok(x) as & r)
 
-    def apply1(x: RowSetter[a], r: ##org.apache.poi.ss.usermodel.Row, style: Option[CellStyle]): Result[a, String] & Impure =
+    def apply1(x: RowSetter[r, a], style: Option[CellStyle[r]], row: ##org.apache.poi.ss.usermodel.Row): Result[a, EvalError] & r =
         let RowSetter(f) = x;
-        f(r, style)
+        f(style, row)
 
-    pub def throwError(errMsg: String): RowSetter[a] =
-        RowSetter((_, _) -> Err(errMsg) as & Impure)
 
-    pub def mapError(f: String -> String, ma: RowSetter[a]): RowSetter[a] =
-        RowSetter((r, style) -> match apply1(ma, r, style) { 
-            case Ok(a) => Ok(a)
-            case Err(e) => Err(f(e))
+
+
+    pub def throwError(msg: String): RowSetter[r, a] =
+        RowSetter((_, row) -> 
+            Err(SheetIO/Internal/EvalError.create(() as Region[r], row, {source = msg, exnMessage = ""}))
+        )
+
+
+
+    pub def swapError(errSrc: String, ma: RowSetter[r, a]): RowSetter[r, a] =
+        RowSetter((style, row) -> match apply1(ma, style, row) { 
+            case Ok(x1)   => Ok(x1)
+            case Err(err) => Err({source = errSrc | err})
         })
 
-    pub def swapError(ma: RowSetter[a], errMsg: String): RowSetter[a] =
-        RowSetter((r, style)-> match apply1(ma, r, style) { 
-            case Ok(a) => Ok(a)
-            case Err(_) => Err(errMsg)
-        })
 
-
-    pub def map(f: a -> b & ef, x: RowSetter[a]): RowSetter[b] & ef =
-        RowSetter((r, style) -> match apply1(x, r, style) {
+    pub def map(f: a -> b & ef, x: RowSetter[r, a]): RowSetter[r, b] & ef =
+        RowSetter((style, row) -> match apply1(x, style, row) {
             case Ok(a) => {
-                let ans = f(a) as & Impure;
+                let ans = f(a) as & r;
                 Ok(ans)
             }
             case Err(e) => Err(e)
         }) as & ef
 
-    pub def ap(mf: RowSetter[a -> b & ef], ma: RowSetter[a]): RowSetter[b] & ef =
-        RowSetter((r, style) ->  match apply1(mf, r, style) {
+    pub def ap(mf: RowSetter[r, a -> b & ef], ma: RowSetter[r, a]): RowSetter[r, b] & ef =
+        RowSetter((style, row) ->  match apply1(mf, style, row) {
             case Ok(f) => {
-                match apply1(ma, r, style) {
-                    case Ok(a) => Ok(f(a) as & Impure)
+                match apply1(ma, style, row) {
+                    case Ok(a) => Ok(f(a) as & r)
                     case Err(e2) => Err(e2)
                 }
             }
@@ -95,149 +109,153 @@ namespace SheetIO/RowSetter {
         }) as & ef
 
 
-    pub def bind(x: RowSetter[a], k: a -> RowSetter[b] & ef): RowSetter[b] & ef =
-        RowSetter((r, style) -> 
-            match apply1(x, r, style) {
-                case Ok(a) => {let ans = k(a) as & Impure; apply1(ans, r, style)}
+    pub def flatMap(k: a -> RowSetter[r, b] & ef, x: RowSetter[r, a]): RowSetter[r, b] & ef =
+        RowSetter((style, row) -> 
+            match apply1(x, style, row) {
+                case Ok(a) => {let ans = k(a) as & r; apply1(ans, style, row)}
                 case Err(e) => Err(e)
             }) as & ef
 
-    pub def flatMap(k: a -> RowSetter[b] & ef, x: RowSetter[a]): RowSetter[b] & ef = bind(x, k)
 
 
-    def liftPrim(fn: ##org.apache.poi.ss.usermodel.Row -> Option[CellStyle] -> Result[a, String] & Impure): RowSetter[a] =
-        RowSetter((r, style) -> fn(r, style))
+    pub def orelse(ma: RowSetter[r, a], mb: RowSetter[r, a]): RowSetter[r, a] =
+        RowSetter((style, row) -> 
+            match apply1(ma, style, row) {
+                case Ok(a)  => Ok(a)
+                case Err(_) => apply1(mb, style, row)
+            }
+        )
 
-    pub def liftAction(fn: Unit -> a & Impure): RowSetter[a] =
-        RowSetter((_, _) -> let x = fn(); Ok(x))
 
-    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): RowSetter[a] =
-        RowSetter((_, _) -> fn())
 
-    pub def liftOption(x: Option[a], errMsg: String): RowSetter[a] = match x { 
+    def liftPrim(fn: Region[r] -> Option[CellStyle[r]] -> ##org.apache.poi.ss.usermodel.Row -> Result[a, PrimError] & ef): RowSetter[r, a] & ef =
+        RowSetter((style, row) -> 
+            let r = () as Region[r]; 
+            {fn(r, style, row) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.create(r, row))
+        ) as & ef
+        
+
+    pub def liftAction(fn: Unit -> a & ef): RowSetter[r, a] & ef=
+        RowSetter((_, _) -> 
+            let x = fn() as & r; 
+            Ok(x)
+        ) as & ef
+
+    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): RowSetter[r, a] & ef=
+        RowSetter((_, row) -> 
+            let r = () as Region[r]; 
+            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.create(r, row, {source = s, exnMessage = ""}))
+        ) as & ef
+
+    pub def liftOption(x: Option[a], errMsg: String): RowSetter[r, a] = match x { 
         case Some(x1) => point(x1)
-        case None => throwError(errMsg)
+        case None     => throwError(errMsg)
     }
     
-    pub def liftResult(x: Result[a, String]): RowSetter[a] = match x { 
+    pub def liftResult(x: Result[a, String]): RowSetter[r, a] = match x { 
         case Ok(x1)   => point(x1)
         case Err(msg) => throwError(msg)
     }
     
-    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): RowSetter[a] = match x { 
+    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowSetter[r, a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
-    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): RowSetter[a] = match x { 
+    pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowSetter[r, a] = match x { 
         case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
 
 
-    def createOrGetCell(row: ##org.apache.poi.ss.usermodel.Row, 
-                        style: Option[CellStyle],
-                        ix: Int32): Result[##org.apache.poi.ss.usermodel.Cell, String] & Impure = 
+
+    /// This sets the CellStyle...
+    def createOrGetCell(ix: Int32): RowSetter[r, ##org.apache.poi.ss.usermodel.Cell] \ Write(r) = 
+        use SheetIO/Internal/Row.{getCell, createCell!};
         use Result.{flatMap};
-        use SheetIO/Internal/Row.{getCell, createCell};
-        let* cell   = match getCell(row, ix) {
-                        case Ok(a) => if (not Object.isNull(a)) Ok(a) else createCell(row, ix)
-                        case Err(_) => createCell(row, ix)
-                    };
-        let* _      = match style { 
-                        case Some(x) => {let CellStyle(style1) = x; SheetIO/Internal/Cell.setCellStyle(cell, style1)}
-                        case None => Ok() as & Impure
-                    };
-        Ok(cell)
-
-    pub def localCellStyle(style: CellStyle, mx: RowSetter[a]): RowSetter[a] = 
-        RowSetter((r, _) -> apply1(mx, r, Some(style)))
-    
-    pub def putBlankAt!(ix: Int32): RowSetter[Unit] =
-        use SheetIO.CellType.{TyBlank};
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let typ1    = SheetIO/CellType.toNative(TyBlank);
-            let* _      = SheetIO/Internal/Cell.setCellType(cell, typ1);
-            Ok()
+        let body = (r, style, row) -> {
+            let* cell   = match getCell(r, ix, row) {
+                            case Ok(a)  => if (not Object.isNull(a)) Ok(a) else createCell!(r, ix, row)
+                            case Err(_) => createCell!(r, ix, row)
+                        };
+            let* _      = match style { 
+                            case Some(x) => {let CellStyle(style1) = x; SheetIO/Internal/Cell.setCellStyle!(r, style1, cell)}
+                            case None    => Ok() as & r
+                        };
+            Ok(cell)
         };
-        liftPrim(step)
+        liftPrim(body)
+
+    def liftPrimCell(ix: Int32, 
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Cell -> Option[CellStyle[r]] -> Result[a, PrimError] & ef): RowSetter[r, a] \ { Write(r), ef } =
+        let* cell = createOrGetCell(ix);
+        liftPrim((r, style, _) -> fn(r, cell, style))
 
 
-    pub def putStringAt!(ix: Int32, value: String): RowSetter[Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setStringCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step)
-
-    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setBooleanCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step)
-
-    def putNumericAt!(ix: Int32, errMsg: String, value: Float64): RowSetter[Unit] =
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell   = createOrGetCell(row, style, ix);
-            let* _      = SheetIO/Internal/Cell.setNumericCellValue(cell, value);
-            Ok()
-        };
-        liftPrim(step) `swapError` errMsg
-
-    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[Unit] =
-        putNumericAt!(ix, "putInt8At!", Int8.toFloat64(n))
-
-    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[Unit] =
-        putNumericAt!(ix, "putInt16At!", Int16.toFloat64(n))
-
-    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[Unit] =
-        putNumericAt!(ix, "putInt32At!", Int32.toFloat64(n))
-
-    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[Unit] =
-        putNumericAt!(ix, "putInt64At!", Int64.toFloat64(n))
-
-    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[Unit] =
-        putNumericAt!(ix, "putFloat32At!", Float32.toFloat64(n))
-
-    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[Unit] =
-        putNumericAt!(ix, "putFloat64At!", n)
+    pub def localCellStyle(style: CellStyle[r], mx: RowSetter[r, a]): RowSetter[r, a] = 
+        RowSetter((_, row) -> apply1(mx, Some(style), row))
 
 
-    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[Unit] =
+    pub def putBlankAt!(ix: Int32): RowSetter[r, Unit] \ Write(r) =
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setBlank!(r, cell))
+            |> swapError("putBlankAt!")
+
+
+    pub def putStringAt!(ix: Int32, value: String): RowSetter[r, Unit] \ Write(r) =
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueString!(r, value, cell))
+            |> swapError("putBoolAt!")
+
+    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[r, Unit] \ Write(r) =
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueBoolean!(r, value, cell))
+            |> swapError("putBoolAt!")
+
+
+
+    def putNumericAt!(ix: Int32, value: Float64): RowSetter[r, Unit] \ Write(r) =
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueDouble!(r, value, cell))
+
+
+    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, Int8.toFloat64(n))
+            |> swapError("putInt8At!")
+
+    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, Int16.toFloat64(n))
+            |> swapError("putInt16At")
+
+    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, Int32.toFloat64(n))
+            |> swapError("putInt32At!")
+
+
+    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, Int64.toFloat64(n))
+            |> swapError("putInt64At!")
+
+    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, Float32.toFloat64(n))
+            |> swapError("putFloat32At!")
+
+    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[r, Unit] \ Write(r) =
+        putNumericAt!(ix, n)
+            |> swapError("putFloat64At!")
+
+    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, Unit] \ Write(r) =
         use Time.LocalDateTime.{LocalDateTime};
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell               = createOrGetCell(row, style, ix);
-            let  LocalDateTime(dt1) = dt;
-            let* _                  = SheetIO/Internal/Cell.setLocalDateTimeCellValue(cell, dt1);
-            Ok()
-        };
-        liftPrim(step)
+        let  LocalDateTime(dt1) = dt;
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
-    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[Unit] =
+
+
+    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, Unit] \ Write(r) =
         use Time.LocalDate.{LocalDate};
-        use Result.flatMap;
-        let step = (row, style) -> {
-            let* cell           = createOrGetCell(row, style, ix);
-            let  LocalDate(dt1) = dt;
-            let* _              = SheetIO/Internal/Cell.setLocalDateCellValue(cell, dt1);
-            Ok()
-        };
-        liftPrim(step)
-
-
-    pub def putHeaders!(l: List[String]): RowSetter[Unit] = 
+        let  LocalDate(dt1) = dt;
+        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
+ 
+    pub def putHeaders!(l: List[String]): RowSetter[r, Unit] \ Write(r) = 
         putHeadersHelper!(l, 0)
         
-    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[Unit] = match l {
+    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[r, Unit] \ Write(r) = match l {
         case Nil => point()
         case s :: rs => {
             let* _  = putStringAt!(ix, s);
@@ -245,95 +263,45 @@ namespace SheetIO/RowSetter {
         }
     }
 
-    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[Unit] = match x {
+    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(s) => putStringAt!(ix, s)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[Unit] = match x {
+    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(b) => putBoolAt!(ix, b)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[Unit] = match x {
+    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt8At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
         }
 
-    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[Unit] = match x {
+    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt16At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[Unit] = match x {
+    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt32At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[Unit] = match x {
+    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putInt64At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[Unit] = match x {
+    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putFloat32At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[Unit] = match x {
+    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[r, Unit] \ Write(r) = match x {
         case Some(n) => putFloat64At!(ix, n)
-        case None => putBlankAt!(ix)
+        case None    => putBlankAt!(ix)
     }
-
-
-
-    pub def mapM(mf: a -> RowSetter[b], xs: List[a]): RowSetter[List[b]] =
-        RowSetter((r, style) ->
-            mapMHelper(r, style, mf, xs, e -> Err(e), ys -> Ok(ys))
-        )
-
-    ///
-    /// Helper function for `mapM`.
-    ///
-    def mapMHelper(row: ##org.apache.poi.ss.usermodel.Row, 
-                   style: Option[CellStyle], 
-                   mf: a -> RowSetter[b], 
-                   xs: List[a], 
-                   fk: String -> Result[List[b], String], 
-                   sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
-        match xs {
-            case Nil => sk(Nil)
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, row, style) {
-                    case Err(e) => fk(e)
-                    case Ok(x1) => mapMHelper(row, style, mf, rs, fk, ks -> sk(x1 :: ks))
-                }
-            }
-        }
-
-    pub def mapX(mf: a -> RowSetter[b], xs: List[a]): RowSetter[Unit] =
-        RowSetter((r, style) ->
-            mapXHelper(r, style, mf, xs, e -> Err(e), _ -> Ok())
-        )
-
-    def mapXHelper(row: ##org.apache.poi.ss.usermodel.Row, 
-                   style: Option[CellStyle],
-                   mf: a -> RowSetter[b], 
-                   xs: List[a], 
-                   fk: String -> Result[Unit, String], 
-                   sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
-        match xs {
-            case Nil => sk()
-            case x :: rs => {
-                let ma = mf(x);
-                match apply1(ma, row, style) {
-                    case Err(e) => fk(e)
-                    case Ok(_) => mapXHelper(row, style, mf, rs, fk, sk)
-                }
-            }
-        }
-
 
 }
 

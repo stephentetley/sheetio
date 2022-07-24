@@ -17,123 +17,134 @@
 
 namespace SheetIO/Internal/Font {
 
-    pub def setFontName(font: ##org.apache.poi.ss.usermodel.Font,
-                        value: String): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontName(String): Unit & Impure; 
+    use SheetIO/Internal/PrimError.{PrimError};
+    
+    pub def setFontName!(r: Region[r],
+                        value: String, 
+                        font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setFontName(String): Unit & r; 
         try {
             let ans = setFontName(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFontName")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFontName!", ex)
         }
 
-    pub def setFontHeight(font: ##org.apache.poi.ss.usermodel.Font,
-                          value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16): Unit & Impure; 
+
+    pub def setFontHeight!(r: Region[r],
+                            value: Int16,
+                            font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setFontHeight(Int16): Unit & r; 
         try {
             let ans = setFontHeight(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFontHeight")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFontHeight!", ex)
         }
 
-    pub def setFontHeightInPoints(font: ##org.apache.poi.ss.usermodel.Font,
-                                  value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16): Unit & Impure; 
+    pub def setFontHeightInPoints!(r: Region[r],
+                                    value: Int16,
+                                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setFontHeightInPoints(Int16): Unit & r; 
         try {
             let ans = setFontHeightInPoints(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setFontHeightInPoints")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setFontHeightInPoints!", ex)
         }
 
     
-    pub def getBold(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getBold(): Bool & Impure;
+    pub def getBold(r: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Font.getBold(): Bool & r;
         try {
             let ans = getBold(font);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getBold")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getBold", ex)
         }
 
-    pub def setBold(font: ##org.apache.poi.ss.usermodel.Font,
-                    value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setBold(Bool): Unit & Impure; 
+    pub def setBold!(r: Region[r], 
+                    value: Bool, 
+                    font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setBold(Bool): Unit & r; 
         try {
             let ans = setBold(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setBold")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setBold!", ex)
         }
 
-    pub def setItalic(font: ##org.apache.poi.ss.usermodel.Font,
-                      value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setItalic(Bool): Unit & Impure; 
+    pub def setItalic!(r: Region[r],
+                        value: Bool,
+                        font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setItalic(Bool): Unit & r; 
         try {
             let ans = setItalic(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setItalic")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setItalic!", ex)
         }
 
     
-    pub def getItalic(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getItalic(): Bool & Impure; 
+    pub def getItalic(r: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Font.getItalic(): Bool & r; 
         try {
-            let ans = getItalic(font);
-            Ok(ans)
+            getItalic(font) |> Ok
         } catch {
-            case _: ##java.lang.Exception => Err("getItalic")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getItalic", ex)
         }
 
-    pub def setStrikeout(font: ##org.apache.poi.ss.usermodel.Font,
-                         value: Bool): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool): Unit & Impure; 
+    pub def setStrikeout!(r: Region[r],
+                            value: Bool, 
+                            font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setStrikeout(Bool): Unit & r; 
         try {
             let ans = setStrikeout(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setStrikeout")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setStrikeout!", ex)
         }
     
-    pub def getStrikeout(font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.getStrikeout(): Bool & Impure; 
+    pub def getStrikeout(r: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Result[Bool, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Font.getStrikeout(): Bool & r; 
         try {
             let ans = getStrikeout(font);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getStrikeout")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getStrikeout", ex)
         }
 
-    pub def setColor(font: ##org.apache.poi.ss.usermodel.Font,
-                     value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setColor(Int16): Unit & Impure; 
+    pub def setColor!(r: Region[r],
+                        value: Int16,
+                        font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setColor(Int16): Unit & r; 
         try {
             let ans = setColor(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setColor")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setColor!", ex)
         }
 
-    pub def setTypeOffset(font: ##org.apache.poi.ss.usermodel.Font,
-                          value: Int16): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16): Unit & Impure; 
+    pub def setTypeOffset!(r: Region[r],
+                            value: Int16,
+                            font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setTypeOffset(Int16): Unit & r; 
         try {
             let ans = setTypeOffset(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setTypeOffset")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setTypeOffset!", ex)
         }
 
-    pub def setUnderline(font: ##org.apache.poi.ss.usermodel.Font,
-                         value: Int8): Result[Unit, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Font.setUnderline(Int8): Unit & Impure; 
+    pub def setUnderline!(r: Region[r],
+                            value: Int8, 
+                            font: ##org.apache.poi.ss.usermodel.Font): Result[Unit, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Font.setUnderline(Int8): Unit & r; 
         try {
             let ans = setUnderline(font, value);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("setUnderline")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setUnderline!", ex)
         }
 
 }

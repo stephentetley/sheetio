@@ -18,17 +18,51 @@
 
 namespace SheetIO {
 
-    /// TODO - do we really need to wrap these?
+    /// Mutable objects with regions...
     
-    pub enum Sheet(##org.apache.poi.ss.usermodel.Sheet)
+    pub enum Sheet[_: Region](##org.apache.poi.ss.usermodel.Sheet)
 
-    pub enum Row(##org.apache.poi.ss.usermodel.Row)
+    pub enum Row[_: Region](##org.apache.poi.ss.usermodel.Row)
 
-    pub enum CellStyle(##org.apache.poi.ss.usermodel.CellStyle)
+    pub enum CellStyle[_: Region](##org.apache.poi.ss.usermodel.CellStyle)
 
-    pub enum DataFormat(##org.apache.poi.ss.usermodel.DataFormat)
+    pub enum DataFormat[_: Region](##org.apache.poi.ss.usermodel.DataFormat)
 
-    pub enum Font(##org.apache.poi.ss.usermodel.Font)
+    pub enum Font[_: Region](##org.apache.poi.ss.usermodel.Font)
+
+
+
+
+    instance CollectionInterop.Marshal[Row[r]] {
+        pub def toJavaObject(x: Row[r]): ##java.lang.Object = 
+            let Row(r1) = x;
+            r1 as ##java.lang.Object
+
+        pub def fromJavaObject(o: ##java.lang.Object): Row[r] = 
+            Row(o as ##org.apache.poi.ss.usermodel.Row)
+
+    }
+
+    instance CollectionInterop.Marshal[CellStyle[r]] {
+        pub def toJavaObject(x: CellStyle[r]): ##java.lang.Object = 
+            let CellStyle(r1) = x;
+            r1 as ##java.lang.Object
+
+        pub def fromJavaObject(o: ##java.lang.Object): CellStyle[r] = 
+            CellStyle(o as ##org.apache.poi.ss.usermodel.CellStyle)
+
+    }
+
 
 }
 
+namespace SheetIO/Common {
+
+    use SheetIO.Row;
+    use SheetIO.Row.{Row};
+
+    pub def getRow(row: Row[_]): ##org.apache.poi.ss.usermodel.Row =
+        let Row(row1) = row;
+        row1
+
+}

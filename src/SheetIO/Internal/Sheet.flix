@@ -16,72 +16,80 @@
 
 namespace SheetIO/Internal/Sheet {
 
-    pub def getSheetName(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[String, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String & Impure; 
+    use SheetIO/Internal/PrimError.{PrimError};
+
+    pub def getSheetName(r: Region[r], sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[String, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String & r; 
         try {
             let ans = getSheetName(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getSheetName [Sheet]")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getSheetName", ex) 
         }
 
-    pub def getFirstRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(): Int32 & Impure; 
+    pub def getFirstRowNum(r: Region[r], 
+                            sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(): Int32 & r; 
         try {
             let ans = getFirstRowNum(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getFirstRowNum")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getFirstRowNum", ex)
         }
 
     /// Gets the last row number - this row could be "empty" if cells in the row have been written to but then cleared.
-    pub def getLastRowNum(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 & Impure;
+    pub def getLastRowNum(r: Region[r], 
+                            sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 & r;
         try {
             let ans = getLastRowNum(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getLastRowNum")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getLastRowNum", ex)
         }
 
     /// Number of rows used - do not use for trying to find end.
-    pub def getPhysicalNumberOfRows(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 & Impure; 
+    pub def getPhysicalNumberOfRows(r: Region[r], 
+                                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[Int32, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 & r; 
         try {
             let ans = getPhysicalNumberOfRows(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getPhysicalNumberOfRows")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getPhysicalNumberOfRows", ex)
         }
 
-    pub def getWorkbook(sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook & Impure;
+    pub def getWorkbook(r: Region[r], 
+                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Workbook, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook & r;
         try {
             let ans = getWorkbook(sheet);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getWorkbook [Sheet]")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getWorkbook", ex)
         }
 
 
-    pub def getRow(sheet: ##org.apache.poi.ss.usermodel.Sheet,
-                   ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row & Impure; 
+    pub def getRow(r: Region[r],
+                    ix: Int32,
+                    sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row & r; 
         try {
             let ans = getRow(sheet, ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("getRow")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getRow", ex)
         }
 
-    pub def createRow(sheet: ##org.apache.poi.ss.usermodel.Sheet,
-                      ix: Int32): Result[##org.apache.poi.ss.usermodel.Row, String] & Impure = 
-        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row & Impure; 
+    pub def createRow(r: Region[r],
+                        ix: Int32,
+                        sheet: ##org.apache.poi.ss.usermodel.Sheet): Result[##org.apache.poi.ss.usermodel.Row, PrimError] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row & r; 
         try {
             let ans = createRow(sheet, ix);
             Ok(ans)
         } catch {
-            case _: ##java.lang.Exception => Err("createRow")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "createRow", ex)
         }
 
 }

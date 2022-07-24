@@ -1,33 +1,31 @@
 
 namespace TestAllRowsFrom {
 
-use SheetIO.SheetReader;
-use SheetIO.RowEvaluator;
+    use SheetIO.WorkbookReader;
+    use SheetIO.RowEvaluator;
 
-@test
-def testAll(): Int32 & Impure = 
-    runtest("test 0...", test01(0));
-    runtest("test 1...", test01(1));
-    runtest("test 2...", test01(2));
-    runtest("test 3...", test01(3));
-    0
+    @test
+    def testAll(): Int32 & Impure = 
+        runtest("test 0...", test01(0));
+        runtest("test 1...", test01(1));
+        runtest("test 2...", test01(2));
+        runtest("test 3...", test01(3));
+        0
 
-def runtest(description: String, action: SheetReader[List[String]]): Unit & Impure =
-    use SheetIO/SheetReader.runXlsx;
-    println(description);
-    match runXlsx(action, FlixSandbox/System/FilePath.filePath("e:/coding/flix/sheetio/data/one_to_ten.xlsx")) { 
-        case Err(msg) => println("Error: ${msg}")
-        case Ok(xs) => List.foreach(println, xs)
-    }
+    def runtest(description: String, action: WorkbookReader[r, List[String]]): Unit & Impure =
+        use SheetIO/WorkbookReader.runXlsx;
+        println(description);
+        match runXlsx(action, FlixSandbox/System/FilePath.filePath("e:/coding/flix/sheetio/data/one_to_ten.xlsx")) { 
+            case Err(msg) => println("Error: ${msg}")
+            case Ok(xs) => List.foreach(println, xs)
+        }
 
-def test01(start: Int32): SheetReader[List[String]] = 
-    use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRowsFrom};      
-    let* s1     = getSheetNamed("one_to_ten");
-    let* xs     = allRowsFrom(start, evalRow(), s1);
-    point(xs)
+    def test01(start: Int32): WorkbookReader[r, List[String]] \ Read(r) = 
+        use SheetIO/WorkbookReader.{flatMap, point, getSheetNamed, withSheetReader};      
+        let* s1     = getSheetNamed("one_to_ten");
+        let* xs     = withSheetReader(SheetIO/SheetReader.allRowsFrom(start, evalRow()), s1);
+        point(xs)
 
-def evalRow(): RowEvaluator[String] = 
-    SheetIO/RowEvaluator.getContentAt(0)
-
+    def evalRow(): RowEvaluator[r, String] \ Read(r) = SheetIO/RowEvaluator.getContentAt(0)
 
 }

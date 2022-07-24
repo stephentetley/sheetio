@@ -17,18 +17,21 @@
 
 namespace SheetIO/Internal/Prim {
 
+
+    use SheetIO/Internal/PrimError.{PrimError};
+    
     // XSSF (OOXML) concretely
 
     ///
     /// Create new for writing.
     ///
-    pub def newXSSFWorkbook(): Result[##org.apache.poi.xssf.usermodel.XSSFWorkbook, String] & Impure = 
+    pub def newXSSFWorkbook(r: Region[r]): Result[##org.apache.poi.xssf.usermodel.XSSFWorkbook, PrimError] \ { Impure, Write(r) } = 
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook():##org.apache.poi.xssf.usermodel.XSSFWorkbook & Impure as newXSSFWorkbook;
         try {
             let wb = newXSSFWorkbook();
             Ok(wb)
         } catch {
-            case _: ##java.lang.Exception => Err("newXSSFWorkbook")
+            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "newXSSFWorkbook", ex) 
         }
 
 
