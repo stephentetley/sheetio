@@ -47,7 +47,7 @@ namespace SheetIO {
         pub def empty(): RowEvaluator[r, a] = SheetIO/RowEvaluator.throwError("empty")
     }
 
-    instance MonadOr[RowEvaluator[r]] {
+    instance MonadLib.MonadOr[RowEvaluator[r]] {
         pub def orelse(a: RowEvaluator[r, a], b: RowEvaluator[r, a]): RowEvaluator[r, a] =
             SheetIO/RowEvaluator.orelse(a, b)
     }
@@ -478,7 +478,7 @@ namespace SheetIO/RowEvaluator {
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
     pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r1, Array[String, r2]] \ { Read(r1), Write(r2) } =
-        let eval = ix -> MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
+        let eval = ix -> MonadLib/MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
         getRowContentsWith(r, eval)
 
     def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, String] \ Read(r) = 

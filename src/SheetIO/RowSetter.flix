@@ -47,10 +47,7 @@ namespace SheetIO {
         pub def empty(): RowSetter[r, a] = SheetIO/RowSetter.throwError("empty")
     }
 
-    instance MonadOr[RowSetter[r]] {
-        pub def orelse(a: RowSetter[r, a], b: RowSetter[r, a]): RowSetter[r, a] =
-            SheetIO/RowSetter.orelse(a, b)
-    }
+    // No MonadOr
 
 }
 
@@ -115,16 +112,6 @@ namespace SheetIO/RowSetter {
                 case Ok(a) => {let ans = k(a) as & r; apply1(ans, style, row)}
                 case Err(e) => Err(e)
             }) as & ef
-
-
-
-    pub def orelse(ma: RowSetter[r, a], mb: RowSetter[r, a]): RowSetter[r, a] =
-        RowSetter((style, row) -> 
-            match apply1(ma, style, row) {
-                case Ok(a)  => Ok(a)
-                case Err(_) => apply1(mb, style, row)
-            }
-        )
 
 
 

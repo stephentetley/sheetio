@@ -45,7 +45,7 @@ namespace SheetIO {
         pub def empty(): WorkbookReader[r, a] = SheetIO/WorkbookReader.throwError("empty")
     }
 
-    instance MonadOr[WorkbookReader[r]] {
+    instance MonadLib.MonadOr[WorkbookReader[r]] {
         pub def orelse(a: WorkbookReader[r, a], b: WorkbookReader[r, a]): WorkbookReader[r, a] =
             SheetIO/WorkbookReader.orelse(a, b)
     }

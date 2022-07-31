@@ -49,7 +49,7 @@ namespace SheetIO {
         pub def empty(): NamedRowEvaluator[r, a] = SheetIO/NamedRowEvaluator.throwError("empty")
     }
 
-    instance MonadOr[NamedRowEvaluator[r]] {
+    instance MonadLib.MonadOr[NamedRowEvaluator[r]] {
         pub def orelse(a: NamedRowEvaluator[r, a], b: NamedRowEvaluator[r, a]): NamedRowEvaluator[r, a] =
             SheetIO/NamedRowEvaluator.orelse(a, b)
     }
