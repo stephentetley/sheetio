@@ -33,7 +33,7 @@ namespace SheetIO {
 
 
 
-    instance CollectionInterop.Marshal[Row[r]] {
+    instance Interop/Collections.Marshal[Row[r]] {
         pub def toJavaObject(x: Row[r]): ##java.lang.Object = 
             let Row(r1) = x;
             r1 as ##java.lang.Object
@@ -43,7 +43,7 @@ namespace SheetIO {
 
     }
 
-    instance CollectionInterop.Marshal[CellStyle[r]] {
+    instance Interop/Collections.Marshal[CellStyle[r]] {
         pub def toJavaObject(x: CellStyle[r]): ##java.lang.Object = 
             let CellStyle(r1) = x;
             r1 as ##java.lang.Object

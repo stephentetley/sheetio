@@ -56,7 +56,7 @@ namespace SheetIO {
 namespace SheetIO/WorkbookReader {
 
     use ToString.toString;
-
+    use Interop/System.FilePath;
 
     use SheetIO.WorkbookReader;
     use SheetIO.WorkbookReader.{WorkbookReader};
@@ -77,11 +77,11 @@ namespace SheetIO/WorkbookReader {
     use SheetIO.SheetReader;
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runXlsx(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: WorkbookReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runXssf(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = toString(path);
@@ -95,7 +95,7 @@ namespace SheetIO/WorkbookReader {
         }
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookReader[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1 = toString(path);

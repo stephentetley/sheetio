@@ -7,7 +7,7 @@ namespace TestWriteBold {
 
     @test
     def testAll(): Int32 & Impure = 
-        match SheetIO/WorkbookWriter.runXlsx(write1(), FlixSandbox/System/FilePath.filePath("E:/coding/flix/sheetio/data/bold_out1.xlsx")) { 
+        match SheetIO/WorkbookWriter.runXlsx(write1(), Interop/System/FilePath.filePath("E:/coding/flix/sheetio/data/bold_out1.xlsx")) { 
             case Err(e) => {println("Error: ${e}"); 1}
             case Ok() => {println("[writer done]"); 0}
         }
@@ -16,18 +16,18 @@ namespace TestWriteBold {
 
     def write1(): WorkbookWriter[r, Unit] \ Write(r) = 
         use Applicative.{*>};
-        use SheetIO/WorkbookWriter.{flatMap, point, createSheet, createFont, createCellStyle,  
-                createDataFormat, getFormat, withSheetWriter};
+        use SheetIO/WorkbookWriter.{flatMap, point, createSheet!, createFont!, createCellStyle!,  
+                createDataFormat!, getFormat, withSheetWriter};
         use SheetIO/FontSetter.{setBold!, setColor!};
         use SheetIO/CellStyleSetter.{setFont!, setDataFormat!};    
         use SheetIO/IndexedColors.{getIndex}; 
         use SheetIO.IndexedColors.{Aqua}; 
-        let* s1             = createSheet("Sheet1");
-        let* font1          = createFont(setBold!(true) *> setColor!(getIndex(Aqua)));
-        let* boldStyle      = createCellStyle(setFont!(font1));
-        let* dataFmt        = createDataFormat();
+        let* s1             = createSheet!("Sheet1");
+        let* font1          = createFont!(setBold!(true) *> setColor!(getIndex(Aqua)));
+        let* boldStyle      = createCellStyle!(setFont!(font1));
+        let* dataFmt        = createDataFormat!();
         let* fmt1           = getFormat(dataFmt, "0.00");
-        let* numStyle       = createCellStyle(setDataFormat!(fmt1));
+        let* numStyle       = createCellStyle!(setDataFormat!(fmt1));
         let* _      = withSheetWriter(SheetIO/SheetWriter.setRow!(0, setRowOf2(boldStyle, "Hello", "World!", None)), s1);
         let* _      = withSheetWriter(SheetIO/SheetWriter.setRow!(1, setRowOf2(boldStyle, "one", "two", Some("three"))), s1);
         let* _      = withSheetWriter(SheetIO/SheetWriter.setRow!(2, setRowOf2(boldStyle, "Red", "Green", Some("Blue"))), s1);

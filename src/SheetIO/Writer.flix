@@ -35,7 +35,7 @@ namespace SheetIO/Writer {
         } 
 
     /// Write a workbook containing a single sheet
-    pub def writeWorkSheet(sheetWriter: WorkSheetWriter[a], path: FlixSandbox/System.FilePath): Result[Unit, String] & Impure =
+    pub def writeWorkSheet(sheetWriter: WorkSheetWriter[a], path: FilePath): Result[Unit, String] & Impure =
         SheetIO/SheetWriter.runXlsx(writeSheet(sheetWriter), path)
 
     /// It is not viable to write a list of WorkSheetWriter as a list of WorkSheetWriter's are unlikely 
@@ -43,7 +43,7 @@ namespace SheetIO/Writer {
     /// To write multiple sheets we need to be able to append sheets...
 
     /// Add a Sheet to an existing Workbook
-    pub def addWorkSheet(sheetWriter: WorkSheetWriter[a], path: FlixSandbox/System.FilePath): Result[Unit, String] & Impure =
+    pub def addWorkSheet(sheetWriter: WorkSheetWriter[a], path: FilePath): Result[Unit, String] & Impure =
         SheetIO/SheetWriter.runAppendXlsx(writeSheet(sheetWriter), path)
 
 

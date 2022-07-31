@@ -26,7 +26,7 @@ namespace SheetIO/Reader {
 /*
     pub type alias XlsxSource = 
         { sheet :: String
-        , path :: FlixSandbox/System.FilePath
+        , path :: Interop/System.FilePath
         }
 
 

@@ -7,7 +7,7 @@ namespace TestReadXls {
     @test
     def testAll(): Int32 & Impure = 
         use SheetIO/WorkbookReader.{runHssf};
-        match runHssf(test01(), FlixSandbox/System/FilePath.filePath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
+        match runHssf(test01(), Interop/System/FilePath.filePath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls")) { 
             case Err(msg) => println("Error: ${msg}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
         };

@@ -27,6 +27,9 @@ namespace SheetIO {
 
 namespace SheetIO/DataFormatter {
 
+
+    use Interop/I18n.Locale;
+
     use SheetIO.DataFormatter;
     use SheetIO.DataFormatter.{DataFormatter};
 
@@ -39,7 +42,7 @@ namespace SheetIO/DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(r: Region[r], l: I18n.Locale): DataFormatter[r] \ Write(r) =
+    pub def newWithLocale(r: Region[r], l: Locale): DataFormatter[r] \ Write(r) =
         DataFormatter(SheetIO/Internal/DataFormatter.newWithLocale(r, l))
         
 }

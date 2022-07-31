@@ -46,6 +46,8 @@ namespace SheetIO {
 
 namespace SheetIO/WorkbookWriter {
 
+    use Interop/System.FilePath;
+
     use SheetIO.WorkbookWriter;
     use SheetIO.WorkbookWriter.{WorkbookWriter};
 
@@ -67,13 +69,13 @@ namespace SheetIO/WorkbookWriter {
 
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(ma: WorkbookWriter[r, a], 
-                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+                    path: FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
     pub def runXssf(ma: WorkbookWriter[r, a], 
-                    path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+                    path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         region r {
@@ -87,13 +89,13 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: WorkbookWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runAppendXlsx(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
         runAppendXssf(ma, path)
     
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "open" not "new"...
-    pub def runAppendXssf(ma: WorkbookWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runAppendXssf(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = ToString.toString(path);
@@ -110,11 +112,11 @@ namespace SheetIO/WorkbookWriter {
 
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: WorkbookWriter[r, a], 
-                            template: FlixSandbox/System.FilePath, 
-                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
+                            template: FilePath, 
+                            outPath: FilePath): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
-        let* _      = FlixSandbox/System/Directory.copy(template, outPath);
+        let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
         let path1   = ToString.toString(outPath);
         let* wb     = openXSSFWorkbook(path1);
         let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);        
@@ -124,7 +126,7 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookWriter[r, a], path: FlixSandbox/System.FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1   = ToString.toString(path);
@@ -135,11 +137,11 @@ namespace SheetIO/WorkbookWriter {
         Ok(ans)
 
     pub def runTemplateHssf(ma: WorkbookWriter[r, a], 
-                            template: FlixSandbox/System.FilePath, 
-                            outPath: FlixSandbox/System.FilePath): Result[a, String] & Impure =
+                            template: FilePath, 
+                            outPath: FilePath): Result[a, String] & Impure =
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
-        let* _          = FlixSandbox/System/Directory.copy(template, outPath);
+        let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
         let outPath1    = ToString.toString(outPath);
         let* wb         = openHSSFWorkbook(outPath1);
         let* ans        = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
@@ -175,7 +177,7 @@ namespace SheetIO/WorkbookWriter {
         })
 */
 
-    /// Needs to allow allow effects (e.g create / access arrays)
+
     pub def map(fn: a -> b & ef, ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
         WorkbookWriter(wb -> match apply1(ma, wb) { 
             case Ok(a) => { let a1 = fn(a) as & r; Ok(a1) }
@@ -217,13 +219,25 @@ namespace SheetIO/WorkbookWriter {
         ) as & ef
 
 
-    pub def createSheet(name: String): WorkbookWriter[r, Sheet[r]] \ Write(r) =
+    pub def createSheet!(name: String): WorkbookWriter[r, Sheet[r]] \ Write(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createSheet(r, name, wb) |> Result.map(Sheet))
 
     pub def getSheetNamed(name: String): WorkbookWriter[r, Sheet[r]] \ Read(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheet(r, name, wb) |> Result.map(Sheet)) 
 
+    
+    pub def getSheetNames(): WorkbookWriter[r, List[String]] \ Read(r) =
+        let* n  = getNumberOfSheets();
+        let ixs = List.range(0, n);
+        Traversable.traverse(getSheetName, ixs)      
+    
+    pub def getNumberOfSheets(): WorkbookWriter[r, Int32] \ Read(r) =
+        liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
 
+    pub def getSheetName(ix: Int32): WorkbookWriter[r, String] \ Read(r) =
+        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
+
+        
     pub def getSheetAt(ix: Int32): WorkbookWriter[r, Sheet[r]] \ Read(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
 
@@ -232,11 +246,11 @@ namespace SheetIO/WorkbookWriter {
         liftWorkbookPrim((r, _) -> SheetIO/Internal/Util.getFormat(r, format, x1))
 
 
-    pub def createDataFormat(): WorkbookWriter[r, DataFormat[r]] \ Write(r) =
+    pub def createDataFormat!(): WorkbookWriter[r, DataFormat[r]] \ Write(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createDataFormat(r, wb) |> Result.map(DataFormat))
 
 
-    pub def createFont(mx: FontSetter[r, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
+    pub def createFont!(mx: FontSetter[r, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createFont};
         let FontSetter(mf)      = mx;
         let* font               = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
@@ -244,7 +258,7 @@ namespace SheetIO/WorkbookWriter {
         point(Font(font))
 
 
-    pub def createCellStyle(mx: CellStyleSetter[r, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
+    pub def createCellStyle!(mx: CellStyleSetter[r, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createCellStyle};
         let CellStyleSetter(mf) = mx;
         let* style              = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
@@ -414,108 +428,11 @@ namespace SheetIO/WorkbookWriter {
     ///
     pub def mapAccumX(mf: (ac, a) -> SheetWriter[r, ac], start: ac, xs: List[a]): SheetWriter[r, ac] = foldM(mf, start, xs)
 
-
-
-    // SheetWriter
-
-    def getCursorAndIncr(sheetName: String): SheetWriter[r, Int32] = 
-        SheetWriter((_, _, s1) -> match Map.get(sheetName, s1) {
-            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, s1), ix)) as & Impure
-            case None       => Ok((Map.insert(sheetName, 1, s1), 0)) as & Impure
-        })
-
-    
-
     
     
     /// Although this is `SheetWriter` some introspection (reading) is needed, 
     /// e.g. if we are writing to a template file
 
-    pub def getSheetNamed(name: String): SheetWriter[r, Sheet] =
-        use SheetIO/Internal/Workbook.{getSheet};
-        liftWorkbookPrim(x1 -> Result.map(Sheet, getSheet(x1, name))) 
-    
-    pub def getSheetNames(): SheetWriter[r, List[String]] =
-        let* n  = getNumberOfSheets();
-        let ixs = List.range(0, n);
-        mapM(getSheetNameWb, ixs)      
-    
-    def getNumberOfSheets(): SheetWriter[r, Int32] =
-        use SheetIO/Internal/Workbook.{getNumberOfSheets};
-        liftWorkbookPrim(getNumberOfSheets)
-
-    def getSheetNameWb(ix: Int32): SheetWriter[r, String] =
-        use SheetIO/Internal/Workbook.{getSheetName};
-        liftWorkbookPrim(x1 -> getSheetName(x1, ix))
-
-
-    pub def createDataFormat(): SheetWriter[r, DataFormat] =
-        use SheetIO/Internal/Workbook.{createDataFormat};
-        liftWorkbookPrim(x1 -> Result.map(DataFormat, createDataFormat(x1)))
-
-    pub def getFormat(x: DataFormat, format: String): SheetWriter[r, Int16] =
-        use SheetIO/Internal/Workbook.{getFormat};
-        let DataFormat(x1) = x;
-        liftActionResult(_ -> getFormat(x1, format))
-
-
-    pub def setCursor!(x: Sheet, n: Int32): SheetWriter[r, Unit] =
-        let* name = getSheetName(x);
-        setCursorHelper(name, n)
-
-    def getSheetName(x: Sheet): SheetWriter[r, String] =
-        use SheetIO/Internal/Sheet.{getSheetName};
-        let Sheet(x1) = x;
-        liftActionResult(_ -> getSheetName(x1))
-
-    def setCursorHelper(sheetName: String, n: Int32): SheetWriter[r, Unit] = 
-        SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as & Impure)
-
-
-    pub def createCellStyle(mx: CellStyleSetter[r, a]): SheetWriter[r, CellStyle] =
-        use SheetIO/Internal/Workbook.{createCellStyle};
-        let CellStyleSetter(mf) = mx;
-        let* style              = liftWorkbookPrim(createCellStyle >> Result.map(CellStyle));
-        let CellStyle(style1)   = style;
-        let* _                  = liftActionResult(_ -> mf(style1));
-        point(style)
-
-
-
-    pub def createFont(mx: FontSetter[r, a]): SheetWriter[r, Font] =
-        use SheetIO/Internal/Workbook.{createFont};
-        let FontSetter(mf)      = mx;
-        let* font               = liftWorkbookPrim(createFont >> Result.map(Font));
-        let Font(font1)         = font;
-        let* _                  = liftActionResult(_ -> mf(font1));
-        point(font)
-
-    // createRow
-    def createRow(x: Sheet, ix: Int32): SheetWriter[r, Row] =
-        use SheetIO/Internal/Sheet.{createRow};
-        let Sheet(x1) = x;
-        liftActionResult(_ -> Result.map(Row, createRow(x1, ix)))
-
-    pub def appendRow(x: Sheet, mx: RowSetter[a]): SheetWriter[r, Unit] =
-        let RowSetter(mf) = mx;
-        let* name       = getSheetName(x);
-        let* ix         = getCursorAndIncr(name);
-        let* row        = createRow(x, ix);
-        let Row(row1)   = row;
-        let* style      = askStyle();
-        let* _          = liftActionResult(_ -> mf(row1, style));
-        point()
-
-
-    pub def allRows(sheet: Sheet, rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[r, Unit] = 
-        mapX(r -> appendRow(sheet, writer(r)), rows)
-
-
-    /// Row 0 is read for the headers, all subsequent rows are *data*.
-    pub def allRowsWithHeaders(sheet: Sheet, headers: List[String], rows: List[a], writer: a -> RowSetter[Unit]): SheetWriter[r, Unit] = 
-        let* _      = appendRow(sheet, SheetIO/RowSetter.putHeaders!(headers));
-        let* _      = mapX(r -> appendRow(sheet, writer(r)), rows);
-        point()
-
 */
+
 }

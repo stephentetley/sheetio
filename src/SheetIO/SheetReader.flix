@@ -251,7 +251,7 @@ namespace SheetIO/SheetReader {
     def getRowIterator(): SheetReader[r, Iterator[Row[r], r]] \ Read(r) =
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
         let* iter = liftPrim((_, s) -> rowIterator(s) |> Ok);
-        CollectionInterop/RawIterator.new(() as Region[r], iter) |> CollectionInterop/RawIterator.iterator |> point
+        Interop/Collections/RawIterator.new(() as Region[r], iter) |> Interop/Collections/RawIterator.iterator |> point
 
 
 
@@ -347,26 +347,8 @@ namespace SheetIO/SheetReader {
         foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
 
-/*
-    /// Reader headers from row at `headerIndex` then read data rows from `start`.
-    /// Note - might be wise to change back to flix-sandbox Cursor while stdlib Interator
-    /// is in development.
-    /// `headerIndex` and `start` are zero indexed (as per POI rather than Excel).
-    ///
-    pub def namedRowsFrom(r: {headerIndex :: Int32}, start :: Int32}, eval: NamedRowEvaluator[r, a]): SheetReader[r, List[a]] =   
-        let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-        let* row0       = getRowAt(sheet, r.headerIndex);
-        let* ixs        = region r1 {
-            let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
-            point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
-        };
-        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-        let* xs         = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
-        point(xs)
-*/
 
 /*
-
 
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.

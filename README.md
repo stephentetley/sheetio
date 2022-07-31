@@ -8,11 +8,11 @@ Flix dependencies (*.pkg files included in the folder `lib`)
 
 https://github.com/stephentetley/flix-time
 
-https://github.com/stephentetley/flix-sandbox
+https://github.com/stephentetley/interop-filepath
 
-https://github.com/stephentetley/charset-locale
+https://github.com/stephentetley/interop-charset-locale
 
-https://github.com/stephentetley/collection-interop
+https://github.com/stephentetley/interop-collection
 
 
 Java dependencies - sheetio needs these jars (mostly from org.apache):

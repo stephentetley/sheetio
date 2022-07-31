@@ -8,11 +8,11 @@ namespace TestRead01 {
     @test
     def testAll(): Int32 & Impure = 
         use SheetIO/WorkbookReader.{runXlsx};
-        match runXlsx(test01(), FlixSandbox/System/FilePath.filePath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
+        match runXlsx(test01(), Interop/System/FilePath.filePath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
             case Err(e) => println("Error: ${e}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test01: ${a}, ${b}")} , xs)
         };
-        match runXlsx(test02(), FlixSandbox/System/FilePath.filePath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
+        match runXlsx(test02(), Interop/System/FilePath.filePath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx")) { 
             case Err(e) => println("Error: ${e}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test02: ${a}, ${b}")} , xs)
         };
