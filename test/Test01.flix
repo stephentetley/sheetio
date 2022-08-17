@@ -6,7 +6,8 @@ namespace Test01 {
     @test
     def testAll(): Unit & Impure = 
         use SheetIO/WorkbookReader.{runXlsx};
-        match runXlsx(test01(), Interop/System/FilePath.filePath("G:/work/assets/uxl/LANGS_uxl01.xlsx")) { 
+        let path1 = Basis/System/FilePath.filePath("G:/work/assets/uxl/LANGS_uxl01.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
+        match runXlsx(test01(), path1) { 
             case Err(_) => println("err")
             case Ok(xs) => List.foreach(x -> println("${x.name}: ${x.start} .. ${x.end}"), xs)
         }

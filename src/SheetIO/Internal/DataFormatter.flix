@@ -16,7 +16,8 @@
 
 namespace SheetIO/Internal/DataFormatter {
 
-    use Interop/I18n.Locale;
+    use Basis/I18n.Locale;
+    use Basis/I18n.Locale.{Locale};
     use SheetIO/Internal/PrimError.{PrimError};
 
     pub def new(_: Region[r]): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
@@ -28,10 +29,9 @@ namespace SheetIO/Internal/DataFormatter {
     /// Returns a new mutable DataFormatter.
     ///
     pub def newWithLocale(_: Region[r], x: Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
-        use Interop/I18n.Locale.{Locale};
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter & r as newDataFormatter;
         let Locale(x1) = x;
-        newDataFormatter(x1)
+        newDataFormatter(Interop/Util/Locale.getHH(x1))
 
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...

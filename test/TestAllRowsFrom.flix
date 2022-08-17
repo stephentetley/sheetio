@@ -15,7 +15,8 @@ namespace TestAllRowsFrom {
     def runtest(description: String, action: WorkbookReader[r, List[String]]): Unit & Impure =
         use SheetIO/WorkbookReader.runXlsx;
         println(description);
-        match runXlsx(action, Interop/System/FilePath.filePath("e:/coding/flix/sheetio/data/one_to_ten.xlsx")) { 
+        let path1 = Basis/System/FilePath.filePath("e:/coding/flix/sheetio/data/one_to_ten.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
+        match runXlsx(action, path1) { 
             case Err(msg) => println("Error: ${msg}")
             case Ok(xs) => List.foreach(println, xs)
         }

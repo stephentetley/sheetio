@@ -28,7 +28,7 @@ namespace SheetIO {
 namespace SheetIO/DataFormatter {
 
 
-    use Interop/I18n.Locale;
+    use Basis/I18n.Locale;
 
     use SheetIO.DataFormatter;
     use SheetIO.DataFormatter.{DataFormatter};

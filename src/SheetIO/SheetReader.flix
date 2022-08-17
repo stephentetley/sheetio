@@ -251,7 +251,7 @@ namespace SheetIO/SheetReader {
     def getRowIterator(): SheetReader[r, Iterator[Row[r], r]] \ Read(r) =
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
         let* iter = liftPrim((_, s) -> rowIterator(s) |> Ok);
-        Interop/Collections/RawIterator.new(() as Region[r], iter) |> Interop/Collections/RawIterator.iterator |> point
+        Interop/Util/IteratorZ.mkIteratorZ(() as Region[r], iter) |> Interop/Util/IteratorZ.iterator |> point
 
 
 

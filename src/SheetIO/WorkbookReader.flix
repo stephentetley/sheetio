@@ -56,7 +56,7 @@ namespace SheetIO {
 namespace SheetIO/WorkbookReader {
 
     use ToString.toString;
-    use Interop/System.FilePath;
+    use Basis/System.FilePath;
 
     use SheetIO.WorkbookReader;
     use SheetIO.WorkbookReader.{WorkbookReader};
