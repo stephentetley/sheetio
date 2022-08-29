@@ -1,0 +1,16 @@
+<project default="compile">
+    <target name="compile">
+        <mkdir dir="build/classes"/>
+        <javac srcdir="flixspt" destdir="build/classes">
+            <classpath>
+                <pathelement path="${classpath}"/>
+                <pathelement location="../lib/poi-5.2.2.jar"/>
+                <pathelement location="../lib/poi-ooxml-5.2.2.jar"/>
+                <pathelement location="../lib/poi-ooxml-full-5.2.2.jar"/>
+                <pathelement location="../lib/excel-streaming-reader-3.1.1.jar"/>
+            </classpath>        
+        </javac>
+        <jar destfile="build/sheetio-java-1.1.jar" basedir="build/classes"/>
+    </target>
+
+</project>
