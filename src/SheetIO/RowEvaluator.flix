@@ -20,6 +20,8 @@ namespace SheetIO {
     use SheetIO/Internal/EvalError.{EvalError};
     use SheetIO.DataFormatter;
     
+    /// TODO use MonadLib.Evaluator
+
     pub enum RowEvaluator[r: Region, a: Type](
         DataFormatter[r] -> ##org.apache.poi.ss.usermodel.Row -> Result[a, EvalError] & r
     )

@@ -20,6 +20,7 @@ namespace SheetIO {
     use SheetIO.CellStyle;
     use SheetIO/Internal/EvalError.{EvalError};
    
+    /// TODO - codensity transform
 
     pub enum SheetWriter[r: Region, a: Type](
         Option[CellStyle[r]] -> ##org.apache.poi.ss.usermodel.Sheet -> Result[a, EvalError] & r)

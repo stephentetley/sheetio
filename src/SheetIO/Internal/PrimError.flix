@@ -16,7 +16,7 @@
 
 namespace SheetIO/Internal/PrimError {
 
-
+    /// TODO - revert to just String...
 
     pub type alias PrimError = 
         { source :: String

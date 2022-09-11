@@ -19,7 +19,12 @@ namespace SheetIO {
 
     use SheetIO/Internal/PrimError.{PrimError};
 
+    /// TODO use MonadLib.Builder
+
+
     pub enum FontSetter[r: Region, a: Type](##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & r)
+
+    /// pub enum Builder[r: Region, ka: Type, a: Type](MonadLib.Builder[r, ka, Interop/Util/Locale.Builder[r], a])
 
     instance Functor[FontSetter[r]] {
         pub def map(f: a -> b & ef, o: FontSetter[r, a]): FontSetter[r, b] & ef = 

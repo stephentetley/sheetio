@@ -18,6 +18,8 @@
 namespace SheetIO {
 
     use SheetIO/Internal/EvalError.{EvalError};
+
+    /// TODO - codensity...
     
     pub enum WorkbookWriter[r: Region, a: Type](
         ##org.apache.poi.ss.usermodel.Workbook -> Result[a, EvalError] & r)
