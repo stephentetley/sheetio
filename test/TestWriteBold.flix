@@ -16,16 +16,18 @@ namespace TestWriteBold {
 
 
     def write1(): WorkbookWriter[r, Unit] \ Write(r) = 
-        use Applicative.{*>};
-        use SheetIO/WorkbookWriter.{flatMap, point, createSheet!, createFont!, createCellStyle!,  
+        use Applicative.{*>, point};
+        use SheetIO/WorkbookWriter.{flatMap, createSheet!, createFont!, createCellStyle!,  
                 createDataFormat!, getFormat, withSheetWriter};
         use SheetIO/FontSetter.{setBold!, setColor!};
         use SheetIO/CellStyleSetter.{setFont!, setDataFormat!};    
         use SheetIO/IndexedColors.{getIndex}; 
         use SheetIO.IndexedColors.{Aqua}; 
         let* s1             = createSheet!("Sheet1");
-        let* font1          = createFont!(setBold!(true) *> setColor!(getIndex(Aqua)));
-        let* boldStyle      = createCellStyle!(setFont!(font1));
+        // TODO - reinstate font setting...
+        // let* font1          = createFont!(setBold!(true) *> setColor!(getIndex(Aqua)));
+        // let* boldStyle      = createCellStyle!(setFont!(font1));
+        let* boldStyle      = createCellStyle!(point());
         let* dataFmt        = createDataFormat!();
         let* fmt1           = getFormat(dataFmt, "0.00");
         let* numStyle       = createCellStyle!(setDataFormat!(fmt1));

@@ -37,6 +37,10 @@ namespace Interop/Apache/Poi/Ss/Usermodel/CellStyle {
         cs1
 
    
+    pub def new(_: Region[r], cs: ##org.apache.poi.ss.usermodel.CellStyle): CellStyle[r] =
+        CellStyle(cs)
+
+
     pub def setFont!(font: Font[r], cs: CellStyle[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit \ r; 
         let Font(font1) = font;

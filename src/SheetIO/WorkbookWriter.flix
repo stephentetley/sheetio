@@ -259,13 +259,14 @@ namespace SheetIO/WorkbookWriter {
         let* _                  = WorkbookWriter(_ -> mf(font) |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError));
         point(Font(font))
 
-
-    pub def createCellStyle!(mx: CellStyleSetter[r, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
+    // TODO - this will be simpler once all Java calls use Interop layer
+    pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createCellStyle};
-        let CellStyleSetter(mf) = mx;
-        let* style              = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
-        let* _                  = WorkbookWriter(_ -> mf(style) |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError));
-        point(CellStyle(style))
+        use Interop/Apache/Poi/Ss/Usermodel/CellStyle.{new => newCellStyle};
+        let* styleHH            = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
+        let r1                  = () as Region[r];
+        let _                   = SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, newCellStyle(r1, styleHH)); // TODO - ignores failure
+        point(CellStyle(styleHH))
 
     pub def withSheetWriter(writer: SheetWriter[r, a], sheet: Sheet[r]): WorkbookWriter[r, a] =
         WorkbookWriter(_ -> SheetIO/SheetWriter.write(writer, sheet))
