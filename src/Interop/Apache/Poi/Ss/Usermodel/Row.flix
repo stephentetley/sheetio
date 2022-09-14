@@ -43,14 +43,10 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Row {
         let Row(row1) = row;
         getRowNum(row1)
     
-    pub def getCell(ix: Int32, row: Row[r]): Result[Cell[r], String] \ Read(r) = 
+    pub def getCell(ix: Int32, row: Row[r]): Option[Cell[r]] \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r; 
         let Row(row1) = row;
-        let ans = getCell(row1, ix);
-        if (not Object.isNull(ans))
-            ans |> Cell |> Ok
-        else
-            Err("getCell - null")
+        getCell(row1, ix) |> Object.toOption |> Option.map(Cell)
 
     pub def getSheet(row: Row[r]): ##org.apache.poi.ss.usermodel.Sheet \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ r;

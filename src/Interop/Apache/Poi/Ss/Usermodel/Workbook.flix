@@ -30,6 +30,12 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Workbook {
 
     use Interop/Apache/Poi/Ss/Usermodel.Workbook;
     use Interop/Apache/Poi/Ss/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
+    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/Ss/Usermodel.DataFormat;
+    use Interop/Apache/Poi/Ss/Usermodel.DataFormat.{DataFormat};
+    use Interop/Apache/Poi/Ss/Usermodel.Font;
+    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
     use Interop/Apache/Poi/Ss/Usermodel.Sheet;
     use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
 
@@ -55,70 +61,54 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Workbook {
         getNumberOfSheets(wb1)
 
     pub def getSheetName(ix: Int32, wb: Workbook[r]): String \ Read(r) = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32): String \ r; 
+        import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32): String \ r;
         let Workbook(wb1) = wb;
         getSheetName(wb1, ix)
 
-/*
-    pub def getSheet(name: String, wb: Workbook[r]): Result[Sheet[r], PrimError] \ Read(r) = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r; 
+
+    pub def getSheet(name: String, wb: Workbook[r]): Option[Sheet[r]] \ Read(r) = 
+        import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r;
+        let Workbook(wb1) = wb;
+        getSheet(wb1, name) |> Object.toOption |> Option.map(Sheet)
+
+
+    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[Sheet[r], String] \ Read(r) = 
         try {
-            let ans = getSheet(wb, name);
-            if (Object.isNull(ans))
-                Err({source = "getSheet", exnMessage = "Answer is null"})
-            else
-                Ok(ans)
+            import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r;
+            let Workbook(wb1) = wb;
+            getSheetAt(wb1, ix) |> Sheet |> Ok
         } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getSheet", ex)
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
         }
 
-    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[Sheet[r], PrimError] \ Read(r) = 
-        import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r; 
-        try {
-            let ans = getSheetAt(wb, ix);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getSheetAt", ex)
-        }
 
-    pub def getFontAt(ix: Int32, wb: Workbook[r]): Result[Font[r], PrimError] \ Read(r) = 
+    pub def getFontAt(ix: Int32, wb: Workbook[r]): Option[Font[r]] \ Read(r) = 
         import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32): ##org.apache.poi.ss.usermodel.Font \ r; 
+        let Workbook(wb1) = wb;
+        getFontAt(wb1, ix) |> Object.toOption |> Option.map(Font)
+
+
+    pub def createCellStyle!(wb: Workbook[r]): Result[CellStyle[r], String] \ Write(r) = 
         try {
-            let ans = getFontAt(wb, ix);
-            if (Object.isNull(ans))
-                Err({source = "getFontAt", exnMessage = "Answer is null"})
-            else
-                Ok(ans)
+            import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
+            let Workbook(wb1) = wb;
+            createCellStyle(wb1) |> CellStyle |> Ok
         } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getFontAt", ex)
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
         }
 
-
-    pub def createCellStyle!(wb: Workbook[r]): Result[CellStyle[r], PrimError] \ Write(r) = 
-        import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
-        try {
-            let ans = createCellStyle(wb);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "createCellStyle", ex)
-        }
-
-    pub def createFont!(wb: Workbook[r]): Result[Font[r], PrimError] \ Write(r) = 
+    pub def createFont!(wb: Workbook[r]): Font[r] \ Write(r) = 
         import org.apache.poi.ss.usermodel.Workbook.createFont(): ##org.apache.poi.ss.usermodel.Font \ r; 
-        try {
-            let ans = createFont(wb);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "createFont", ex)
-        }
+        let Workbook(wb1) = wb;
+        createFont(wb1) |> Font
 
-    pub def createDataFormat(wb: Workbook[r]): Result[##org.apache.poi.ss.usermodel.DataFormat, PrimError] \ Write(r) = 
+    pub def createDataFormat!(wb: Workbook[r]): DataFormat[r] \ Write(r) = 
         import org.apache.poi.ss.usermodel.Workbook.createDataFormat(): ##org.apache.poi.ss.usermodel.DataFormat \ r; 
-        try {
-            let ans = createDataFormat(wb);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "createDataFormat", ex)
-        }
-*/
+        let Workbook(wb1) = wb;
+        createDataFormat(wb1) |> DataFormat
+
 }
