@@ -22,7 +22,7 @@ namespace SheetIO {
 
 
     instance Functor[CellStyleSetter[r, ka]] {
-        pub def map(f: a -> b & ef, o: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] & ef = 
+        pub def map(f: a -> b \ ef, o: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] \ ef = 
             SheetIO/CellStyleSetter.map(f, o)
     }
 
@@ -30,12 +30,12 @@ namespace SheetIO {
         pub def point(x: a): CellStyleSetter[r, ka, a] = 
             SheetIO/CellStyleSetter.point(x)
 
-        pub def ap(f: CellStyleSetter[r, ka, a -> b & ef], x: CellStyleSetter[r, ka, a]) : CellStyleSetter[r, ka, b] & ef = 
+        pub def ap(f: CellStyleSetter[r, ka, a -> b \ ef], x: CellStyleSetter[r, ka, a]) : CellStyleSetter[r, ka, b] \ ef = 
             SheetIO/CellStyleSetter.ap(f, x)
     }
 
     instance Monad[CellStyleSetter[r, ka]] {
-        pub def flatMap(f: a -> CellStyleSetter[r, ka, b] & ef, o: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] & ef =
+        pub def flatMap(f: a -> CellStyleSetter[r, ka, b] \ ef, o: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] \ ef =
             SheetIO/CellStyleSetter.flatMap(f, o)
     }
 
@@ -62,8 +62,6 @@ namespace SheetIO/CellStyleSetter {
     use Interop/Apache/Poi/Ss/Usermodel.Font;
     use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
 
-    
-
     pub def getCellStyleSetter(x: CellStyleSetter[r, ka, a]): MonadLib.MutStateError[r, ka, CellStyle[r], a] = 
         let CellStyleSetter(x1) = x;
         x1
@@ -76,7 +74,6 @@ namespace SheetIO/CellStyleSetter {
 
     pub def point(x: a): CellStyleSetter[r, ka, a] = 
         CellStyleSetter(MonadLib/MutStateError.point(x))
-
 
     pub def map(f: a -> b \ ef, x: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] \ ef =
         CellStyleSetter(MonadLib/MutStateError.map(f, getCellStyleSetter(x)))

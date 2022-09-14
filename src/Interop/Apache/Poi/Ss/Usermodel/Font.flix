@@ -33,7 +33,10 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Font {
     pub def getHH(font: Font[r]): ##org.apache.poi.ss.usermodel.Font =
         let Font(font1) = font;
         font1
-    
+
+    pub def new(_: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Font[r] =
+        Font(font)
+
     pub def setFontName!(name: String, font: Font[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Font.setFontName(String): Unit \ r;
         let Font(font1) = font;

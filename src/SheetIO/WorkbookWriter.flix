@@ -252,12 +252,13 @@ namespace SheetIO/WorkbookWriter {
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createDataFormat(r, wb) |> Result.map(DataFormat))
 
 
-    pub def createFont!(mx: FontSetter[r, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
+    pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createFont};
-        let FontSetter(mf)      = mx;
-        let* font               = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
-        let* _                  = WorkbookWriter(_ -> mf(font) |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError));
-        point(Font(font))
+        use Interop/Apache/Poi/Ss/Usermodel/Font.{new => newFont};
+        let* fontHH             = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
+        let r1                  = () as Region[r];
+        let _                   = SheetIO/FontSetter.runFontSetter!(r1, mx, newFont(r1, fontHH)); // TODO - ignores failure
+        point(Font(fontHH))
 
     // TODO - this will be simpler once all Java calls use Interop layer
     pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
