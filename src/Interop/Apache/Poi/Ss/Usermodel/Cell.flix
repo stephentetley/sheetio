@@ -29,15 +29,19 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Cell {
 
     use Interop/Apache/Poi/Ss/Usermodel.Cell;
     use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
+    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/Ss/Usermodel.CellType;
+    use Interop/Apache/Poi/Ss/Usermodel.CellType.{CellType};
 
     pub def getHH(cell: Cell[r]): ##org.apache.poi.ss.usermodel.Cell =
         let Cell(cell1) = cell;
         cell1
 
-    pub def getCellType(cell: Cell[r]): ##org.apache.poi.ss.usermodel.CellType \ Read(r) = 
+    pub def getCellType(cell: Cell[r]): CellType \ Read(r) = 
         import org.apache.poi.ss.usermodel.Cell.getCellType(): ##org.apache.poi.ss.usermodel.CellType \ r; 
         let Cell(cell1) = cell;
-        getCellType(cell1)
+        getCellType(cell1) |> CellType
 
 
     pub def getBooleanCellValue(cell: Cell[r]): Result[Bool, String] \ Read(r) =  
@@ -63,118 +67,81 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Cell {
                 import java.lang.Throwable.getMessage(): String \ {};
                 Err(getMessage(ex))
         }
-/*
-    pub def getNumericCellValue(r: Region[r],
-                                cell: Cell[r]): Result[Float64, PrimError] \ Read(r) = 
-        import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 \ r; 
+
+    pub def getNumericCellValue(cell: Cell[r]): Result[Float64, String] \ Read(r) = 
         try {
-            let ans = getNumericCellValue(cell);
-            Ok(ans)
+            import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 \ r;
+            let Cell(cell1) = cell;
+            getNumericCellValue(cell1) |> Ok
         } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getNumericCellValue", ex)
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
         }
 
 
-    pub def getLocalDateTimeCellValue(r: Region[r],
-                                        cell: Cell[r]): Result[##java.time.LocalDateTime, PrimError] \ Read(r) = 
-        import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime \ r; 
-        try {
-            let ans = getLocalDateTimeCellValue(cell);
-            Ok(ans)
+    pub def getLocalDateTimeCellValue(cell: Cell[r]): Result[##java.time.LocalDateTime, String] \ Read(r) = 
+        try { 
+            import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime \ r;
+            let Cell(cell1) = cell;
+            getLocalDateTimeCellValue(cell1) |> Ok
         } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getLocalDateTimeCellValue", ex)
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
         }
 
 
-    pub def setCellValueBoolean!(r: Region[r],
-                                value: Bool,
-                                cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+    pub def setCellValueBoolean!(value: Bool, cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool): Unit \ r; 
-        try {
-            let ans = setCellValue(cell, value);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellValueBoolean!", ex)
-        }
+        let Cell(cell1) = cell;
+        setCellValue(cell1, value)
 
-    pub def setCellValueDouble!(r: Region[r], 
-                                value: Float64,
-                                cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+
+    pub def setCellValueDouble!(value: Float64,
+                                cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64): Unit \ r; 
-        try {
-            let ans = setCellValue(cell, value);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellValueDouble!", ex)
-        }
+        let Cell(cell1) = cell;
+        setCellValue(cell1, value)
 
-    pub def setCellValueString!(r: Region[r], 
-                                value: String,
-                                cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+
+    pub def setCellValueString!(value: String,
+                                cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(String): Unit \ r;
-        try {
-            let ans = setCellValue(cell, value);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellValueString!", ex)
-        }
+        let Cell(cell1) = cell;
+        setCellValue(cell1, value)
 
 
-    pub def setCellValueLocalDate!(r: Region[r], 
-                                    value: ##java.time.LocalDate,
-                                    cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+    pub def setCellValueLocalDate!(value: ##java.time.LocalDate, cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate): Unit \ r;
-        try {
-            let ans = setCellValue(cell, value);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellValueLocalDate!", ex)
-        }
+        let Cell(cell1) = cell;
+        setCellValue(cell1, value)
 
-    pub def setCellValueLocalDateTime!(r: Region[r], 
-                                        value: ##java.time.LocalDateTime,
-                                        cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+
+    pub def setCellValueLocalDateTime!(value: ##java.time.LocalDateTime, cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime): Unit \ r;
-        try {
-            let ans = setCellValue(cell, value);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellValueLocalDateTime!", ex)
-        }
+        let Cell(cell1) = cell;
+        setCellValue(cell1, value)
 
 
 
-    pub def setBlank!(r: Region[r], 
-                        cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
+    pub def setBlank!(cell: Cell[r]): Unit \ Write(r) = 
         import org.apache.poi.ss.usermodel.Cell.setBlank(): Unit \ r;
-        try {
-            let ans = setBlank(cell);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setBlank!", ex)
-        }
+        let Cell(cell1) = cell;
+        setBlank(cell1)
 
 
-    pub def setCellStyle!(r: Region[r], 
-                            style: ##org.apache.poi.ss.usermodel.CellStyle,
-                            cell: Cell[r]): Result[Unit, PrimError] \ Write(r) = 
-        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle): Unit \ r; 
-        try {
-            let ans = setCellStyle(cell, style);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "setCellStyle!", ex)
-        }
+    pub def setCellStyle!(style: CellStyle[r], cell: Cell[r]): Unit \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle): Unit \ r;
+        let Cell(cell1) = cell;
+        let CellStyle(style1) = style;
+        setCellStyle(cell1, style1)
 
-   pub def getCellStyle(r: Region[r],
-                        cell: Cell[r]): Result[##org.apache.poi.ss.usermodel.CellStyle, PrimError] \ Read(r) = 
+   pub def getCellStyle(cell: Cell[r]): CellStyle[r] \ Read(r) = 
         import org.apache.poi.ss.usermodel.Cell.getCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
-        try {
-            let ans = getCellStyle(cell);
-            Ok(ans)
-        } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "getCellStyle", ex)
-        }
-*/
+        let Cell(cell1) = cell;
+        getCellStyle(cell1) |> CellStyle
+
+
 }
 
