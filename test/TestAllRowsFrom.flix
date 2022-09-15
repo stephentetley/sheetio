@@ -27,6 +27,6 @@ namespace TestAllRowsFrom {
         let* xs     = withSheetReader(SheetIO/SheetReader.allRowsFrom(start, evalRow()), s1);
         point(xs)
 
-    def evalRow(): RowEvaluator[r, String] \ Read(r) = SheetIO/RowEvaluator.getContentAt(0)
+    def evalRow(): RowEvaluator[r, ka, String] \ Read(r) = SheetIO/RowEvaluator.getContentAt(0)
 
 }

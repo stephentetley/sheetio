@@ -32,6 +32,11 @@ namespace Interop/Apache/Poi/Ss/Util/CellAddress {
         import new org.apache.poi.ss.util.CellAddress(Int32, Int32): ##org.apache.poi.ss.util.CellAddress \ {} as newCellAddress; 
         newCellAddress(row.row, column.column) |> CellAddress
 
+    pub def cellAddressWithAddress(address: String): CellAddress = 
+        import new org.apache.poi.ss.util.CellAddress(String): ##org.apache.poi.ss.util.CellAddress \ {} as newCellAddress; 
+        newCellAddress(address) |> CellAddress
+
+
     pub def getRow(ca: CellAddress): Int32 = 
         import org.apache.poi.ss.util.CellAddress.getRow(): Int32 \ {}; 
         let CellAddress(ca1) = ca;

@@ -38,6 +38,11 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Cell {
         let Cell(cell1) = cell;
         cell1
 
+
+    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Cell): Cell[r] \ Write(r) =
+        Cell(prim) as \ Write(r)
+
+
     pub def getCellType(cell: Cell[r]): CellType \ Read(r) = 
         import org.apache.poi.ss.usermodel.Cell.getCellType(): ##org.apache.poi.ss.usermodel.CellType \ r; 
         let Cell(cell1) = cell;

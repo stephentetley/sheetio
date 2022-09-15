@@ -31,6 +31,9 @@ namespace Interop/Apache/Poi/Ss/Usermodel/DataFormatter {
 
     use Interop/Apache/Poi/Ss/Usermodel.DataFormatter;
     use Interop/Apache/Poi/Ss/Usermodel.DataFormatter.{DataFormatter};
+    use Interop/Apache/Poi/Ss/Usermodel.Cell;
+    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+
 
     pub def getHH(df: DataFormatter[r]): ##org.apache.poi.ss.usermodel.DataFormatter =
         let DataFormatter(df1) = df;
@@ -53,10 +56,11 @@ namespace Interop/Apache/Poi/Ss/Usermodel/DataFormatter {
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
     /// This is a "getter" despite its name.
-    pub def formatCellValue(cell: ##org.apache.poi.ss.usermodel.Cell, df: DataFormatter[r]): String \ Read(r) = 
+    pub def formatCellValue(cell: Cell[r], df: DataFormatter[r]): String \ Read(r) = 
         import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String \ r; 
         let DataFormatter(df1) = df;
-        formatCellValue(df1, cell)
+        let Cell(cell1) = cell;
+        formatCellValue(df1, cell1)
 
 
 }

@@ -32,7 +32,7 @@ namespace TestRead01 {
         point(xs)
 
 
-    def evalRow(): RowEvaluator[r, (String, String)] \ Read(r) =
+    def evalRow(): RowEvaluator[r, ka, (String, String)] \ Read(r) =
         use SheetIO/RowEvaluator.{getContentAt};
         Applicative.product(getContentAt(0), getContentAt(1))
 

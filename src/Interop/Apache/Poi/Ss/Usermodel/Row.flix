@@ -32,12 +32,17 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Row {
     use Interop/Apache/Poi/Ss/Usermodel.Row.{Row};
     use Interop/Apache/Poi/Ss/Usermodel.Cell;
     use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/Ss/Usermodel.Sheet;
+    use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
 
     pub def getHH(row: Row[r]): ##org.apache.poi.ss.usermodel.Row =
         let Row(row1) = row;
         row1
 
     
+    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] \ Write(r) =
+        Row(prim) as \ Write(r)
+
     pub def getRowNum(row: Row[r]): Int32 \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 
         let Row(row1) = row;
@@ -48,10 +53,10 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Row {
         let Row(row1) = row;
         getCell(row1, ix) |> Object.toOption |> Option.map(Cell)
 
-    pub def getSheet(row: Row[r]): ##org.apache.poi.ss.usermodel.Sheet \ Read(r) = 
+    pub def getSheet(row: Row[r]): Sheet[r] \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ r;
         let Row(row1) = row;
-        getSheet(row1)
+        getSheet(row1) |> Sheet
 
     pub def createCell!(ix: Int32, row: Row[r]): Result[Cell[r], String] \ Write(r) = 
         try {

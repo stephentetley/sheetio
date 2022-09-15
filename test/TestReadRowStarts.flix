@@ -50,7 +50,7 @@ namespace TestReadRowStarts {
         let* xs     = withSheetReader(SheetIO/SheetReader.allRowsFrom(3, evalIndexedRow()), s1);
         point(xs)
 
-    def evalIndexedRow(): RowEvaluator[r, (String, Int32)] \ Read(r) = 
+    def evalIndexedRow(): RowEvaluator[r, ka, (String, Int32)] \ Read(r) = 
         use SheetIO/RowEvaluator.{getContentAt, getInt32At};
         Applicative.product(getContentAt(0), getInt32At(1))
 
