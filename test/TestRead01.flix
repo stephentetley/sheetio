@@ -36,7 +36,7 @@ namespace TestRead01 {
         use SheetIO/RowEvaluator.{getContentAt};
         Applicative.product(getContentAt(0), getContentAt(1))
 
-    def evalNamedRow(): NamedRowEvaluator[r, (String, String)] \ Read(r) = 
+    def evalNamedRow(): NamedRowEvaluator[r, ka, (String, String)] \ Read(r) = 
         use SheetIO/NamedRowEvaluator.{getContentNamed};
         Applicative.product(getContentNamed("Change"), getContentNamed("Reference"))          
 

@@ -1,6 +1,7 @@
 
 namespace TestReadXls {
 
+
     use SheetIO.WorkbookReader;
     use SheetIO.NamedRowEvaluator;
 
@@ -20,7 +21,7 @@ namespace TestReadXls {
         let* xs     = withSheetReader(SheetIO/SheetReader.allNamedRows(evalRow()), s1);
         point(xs)
 
-    def evalRow(): NamedRowEvaluator[r, (String, String)] \ Read(r) = 
+    def evalRow(): NamedRowEvaluator[r, ka, (String, String)] \ Read(r) = 
         use SheetIO/NamedRowEvaluator.{getStringNamed};
         Applicative.product(getStringNamed("Apache"), getStringNamed("Format"))
 

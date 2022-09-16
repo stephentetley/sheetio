@@ -147,7 +147,7 @@ namespace SheetIO/RowEvaluator {
 
 
     def liftCellGetter(ix: Int32, 
-                        fn: DataFormatter[r] -> Cell[r] -> a \ ef): RowEvaluator[r, ka, a] \ { Write(r), ef } =
+                        fn: DataFormatter[r] -> Cell[r] -> a \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } =
         liftGetterResult((fmt, row) -> 
             match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Ok
@@ -157,7 +157,7 @@ namespace SheetIO/RowEvaluator {
         )
 
     def liftCellGetterResult(ix: Int32, 
-                            fn: DataFormatter[r] -> Cell[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ { Write(r), ef } with ToString[err] =
+                            fn: DataFormatter[r] -> Cell[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } with ToString[err] =
         liftGetterResult((fmt, row) -> 
             match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Result.mapErr(ToString.toString)
@@ -217,7 +217,7 @@ namespace SheetIO/RowEvaluator {
         let* typ = getCellTypeAt(ix);
         match typ { 
             case TyBlank => point(true)
-            case _ => point(false)
+            case _       => point(false)
         } |> swapError("isBlankAt(${ix})")
 
 

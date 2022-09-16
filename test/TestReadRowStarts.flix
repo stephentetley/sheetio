@@ -34,7 +34,7 @@ namespace TestReadRowStarts {
         let* xs     = withSheetReader(SheetIO/SheetReader.allNamedRowsFrom({headerIndex = 2, start = 3}, evalNamedRow()), s1);
         point(xs)
 
-    def evalNamedRow(): NamedRowEvaluator[r, (String, Int32)] \ Read(r) = 
+    def evalNamedRow(): NamedRowEvaluator[r, ka, (String, Int32)] \ Read(r) = 
         use SheetIO/NamedRowEvaluator.{getContentNamed, getInt32Named};
         Applicative.product(getContentNamed("Lang"), getInt32Named("Year"))
 
