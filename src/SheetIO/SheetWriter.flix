@@ -21,9 +21,6 @@ namespace SheetIO {
     /// Imperative writing is not a writer monad (which has backtracking)
     /// Imparative writing is mutable state
 
-    // pub enum SheetWriter[r: Region, a: Type](
-    //     Option[CellStyle[r]] -> ##org.apache.poi.ss.usermodel.Sheet -> Result[a, EvalError] & r)
-
     pub enum SheetWriter[r: Region, ka: Type, a: Type](
         MonadLib.EnvMutStateError[r, ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Sheet[r], a])
 
@@ -43,6 +40,17 @@ namespace SheetIO {
     instance Monad[SheetWriter[r, ka]] {
         pub def flatMap(f: a -> SheetWriter[r, ka, b] & ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] & ef =
             SheetIO/SheetWriter.flatMap(f, o)
+    }
+
+    instance MonadLib.MonadError[SheetWriter[r, ka]] {
+        pub def throwError(msg: String): SheetWriter[r, ka, a] = 
+            SheetIO/SheetWriter.throwError(msg)
+
+        pub def mapError(f: String -> String \ ef, ma: SheetWriter[r, ka, a]): SheetWriter[r, ka, a] \ ef =
+            SheetIO/SheetWriter.mapError(f, ma)
+
+        pub def catchError(ma: SheetWriter[r, ka, a], f: String -> SheetWriter[r, ka, a] \ ef): SheetWriter[r, ka, a] \ ef =
+            SheetIO/SheetWriter.catchError(ma, f)
     }
 
 

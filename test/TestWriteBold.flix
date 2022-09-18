@@ -1,6 +1,6 @@
 
 namespace TestWriteBold {
-
+/*
     use SheetIO.RowSetter;
     use SheetIO.WorkbookWriter;
     use SheetIO.CellStyle;
@@ -52,5 +52,5 @@ namespace TestWriteBold {
         let* _      = putStringAt!(0, "Number");
         let* _      = localCellStyle(sty, putFloat64At!(1, a));
         point()
-
+*/
 }
