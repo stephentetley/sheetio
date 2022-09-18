@@ -235,7 +235,7 @@ namespace SheetIO/SheetReader {
     pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, a] \ Read(r) =
         let r        = () as Region[r];
         let* primrow = liftPrim(_ -> SheetIO/Internal/Sheet.getRow(r, ix));
-        liftActionResult(_ -> SheetIO/RowEvaluator.runRowEvaluator(r, eval, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r, primrow)))
+        liftActionResult(_ -> SheetIO/RowEvaluator.runRowEvaluator(r, eval, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, primrow)))
         
 
 
@@ -270,7 +270,7 @@ namespace SheetIO/SheetReader {
                 let primRow = SheetIO/Common.getRow(row1);
                 let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r1, primRow)) {
                         case Err(_)  => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -295,7 +295,7 @@ namespace SheetIO/SheetReader {
                 let primRow = SheetIO/Common.getRow(row1);
                 let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r1, primRow)) {
                         case Err(_)  => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }

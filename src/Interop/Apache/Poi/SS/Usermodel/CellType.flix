@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Enum
 
@@ -23,12 +23,12 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
 
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/CellType {
+namespace Interop/Apache/Poi/SS/Usermodel/CellType {
 
-    use Interop/Apache/Poi/Ss/Usermodel.CellType;
-    use Interop/Apache/Poi/Ss/Usermodel.CellType.{CellType};
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.CellType;
+    use Interop/Apache/Poi/SS/Usermodel.CellType.{CellType};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
 
     pub def getHH(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
         let CellType(x1) = x;

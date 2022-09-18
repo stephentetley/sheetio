@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable
 
@@ -25,19 +25,19 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     }
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/CellStyle {
+namespace Interop/Apache/Poi/SS/Usermodel/CellStyle {
 
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
 
     pub def getHH(cs: CellStyle[r]): ##org.apache.poi.ss.usermodel.CellStyle =
         let CellStyle(cs1) = cs;
         cs1
 
    
-    pub def new(_: Region[r], cs: ##org.apache.poi.ss.usermodel.CellStyle): CellStyle[r] =
+    pub def wrapHH(_: Region[r], cs: ##org.apache.poi.ss.usermodel.CellStyle): CellStyle[r] =
         CellStyle(cs)
 
 

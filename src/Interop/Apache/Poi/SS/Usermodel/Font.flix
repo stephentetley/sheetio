@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable
 
@@ -25,16 +25,16 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     }
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Font {
+namespace Interop/Apache/Poi/SS/Usermodel/Font {
 
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
 
     pub def getHH(font: Font[r]): ##org.apache.poi.ss.usermodel.Font =
         let Font(font1) = font;
         font1
 
-    pub def new(_: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Font[r] =
+    pub def wrapHH(_: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Font[r] =
         Font(font)
 
     pub def setFontName!(name: String, font: Font[r]): Unit \ Write(r) = 

@@ -15,7 +15,7 @@
  */
 
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Class
 
@@ -27,12 +27,12 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
 }
 
 
-namespace Interop/Apache/Poi/Ss/Usermodel/DataFormatter {
+namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
 
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter.{DataFormatter};
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter.{DataFormatter};
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
 
 
     pub def getHH(df: DataFormatter[r]): ##org.apache.poi.ss.usermodel.DataFormatter =

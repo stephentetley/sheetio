@@ -18,7 +18,7 @@
 namespace SheetIO {
 
 
-    pub enum FontSetter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/Ss/Usermodel.Font[r], a])
+    pub enum FontSetter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Font[r], a])
 
     instance Functor[FontSetter[r, ka]] {
         pub def map(f: a -> b & ef, o: FontSetter[r, ka, a]): FontSetter[r, ka, b] & ef = 
@@ -56,8 +56,8 @@ namespace SheetIO/FontSetter {
 
     use SheetIO.FontSetter;
     use SheetIO.FontSetter.FontSetter;
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
 
     pub def getFontSetter(x: FontSetter[r, ka, a]): MonadLib.MutStateError[r, ka, Font[r], a] = 
         let FontSetter(x1) = x;
@@ -105,25 +105,25 @@ namespace SheetIO/FontSetter {
         FontSetter(MonadLib/MutStateError.liftActionResult(f))
 
     pub def setFontName!(name: String): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setFontName!(name))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setFontName!(name))
 
     pub def setFontHeight!(height: Int16): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setFontHeight!(height))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setFontHeight!(height))
 
     pub def setFontHeightInPoints!(height: Int16): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setFontHeightInPoints!(height))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setFontHeightInPoints!(height))
 
     pub def setBold!(bold: Bool): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setBold!(bold))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setBold!(bold))
 
     pub def setItalic!(italic: Bool): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setItalic!(italic))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setItalic!(italic))
 
     pub def setStrikeout!(strikeout: Bool): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setStrikeout!(strikeout))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setStrikeout!(strikeout))
     
     pub def setColor!(color: Int16): FontSetter[r, ka, Unit] \ Write(r) = 
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/Font.setColor!(color))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/Font.setColor!(color))
 
 
     /// TODO others need enums...

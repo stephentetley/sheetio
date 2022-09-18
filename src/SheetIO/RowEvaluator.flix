@@ -22,7 +22,7 @@ namespace SheetIO {
 
     // pass around DataFormatter[r]
     pub enum RowEvaluator[r: Region, ka: Type, a: Type](
-        MonadLib.EnvEvaluator[r, ka, Interop/Apache/Poi/Ss/Usermodel.DataFormatter[r], Interop/Apache/Poi/Ss/Usermodel.Row[r], a])
+        MonadLib.EnvEvaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
     instance Functor[RowEvaluator[r, ka]] {
         pub def map(f: a -> b & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef = 
@@ -74,9 +74,9 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
 
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/Ss/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
+    use Interop/Apache/Poi/SS/Usermodel.Row;
 
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
@@ -91,7 +91,7 @@ namespace SheetIO/RowEvaluator {
     pub def runRowEvaluator(r: Region[r], 
                                 ma: RowEvaluator[r, a, a], 
                                 st: Row[r]): Result[a, String] \ r =
-        let env = Interop/Apache/Poi/Ss/Usermodel/DataFormatter.new(r);
+        let env = Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r);
         MonadLib/EnvEvaluator.runEnvEvaluator(r, getRowEvaluator(ma), env, st)
 
 
@@ -143,13 +143,13 @@ namespace SheetIO/RowEvaluator {
     // // so FactIO's API indexes from 0.
 
     def getCellAt(ix: Int32): RowEvaluator[r, ka, Cell[r]] \ Read(r) = 
-        liftGetterResult((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) |> Option.toOk("getCellAt(${ix})"))
+        liftGetterResult((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) |> Option.toOk("getCellAt(${ix})"))
 
 
     def liftCellGetter(ix: Int32, 
                         fn: DataFormatter[r] -> Cell[r] -> a \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } =
         liftGetterResult((fmt, row) -> 
-            match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
+            match Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Ok
                 case None       => Err("liftCellGetter(${ix})")
             }
@@ -159,7 +159,7 @@ namespace SheetIO/RowEvaluator {
     def liftCellGetterResult(ix: Int32, 
                             fn: DataFormatter[r] -> Cell[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } with ToString[err] =
         liftGetterResult((fmt, row) -> 
-            match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
+            match Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Result.mapErr(ToString.toString)
                 case None       => Err("liftCellGetterResult(${ix})")
             }
@@ -167,27 +167,27 @@ namespace SheetIO/RowEvaluator {
         )
 
     pub def getRowNum(): RowEvaluator[r, ka, Int32] \ Read(r) = 
-        liftGetter((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getRowNum(row))
+        liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row))
 
 
     pub def getSheetName(): RowEvaluator[r, ka, String] \ Read(r) = 
         liftGetter((_, row) -> {
-            let sheet = Interop/Apache/Poi/Ss/Usermodel/Row.getSheet(row);
-            Interop/Apache/Poi/Ss/Usermodel/Sheet.getSheetName(sheet)
+            let sheet = Interop/Apache/Poi/SS/Usermodel/Row.getSheet(row);
+            Interop/Apache/Poi/SS/Usermodel/Sheet.getSheetName(sheet)
         })
             
 
     /// Get the column index from the column identifier "A", "B", ... "AA", "AB", ...
     pub def getColumnIndex(s: String): RowEvaluator[r, ka, Int32] = 
         liftAction(_ -> 
-            let addr = Interop/Apache/Poi/Ss/Util/CellAddress.cellAddressWithAddress(s + "1");
-            Interop/Apache/Poi/Ss/Util/CellAddress.getColumn(addr)
+            let addr = Interop/Apache/Poi/SS/Util/CellAddress.cellAddressWithAddress(s + "1");
+            Interop/Apache/Poi/SS/Util/CellAddress.getColumn(addr)
         )
 
 
     /// Uses the default DataFormatter
     pub def getContentAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
-        liftCellGetter(ix, (fmt, cell) -> Interop/Apache/Poi/Ss/Usermodel/DataFormatter.formatCellValue(cell, fmt))
+        liftCellGetter(ix, (fmt, cell) -> Interop/Apache/Poi/SS/Usermodel/DataFormatter.formatCellValue(cell, fmt))
 
 
     /// Uses the default DataFormatter
@@ -206,7 +206,7 @@ namespace SheetIO/RowEvaluator {
     pub def getCellTypeAt(ix: Int32): RowEvaluator[r, ka, CellType] \ Read(r) =
         liftCellGetterResult(ix, (_, cell) -> {
             let r = () as Region[r];
-            let cell1 = Interop/Apache/Poi/Ss/Usermodel/Cell.getHH(cell);
+            let cell1 = Interop/Apache/Poi/SS/Usermodel/Cell.getHH(cell);
             SheetIO/Internal/Cell.getCellType(r, cell1) 
                 |> Result.map(SheetIO/CellType.fromNative)  /// TODO make compatible with Interop
                 |> Result.mapErr(_ -> "getCellTypeAt(${ix})")
@@ -231,7 +231,7 @@ namespace SheetIO/RowEvaluator {
 
     /// Error if the cell type is numeric.
     pub def getStringAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
-        liftCellGetterResult(ix, (_, row) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getStringCellValue(row))
+        liftCellGetterResult(ix, (_, row) -> Interop/Apache/Poi/SS/Usermodel/Cell.getStringCellValue(row))
 
 
     /// TODO - wrong name or should return Bool...
@@ -255,17 +255,17 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter[r]): RowEvaluator[r, ka, String] \Read(r) =
-        liftCellGetter(ix, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/DataFormatter.formatCellValue(cell, dfmt))
+        liftCellGetter(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/DataFormatter.formatCellValue(cell, dfmt))
 
 
     pub def getBoolAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) =
-        liftCellGetterResult(ix, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getBooleanCellValue(cell))
+        liftCellGetterResult(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getBooleanCellValue(cell))
 
 
     /// Error if the cell type is String or cell value is not a readable double.
     /// Returns 0 for blank cells.
     pub def getNumericAt(ix: Int32): RowEvaluator[r, ka, Float64] \ Read(r) =
-        liftCellGetterResult(ix, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getNumericCellValue(cell))
+        liftCellGetterResult(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getNumericCellValue(cell))
 
 
     def getNumAt(ix: Int32, conv: Float64 -> Option[a]): RowEvaluator[r, ka, a] \ Read(r) =
@@ -302,7 +302,7 @@ namespace SheetIO/RowEvaluator {
 
 
     def isDateFormattedAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
-        liftCellGetter(ix, ( _, cell) -> Interop/Apache/Poi/Ss/Usermodel/DateUtil.isCellDateFormatted(cell))
+        liftCellGetter(ix, ( _, cell) -> Interop/Apache/Poi/SS/Usermodel/DateUtil.isCellDateFormatted(cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
@@ -313,7 +313,7 @@ namespace SheetIO/RowEvaluator {
         if (ctype == TyNumeric) {
             let* dtCell = isDateFormattedAt(ix);
             if (dtCell) {
-                let* dt = liftCellGetterResult(ix, ( _, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getLocalDateTimeCellValue(cell));
+                let* dt = liftCellGetterResult(ix, ( _, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getLocalDateTimeCellValue(cell));
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeAt - null")
                 else
@@ -391,10 +391,10 @@ namespace SheetIO/RowEvaluator {
 */
         
     pub def getFirstCellNum(): RowEvaluator[r, ka, Int32] \ Read(r) =
-        liftGetter((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getFirstCellNum(row) |> Int16.toInt32)
+        liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getFirstCellNum(row) |> Int16.toInt32)
 
     pub def getLastCellNum(): RowEvaluator[r, ka, Int32] \ Read(r) =
-        liftGetter((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getLastCellNum(row) |> Int16.toInt32)
+        liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getLastCellNum(row) |> Int16.toInt32)
             |> map(n -> if (n > 0) n - 1 else n)
 
 /*

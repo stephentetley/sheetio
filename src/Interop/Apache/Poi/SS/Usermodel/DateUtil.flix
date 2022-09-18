@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel/DateUtil {
+namespace Interop/Apache/Poi/SS/Usermodel/DateUtil {
 
 
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
 
     /// Caller should test we have a NUMERIC cell first...
     pub def isCellDateFormatted(cell: Cell[r]): Bool \ Read(r) = 

@@ -17,29 +17,25 @@
 
 namespace SheetIO {
 
-    use SheetIO/Internal/EvalError.{EvalError};
-
-    /// TODO - codensity...
-    
-    pub enum WorkbookWriter[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Workbook -> Result[a, EvalError] & r)
 
 
-    instance Functor[WorkbookWriter[r]] {
-        pub def map(f: a -> b & ef, o: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
+    pub enum WorkbookWriter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+
+    instance Functor[WorkbookWriter[r, ka]] {
+        pub def map(f: a -> b & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef = 
             SheetIO/WorkbookWriter.map(f, o)
     }
 
-    instance Applicative[WorkbookWriter[r]] {
-        pub def point(x: a): WorkbookWriter[r, a] = 
+    instance Applicative[WorkbookWriter[r, ka]] {
+        pub def point(x: a): WorkbookWriter[r, ka, a] = 
             SheetIO/WorkbookWriter.point(x)
 
-        pub def ap(f: WorkbookWriter[r, a -> b & ef], x: WorkbookWriter[r, a]) : WorkbookWriter[r, b] & ef = 
+        pub def ap(f: WorkbookWriter[r, ka, a -> b & ef], x: WorkbookWriter[r, ka, a]) : WorkbookWriter[r, ka, b] & ef = 
             SheetIO/WorkbookWriter.ap(f, x)
     }
 
-    instance Monad[WorkbookWriter[r]] {
-        pub def flatMap(f: a -> WorkbookWriter[r, b] & ef, o: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef =
+    instance Monad[WorkbookWriter[r, ka]] {
+        pub def flatMap(f: a -> WorkbookWriter[r, ka, b] & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef =
             SheetIO/WorkbookWriter.flatMap(f, o)
     }
 
@@ -53,6 +49,9 @@ namespace SheetIO/WorkbookWriter {
     use SheetIO.WorkbookWriter;
     use SheetIO.WorkbookWriter.{WorkbookWriter};
 
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
+
     use SheetIO.CellStyle;
     use SheetIO.CellStyle.{CellStyle};
     use SheetIO.CellStyleSetter;
@@ -62,28 +61,26 @@ namespace SheetIO/WorkbookWriter {
     use SheetIO.Font;
     use SheetIO.Font.{Font};
     use SheetIO.FontSetter;
-    use SheetIO.FontSetter.{FontSetter};    
-    use SheetIO/Internal/EvalError.{EvalError};
-    use SheetIO/Internal/PrimError.{PrimError};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
+    use SheetIO.FontSetter.{FontSetter};
     use SheetIO.SheetWriter;
+    
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookWriter[r, a], 
+    pub def runXlsx(ma: WorkbookWriter[r, a, a], 
                     path: FilePath): Result[a, String] & Impure = 
         runXssf(ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(ma: WorkbookWriter[r, a], 
+    pub def runXssf(ma: WorkbookWriter[r, a, a], 
                     path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         region r {
             let outpath = ToString.toString(path);
-            let* wb     = newXSSFWorkbook(r) |> Result.mapErr(SheetIO/Internal/PrimError.getText);
-            let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+            let* wb     = newXSSFWorkbook(r) as ##org.apache.poi.ss.usermodel.Workbook;
+            let* ans    = runWorkbookWriter!(() as Region[r], ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
             let* _      = writeXSSFWorkbook(wb, outpath);
             let* _      = closeXSSFWorkbook(wb);
             Ok(ans)
@@ -91,20 +88,20 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
+    pub def runAppendXlsx(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
         runAppendXssf(ma, path)
     
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "open" not "new"...
-    pub def runAppendXssf(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
+    pub def runAppendXssf(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let path1 = ToString.toString(path);
         match openXSSFWorkbook(path1) { 
             case Err(e) => Err("runAppendXssf('${path1}'): ${e}")
             case Ok(wb) => {
-                let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+                let* ans    = runWorkbookWriter!(() as Region[r], ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
                 let* _      = writeXSSFWorkbook(wb, path1);
                 let* _      = closeXSSFWorkbook(wb);
                 Ok(ans)
@@ -113,165 +110,146 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
-    pub def runTemplateXssf(ma: WorkbookWriter[r, a], 
+    pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
                             template: FilePath, 
                             outPath: FilePath): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
         let path1   = ToString.toString(outPath);
-        let* wb     = openXSSFWorkbook(path1);
-        let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);        
+        let* wb     = openXSSFWorkbook(path1) as ##org.apache.poi.ss.usermodel.Workbook;
+        let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
         let* _      = writeXSSFWorkbook(wb, path1);
         let* _      = closeXSSFWorkbook(wb);
         Ok(ans)
 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookWriter[r, a], path: FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1   = ToString.toString(path);
-        let* wb     = newHSSFWorkbook();
-        let* ans    = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+        let* wb     = newHSSFWorkbook() as ##org.apache.poi.ss.usermodel.Workbook;
+        let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
         let* _      = writeHSSFWorkbook(wb, path1);
         let* _      = closeHSSFWorkbook(wb);
         Ok(ans)
 
-    pub def runTemplateHssf(ma: WorkbookWriter[r, a], 
+    pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
                             template: FilePath, 
                             outPath: FilePath): Result[a, String] & Impure =
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
         let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
         let outPath1    = ToString.toString(outPath);
-        let* wb         = openHSSFWorkbook(outPath1);
-        let* ans        = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+        let* wb         = openHSSFWorkbook(outPath1) as ##org.apache.poi.ss.usermodel.Workbook;
+        let* ans        = runWorkbookWriter!(() as Region[r], ma, wb);
         let* _          = writeHSSFWorkbook(wb, outPath1);
         let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
 
 
-    def apply1(ma: WorkbookWriter[r, a], 
-               wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, EvalError] & r = 
-        let WorkbookWriter(f1) = ma;
-        f1(wb)
+    pub def getWorkbookWriter(x: WorkbookWriter[r, ka, a]): MonadLib.MutStateError[r, ka, Workbook[r], a] = 
+        let WorkbookWriter(x1) = x;
+        x1
 
-    pub def point(x: a): WorkbookWriter[r, a] = 
-        WorkbookWriter(_ -> Ok(x) as & r)
+    /// The state param `st` is expected to be mutated...
+    pub def runWorkbookWriter!(r: Region[r], 
+                                ma: WorkbookWriter[r, a, a], 
+                                st: Workbook[r]): Result[a, String] \ r =
+        MonadLib/MutStateError.runMutStateError(r, getWorkbookWriter(ma), st)
 
-    pub def throwError(msg: String): WorkbookWriter[r, a] =
-        WorkbookWriter(_ -> 
-            Err(SheetIO/Internal/EvalError.emptyEvalError({source = msg, exnMessage = ""})) as & r
-        )
+    pub def point(x: a): WorkbookWriter[r, ka, a] = 
+        WorkbookWriter(MonadLib/MutStateError.point(x))
+
+
+    pub def map(f: a -> b \ ef, x: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef =
+        WorkbookWriter(MonadLib/MutStateError.map(f, getWorkbookWriter(x)))
+
+    pub def ap(mf: WorkbookWriter[r, ka, a -> b \ ef], ma: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef =
+        WorkbookWriter(MonadLib/MutStateError.ap(getWorkbookWriter(mf), getWorkbookWriter(ma)))
+
+    pub def flatMap(k: a -> WorkbookWriter[r, ka, b] \ ef, x: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b]  \ ef = 
+        WorkbookWriter(MonadLib/MutStateError.flatMap(k >> getWorkbookWriter, getWorkbookWriter(x)))
+
+
+    pub def throwError(msg: String): WorkbookWriter[r, ka, a] = 
+        WorkbookWriter(MonadLib/MutStateError.throwError(msg))
+
+    pub def mapError(f: String -> String \ ef, ma: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, a] \ ef =
+        WorkbookWriter(MonadLib/MutStateError.mapError(f, getWorkbookWriter(ma)))
+
+    pub def catchError(ma: WorkbookWriter[r, ka, a], f: String -> WorkbookWriter[r, ka, a] \ ef): WorkbookWriter[r, ka, a] \ ef =
+        WorkbookWriter(MonadLib/MutStateError.catchError(getWorkbookWriter(ma), f >> getWorkbookWriter))
+
+    def liftSetter!(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
+        WorkbookWriter(MonadLib/MutStateError.liftSetter!(f))
+
+    def liftSetterResult!(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
+        WorkbookWriter(MonadLib/MutStateError.liftSetterResult!(f))
+    
+    pub def liftAction(f: Unit -> a \ ef): WorkbookWriter[r, ka, a] \ ef =
+        WorkbookWriter(MonadLib/MutStateError.liftAction(f))
+    
+        
+    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
+        WorkbookWriter(MonadLib/MutStateError.liftActionResult(f))
+
+
+
+    pub def createSheet!(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Write(r) =
+        liftSetterResult!(wb -> Interop/Apache/Poi/SS/Usermodel/Workbook.createSheet!(name, wb))
 
 /*
-    pub def catchError(ma: WorkbookWriter[r, a], handle: String -> WorkbookWriter[r, a]): WorkbookWriter[r, a] =
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, a)) => Ok((s2, a))
-            case Err(e) => apply1(handle(e), wb, style, s1)
-        })
-
-    pub def mapError(f: String -> String, ma: SheetWriter[r, a]): SheetWriter[r, a] =
-        SheetWriter((wb, style, s1) -> match apply1(ma, wb, style, s1) { 
-            case Ok((s2, a)) => Ok((s2, a))
-            case Err(e) => Err(f(e))
-        })
-*/
-
-
-    pub def map(fn: a -> b & ef, ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
-        WorkbookWriter(wb -> match apply1(ma, wb) { 
-            case Ok(a) => { let a1 = fn(a) as & r; Ok(a1) }
-            case Err(e) => Err(e)
-        }) as & ef
-
-    pub def ap(mf: WorkbookWriter[r, a -> b & ef], ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
-        WorkbookWriter(wb -> 
-            match apply1(mf, wb) { 
-                case Ok(f)  => match apply1(ma, wb) { 
-                    case Ok(a)  => { let ans = f(a) as & r; Ok(ans) }
-                    case Err(e) => Err(e)
-                }
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-
-
-    pub def flatMap(fn: a -> WorkbookWriter[r, b] & ef, ma: WorkbookWriter[r, a]): WorkbookWriter[r, b] & ef = 
-        WorkbookWriter(wb -> match apply1(ma, wb) { 
-            case Ok(a) => apply1(fn(a) as & r, wb)
-            case Err(e) => Err(e)
-        }) as & ef
-
-
-    def liftWorkbookPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Workbook -> Result[a, PrimError] & ef): WorkbookWriter[r, a] & ef = 
-        WorkbookWriter(wb -> 
-            let r = () as Region[r];
-            {fn(r, wb) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
-        )  as & ef
-
-    pub def liftAction(fn: Unit -> a & ef): WorkbookWriter[r, a] & ef = 
-        WorkbookWriter(_ -> { let a = fn() as & r; Ok(a)}) as & ef
-
-
-    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): WorkbookWriter[r, a] & ef = 
-        WorkbookWriter(_ -> 
-            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.emptyEvalError({ source = s, exnMessage = ""}))
-        ) as & ef
-
-
-    pub def createSheet!(name: String): WorkbookWriter[r, Sheet[r]] \ Write(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createSheet(r, name, wb) |> Result.map(Sheet))
-
-    pub def getSheetNamed(name: String): WorkbookWriter[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheet(r, name, wb) |> Result.map(Sheet)) 
+    pub def getSheetNamed(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
+        liftWorkbookPrim1((r, wb) -> Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name, wb)) 
 
     
-    pub def getSheetNames(): WorkbookWriter[r, List[String]] \ Read(r) =
+    pub def getSheetNames(): WorkbookWriter[r, ka, List[String]] \ Read(r) =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0, n);
         Traversable.traverse(getSheetName, ixs)      
     
-    pub def getNumberOfSheets(): WorkbookWriter[r, Int32] \ Read(r) =
+    pub def getNumberOfSheets(): WorkbookWriter[r, ka, Int32] \ Read(r) =
         liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
 
-    pub def getSheetName(ix: Int32): WorkbookWriter[r, String] \ Read(r) =
+    pub def getSheetName(ix: Int32): WorkbookWriter[r, ka, String] \ Read(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
 
         
-    pub def getSheetAt(ix: Int32): WorkbookWriter[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
+    pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
+        liftWorkbookPrim1((r, wb) -> Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix, wb))
 
-    pub def getFormat(x: DataFormat[r], format: String): WorkbookWriter[r, Int16] \ Read(r) =
+    pub def getFormat(x: DataFormat[r], format: String): WorkbookWriter[r, ka, Int16] \ Read(r) =
         let DataFormat(x1) = x;
         liftWorkbookPrim((r, _) -> SheetIO/Internal/Util.getFormat(r, format, x1))
 
 
-    pub def createDataFormat!(): WorkbookWriter[r, DataFormat[r]] \ Write(r) =
+    pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] \ Write(r) =
         liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createDataFormat(r, wb) |> Result.map(DataFormat))
 
 
-    pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, Font[r]] \ Write(r) =
+    pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createFont};
-        use Interop/Apache/Poi/Ss/Usermodel/Font.{new => newFont};
+        use Interop/Apache/Poi/SS/Usermodel/Font.{new => newFont};
         let* fontHH             = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
         let r1                  = () as Region[r];
         let _                   = SheetIO/FontSetter.runFontSetter!(r1, mx, newFont(r1, fontHH)); // TODO - ignores failure
         point(Font(fontHH))
 
     // TODO - this will be simpler once all Java calls use Interop layer
-    pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, CellStyle[r]] \ Write(r) =
+    pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
         use SheetIO/Internal/Workbook.{createCellStyle};
-        use Interop/Apache/Poi/Ss/Usermodel/CellStyle.{new => newCellStyle};
+        use Interop/Apache/Poi/SS/Usermodel/CellStyle.{new => newCellStyle};
         let* styleHH            = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
         let r1                  = () as Region[r];
         let _                   = SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, newCellStyle(r1, styleHH)); // TODO - ignores failure
         point(CellStyle(styleHH))
 
-    pub def withSheetWriter(writer: SheetWriter[r, a], sheet: Sheet[r]): WorkbookWriter[r, a] =
-        WorkbookWriter(_ -> SheetIO/SheetWriter.write(writer, sheet))
-
+    pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] =
+        let r1                  = () as Region[r];
+        WorkbookWriter(_ -> SheetIO/SheetWriter.runSheetWriter!(r1, writer, None, sheet))
+*/
 
 /*
 

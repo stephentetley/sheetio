@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Util {
+namespace Interop/Apache/Poi/SS/Util {
 
     /// Immutable
 
@@ -23,10 +23,10 @@ namespace Interop/Apache/Poi/Ss/Util {
 
 }
 
-namespace Interop/Apache/Poi/Ss/Util/CellAddress {
+namespace Interop/Apache/Poi/SS/Util/CellAddress {
 
-    use Interop/Apache/Poi/Ss/Util.CellAddress;
-    use Interop/Apache/Poi/Ss/Util.CellAddress.{CellAddress};
+    use Interop/Apache/Poi/SS/Util.CellAddress;
+    use Interop/Apache/Poi/SS/Util.CellAddress.{CellAddress};
 
     pub def cellAddress(row: {row = Int32}, column: {column = Int32}): CellAddress = 
         import new org.apache.poi.ss.util.CellAddress(Int32, Int32): ##org.apache.poi.ss.util.CellAddress \ {} as newCellAddress; 

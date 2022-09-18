@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Interface
 
@@ -25,18 +25,22 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     }
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Sheet {
+namespace Interop/Apache/Poi/SS/Usermodel/Sheet {
 
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet;
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
-    use Interop/Apache/Poi/Ss/Usermodel.Row;
-    use Interop/Apache/Poi/Ss/Usermodel.Row.{Row};
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook;
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
+    use Interop/Apache/Poi/SS/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Row.{Row};
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
     pub def getHH(sheet: Sheet[r]): ##org.apache.poi.ss.usermodel.Sheet =
         let Sheet(sheet1) = sheet;
         sheet1
+   
+    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): Sheet[r] =
+        Sheet(s)
+
 
     pub def getSheetName(sheet: Sheet[r]): String \ Read(r) = 
         import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String \ r; 

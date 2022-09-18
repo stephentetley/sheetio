@@ -25,7 +25,7 @@ namespace SheetIO {
 
     /// Includes Map[columName: String => index: Int32]
     pub enum NamedRowEvaluator[r: Region, ka: Type, a: Type](
-        MonadLib.EnvEvaluator[r, ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/Ss/Usermodel.Row[r], a])
+        MonadLib.EnvEvaluator[r, ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
 
     instance Functor[NamedRowEvaluator[r, ka]] {
@@ -79,9 +79,9 @@ namespace SheetIO/NamedRowEvaluator {
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/Ss/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
+    use Interop/Apache/Poi/SS/Usermodel.Row;
 
     use SheetIO.CellType;
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
@@ -89,7 +89,7 @@ namespace SheetIO/NamedRowEvaluator {
 
     pub type alias Env[r: Region] = 
         { columnIndices = Map[String, Int32]
-        , formatter = Interop/Apache/Poi/Ss/Usermodel.DataFormatter[r]
+        , formatter = Interop/Apache/Poi/SS/Usermodel.DataFormatter[r]
         }
 
 
@@ -118,7 +118,7 @@ namespace SheetIO/NamedRowEvaluator {
                                     st: Row[r]): Result[a, String] \ r =
         let env = 
             { columnIndices = makeHeaders(headings)
-            , formatter = Interop/Apache/Poi/Ss/Usermodel/DataFormatter.new(r)
+            , formatter = Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r)
             };
         MonadLib/EnvEvaluator.runEnvEvaluator(r, getNamedRowEvaluator(ma), env, st)
 
@@ -178,14 +178,14 @@ namespace SheetIO/NamedRowEvaluator {
 
     def getCellNamed(label: String): NamedRowEvaluator[r, ka, Cell[r]] \ Read(r) =
         let* ix = getIndex(label); 
-        liftGetterResult((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
+        liftGetterResult((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
 
 
     def liftCellGetter(label: String, 
                         fn: DataFormatter[r] -> Cell[r] -> a \ ef): NamedRowEvaluator[r, ka, a] \ { Read(r), ef } =
         let* ix = getIndex(label);
         liftGetterResult((env, row) -> 
-            match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
+            match Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(env.formatter, cell) |> Ok
                 case None       => Err("liftCellGetter(${label})")
             }
@@ -196,7 +196,7 @@ namespace SheetIO/NamedRowEvaluator {
                             fn: DataFormatter[r] -> Cell[r] -> Result[a, err] \ ef): NamedRowEvaluator[r, ka, a] \ { Read(r), ef } with ToString[err] =
         let* ix = getIndex(label);
         liftGetterResult((env, row) -> 
-            match Interop/Apache/Poi/Ss/Usermodel/Row.getCell(ix, row) {
+            match Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) {
                 case Some(cell) => fn(env.formatter, cell) |> Result.mapErr(ToString.toString)
                 case None       => Err("liftCellGetterResult(${label})")
             }
@@ -205,18 +205,18 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getRowNum(): NamedRowEvaluator[r, ka, Int32] \ Read(r) = 
-        liftGetter((_, row) -> Interop/Apache/Poi/Ss/Usermodel/Row.getRowNum(row))
+        liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row))
 
     pub def getSheetName(): NamedRowEvaluator[r, ka, String] \ Read(r) = 
         liftGetter((_, row) -> {
-            let sheet = Interop/Apache/Poi/Ss/Usermodel/Row.getSheet(row);
-            Interop/Apache/Poi/Ss/Usermodel/Sheet.getSheetName(sheet)
+            let sheet = Interop/Apache/Poi/SS/Usermodel/Row.getSheet(row);
+            Interop/Apache/Poi/SS/Usermodel/Sheet.getSheetName(sheet)
         })
 
 
     /// Uses the default DataFormatter
     pub def getContentNamed(label: String): NamedRowEvaluator[r, ka, String] \ Read(r) =
-        liftCellGetter(label, (fmt, cell) -> Interop/Apache/Poi/Ss/Usermodel/DataFormatter.formatCellValue(cell, fmt))
+        liftCellGetter(label, (fmt, cell) -> Interop/Apache/Poi/SS/Usermodel/DataFormatter.formatCellValue(cell, fmt))
 
 
     /// Uses the default DataFormatter
@@ -235,7 +235,7 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getCellTypeNamed(label: String): NamedRowEvaluator[r, ka, CellType] \ Read(r) =
         liftCellGetterResult(label, (_, cell) -> {
             let r = () as Region[r];
-            let cell1 = Interop/Apache/Poi/Ss/Usermodel/Cell.getHH(cell);
+            let cell1 = Interop/Apache/Poi/SS/Usermodel/Cell.getHH(cell);
             SheetIO/Internal/Cell.getCellType(r, cell1) 
                 |> Result.map(SheetIO/CellType.fromNative)  /// TODO make compatible with Interop
                 |> Result.mapErr(_ -> "getCellTypeNamed(${label})")
@@ -259,7 +259,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getStringNamed(label: String): NamedRowEvaluator[r, ka, String] \ Read(r) =
-        liftCellGetterResult(label, (_, row) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getStringCellValue(row))
+        liftCellGetterResult(label, (_, row) -> Interop/Apache/Poi/SS/Usermodel/Cell.getStringCellValue(row))
             
 
     pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowEvaluator[r, ka, String] \ Read(r) =
@@ -282,14 +282,14 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter[r]): NamedRowEvaluator[r, ka, String] \ Read(r) =
-        liftCellGetter(label, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/DataFormatter.formatCellValue(cell, dfmt))
+        liftCellGetter(label, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/DataFormatter.formatCellValue(cell, dfmt))
 
     pub def getBoolNamed(label: String): NamedRowEvaluator[r, ka, Bool] \ Read(r) =
-        liftCellGetterResult(label, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getBooleanCellValue(cell))
+        liftCellGetterResult(label, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getBooleanCellValue(cell))
     
 
     pub def getNumericNamed(label: String): NamedRowEvaluator[r, ka, Float64] \ Read(r) =
-        liftCellGetterResult(label, (_, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getNumericCellValue(cell))
+        liftCellGetterResult(label, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getNumericCellValue(cell))
 
     def getNumNamed(label: String, conv: Float64 -> Option[a]): NamedRowEvaluator[r, ka, a] \ Read(r) =
         let* n = getNumericNamed(label);
@@ -326,7 +326,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     def isDateFormattedNamed(label: String): NamedRowEvaluator[r, ka, Bool] \ Read(r) =
-        liftCellGetter(label, ( _, cell) -> Interop/Apache/Poi/Ss/Usermodel/DateUtil.isCellDateFormatted(cell))
+        liftCellGetter(label, ( _, cell) -> Interop/Apache/Poi/SS/Usermodel/DateUtil.isCellDateFormatted(cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
@@ -337,7 +337,7 @@ namespace SheetIO/NamedRowEvaluator {
         if (ctype == TyNumeric) {
             let* dtCell = isDateFormattedNamed(label);
             if (dtCell) {
-                let* dt = liftCellGetterResult(label, ( _, cell) -> Interop/Apache/Poi/Ss/Usermodel/Cell.getLocalDateTimeCellValue(cell));
+                let* dt = liftCellGetterResult(label, ( _, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.getLocalDateTimeCellValue(cell));
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeNamed - null")
                 else
