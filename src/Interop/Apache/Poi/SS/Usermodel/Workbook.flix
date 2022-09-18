@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Interface
 
@@ -23,25 +23,33 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     instance Scoped[Workbook] {
         pub def regionOf(_: Workbook[r]): Region[r] = () as Region[r]
     }
+
+    pub class SubWorkbook[t: Region -> Type] {
+        pub def toWorkbook[r: Region](s: t[r]): Workbook[r]
+        pub def fromWorkbook[r: Region](s: Workbook[r]): t[r]
+    }
 }
 
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Workbook {
+namespace Interop/Apache/Poi/SS/Usermodel/Workbook {
 
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook;
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook.{Workbook};
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormat;
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormat.{DataFormat};
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet;
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/SS/Usermodel.DataFormat;
+    use Interop/Apache/Poi/SS/Usermodel.DataFormat.{DataFormat};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
 
     pub def getHH(wb: Workbook[r]): ##org.apache.poi.ss.usermodel.Workbook =
         let Workbook(wb1) = wb;
         wb1
+   
+    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): Workbook[r] =
+        Workbook(s)
 
     pub def createSheet!(name: String, wb: Workbook[r]): Result[Sheet[r], String] \ Write(r) =         
         try {

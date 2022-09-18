@@ -15,7 +15,7 @@
  */
 
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Class
 
@@ -27,12 +27,14 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
 }
 
 
-namespace Interop/Apache/Poi/Ss/Usermodel/DataFormatter {
+namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
 
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/Ss/Usermodel.DataFormatter.{DataFormatter};
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
+    use Interop/Util.Locale;
+
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter.{DataFormatter};
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
 
 
     pub def getHH(df: DataFormatter[r]): ##org.apache.poi.ss.usermodel.DataFormatter =
@@ -44,13 +46,13 @@ namespace Interop/Apache/Poi/Ss/Usermodel/DataFormatter {
         DataFormatter(newDataFormatter())
 
 
-    // ///
-    // /// Returns a new mutable DataFormatter.
-    // ///
-    // pub def newWithLocale(_: Region[r], x: Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ Write(r) = 
-    //     import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as newDataFormatter;
-    //     let Locale(x1) = x;
-    //     newDataFormatter(Interop/Util/Locale.getHH(x1))
+    ///
+    /// Returns a new mutable DataFormatter.
+    ///
+    pub def newWithLocale(_: Region[r], loc: Locale): DataFormatter[r] \ Write(r) = 
+        import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as newDataFormatter;
+        let loc1 = Interop/Util/Locale.getHH(loc);
+        newDataFormatter(loc1) |> DataFormatter
 
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...

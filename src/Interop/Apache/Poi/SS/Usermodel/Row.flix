@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Interface
 
@@ -25,23 +25,23 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     }
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Row {
+namespace Interop/Apache/Poi/SS/Usermodel/Row {
 
 
-    use Interop/Apache/Poi/Ss/Usermodel.Row;
-    use Interop/Apache/Poi/Ss/Usermodel.Row.{Row};
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet;
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
+    use Interop/Apache/Poi/SS/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Row.{Row};
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
 
     pub def getHH(row: Row[r]): ##org.apache.poi.ss.usermodel.Row =
         let Row(row1) = row;
         row1
 
     
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] \ Write(r) =
-        Row(prim) as \ Write(r)
+    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] =
+        Row(prim)
 
     pub def getRowNum(row: Row[r]): Int32 \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 

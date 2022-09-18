@@ -17,39 +17,49 @@
 
 namespace SheetIO {
 
-    use SheetIO/Internal/EvalError.{EvalError};
-    
-    pub enum WorkbookReader[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Workbook -> Result[a, EvalError] & r
-    )
 
-    instance Functor[WorkbookReader[r]] {
-        pub def map(f: a -> b & ef, o: WorkbookReader[r, a]): WorkbookReader[r, b] & ef = 
+    pub enum WorkbookReader[r: Region, ka: Type, a: Type](
+        MonadLib.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+
+
+    instance Functor[WorkbookReader[r, ka]] {
+        pub def map(f: a -> b & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef = 
             SheetIO/WorkbookReader.map(f, o)
     }
 
-    instance Applicative[WorkbookReader[r]] {
-        pub def point(x: a): WorkbookReader[r, a] = 
+    instance Applicative[WorkbookReader[r, ka]] {
+        pub def point(x: a): WorkbookReader[r, ka, a] = 
             SheetIO/WorkbookReader.point(x)
 
-        pub def ap(f: WorkbookReader[r, a -> b & ef], x: WorkbookReader[r, a]) : WorkbookReader[r, b] & ef = 
+        pub def ap(f: WorkbookReader[r, ka, a -> b & ef], x: WorkbookReader[r, ka, a]) : WorkbookReader[r, ka, b] & ef = 
             SheetIO/WorkbookReader.ap(f, x)
     }
 
-    instance Monad[WorkbookReader[r]] {
-        pub def flatMap(f: a -> WorkbookReader[r, b] & ef, o: WorkbookReader[r, a]): WorkbookReader[r, b] & ef =
+    instance Monad[WorkbookReader[r, ka]] {
+        pub def flatMap(f: a -> WorkbookReader[r, ka, b] & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef =
             SheetIO/WorkbookReader.flatMap(f, o)
     }
 
-    instance MonadZero[WorkbookReader[r]] {
-        pub def empty(): WorkbookReader[r, a] = SheetIO/WorkbookReader.throwError("empty")
+    instance MonadZero[WorkbookReader[r, ka]] {
+        pub def empty(): WorkbookReader[r, ka, a] = 
+            SheetIO/WorkbookReader.empty()
     }
 
-    instance MonadLib.MonadOr[WorkbookReader[r]] {
-        pub def orelse(a: WorkbookReader[r, a], b: WorkbookReader[r, a]): WorkbookReader[r, a] =
+    instance MonadLib.MonadOr[WorkbookReader[r, ka]] {
+        pub def orelse(a: WorkbookReader[r, ka, a], b: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
             SheetIO/WorkbookReader.orelse(a, b)
     }
 
+    instance MonadLib.MonadError[WorkbookReader[r, ka]] {
+        pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
+            SheetIO/WorkbookReader.throwError(msg)
+
+        pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
+            SheetIO/WorkbookReader.mapError(f, ma)
+
+        pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
+            SheetIO/WorkbookReader.catchError(ma, f)
+    }
 
 }
 
@@ -61,202 +71,168 @@ namespace SheetIO/WorkbookReader {
     use SheetIO.WorkbookReader;
     use SheetIO.WorkbookReader.{WorkbookReader};
 
-    
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
-    use SheetIO/Internal/EvalError.{EvalError};
-    use SheetIO/Internal/PrimError.{PrimError};
-
-    use SheetIO.Row;
-    use SheetIO.Row.{Row};
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
+
     use SheetIO.SheetReader;
 
+
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
-        runXssf(ma, path)
+    pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+        runXssf(r, ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
+    pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
         use Result.{flatMap};
-        let path1 = toString(path);
-        match openXSSFWorkbook(path1) { 
-            case Err(e) => Err("runXssf(${path1}): ${e}")
-            case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-                let* _ = closeXSSFWorkbook(wb);
-                ans         
-            }
-        }
+        let path1   = toString(path);
+        let file    = Interop/IO/File.newFile(r, path1);
+        let* wb     = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.newWithFile(file);
+        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
+        let* ans    = runWorkbookReader(r, ma, wb1);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        Ok(ans)
+        
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookReader[r, a], path: FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
+    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] & Impure = 
         use Result.{flatMap};
-        let path1 = toString(path);
-        match openHSSFWorkbook(path1) { 
-            case Err(e) => Err("runHssf(${path1}): ${e}")
-            case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-                let* _ = closeHSSFWorkbook(wb);
-                ans         
-            }
-        }
+        let path1   = toString(path);
+        let* ins    = Interop/IO/FileInputStream.newWithPath(path1);
+        let* wb     = Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook.newWithInputStream(r, ins);
+        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
+        let* ans    = runWorkbookReader(r, ma, wb1);
+        let* _      = Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook.close(wb);
+        Ok(ans)
 
 
-    def apply1(ma: WorkbookReader[r, a], wb: ##org.apache.poi.ss.usermodel.Workbook): Result[a, EvalError] & r = 
-        let WorkbookReader(x1) = ma;
-        x1(wb)
 
-    pub def point(x: a): WorkbookReader[r, a] = 
-        WorkbookReader(_ -> Ok(x) as & r)
+    pub def getWorkbookReader(x: WorkbookReader[r, ka, a]): MonadLib.Evaluator[r, ka, Workbook[r], a] = 
+        let WorkbookReader(x1) = x;
+        x1
 
 
-    pub def throwError(msg: String): WorkbookReader[r, a] =
-        WorkbookReader(_ -> 
-            Err(SheetIO/Internal/EvalError.emptyEvalError({source = msg, exnMessage = ""})) as & r
-        )
+    pub def runWorkbookReader(r: Region[r], 
+                                ma: WorkbookReader[r, a, a], 
+                                st: Workbook[r]): Result[a, String] \ r =
+        MonadLib/Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
 
-    pub def swapError(ma: WorkbookReader[r, a], msg: String): WorkbookReader[r, a] =
-        WorkbookReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a)    => Ok(a)
-                case Err(err) => Err({source = msg | err})
-            }
-        )
+    pub def point(x: a): WorkbookReader[r, ka, a] = 
+        WorkbookReader(MonadLib/Evaluator.point(x))
 
 
-    pub def catchError(ma: WorkbookReader[r, a], catcher: EvalError -> WorkbookReader[r, a] & ef): WorkbookReader[r, a] & ef=
-        WorkbookReader(wb -> match apply1(ma, wb) { 
-            case Ok(a) => Ok(a)
-            case Err(e) => apply1(catcher(e) as & r, wb)
-        }) as & ef
+
+    pub def map(f: a -> b \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
+        WorkbookReader(MonadLib/Evaluator.map(f, getWorkbookReader(ma)))
+
+    pub def ap(mf: WorkbookReader[r, ka, a -> b \ ef], ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
+        WorkbookReader(MonadLib/Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
+
+    pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
+        WorkbookReader(MonadLib/Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
+
+    pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
+        WorkbookReader(MonadLib/Evaluator.throwError(msg))
+
+    pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
+        WorkbookReader(MonadLib/Evaluator.mapError(f, getWorkbookReader(ma)))
+
+    pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
+        WorkbookReader(MonadLib/Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
+
+    pub def empty(): WorkbookReader[r, ka, a] = 
+        WorkbookReader(MonadLib/Evaluator.empty())
+        
+    pub def orelse(ma: WorkbookReader[r, ka, a], mb: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
+        WorkbookReader(MonadLib/Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
+
+    def liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
+        WorkbookReader(MonadLib/Evaluator.liftGetter(f))
+    
+    def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
+        WorkbookReader(MonadLib/Evaluator.liftGetterResult(f))
 
 
-    /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: WorkbookReader[r, a]): WorkbookReader[r, b] & ef = 
-        WorkbookReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => { let ans = fn(a) as & r; Ok(ans) }
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-
-    pub def ap(mf: WorkbookReader[r, a -> b & ef], ma: WorkbookReader[r, a]): WorkbookReader[r, b] & ef = 
-        WorkbookReader(wb -> 
-            match apply1(mf, wb) { 
-                case Ok(f) => match apply1(ma, wb) { 
-                    case Ok(a) => { let ans = f(a) as & r; Ok(ans) }
-                    case Err(e) => Err(e)
-                }
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-
-    pub def flatMap(fn: a -> WorkbookReader[r, b] & ef, ma: WorkbookReader[r, a]): WorkbookReader[r, b] & ef = 
-        WorkbookReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => apply1(fn(a) as & r, wb)
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-  
-    pub def bind(ma: WorkbookReader[r, a], fn: a -> WorkbookReader[r, b] & ef): WorkbookReader[r, b] & ef = 
-        flatMap(fn, ma)
+    pub def liftAction(f: Unit -> a \ ef): WorkbookReader[r, ka, a] \ ef =
+        WorkbookReader(MonadLib/Evaluator.liftAction(f))
+    
+        
+    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
+        WorkbookReader(MonadLib/Evaluator.liftActionResult(f))
 
 
-    pub def orelse(ma: WorkbookReader[r, a], mb: WorkbookReader[r, a]): WorkbookReader[r, a] =
-        WorkbookReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a)  => Ok(a)
-                case Err(_) => apply1(mb, wb)
-            }
-        )
-
+/*
     ///
     /// Expose the result of operation `ma`.
     ///
     /// By definition this never fails.
     ///
-    pub def result(ma: WorkbookReader[r, a]): WorkbookReader[r, Result[a, String]] = 
+    pub def result(ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, Result[a, String]] = 
         WorkbookReader(wb -> 
             let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
             Ok(ans)
         )
 
-    pub def guard(x: Bool): WorkbookReader[r, Unit] = 
+    pub def guard(x: Bool): WorkbookReader[r, ka, Unit] = 
         match x { 
             case true  => point()
             case false => throwError("guard")
         }
+*/
 
 
-    def liftWorkbookPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Workbook -> Result[a, PrimError] & ef): WorkbookReader[r, a] & ef = 
-        WorkbookReader(wb -> 
-            let r = () as Region[r];
-            {fn(r, wb) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
-        )  as & ef
-
-
-    pub def liftAction(fn: Unit -> a & ef): WorkbookReader[r, a] & ef = 
-        WorkbookReader(_ -> { let a = fn() as & r; Ok(a)}) as & ef
-
-
-    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): WorkbookReader[r, a] & ef = 
-        WorkbookReader(_ -> 
-            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.emptyEvalError({ source = s, exnMessage = ""}))
-        ) as & ef
-
-    pub def liftOption(x: Option[a], errMsg: String): WorkbookReader[r, a] = match x { 
+/*
+    pub def liftOption(x: Option[a], errMsg: String): WorkbookReader[r, ka, a] = match x { 
         case Some(x1) => point(x1)
         case None     => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, String]): WorkbookReader[r, a] = match x { 
+    pub def liftResult(x: Result[a, String]): WorkbookReader[r, ka, a] = match x { 
         case Ok(x1)   => point(x1)
         case Err(msg) => throwError(msg)
     }
 
-    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): WorkbookReader[r, a] = match x { 
+    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): WorkbookReader[r, ka, a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
-    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): WorkbookReader[r, a] = match x { 
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): WorkbookReader[r, ka, a] = match x { 
         case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
+*/
 
 
-    // SheetReader
 
-    pub def getNumberOfSheets(): WorkbookReader[r, Int32] \ Read(r) =
-        liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
+    // WorkbookReader
 
-    pub def getSheetNames(): WorkbookReader[r, List[String]] \ Read(r) =
+    pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ Read(r) =
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getNumberOfSheets)
+
+    pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ Read(r) =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0,n);
         Traversable.traverse(getSheetNameWb, ixs)      
 
 
-    def getSheetNameWb(ix: Int32): WorkbookReader[r, String] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
+    def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ Read(r) =
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetName(ix))
 
+    pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
-    pub def getSheetNamed(name: String): WorkbookReader[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheet(r, name, wb) |> Result.map(Sheet)) 
+    pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
 
-
-    pub def getSheetAt(ix: Int32): WorkbookReader[r, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
-
-    pub def withSheetReader(eval: SheetReader[r, a], sheet: Sheet[r]): WorkbookReader[r, a] =
-        WorkbookReader(_ -> SheetIO/SheetReader.evaluate(eval, sheet))
+    pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
+        liftActionResult(_ -> {let r = () as Region[r]; SheetIO/SheetReader.runSheetReader(r, eval, sheet)})
 
 
 }

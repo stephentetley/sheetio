@@ -17,39 +17,49 @@
 
 namespace SheetIO {
 
-    use SheetIO/Internal/EvalError.{EvalError};
-    
-    pub enum SheetReader[r: Region, a: Type](
-        ##org.apache.poi.ss.usermodel.Sheet -> Result[a, EvalError] & r
-    )
 
-    instance Functor[SheetReader[r]] {
-        pub def map(f: a -> b & ef, o: SheetReader[r, a]): SheetReader[r, b] & ef = 
+    pub enum SheetReader[r: Region, ka: Type, a: Type](
+        MonadLib.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Sheet[r], a])
+
+
+
+    instance Functor[SheetReader[r, ka]] {
+        pub def map(f: a -> b \ ef, o: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef = 
             SheetIO/SheetReader.map(f, o)
     }
 
-    instance Applicative[SheetReader[r]] {
-        pub def point(x: a): SheetReader[r, a] = 
+    instance Applicative[SheetReader[r, ka]] {
+        pub def point(x: a): SheetReader[r, ka, a] = 
             SheetIO/SheetReader.point(x)
 
-        pub def ap(f: SheetReader[r, a -> b & ef], x: SheetReader[r, a]) : SheetReader[r, b] & ef = 
+        pub def ap(f: SheetReader[r, ka, a -> b \ ef], x: SheetReader[r, ka, a]) : SheetReader[r, ka, b] \ ef = 
             SheetIO/SheetReader.ap(f, x)
     }
 
-    instance Monad[SheetReader[r]] {
-        pub def flatMap(f: a -> SheetReader[r, b] & ef, o: SheetReader[r, a]): SheetReader[r, b] & ef =
+    instance Monad[SheetReader[r, ka]] {
+        pub def flatMap(f: a -> SheetReader[r, ka, b] \ ef, o: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
             SheetIO/SheetReader.flatMap(f, o)
     }
 
-    instance MonadZero[SheetReader[r]] {
-        pub def empty(): SheetReader[r, a] = SheetIO/SheetReader.throwError("empty")
+    instance MonadZero[SheetReader[r, ka]] {
+        pub def empty(): SheetReader[r, ka, a] = SheetIO/SheetReader.throwError("empty")
     }
 
-    instance MonadLib.MonadOr[SheetReader[r]] {
-        pub def orelse(a: SheetReader[r, a], b: SheetReader[r, a]): SheetReader[r, a] =
+    instance MonadLib.MonadOr[SheetReader[r, ka]] {
+        pub def orelse(a: SheetReader[r, ka, a], b: SheetReader[r, ka, a]): SheetReader[r, ka, a] =
             SheetIO/SheetReader.orelse(a, b)
     }
 
+    instance MonadLib.MonadError[SheetReader[r, ka]] {
+        pub def throwError(msg: String): SheetReader[r, ka, a] = 
+            SheetIO/SheetReader.throwError(msg)
+
+        pub def mapError(f: String -> String \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, a] \ ef =
+            SheetIO/SheetReader.mapError(f, ma)
+
+        pub def catchError(ma: SheetReader[r, ka, a], f: String -> SheetReader[r, ka, a] \ ef): SheetReader[r, ka, a] \ ef =
+            SheetIO/SheetReader.catchError(ma, f)
+    }
 }
 
 namespace SheetIO/SheetReader {
@@ -60,91 +70,71 @@ namespace SheetIO/SheetReader {
     use SheetIO.SheetReader;
     use SheetIO.SheetReader.{SheetReader};
 
-    use SheetIO/Internal/EvalError.{EvalError};
-    use SheetIO/Internal/PrimError.{PrimError};
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
+    use Interop/Apache/Poi/SS/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
 
-    use SheetIO.Row;
-    use SheetIO.Row.{Row};
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
-    use SheetIO.Sheet;
-    use SheetIO.Sheet.{Sheet};
     use SheetIO.NamedRowEvaluator;
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
 
 
-    def apply1(ma: SheetReader[r, a], primSheet: ##org.apache.poi.ss.usermodel.Sheet): Result[a, EvalError] & r = 
-        let SheetReader(x1) = ma;
-        x1(primSheet)
 
-    pub def evaluate(ma: SheetReader[r, a], sheet: Sheet[r]): Result[a, EvalError] & r = 
-        let Sheet(sheet1) = sheet;
-        apply1(ma, sheet1)
+    pub def getSheetReader(x: SheetReader[r, ka, a]): MonadLib.Evaluator[r, ka, Sheet[r], a] = 
+        let SheetReader(x1) = x;
+        x1
 
-    pub def point(x: a): SheetReader[r, a] = 
-        SheetReader(_ -> Ok(x) as & r)
+    pub def runSheetReader(r: Region[r], 
+                            ma: SheetReader[r, a, a],
+                            st: Sheet[r]): Result[a, String] \ r =
+        MonadLib/Evaluator.runEvaluator(r, getSheetReader(ma), st)
 
+    pub def point(x: a): SheetReader[r, ka, a] = 
+        SheetReader(MonadLib/Evaluator.point(x))
 
-    pub def throwError(msg: String): SheetReader[r, a] =
-        SheetReader(_ -> 
-            Err(SheetIO/Internal/EvalError.emptyEvalError({source = msg, exnMessage = ""})) as & r
-        )
+    pub def map(f: a -> b \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
+        SheetReader(MonadLib/Evaluator.map(f, getSheetReader(ma)))
 
+    pub def ap(mf: SheetReader[r, ka, a -> b \ ef], ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
+        SheetReader(MonadLib/Evaluator.ap(getSheetReader(mf), getSheetReader(ma)))
 
-    pub def swapError(ma: SheetReader[r, a], msg: String): SheetReader[r, a] =
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a)    => Ok(a)
-                case Err(err) => Err({source = msg | err})
-            }
-        )
+    pub def flatMap(f: a -> SheetReader[r, ka, b] \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
+        SheetReader(MonadLib/Evaluator.flatMap(f >> getSheetReader, getSheetReader(ma)))
 
+    pub def throwError(msg: String): SheetReader[r, ka, a] = 
+        SheetReader(MonadLib/Evaluator.throwError(msg))
 
-    pub def catchError(ma: SheetReader[r, a], catcher: EvalError -> SheetReader[r, a] & ef): SheetReader[r, a] & ef=
-        SheetReader(wb -> match apply1(ma, wb) { 
-            case Ok(a) => Ok(a)
-            case Err(e) => apply1(catcher(e) as & r, wb)
-        }) as & ef
+    pub def mapError(f: String -> String \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, a] \ ef =
+        SheetReader(MonadLib/Evaluator.mapError(f, getSheetReader(ma)))
 
+    pub def catchError(ma: SheetReader[r, ka, a], f: String -> SheetReader[r, ka, a] \ ef): SheetReader[r, ka, a] \ ef =
+        SheetReader(MonadLib/Evaluator.catchError(getSheetReader(ma), f >> getSheetReader))
 
-    /// Needs to allow allow effects (e.g create / access arrays)
-    pub def map(fn: a -> b & ef, ma: SheetReader[r, a]): SheetReader[r, b] & ef = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => { let ans = fn(a) as & r; Ok(ans) }
-                case Err(e) => Err(e)
-            }
-        ) as & ef
+    pub def empty(): SheetReader[r, ka, a] = 
+        SheetReader(MonadLib/Evaluator.empty())
+        
+    pub def orelse(ma: SheetReader[r, ka, a], mb: SheetReader[r, ka, a]): SheetReader[r, ka, a] =
+        SheetReader(MonadLib/Evaluator.orelse(getSheetReader(ma), getSheetReader(mb)))
 
-    pub def ap(mf: SheetReader[r, a -> b & ef], ma: SheetReader[r, a]): SheetReader[r, b] & ef = 
-        SheetReader(wb -> 
-            match apply1(mf, wb) { 
-                case Ok(f) => match apply1(ma, wb) { 
-                    case Ok(a) => { let ans = f(a) as & r; Ok(ans) }
-                    case Err(e) => Err(e)
-                }
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-
-    pub def flatMap(fn: a -> SheetReader[r, b] & ef, ma: SheetReader[r, a]): SheetReader[r, b] & ef = 
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a) => apply1(fn(a) as & r, wb)
-                case Err(e) => Err(e)
-            }
-        ) as & ef
-
-    pub def orelse(ma: SheetReader[r, a], mb: SheetReader[r, a]): SheetReader[r, a] =
-        SheetReader(wb -> 
-            match apply1(ma, wb) { 
-                case Ok(a)  => Ok(a)
-                case Err(_) => apply1(mb, wb)
-            }
-        )
+    def liftGetter(f: Sheet[r] -> a \ ef): SheetReader[r, ka, a] \ ef =
+        SheetReader(MonadLib/Evaluator.liftGetter(f))
+    
+    def liftGetterResult(f: Sheet[r] -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
+        SheetReader(MonadLib/Evaluator.liftGetterResult(f))
 
 
-    pub def testM(ma: SheetReader[r, a]): SheetReader[r, Bool] =
+
+    pub def liftAction(f: Unit -> a \ ef): SheetReader[r, ka, a] \ ef =
+        SheetReader(MonadLib/Evaluator.liftAction(f))
+    
+        
+    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
+        SheetReader(MonadLib/Evaluator.liftActionResult(f))
+
+
+/*
+    pub def testM(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Bool] =
         SheetReader(wb -> 
             match apply1(ma, wb) { 
                 case Ok(_)  => Ok(true)
@@ -157,102 +147,84 @@ namespace SheetIO/SheetReader {
     ///
     /// By definition this never fails.
     ///
-    pub def result(ma: SheetReader[r, a]): SheetReader[r, Result[a, String]] = 
+    pub def result(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Result[a, String]] = 
         SheetReader(wb -> 
             let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
             Ok(ans)
         )
 
-    pub def guard(x: Bool): SheetReader[r, Unit] = 
+    pub def guard(x: Bool): SheetReader[r, ka, Unit] = 
         match x { 
             case true => point()
             case false => throwError("guard")
         }
 
+*/
 
 
-
-
-
-    def liftPrim(fn: Region[r] -> ##org.apache.poi.ss.usermodel.Sheet -> Result[a, PrimError] & ef): SheetReader[r, a] & ef = 
-        SheetReader(s -> 
-            let r = () as Region[r];
-            {fn(r, s) as & r} |> Result.mapErr(SheetIO/Internal/EvalError.emptyEvalError)
-        )  as & ef
-
-
-    pub def liftAction(fn: Unit -> a & ef): SheetReader[r, a] & ef = 
-        SheetReader(_ -> { let a = fn() as & r; Ok(a)}) as & ef
-
-
-    pub def liftActionResult(fn: Unit -> Result[a, String] & ef): SheetReader[r, a] & ef = 
-        SheetReader(_ -> 
-            {fn() as & r} |> Result.mapErr(s -> SheetIO/Internal/EvalError.emptyEvalError({ source = s, exnMessage = ""}))
-        ) as & ef
-
-    pub def liftOption(x: Option[a], errMsg: String): SheetReader[r, a] = match x { 
+/*
+    pub def liftOption(x: Option[a], errMsg: String): SheetReader[r, ka, a] = match x { 
         case Some(x1) => point(x1)
         case None     => throwError(errMsg)
     }
 
-    pub def liftResult(x: Result[a, String]): SheetReader[r, a] = match x { 
+    pub def liftResult(x: Result[a, String]): SheetReader[r, ka, a] = match x { 
         case Ok(x1)   => point(x1)
         case Err(msg) => throwError(msg)
     }
 
-    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): SheetReader[r, a] = match x { 
+    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): SheetReader[r, ka, a] = match x { 
         case Ok(x1) => point(x1)
         case Err(e) => throwError(makeErrMsg(e))
     }
 
-    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetReader[r, a] = match x { 
+    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetReader[r, ka, a] = match x { 
         case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
-
+*/
 
     // SheetReader
  
-    /// TODO - the SheetReader monad is dealing with both Sheet and Workbook functions.
-    /// This was useful at first but is probably not the right abstraction...
 
-    pub def getSheetName(): SheetReader[r, String] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getSheetName)
+    pub def getSheetName(): SheetReader[r, ka, String] \ Read(r) =
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getSheetName)
 
-    pub def getFirstRowNum(): SheetReader[r, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getFirstRowNum)
+
+    pub def getFirstRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getFirstRowNum >> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
-    pub def getLastRowNum(): SheetReader[r, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getLastRowNum)
+    pub def getLastRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getLastRowNum >> Option.toOk("getLastRowNum"))
 
 
-    pub def getPhysicalNumberOfRows(): SheetReader[r, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getPhysicalNumberOfRows)
+    pub def getPhysicalNumberOfRows(): SheetReader[r, ka, Int32] \ Read(r) =
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getPhysicalNumberOfRows)
 
 
-    pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, a] \ Read(r) =
-        let r        = () as Region[r];
-        let* primrow = liftPrim(_ -> SheetIO/Internal/Sheet.getRow(r, ix));
-        liftActionResult(_ -> SheetIO/RowEvaluator.runRowEvaluator(r, eval, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r, primrow)))
+    pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
+        use Result.flatMap;
+        liftGetterResult(sheet -> {
+            let r = () as Region[r];
+            let* row = Interop/Apache/Poi/SS/Usermodel/Sheet.getRow(ix, sheet);
+            SheetIO/RowEvaluator.runRowEvaluator(r, eval, row)
+        })
         
-
 
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def getRowIterator(): SheetReader[r, Iterator[Row[r], r]] \ Read(r) =
-        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
-        let* iter = liftPrim((_, s) -> rowIterator(s) |> Ok);
-        Interop/Util/IteratorZ.wrapHH(() as Region[r], iter) |> Interop/Util/IteratorZ.iterator |> point
+    def getRowIterator(): SheetReader[r, ka, Iterator[Row[r], r]] \ Read(r) =
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.rowIterator)
 
 
 
-    pub def getHeaders(headerIndex: Int32): SheetReader[r, List[String]] \ Read(r) =
+
+    pub def getHeaders(headerIndex: Int32): SheetReader[r, ka, List[String]] \ Read(r) =
         getRowAt(headerIndex, SheetIO/RowEvaluator.getRowContents())
-
 
 
 
@@ -261,16 +233,15 @@ namespace SheetIO/SheetReader {
                             skipErrors: Bool,
                             f: (b, a, Int32) -> b \ ef, 
                             s: b, 
-                            eval: RowEvaluator[r, a, a]): SheetReader[r, b] \ { Read(r), ef } = 
+                            eval: RowEvaluator[r, a, a]): SheetReader[r, ka, b] \ { Read(r), ef } = 
         let r1 = () as Region[r];
         let* rowIter = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
-            case None => point(s1)
-            case Some(row1) => {
-                let primRow = SheetIO/Common.getRow(row1);
-                let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
+            case None      => point(s1)
+            case Some(row) => {
+                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -280,22 +251,22 @@ namespace SheetIO/SheetReader {
         };
         loop(s)
 
+
     /// This might be expressive enough to write all `RowEvaluator` traversals with...
     def foldNamedRowsTraversal(range: {start :: Int32, end :: Int32}, 
                                 skipErrors: Bool,
                                 headers: List[String],
-                                f: (b, a, Int32) -> b & ef, 
+                                f: (b, a, Int32) -> b \ ef, 
                                 s: b, 
-                                eval: NamedRowEvaluator[r, a, a]): SheetReader[r, b] \ { Read(r), ef } =
+                                eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, b] \ { Read(r), ef } =
         let r1 = () as Region[r];
         let* rowIter        = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
-            case None => point(s1)
-            case Some(row1) => {
-                let primRow = SheetIO/Common.getRow(row1);
-                let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
+            case None     => point(s1)
+            case Some(row) => {
+                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, Interop/Apache/Poi/Ss/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -305,35 +276,34 @@ namespace SheetIO/SheetReader {
         };
         loop(s)
 
-
-
-    pub def allRows(eval: RowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def allRows(eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* end = getPhysicalNumberOfRows();
         foldRowsTraversal({start = 0, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
+
     /// rows where `eval` fails are discounted...
-    pub def someRows(eval: RowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def someRows(eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* end = getPhysicalNumberOfRows();
         foldRowsTraversal({start = 0, end = end}, true, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
     /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
     /// We need a more robust implementation than this...
 
-    pub def allRowsFrom(start: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def allRowsFrom(start: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* end = getPhysicalNumberOfRows();
         foldRowsTraversal({start = start, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-    pub def rowsInRange(range: {start :: Int32, end :: Int32}, eval: RowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def rowsInRange(range: {start :: Int32, end :: Int32}, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
 
     /// Headers at 0, start at 1
-    pub def allNamedRows(eval: NamedRowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def allNamedRows(eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* headers = getHeaders(0);
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = 1, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-    pub def allNamedRowsFrom(pos: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a, a]): SheetReader[r, List[a]] \ { Read(r) } =
+    pub def allNamedRowsFrom(pos: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* headers = getHeaders(pos.headerIndex);
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
@@ -344,7 +314,7 @@ namespace SheetIO/SheetReader {
 
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
-    pub def someRows(eval: RowEvaluator[r, Option[a]], sheet: Sheet): SheetReader[r, List[a]] = 
+    pub def someRows(eval: RowEvaluator[r, Option[a]], sheet: Sheet): SheetReader[r, ka, List[a]] = 
         let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
                 case None => fac()
                 case Some(x1) => x1 :: fac()
@@ -356,14 +326,14 @@ namespace SheetIO/SheetReader {
 
     pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
                     eval: RowEvaluator[r, a], 
-                    x: Row): SheetReader[r, a] =
+                    x: Row): SheetReader[r, ka, a] =
         let RowEvaluator(f) = eval;
         let Row(x1) = x;
         liftActionResult(_ -> f(fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
 
 
 
-    pub def namedRowsInRange(ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] = 
+    pub def namedRowsInRange(ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] = 
         let NamedRowEvaluator(f) = eval;
         let checker         = row -> {
             let ix = SheetIO/Internal/Row.getRowNum(row);
@@ -376,7 +346,7 @@ namespace SheetIO/SheetReader {
 
     pub def nameRowEval(indices: Map[String, Int32], 
                         fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-                        eval: NamedRowEvaluator[r, a], x: Row): SheetReader[r, a] =
+                        eval: NamedRowEvaluator[r, a], x: Row): SheetReader[r, ka, a] =
         let NamedRowEvaluator(f) = eval;
         let Row(x1) = x;
         liftActionResult(_ -> f(indices, fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
@@ -390,7 +360,7 @@ namespace SheetIO/SheetReader {
     /// is in development.
     /// `headerIndex` and `start` are zero indexed (as per POI rather than Excel).
     ///
-    pub def namedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] =   
+    pub def namedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] =   
         let NamedRowEvaluator(f)    = eval;
         let checker         = row -> {
             let ix = SheetIO/Internal/Row.getRowNum(row);
@@ -408,11 +378,11 @@ namespace SheetIO/SheetReader {
 
 
     /// Row 0 is read for the headers, all subsequent rows are *data*.
-    pub def allNamedRows(eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, List[a]] = 
+    pub def allNamedRows(eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] = 
         namedRowsFrom({headerIndex = 0, start = 1}, eval, sheet)
 
     /// Row 0 is read for the headers, some subsequent rows are *data*.
-    pub def someNamedRows(eval: NamedRowEvaluator[r, Option[a]], sheet: Sheet): SheetReader[r, List[a]] = 
+    pub def someNamedRows(eval: NamedRowEvaluator[r, Option[a]], sheet: Sheet): SheetReader[r, ka, List[a]] = 
         let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
                 case None => fac()
                 case Some(x1) => x1 :: fac()
@@ -421,7 +391,7 @@ namespace SheetIO/SheetReader {
 
 
     pub def foldNamedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, 
-                                combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, b] =
+                                combine: (b, a) -> b \ ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, b] =
         let NamedRowEvaluator(f) = eval;
         let checker         = row -> {
             let ix = SheetIO/Internal/Row.getRowNum(row);
@@ -438,7 +408,7 @@ namespace SheetIO/SheetReader {
         point(ans)
 
 
-    pub def foldAllNamedRows(combine: (b, a) -> b & ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, b] =
+    pub def foldAllNamedRows(combine: (b, a) -> b \ ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, b] =
         foldNamedRowsFrom({headerIndex = 0, start = 1}, combine, ac, eval, sheet)
 
 
@@ -463,7 +433,7 @@ namespace SheetIO/SheetReader {
             case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
         }
 
-    pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] =
+    pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[r, ka, b], xs: List[a]): SheetReader[r, ka, List[b]] =
         SheetReader(wb ->
             mapWithIndexMHelper(wb, mf, 0, xs, e -> Err(e), ys -> Ok(ys))
         )
@@ -472,7 +442,7 @@ namespace SheetIO/SheetReader {
     /// Helper function for `mapM`.
     ///
     def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            mf: (a, Int32) -> SheetReader[r, b], 
+                            mf: (a, Int32) -> SheetReader[r, ka, b], 
                             ix : Int32, 
                             xs: List[a], 
                             fk: String -> Result[List[b], String], 
@@ -488,13 +458,13 @@ namespace SheetIO/SheetReader {
             }
         }
 
-    pub def mapWithIndexX(mf: (a, Int32) -> SheetReader[r, b], xs: List[a]): SheetReader[r, Unit] =
+    pub def mapWithIndexX(mf: (a, Int32) -> SheetReader[r, ka, b], xs: List[a]): SheetReader[r, ka, Unit] =
         SheetReader(wb ->
             mapWithIndexXHelper(wb, mf, 0, xs, e -> Err(e), _ -> Ok())
         )
 
     def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            mf: (a, Int32) -> SheetReader[r, b],
+                            mf: (a, Int32) -> SheetReader[r, ka, b],
                             ix: Int32, 
                             xs: List[a], 
                             fk: String -> Result[Unit, String], 
@@ -517,31 +487,31 @@ namespace SheetIO/SheetReader {
     ///
     /// `traverse` is a synonym for `mapM`.
     ///
-    pub def traverse(f: a -> SheetReader[r, b], xs: List[a]): SheetReader[r, List[b]] = mapM(f, xs)
+    pub def traverse(f: a -> SheetReader[r, ka, b], xs: List[a]): SheetReader[r, ka, List[b]] = mapM(f, xs)
 
     ///
     /// `traverseX` is a synonym for `mapX`.
     ///
-    pub def traverseX(f: a -> SheetReader[r, b], xs: List[a]): SheetReader[r, Unit] = mapX(f, xs)
+    pub def traverseX(f: a -> SheetReader[r, ka, b], xs: List[a]): SheetReader[r, ka, Unit] = mapX(f, xs)
 
     ///
     /// `forM` is `mapM` with its arguments flipped.
     ///
-    pub def forM(xs: List[a], f: a -> SheetReader[r, b]): SheetReader[r, List[b]] = mapM(f, xs)
+    pub def forM(xs: List[a], f: a -> SheetReader[r, ka, b]): SheetReader[r, ka, List[b]] = mapM(f, xs)
 
     ///
     /// `forX` is `mapX` with its arguments flipped.
     ///
-    pub def forX(xs: List[a], f: a -> SheetReader[r, b]): SheetReader[r, Unit] = mapX(f, xs)
+    pub def forX(xs: List[a], f: a -> SheetReader[r, ka, b]): SheetReader[r, ka, Unit] = mapX(f, xs)
 
 
-    pub def foldM(mf: (b, a) -> SheetReader[r, b], start: b, xs: List[a]): SheetReader[r, b] =
+    pub def foldM(mf: (b, a) -> SheetReader[r, ka, b], start: b, xs: List[a]): SheetReader[r, ka, b] =
         SheetReader(wb ->
             foldMHelper(wb, mf, start, xs, e -> Err(e), ac -> Ok(ac))
         )
 
     def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                    mf: (b, a) -> SheetReader[r, b], 
+                    mf: (b, a) -> SheetReader[r, ka, b], 
                     acc: b, 
                     xs: List[a], 
                     fk: String -> Result[b, String], 
@@ -557,13 +527,13 @@ namespace SheetIO/SheetReader {
             }
         }
 
-    pub def mapAccumM(mf: (ac, a) -> SheetReader[r, (ac, b)], start: ac, xs: List[a]): SheetReader[r, (ac, List[b])] =
+    pub def mapAccumM(mf: (ac, a) -> SheetReader[r, ka, (ac, b)], start: ac, xs: List[a]): SheetReader[r, ka, (ac, List[b])] =
         SheetReader(wb ->
             mapAccumMHelper(wb, mf, start, xs, e -> Err(e), (ac, ks) -> Ok((ac, ks)))
         )
 
     def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
-                        mf: (ac, a) -> SheetReader[r, (ac, b)],
+                        mf: (ac, a) -> SheetReader[r, ka, (ac, b)],
                         ac: ac,
                         xs: List[a],
                         fk: String -> Result[(ac, List[b]), String],
@@ -582,7 +552,7 @@ namespace SheetIO/SheetReader {
     ///
     /// `mapAccumX` is a synonym for `foldM`.
     ///
-    pub def mapAccumX(mf: (ac, a) -> SheetReader[r, ac], start: ac, xs: List[a]): SheetReader[r, ac] = foldM(mf, start, xs)
+    pub def mapAccumX(mf: (ac, a) -> SheetReader[r, ka, ac], start: ac, xs: List[a]): SheetReader[r, ka, ac] = foldM(mf, start, xs)
 
 
 */

@@ -18,7 +18,7 @@
 namespace SheetIO {
 
 
-    pub enum CellStyleSetter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/Ss/Usermodel.CellStyle[r], a])
+    pub enum CellStyleSetter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.CellStyle[r], a])
 
 
     instance Functor[CellStyleSetter[r, ka]] {
@@ -57,10 +57,10 @@ namespace SheetIO/CellStyleSetter {
     use SheetIO.CellStyleSetter;
     use SheetIO.CellStyleSetter.{CellStyleSetter};
 
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/Ss/Usermodel.Font;
-    use Interop/Apache/Poi/Ss/Usermodel.Font.{Font};
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/SS/Usermodel.Font;
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
 
     pub def getCellStyleSetter(x: CellStyleSetter[r, ka, a]): MonadLib.MutStateError[r, ka, CellStyle[r], a] = 
         let CellStyleSetter(x1) = x;
@@ -109,28 +109,28 @@ namespace SheetIO/CellStyleSetter {
 
 
     pub def setFont!(font: Font[r]): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setFont!(font))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setFont!(font))
 
 
     pub def setWrapText!(wrapped: Bool): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setWrapText!(wrapped))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setWrapText!(wrapped))
 
 
     pub def setIndention!(indent: Int16): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setIndention!(indent))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setIndention!(indent))
 
     pub def setFillForegroundColor!(color: Int16): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setFillForegroundColor!(color))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setFillForegroundColor!(color))
     
     pub def setFillBackgroundColor!(color: Int16): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setFillBackgroundColor!(color))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setFillBackgroundColor!(color))
 
 
     pub def setShrinkToFit!(shrink: Bool): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setShrinkToFit!(shrink))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setShrinkToFit!(shrink))
 
     pub def setDataFormat!(value: Int16): CellStyleSetter[r, ka, Unit] \ Write(r) =
-        liftSetter!(Interop/Apache/Poi/Ss/Usermodel/CellStyle.setDataFormat!(value))
+        liftSetter!(Interop/Apache/Poi/SS/Usermodel/CellStyle.setDataFormat!(value))
 
 /*
     pub def cloneStyleFrom!(x: CellStyle[r]): CellStyleSetter[r, ka, Unit] \ Write(r) =

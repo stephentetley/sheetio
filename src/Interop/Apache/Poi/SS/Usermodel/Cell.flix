@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Interface
 
@@ -25,22 +25,22 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     }
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Cell {
+namespace Interop/Apache/Poi/SS/Usermodel/Cell {
 
-    use Interop/Apache/Poi/Ss/Usermodel.Cell;
-    use Interop/Apache/Poi/Ss/Usermodel.Cell.{Cell};
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle;
-    use Interop/Apache/Poi/Ss/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/Ss/Usermodel.CellType;
-    use Interop/Apache/Poi/Ss/Usermodel.CellType.{CellType};
+    use Interop/Apache/Poi/SS/Usermodel.Cell;
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
+    use Interop/Apache/Poi/SS/Usermodel.CellType;
+    use Interop/Apache/Poi/SS/Usermodel.CellType.{CellType};
 
     pub def getHH(cell: Cell[r]): ##org.apache.poi.ss.usermodel.Cell =
         let Cell(cell1) = cell;
         cell1
 
 
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Cell): Cell[r] \ Write(r) =
-        Cell(prim) as \ Write(r)
+    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Cell): Cell[r] =
+        Cell(prim)
 
 
     pub def getCellType(cell: Cell[r]): CellType \ Read(r) = 

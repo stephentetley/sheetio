@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/Ss/Usermodel {
+namespace Interop/Apache/Poi/SS/Usermodel {
 
     /// Mutable / Interface
 
@@ -23,20 +23,28 @@ namespace Interop/Apache/Poi/Ss/Usermodel {
     instance Scoped[Sheet] {
         pub def regionOf(_: Sheet[r]): Region[r] = () as Region[r]
     }
+
+
+
+
 }
 
-namespace Interop/Apache/Poi/Ss/Usermodel/Sheet {
+namespace Interop/Apache/Poi/SS/Usermodel/Sheet {
 
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet;
-    use Interop/Apache/Poi/Ss/Usermodel.Sheet.{Sheet};
-    use Interop/Apache/Poi/Ss/Usermodel.Row;
-    use Interop/Apache/Poi/Ss/Usermodel.Row.{Row};
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook;
-    use Interop/Apache/Poi/Ss/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/SS/Usermodel.Sheet;
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
+    use Interop/Apache/Poi/SS/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Row.{Row};
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
     pub def getHH(sheet: Sheet[r]): ##org.apache.poi.ss.usermodel.Sheet =
         let Sheet(sheet1) = sheet;
         sheet1
+   
+    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): Sheet[r] =
+        Sheet(s)
+
 
     pub def getSheetName(sheet: Sheet[r]): String \ Read(r) = 
         import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String \ r; 
@@ -87,5 +95,14 @@ namespace Interop/Apache/Poi/Ss/Usermodel/Sheet {
         import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r;
         let Sheet(sheet1) = sheet; 
         createRow(sheet1, ix) |> Row
+
+    pub def rowIterator(sheet: Sheet[r]): Iterator[Row[r], r] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
+        let r = Scoped.regionOf(sheet);
+        let ocast = obj -> Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, obj as ##org.apache.poi.ss.usermodel.Row);
+        let Sheet(sheet1) = sheet;
+        let iterHH = rowIterator(sheet1);
+        Interop/Util/IteratorZ.wrapHH(r, iterHH) 
+            |> Interop/Util/IteratorZ.toFlixIterator(ocast)
 
 }
