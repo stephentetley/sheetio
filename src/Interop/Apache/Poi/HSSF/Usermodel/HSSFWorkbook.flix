@@ -42,6 +42,7 @@ namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
 
     use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook;
     use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook.{HSSFWorkbook};
+    use Interop/IO.SubInputStream;
 
 
     pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
@@ -51,38 +52,28 @@ namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
     pub def wrapHH(_: Region[r], wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook): HSSFWorkbook[r] =
         HSSFWorkbook(wb)
 
-/*
+
     ///
     /// Create new for writing.
     ///
-    pub def new(r: Region[r]): Result[##org.apache.poi.hssf.usermodel.HSSFWorkbook, String] & Impure = 
-        import new org.apache.poi.hssf.usermodel.HSSFWorkbook(): ##org.apache.poi.hssf.usermodel.HSSFWorkbook & Impure as newHSSFWorkbook;
+    pub def new(_: Region[r]): HSSFWorkbook[r] \ IO =
+        import new org.apache.poi.hssf.usermodel.HSSFWorkbook(): ##org.apache.poi.hssf.usermodel.HSSFWorkbook \ IO as newHSSFWorkbook;
+        newHSSFWorkbook() |> HSSFWorkbook
+        
+    ///
+    /// Open for reading.
+    ///
+    pub def newWithInputStream[ins: Region -> Type, r: Region](_: Region[r], ins: ins[r]): Result[HSSFWorkbook[r], String] \ IO with SubInputStream[ins] = 
         try {
-            let wb = newHSSFWorkbook();
-            Ok(wb)
+            import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream): ##org.apache.poi.hssf.usermodel.HSSFWorkbook \ IO as newHSSFWorkbook;
+            let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
+            newHSSFWorkbook(ins1) |> HSSFWorkbook |> Ok
         } catch {
             case ex: ##java.lang.Exception =>
                 import java.lang.Throwable.getMessage(): String \ {};
                 Err(getMessage(ex))
         }
 /*
-    ///
-    /// Open for reading.
-    ///
-    pub def openHSSFWorkbook(path: String): Result[##org.apache.poi.hssf.usermodel.HSSFWorkbook, String] & Impure = 
-        import new java.io.File(String): ##java.io.File & Impure as newFile;
-        import new java.io.FileInputStream(##java.io.File): ##java.io.FileInputStream & Impure as newFileInputStream;
-        import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream): ##org.apache.poi.hssf.usermodel.HSSFWorkbook & Impure as newHSSFWorkbook;
-        try {
-            let file1 = newFile(path);
-            let fistream = newFileInputStream(file1);
-            let istream = fistream as ##java.io.InputStream;
-            let wb = newHSSFWorkbook(istream);
-            Ok(wb)
-        } catch {
-            case _: ##java.lang.Exception => Err("openHSSFWorkbook")
-        }
-
     ///
     /// Write workbook.
     ///
@@ -102,7 +93,7 @@ namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
         }
 */
 
-    pub def closeHSSFWorkbook(wb: HSSFWorkbook[r]): Result[Unit, String] \ {Write(r)} = 
+    pub def close(wb: HSSFWorkbook[r]): Result[Unit, String] \ {Write(r)} = 
         try {
             import org.apache.poi.hssf.usermodel.HSSFWorkbook.close(): Unit \ r; 
             let HSSFWorkbook(wb1) = wb;
