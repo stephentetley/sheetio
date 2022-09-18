@@ -40,8 +40,8 @@ namespace Interop/Apache/Poi/SS/Usermodel/Row {
         row1
 
     
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] \ Write(r) =
-        Row(prim) as \ Write(r)
+    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] =
+        Row(prim)
 
     pub def getRowNum(row: Row[r]): Int32 \ Read(r) = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 

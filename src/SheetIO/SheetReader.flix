@@ -203,28 +203,28 @@ namespace SheetIO/SheetReader {
     pub def getPhysicalNumberOfRows(): SheetReader[r, ka, Int32] \ Read(r) =
         liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getPhysicalNumberOfRows)
 
-/*
-    pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
-        let r        = () as Region[r];
-        let* primrow = liftPrim(_ -> SheetIO/Internal/Sheet.getRow(r, ix));
-        liftActionResult(_ -> SheetIO/RowEvaluator.runRowEvaluator(r, eval, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, primrow)))
-        
 
+    pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
+        use Result.flatMap;
+        liftGetterResult(sheet -> {
+            let r = () as Region[r];
+            let* row = Interop/Apache/Poi/SS/Usermodel/Sheet.getRow(ix, sheet);
+            SheetIO/RowEvaluator.runRowEvaluator(r, eval, row)
+        })
+        
 
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
     def getRowIterator(): SheetReader[r, ka, Iterator[Row[r], r]] \ Read(r) =
-        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
-        let* iter = liftPrim((_, s) -> rowIterator(s) |> Ok);
-        Interop/Util/IteratorZ.wrapHH(() as Region[r], iter) |> Interop/Util/IteratorZ.iterator |> point
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.rowIterator)
+
 
 
 
     pub def getHeaders(headerIndex: Int32): SheetReader[r, ka, List[String]] \ Read(r) =
         getRowAt(headerIndex, SheetIO/RowEvaluator.getRowContents())
-
 
 
 
@@ -237,12 +237,11 @@ namespace SheetIO/SheetReader {
         let r1 = () as Region[r];
         let* rowIter = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
-            case None => point(s1)
-            case Some(row1) => {
-                let primRow = SheetIO/Common.getRow(row1);
-                let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
+            case None      => point(s1)
+            case Some(row) => {
+                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -251,6 +250,7 @@ namespace SheetIO/SheetReader {
             }
         };
         loop(s)
+
 
     /// This might be expressive enough to write all `RowEvaluator` traversals with...
     def foldNamedRowsTraversal(range: {start :: Int32, end :: Int32}, 
@@ -262,12 +262,11 @@ namespace SheetIO/SheetReader {
         let r1 = () as Region[r];
         let* rowIter        = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
-            case None => point(s1)
-            case Some(row1) => {
-                let primRow = SheetIO/Common.getRow(row1);
-                let rownum = SheetIO/Internal/Row.getRowNum(r1, primRow);
+            case None     => point(s1)
+            case Some(row) => {
+                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r1, primRow)) {
+                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -277,11 +276,10 @@ namespace SheetIO/SheetReader {
         };
         loop(s)
 
-
-
     pub def allRows(eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* end = getPhysicalNumberOfRows();
         foldRowsTraversal({start = 0, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+
 
     /// rows where `eval` fails are discounted...
     pub def someRows(eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
@@ -310,7 +308,7 @@ namespace SheetIO/SheetReader {
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-*/
+
 
 /*
 
