@@ -120,7 +120,7 @@ namespace SheetIO/SheetReader {
     def liftGetter(f: Sheet[r] -> a \ ef): SheetReader[r, ka, a] \ ef =
         SheetReader(MonadLib/Evaluator.liftGetter(f))
     
-    def _liftGetterResult(f: Sheet[r] -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
+    def liftGetterResult(f: Sheet[r] -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
         SheetReader(MonadLib/Evaluator.liftGetterResult(f))
 
 
@@ -190,20 +190,20 @@ namespace SheetIO/SheetReader {
     pub def getSheetName(): SheetReader[r, ka, String] \ Read(r) =
         liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getSheetName)
 
-/*
+
     pub def getFirstRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getFirstRowNum)
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getFirstRowNum >> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
     pub def getLastRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getLastRowNum)
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getLastRowNum >> Option.toOk("getLastRowNum"))
 
 
     pub def getPhysicalNumberOfRows(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftPrim(SheetIO/Internal/Sheet.getPhysicalNumberOfRows)
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getPhysicalNumberOfRows)
 
-
+/*
     pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
         let r        = () as Region[r];
         let* primrow = liftPrim(_ -> SheetIO/Internal/Sheet.getRow(r, ix));
