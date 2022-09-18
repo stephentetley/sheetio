@@ -50,6 +50,16 @@ namespace SheetIO {
             SheetIO/WorkbookReader.orelse(a, b)
     }
 
+    instance MonadLib.MonadError[WorkbookReader[r, ka]] {
+        pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
+            SheetIO/WorkbookReader.throwError(msg)
+
+        pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
+            SheetIO/WorkbookReader.mapError(f, ma)
+
+        pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
+            SheetIO/WorkbookReader.catchError(ma, f)
+    }
 
 }
 
@@ -73,25 +83,23 @@ namespace SheetIO/WorkbookReader {
 
     use SheetIO.SheetReader;
 
-/*
+
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookReader[r, ka, a], path: FilePath): Result[a, String] & Impure = 
-        runXssf(ma, path)
+    pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+        runXssf(r, ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: WorkbookReader[r, ka, a], path: FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, closeXSSFWorkbook};
+    pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
         use Result.{flatMap};
-        let path1 = toString(path);
-        match openXSSFWorkbook(path1) { 
-            case Err(e) => Err("runXssf(${path1}): ${e}")
-            case Ok(wb) => {
-                let ans = apply1(ma, wb as ##org.apache.poi.ss.usermodel.Workbook) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-                let* _ = closeXSSFWorkbook(wb);
-                ans         
-            }
-        }
-
+        let path1   = toString(path);
+        let file    = Interop/IO/File.newFile(r, path1);
+        let* wb     = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.newWithFile(file);
+        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);        
+        let* ans    = runWorkbookReader(r, ma, wb1);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        Ok(ans)
+        
+/*
     /// Excel 97 binary (.xls) format.
     pub def runHssf(ma: WorkbookReader[r, ka, a], path: FilePath): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{openHSSFWorkbook, closeHSSFWorkbook};
@@ -112,7 +120,7 @@ namespace SheetIO/WorkbookReader {
         let WorkbookReader(x1) = x;
         x1
 
-    /// The state param `st` is expected to be mutated...
+
     pub def runWorkbookReader(r: Region[r], 
                                 ma: WorkbookReader[r, a, a], 
                                 st: Workbook[r]): Result[a, String] \ r =
@@ -147,10 +155,10 @@ namespace SheetIO/WorkbookReader {
     pub def orelse(ma: WorkbookReader[r, ka, a], mb: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
         WorkbookReader(MonadLib/Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
 
-    def _liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
+    def liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
         WorkbookReader(MonadLib/Evaluator.liftGetter(f))
     
-    def _liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
+    def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
         WorkbookReader(MonadLib/Evaluator.liftGetterResult(f))
 
 
@@ -204,12 +212,12 @@ namespace SheetIO/WorkbookReader {
     }
 */
 
-/*
+
 
     // WorkbookReader
 
     pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ Read(r) =
-        liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getNumberOfSheets)
 
     pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ Read(r) =
         let* n  = getNumberOfSheets();
@@ -218,16 +226,13 @@ namespace SheetIO/WorkbookReader {
 
 
     def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
-
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetName(ix))
 
     pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheet(r, name, wb) |> Result.map(Sheet)) 
-
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
     pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetAt(r, ix, wb) |> Result.map(Sheet))
-*/
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
 
     pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
         liftActionResult(_ -> {let r = () as Region[r]; SheetIO/SheetReader.runSheetReader(r, eval, sheet)})

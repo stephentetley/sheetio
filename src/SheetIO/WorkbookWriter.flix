@@ -40,6 +40,16 @@ namespace SheetIO {
             SheetIO/WorkbookWriter.flatMap(f, o)
     }
 
+    instance MonadLib.MonadError[WorkbookWriter[r, ka]] {
+        pub def throwError(msg: String): WorkbookWriter[r, ka, a] = 
+            SheetIO/WorkbookWriter.throwError(msg)
+
+        pub def mapError(f: String -> String \ ef, ma: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, a] \ ef =
+            SheetIO/WorkbookWriter.mapError(f, ma)
+
+        pub def catchError(ma: WorkbookWriter[r, ka, a], f: String -> WorkbookWriter[r, ka, a] \ ef): WorkbookWriter[r, ka, a] \ ef =
+            SheetIO/WorkbookWriter.catchError(ma, f)
+    }
 
 }
 
@@ -85,29 +95,27 @@ namespace SheetIO/WorkbookWriter {
         Ok(ans)
 
 
-/*
+
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
-        runAppendXssf(ma, path)
+    pub def runAppendXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ IO = 
+        runAppendXssf(r, ma, path)
     
 
     /// Excel 2007 OOXML (.xlsx) format.
-    /// Calls "open" not "new"...
-    pub def runAppendXssf(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+    /// Calls "newWithFile" not "new"...
+    pub def runAppendXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ IO = 
         use Result.{flatMap};
-        let path1 = ToString.toString(path);
-        match openXSSFWorkbook(path1) { 
-            case Err(e) => Err("runAppendXssf('${path1}'): ${e}")
-            case Ok(wb) => {
-                let* ans    = runWorkbookWriter!(() as Region[r], ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
-                let* _      = writeXSSFWorkbook(wb, path1);
-                let* _      = closeXSSFWorkbook(wb);
-                Ok(ans)
-            }
-        }
+        let path1   = ToString.toString(path);
+        let file    = Interop/IO/File.newFile(r, path1);
+        let* wb     = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.newWithFile(file);
+        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
+        let* ans    = runWorkbookWriter!(r, ma, wb1);
+        let* outs   = Interop/IO/FileOutputStream.newWithPath(path1);
+        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write(outs, wb);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        Ok(ans)
 
-
+/*
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
                             template: FilePath, 
@@ -186,7 +194,14 @@ namespace SheetIO/WorkbookWriter {
 
     def liftSetterResult!(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
         WorkbookWriter(MonadLib/MutStateError.liftSetterResult!(f))
-    
+
+    def liftGetter(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
+        WorkbookWriter(MonadLib/MutStateError.liftGetter(f))
+
+    def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
+        WorkbookWriter(MonadLib/MutStateError.liftGetterResult(f))
+
+
     pub def liftAction(f: Unit -> a \ ef): WorkbookWriter[r, ka, a] \ ef =
         WorkbookWriter(MonadLib/MutStateError.liftAction(f))
     
@@ -197,28 +212,29 @@ namespace SheetIO/WorkbookWriter {
 
 
     pub def createSheet!(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Write(r) =
-        liftSetterResult!(wb -> Interop/Apache/Poi/SS/Usermodel/Workbook.createSheet!(name, wb))
+        liftSetterResult!(Interop/Apache/Poi/SS/Usermodel/Workbook.createSheet!(name))
 
-/*
+
     pub def getSheetNamed(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim1((r, wb) -> Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name, wb)) 
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
-    
+
     pub def getSheetNames(): WorkbookWriter[r, ka, List[String]] \ Read(r) =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0, n);
         Traversable.traverse(getSheetName, ixs)      
     
     pub def getNumberOfSheets(): WorkbookWriter[r, ka, Int32] \ Read(r) =
-        liftWorkbookPrim(SheetIO/Internal/Workbook.getNumberOfSheets)
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getNumberOfSheets)
 
     pub def getSheetName(ix: Int32): WorkbookWriter[r, ka, String] \ Read(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.getSheetName(r, ix, wb))
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetName(ix))
 
-        
+ 
     pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
-        liftWorkbookPrim1((r, wb) -> Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix, wb))
+        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
 
+          /* 
     pub def getFormat(x: DataFormat[r], format: String): WorkbookWriter[r, ka, Int16] \ Read(r) =
         let DataFormat(x1) = x;
         liftWorkbookPrim((r, _) -> SheetIO/Internal/Util.getFormat(r, format, x1))

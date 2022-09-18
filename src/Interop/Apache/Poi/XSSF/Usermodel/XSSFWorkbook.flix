@@ -54,9 +54,9 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
 
     use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook;
     use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook.{XSSFWorkbook};
+    use Interop/IO.File;
     use Interop/IO.InputStream;
-    
-    
+    use Interop/IO.SubInputStream;
 
     // XSSF (OOXML) concretely
 
@@ -74,13 +74,29 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook():##org.apache.poi.xssf.usermodel.XSSFWorkbook \ r as newXSSFWorkbook;
         newXSSFWorkbook() |> XSSFWorkbook
 
+
     ///
     /// Open for reading.
     ///
-    pub def newWithInputStream(ins: InputStream[r]): Result[XSSFWorkbook[r], String] \ IO = 
+    pub def newWithFile(file: File[r]): Result[XSSFWorkbook[r], String] \ IO = 
         try {
-            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook & Impure as newXSSFWorkbook;
-            let ins1 = Interop/IO/InputStream.getHH(ins);
+            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.File): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
+            let file1 = Interop/IO/File.getHH(file);
+            newXSSFWorkbook(file1) |> XSSFWorkbook |> Ok
+        } catch {
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
+        }
+
+
+    ///
+    /// Open for reading.
+    ///
+    pub def newWithInputStream[ins: Region -> Type, r: Region](ins: ins[r]): Result[XSSFWorkbook[r], String] \ IO with SubInputStream[ins] = 
+        try {
+            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
+            let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
             newXSSFWorkbook(ins1) |> XSSFWorkbook |> Ok
         } catch {
             case ex: ##java.lang.Exception =>
