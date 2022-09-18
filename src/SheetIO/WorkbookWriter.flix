@@ -19,7 +19,8 @@ namespace SheetIO {
 
 
 
-    pub enum WorkbookWriter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+    pub enum WorkbookWriter[r: Region, ka: Type, a: Type](
+        MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
 
     instance Functor[WorkbookWriter[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef = 

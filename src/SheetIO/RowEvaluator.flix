@@ -125,7 +125,7 @@ namespace SheetIO/RowEvaluator {
     def liftGetter(f: DataFormatter[r] -> Row[r] -> a \ ef): RowEvaluator[r, ka, a] \ ef =
         RowEvaluator(MonadLib/EnvEvaluator.liftGetter(f))
     
-    def liftGetterResult(f: DataFormatter[r] -> Row[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err]=
+    def liftGetterResult(f: DataFormatter[r] -> Row[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
         RowEvaluator(MonadLib/EnvEvaluator.liftGetterResult(f))
 
 
