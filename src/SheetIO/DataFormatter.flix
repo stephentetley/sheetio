@@ -21,7 +21,7 @@ namespace SheetIO {
     ///
     /// DataFormatter
     ///
-    pub enum DataFormatter[_: Region](##org.apache.poi.ss.usermodel.DataFormatter)
+    pub type alias DataFormatter[r: Region] = Interop/Apache/Poi/SS/Usermodel.DataFormatter[r]
 
 }
 
@@ -37,12 +37,13 @@ namespace SheetIO/DataFormatter {
     /// Returns a new mutable DataFormatter.
     ///
     pub def new(r: Region[r]): DataFormatter[r] \ Write(r) =
-        DataFormatter(SheetIO/Internal/DataFormatter.new(r))
+        Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r)
 
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(r: Region[r], l: Locale): DataFormatter[r] \ Write(r) =
-        DataFormatter(SheetIO/Internal/DataFormatter.newWithLocale(r, l))
+    pub def newWithLocale(r: Region[r], loc: Locale): DataFormatter[r] \ Write(r) =
+        let loc1 = Basis/I18n/Locale.getLocale(loc);
+        Interop/Apache/Poi/SS/Usermodel/DataFormatter.newWithLocale(r, loc1)
         
 }

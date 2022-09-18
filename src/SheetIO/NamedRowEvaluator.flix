@@ -233,12 +233,9 @@ namespace SheetIO/NamedRowEvaluator {
 
 
     pub def getCellTypeNamed(label: String): NamedRowEvaluator[r, ka, CellType] \ Read(r) =
-        liftCellGetterResult(label, (_, cell) -> {
-            let r = () as Region[r];
-            let cell1 = Interop/Apache/Poi/SS/Usermodel/Cell.getHH(cell);
-            SheetIO/Internal/Cell.getCellType(r, cell1) 
-                |> Result.map(SheetIO/CellType.fromNative)  /// TODO make compatible with Interop
-                |> Result.mapErr(_ -> "getCellTypeNamed(${label})")
+        liftCellGetter(label, (_, cell) -> {
+            Interop/Apache/Poi/SS/Usermodel/Cell.getCellType(cell) 
+                |> SheetIO/CellType.fromNative
         })
 
     pub def isBlankNamed(label: String): NamedRowEvaluator[r, ka, Bool] \ Read(r) = 

@@ -204,12 +204,9 @@ namespace SheetIO/RowEvaluator {
 
 
     pub def getCellTypeAt(ix: Int32): RowEvaluator[r, ka, CellType] \ Read(r) =
-        liftCellGetterResult(ix, (_, cell) -> {
-            let r = () as Region[r];
-            let cell1 = Interop/Apache/Poi/SS/Usermodel/Cell.getHH(cell);
-            SheetIO/Internal/Cell.getCellType(r, cell1) 
-                |> Result.map(SheetIO/CellType.fromNative)  /// TODO make compatible with Interop
-                |> Result.mapErr(_ -> "getCellTypeAt(${ix})")
+        liftCellGetter(ix, (_, cell) -> {
+            Interop/Apache/Poi/SS/Usermodel/Cell.getCellType(cell) 
+                |> SheetIO/CellType.fromNative
         })
 
 
