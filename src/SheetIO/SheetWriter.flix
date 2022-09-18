@@ -342,13 +342,16 @@ namespace SheetIO/SheetWriter {
 
 
 */
+
     // createRow
-    def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
+    def _createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
         liftSetter!((_, sheet) -> Interop/Apache/Poi/SS/Usermodel/Sheet.createRow!(ix, sheet))
 
 
-    pub def setRow!(_ix: Int32, _mx: RowSetter[r, a]): SheetWriter[r, ka, Unit] \ Write(r) =
-        bug!("setRow!") as \ r
+    // pub def setRow!(ix: Int32, mx: RowSetter[r, a]): SheetWriter[r, ka, Unit] \ Write(r) =
+    //     let* row        = createRow!(ix);
+    //     let* style      = askStyle();
+
 
 /*
     pub def setRow!(ix: Int32, mx: RowSetter[r, a]): SheetWriter[r, ka, Unit] \ Write(r) =

@@ -67,26 +67,24 @@ namespace SheetIO/WorkbookWriter {
     use Interop/Apache/Poi/SS/Usermodel.Sheet;
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookWriter[r, a, a], 
-                    path: FilePath): Result[a, String] & Impure = 
-        runXssf(ma, path)
+    pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ {IO, Write(r)} = 
+        runXssf(r, ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(ma: WorkbookWriter[r, a, a], 
-                    path: FilePath): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{newXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+    pub def runXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ {IO, Write(r)} = 
         use Result.{flatMap};
-        region r {
-            let outpath = ToString.toString(path);
-            let* wb     = newXSSFWorkbook(r) as ##org.apache.poi.ss.usermodel.Workbook;
-            let* ans    = runWorkbookWriter!(() as Region[r], ma, wb as ##org.apache.poi.ss.usermodel.Workbook);
-            let* _      = writeXSSFWorkbook(wb, outpath);
-            let* _      = closeXSSFWorkbook(wb);
-            Ok(ans)
-        }
+        let outpath = ToString.toString(path);
+        let* outs   = Interop/IO/FileOutputStream.newWithPath(outpath);
+        let wb      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.new(r);
+        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
+        let* ans    = runWorkbookWriter!(r, ma, wb1);
+        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write(outs, wb);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        Ok(ans)
 
 
+/*
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runAppendXlsx(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
         runAppendXssf(ma, path)
@@ -147,7 +145,7 @@ namespace SheetIO/WorkbookWriter {
         let* _          = writeHSSFWorkbook(wb, outPath1);
         let* _          = closeHSSFWorkbook(wb);
         Ok(ans)
-
+*/
 
     pub def getWorkbookWriter(x: WorkbookWriter[r, ka, a]): MonadLib.MutStateError[r, ka, Workbook[r], a] = 
         let WorkbookWriter(x1) = x;
@@ -182,8 +180,8 @@ namespace SheetIO/WorkbookWriter {
     pub def catchError(ma: WorkbookWriter[r, ka, a], f: String -> WorkbookWriter[r, ka, a] \ ef): WorkbookWriter[r, ka, a] \ ef =
         WorkbookWriter(MonadLib/MutStateError.catchError(getWorkbookWriter(ma), f >> getWorkbookWriter))
 
-    def liftSetter!(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
-        WorkbookWriter(MonadLib/MutStateError.liftSetter!(f))
+    // def liftSetter!(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
+    //     WorkbookWriter(MonadLib/MutStateError.liftSetter!(f))
 
     def liftSetterResult!(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
         WorkbookWriter(MonadLib/MutStateError.liftSetterResult!(f))

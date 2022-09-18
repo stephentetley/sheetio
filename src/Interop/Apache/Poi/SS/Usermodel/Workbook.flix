@@ -23,6 +23,11 @@ namespace Interop/Apache/Poi/SS/Usermodel {
     instance Scoped[Workbook] {
         pub def regionOf(_: Workbook[r]): Region[r] = () as Region[r]
     }
+
+    pub class SubWorkbook[t: Region -> Type] {
+        pub def toWorkbook[r: Region](s: t[r]): Workbook[r]
+        pub def fromWorkbook[r: Region](s: Workbook[r]): t[r]
+    }
 }
 
 

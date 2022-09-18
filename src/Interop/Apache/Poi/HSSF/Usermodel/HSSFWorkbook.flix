@@ -17,12 +17,25 @@
 
 namespace Interop/Apache/Poi/HSSF/Usermodel {
 
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
     instance Scoped[HSSFWorkbook] {
         pub def regionOf(_: HSSFWorkbook[r]): Region[r] = () as Region[r]
     }
+
+    instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[HSSFWorkbook] {
+        pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
+            let HSSFWorkbook(d1) = d;
+            Workbook(d1 as ##org.apache.poi.ss.usermodel.Workbook)
+
+        pub def fromWorkbook(d: Workbook[r]): HSSFWorkbook[r] = 
+            let Workbook(d1) = d;
+            HSSFWorkbook(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook) 
+    }
+
 }
 
 namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {

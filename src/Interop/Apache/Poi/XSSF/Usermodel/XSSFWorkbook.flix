@@ -16,12 +16,38 @@
 
 namespace Interop/Apache/Poi/XSSF/Usermodel {
 
+    use Interop/Apache/Poi/OOXML.POIXMLDocument;
+    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument};
+    use Interop/Apache/Poi/SS/Usermodel.Workbook;
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
     instance Scoped[XSSFWorkbook] {
         pub def regionOf(_: XSSFWorkbook[r]): Region[r] = () as Region[r]
     }
+
+
+    instance Interop/Apache/Poi/OOXML.SubPOIXMLDocument[XSSFWorkbook] {
+        pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
+            let XSSFWorkbook(d1) = d;
+            POIXMLDocument(d1 as ##org.apache.poi.ooxml.POIXMLDocument)
+
+        pub def fromPOIXMLDocument(d: POIXMLDocument[r]): XSSFWorkbook[r] = 
+            let POIXMLDocument(d1) = d;
+            XSSFWorkbook(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+    }
+
+    instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[XSSFWorkbook] {
+        pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
+            let XSSFWorkbook(d1) = d;
+            Workbook(d1 as ##org.apache.poi.ss.usermodel.Workbook)
+
+        pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
+            let Workbook(d1) = d;
+            XSSFWorkbook(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+    }
+
 }
 
 namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
@@ -44,7 +70,7 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
     ///
     /// Create new for writing.
     ///
-    pub def new(r: Region[r]): XSSFWorkbook[r] \ Write(r)  = 
+    pub def new(_: Region[r]): XSSFWorkbook[r] \ Write(r)  = 
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook():##org.apache.poi.xssf.usermodel.XSSFWorkbook \ r as newXSSFWorkbook;
         newXSSFWorkbook() |> XSSFWorkbook
 
@@ -63,29 +89,12 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
         }
 
 
-    /// `write(OutputStream)` and `close()` are methods on superclass `POIXMLDocument` 
+    /// `write(OutputStream)` is method on superclass `POIXMLDocument` 
 
-/*
-    ///
-    /// Write workbook.
-    ///
-    pub def writeToFile(out: File[r], wb: XSSFWorkbook[r]): Result[Unit, String] & Impure = 
-        import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.File): Unit & Impure;
+
+    pub def close(wb: XSSFWorkbook[r]): Result[Unit, String] \ {IO, Write(r)} = 
         try {
-            let XSSFWorkbook(wb1) = wb;
-            let out1 = Interop/IO/File.getHH(out);
-            write(wb1, out1);
-            Ok()
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
-
-
-    pub def closeXSSFWorkbook(wb: XSSFWorkbook[r]): Result[Unit, String] \ {Write(r)} = 
-        try {
-            import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(): Unit \ r; 
+            import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(): Unit \ {IO, r}; 
             let XSSFWorkbook(wb1) = wb;
             let _ = close(wb1);
             Ok()
@@ -94,7 +103,5 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
                 import java.lang.Throwable.getMessage(): String \ {};
                 Err(getMessage(ex))
         }
-*/
-
 
 }
