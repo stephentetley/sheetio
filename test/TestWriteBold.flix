@@ -10,7 +10,7 @@ namespace TestWriteBold {
         let path1 = Basis/System/FilePath.filePath("E:/coding/flix/sheetio/data/bold_out1.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
         match SheetIO/WorkbookWriter.runXlsx(r, write1(), path1) { 
             case Err(e) => {println("Error: ${e}"); 1}
-            case Ok() => {println("[writer done]"); 0}
+            case Ok()   => {println("[writer done]"); 0}
         }
     }
 
@@ -24,10 +24,8 @@ namespace TestWriteBold {
         use SheetIO/IndexedColors.{getIndex}; 
         use SheetIO.IndexedColors.{Aqua}; 
         let* s1             = createSheet!("Sheet1");
-        // TODO - reinstate font setting...
-        // let* font1          = createFont!(setBold!(true) *> setColor!(getIndex(Aqua)));
-        // let* boldStyle      = createCellStyle!(setFont!(font1));
-        let* boldStyle      = createCellStyle!(point());
+        let* font1          = createFont!(setBold!(true) *> setColor!(getIndex(Aqua)));
+        let* boldStyle      = createCellStyle!(setFont!(font1));
         let* dataFmt        = createDataFormat!();
         let* fmt1           = getFormat!("0.00", dataFmt);
         let* numStyle       = createCellStyle!(setDataFormat!(fmt1));
