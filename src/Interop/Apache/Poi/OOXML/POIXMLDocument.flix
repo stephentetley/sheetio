@@ -54,7 +54,7 @@ namespace Interop/Apache/Poi/OOXML/POIXMLDocument {
     ///
     /// Write workbook.
     ///
-    pub def write[r: Region, outs: Region -> Type, wb: Region -> Type]
+    pub def write![r: Region, outs: Region -> Type, wb: Region -> Type]
                 (out: outs[r], wb: wb[r]): Result[Unit, String] \ {IO, Read(r)} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
         try {
             import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};

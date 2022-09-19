@@ -90,8 +90,8 @@ namespace SheetIO/WorkbookWriter {
         let wb      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.new(r);
         let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
         let* ans    = runWorkbookWriter!(r, ma, wb1);
-        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write(outs, wb);
-        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write!(outs, wb);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close!(wb);
         Ok(ans)
 
 
@@ -111,8 +111,8 @@ namespace SheetIO/WorkbookWriter {
         let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
         let* ans    = runWorkbookWriter!(r, ma, wb1);
         let* outs   = Interop/IO/FileOutputStream.newWithPath(path1);
-        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write(outs, wb);
-        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        let* _      = Interop/Apache/Poi/OOXML/POIXMLDocument.write!(outs, wb);
+        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close!(wb);
         Ok(ans)
 
 /*
@@ -234,37 +234,35 @@ namespace SheetIO/WorkbookWriter {
     pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
         liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
 
-          /* 
-    pub def getFormat(x: DataFormat[r], format: String): WorkbookWriter[r, ka, Int16] \ Read(r) =
-        let DataFormat(x1) = x;
-        liftWorkbookPrim((r, _) -> SheetIO/Internal/Util.getFormat(r, format, x1))
+
+    pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] \ Write(r) =
+        liftAction(_ -> Interop/Apache/Poi/SS/Usermodel/DataFormat.getFormatNamed!(format, df))
 
 
     pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] \ Write(r) =
-        liftWorkbookPrim((r, wb) -> SheetIO/Internal/Workbook.createDataFormat(r, wb) |> Result.map(DataFormat))
+        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.createDataFormat!)
 
 
     pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ Write(r) =
-        use SheetIO/Internal/Workbook.{createFont};
-        use Interop/Apache/Poi/SS/Usermodel/Font.{new => newFont};
-        let* fontHH             = liftWorkbookPrim(SheetIO/Internal/Workbook.createFont);
-        let r1                  = () as Region[r];
-        let _                   = SheetIO/FontSetter.runFontSetter!(r1, mx, newFont(r1, fontHH)); // TODO - ignores failure
-        point(Font(fontHH))
+        let* font   = liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.createFont!);
+        let r1      = () as Region[r];
+        let* _      = liftActionResult(_ -> SheetIO/FontSetter.runFontSetter!(r1, mx, font));
+        point(font)
 
-    // TODO - this will be simpler once all Java calls use Interop layer
+
+
     pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
-        use SheetIO/Internal/Workbook.{createCellStyle};
-        use Interop/Apache/Poi/SS/Usermodel/CellStyle.{new => newCellStyle};
-        let* styleHH            = liftWorkbookPrim(SheetIO/Internal/Workbook.createCellStyle);
-        let r1                  = () as Region[r];
-        let _                   = SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, newCellStyle(r1, styleHH)); // TODO - ignores failure
-        point(CellStyle(styleHH))
+        let* style  = liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.createCellStyle!);
+        let r1      = () as Region[r];
+        let* _      = liftActionResult(_ -> SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, style));
+        point(style)
 
-    pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] =
-        let r1                  = () as Region[r];
-        WorkbookWriter(_ -> SheetIO/SheetWriter.runSheetWriter!(r1, writer, None, sheet))
-*/
+
+
+    pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] \ Write(r) =
+        let r1 = () as Region[r];
+        liftActionResult(_ -> SheetIO/SheetWriter.runSheetWriter!(r1, writer, None, sheet))
+
 
 /*
 
@@ -302,12 +300,10 @@ namespace SheetIO/WorkbookWriter {
         case Success(x1) => point(x1)
         case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     }
-
-    pub def localCellStyle(style: CellStyle, mx: SheetWriter[r, a]): SheetWriter[r, a] = 
-        SheetWriter((wb, _, s1) -> apply1(mx, wb, Some(style), s1))
+*/
 
 
-
+/*
 
     pub def mapWithIndexM(mf: (a, Int32) -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, List[b]] =
         SheetWriter((wb, style, s1) ->

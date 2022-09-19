@@ -108,7 +108,7 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
     /// `write(OutputStream)` is method on superclass `POIXMLDocument` 
 
 
-    pub def close(wb: XSSFWorkbook[r]): Result[Unit, String] \ {IO, Write(r)} = 
+    pub def close!(wb: XSSFWorkbook[r]): Result[Unit, String] \ {IO, Write(r)} = 
         try {
             import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(): Unit \ {IO, r}; 
             let XSSFWorkbook(wb1) = wb;

@@ -352,25 +352,17 @@ namespace SheetIO/SheetWriter {
 */
 
     // createRow
-    def _createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
+    def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
         liftSetter!((_, sheet) -> Interop/Apache/Poi/SS/Usermodel/Sheet.createRow!(ix, sheet))
 
 
-    // pub def setRow!(ix: Int32, mx: RowSetter[r, a]): SheetWriter[r, ka, Unit] \ Write(r) =
-    //     let* row        = createRow!(ix);
-    //     let* style      = askStyle();
-
+    pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ Write(r) =
+        let* row        = createRow!(ix);
+        let r           = () as Region[r];
+        let* style      = askStyle();
+        liftActionResult(_ -> SheetIO/RowSetter.runRowSetter!(r, ma, style, row)) 
 
 /*
-    pub def setRow!(ix: Int32, mx: RowSetter[r, a]): SheetWriter[r, ka, Unit] \ Write(r) =
-        let RowSetter(mf) = mx;
-        let* row        = createRow!(ix);
-        let Row(row1)   = row;
-        let* style      = askStyle();
-        let* _          = SheetWriter((_,_) -> mf(style, row1));
-        point()
-
-
 
     pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, ka, Unit] \ Write(r) = 
         FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)

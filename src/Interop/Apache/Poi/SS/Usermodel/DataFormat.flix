@@ -44,7 +44,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/DataFormat {
         getFormat(df1, ix) |> Object.toOption
 
     /// Creates a new format if not found and returns its index.
-    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ Read(r) = 
+    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ Write(r) = 
         import org.apache.poi.ss.usermodel.DataFormat.getFormat(String): Int16 \ r; 
         let DataFormat(df1) = df;
         getFormat(df1, format)

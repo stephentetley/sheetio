@@ -130,6 +130,11 @@ namespace SheetIO/RowSetter {
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
         RowSetter(MonadLib/EnvMutStateError.liftActionResult(f))
 
+
+    pub def localEnv(f: Option[CellStyle[r]] -> Option[CellStyle[r]] \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef = 
+        RowSetter(MonadLib/EnvMutStateError.localEnv(f, getRowSetter(ma)))
+
+
 /*
     pub def liftOption(x: Option[a], errMsg: String): RowSetter[r, a] = match x { 
         case Some(x1) => point(x1)
@@ -181,8 +186,8 @@ namespace SheetIO/RowSetter {
     //     liftSetterResult!((style, _) -> f(style, cell))
 
 
-    // pub def localCellStyle(style: CellStyle[r], mx: RowSetter[r, a]): RowSetter[r, a] = 
-    //     RowSetter((_, row) -> apply1(mx, Some(style), row))
+    pub def localCellStyle(style: CellStyle[r], ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] = 
+        localEnv(_ -> Some(style), ma)
 
 
     pub def putBlankAt!(ix: Int32): RowSetter[r, ka, Unit] \ Write(r) =
@@ -233,6 +238,7 @@ namespace SheetIO/RowSetter {
         let  LocalDate(dt1) = dt;
         liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
  
+*/ 
     pub def putHeaders!(l: List[String]): RowSetter[r, ka, Unit] \ Write(r) = 
         putHeadersHelper!(l, 0)
         
@@ -283,6 +289,6 @@ namespace SheetIO/RowSetter {
         case Some(n) => putFloat64At!(ix, n)
         case None    => putBlankAt!(ix)
     }
-*/
+
 }
 

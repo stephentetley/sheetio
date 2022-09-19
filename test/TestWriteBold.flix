@@ -1,24 +1,24 @@
 
 namespace TestWriteBold {
-/*
+
     use SheetIO.RowSetter;
     use SheetIO.WorkbookWriter;
     use SheetIO.CellStyle;
 
     @test
-    def testAll(): Int32 & Impure = 
+    def testAll(): Int32 & Impure = region r {
         let path1 = Basis/System/FilePath.filePath("E:/coding/flix/sheetio/data/bold_out1.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
-        match SheetIO/WorkbookWriter.runXlsx(write1(), path1) { 
+        match SheetIO/WorkbookWriter.runXlsx(r, write1(), path1) { 
             case Err(e) => {println("Error: ${e}"); 1}
             case Ok() => {println("[writer done]"); 0}
         }
-        
+    }
 
 
-    def write1(): WorkbookWriter[r, Unit] \ Write(r) = 
+    def write1(): WorkbookWriter[r, ka, Unit] \ Write(r) = 
         use Applicative.{*>, point};
         use SheetIO/WorkbookWriter.{flatMap, createSheet!, createFont!, createCellStyle!,  
-                createDataFormat!, getFormat, withSheetWriter};
+                createDataFormat!, getFormat!, withSheetWriter};
         use SheetIO/FontSetter.{setBold!, setColor!};
         use SheetIO/CellStyleSetter.{setFont!, setDataFormat!};    
         use SheetIO/IndexedColors.{getIndex}; 
@@ -29,7 +29,7 @@ namespace TestWriteBold {
         // let* boldStyle      = createCellStyle!(setFont!(font1));
         let* boldStyle      = createCellStyle!(point());
         let* dataFmt        = createDataFormat!();
-        let* fmt1           = getFormat(dataFmt, "0.00");
+        let* fmt1           = getFormat!("0.00", dataFmt);
         let* numStyle       = createCellStyle!(setDataFormat!(fmt1));
         let* _      = withSheetWriter(SheetIO/SheetWriter.setRow!(0, setRowOf2(boldStyle, "Hello", "World!", None)), s1);
         let* _      = withSheetWriter(SheetIO/SheetWriter.setRow!(1, setRowOf2(boldStyle, "one", "two", Some("three"))), s1);
@@ -40,17 +40,17 @@ namespace TestWriteBold {
         point()
         
     // Change,Reference,Asset Name,OldParentName,NewParentName
-    def setRowOf2(astyle: CellStyle[r], a: String, b: String, c: Option[String]): RowSetter[r, Unit] \ Write(r) = 
+    def setRowOf2(astyle: CellStyle[r], a: String, b: String, c: Option[String]): RowSetter[r, ka, Unit] \ Write(r) = 
         use SheetIO/RowSetter.{flatMap, point, localCellStyle, putStringAt!, putOptionStringAt!};
         let* _      = localCellStyle(astyle, putStringAt!(0, a));
         let* _      = putStringAt!(1, b);
         let* _      = putOptionStringAt!(2, c);
         point()
 
-    def setRowOf1(sty: CellStyle[r], a: Float64): RowSetter[r, Unit] \ Write(r) = 
+    def setRowOf1(sty: CellStyle[r], a: Float64): RowSetter[r, ka, Unit] \ Write(r) = 
         use SheetIO/RowSetter.{flatMap, point, localCellStyle, putStringAt!, putFloat64At!};
         let* _      = putStringAt!(0, "Number");
         let* _      = localCellStyle(sty, putFloat64At!(1, a));
         point()
-*/
+
 }

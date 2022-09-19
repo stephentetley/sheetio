@@ -93,7 +93,7 @@ namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
         }
 */
 
-    pub def close(wb: HSSFWorkbook[r]): Result[Unit, String] \ {Write(r)} = 
+    pub def close!(wb: HSSFWorkbook[r]): Result[Unit, String] \ {Write(r)} = 
         try {
             import org.apache.poi.hssf.usermodel.HSSFWorkbook.close(): Unit \ r; 
             let HSSFWorkbook(wb1) = wb;
