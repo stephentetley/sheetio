@@ -90,27 +90,22 @@ namespace SheetIO/WorkbookReader {
     
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+        runOnFile(r, ma, path) 
+
+    def runOnFile(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
         use Result.{flatMap};
         let path1   = toString(path);
         let file    = Interop/IO/File.newFile(r, path1);
-        let* wb     = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.newWithFile(file);
-        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
-        let* ans    = runWorkbookReader(r, ma, wb1);
-        let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close(wb);
+        let* ins    = Interop/IO/FileInputStream.newWithFile(file);
+        let* wb     = Interop/Apache/Poi/SS/Usermodel/WorkbookFactory.createWithInputStream!(ins);
+        let* ans    = runWorkbookReader(r, ma, wb);
+        let* _      = Interop/Apache/Poi/SS/Usermodel/Workbook.close!(wb);
         Ok(ans)
         
 
     /// Excel 97 binary (.xls) format.
     pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] & Impure = 
-        use Result.{flatMap};
-        let path1   = toString(path);
-        let* ins    = Interop/IO/FileInputStream.newWithPath(path1);
-        let* wb     = Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook.newWithInputStream(r, ins);
-        let wb1     = Interop/Apache/Poi/SS/Usermodel/SubWorkbook.toWorkbook(wb);
-        let* ans    = runWorkbookReader(r, ma, wb1);
-        let* _      = Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook.close(wb);
-        Ok(ans)
-
+        runOnFile(r, ma, path)
 
 
     pub def getWorkbookReader(x: WorkbookReader[r, ka, a]): MonadLib.Evaluator[r, ka, Workbook[r], a] = 

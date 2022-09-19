@@ -50,6 +50,17 @@ namespace Interop/Apache/Poi/SS/Usermodel/Workbook {
    
     pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): Workbook[r] =
         Workbook(s)
+    
+    pub def close!(wb: Workbook[r]): Result[Unit, String] \ Write(r) =         
+        try {
+            import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;
+            let Workbook(wb1) = wb;
+            close(wb1) |> Ok
+        } catch {
+            case ex: ##java.lang.Exception =>
+                import java.lang.Throwable.getMessage(): String \ {};
+                Err(getMessage(ex))
+        }
 
     pub def createSheet!(name: String, wb: Workbook[r]): Result[Sheet[r], String] \ Write(r) =         
         try {
