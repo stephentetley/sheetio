@@ -8,7 +8,7 @@ namespace TestRead01 {
     @test
     def testAll(): Int32 \ IO = region r {
         use SheetIO/WorkbookReader.{runXlsx};
-        let path1 = Basis/System/FilePath.filePath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
+        let path1 = Basis/System/Path.newPath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx") |> Result.getWithDefault(Basis/System/Path.empty());
         match runXlsx(r, test01(), path1) { 
             case Err(e) => println("Error: ${e}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test01: ${a}, ${b}")} , xs)

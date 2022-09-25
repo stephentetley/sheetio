@@ -7,7 +7,7 @@ namespace TestReadXls {
     @test
     def testAll(): Int32 \ IO = region r {
         use SheetIO/WorkbookReader.{runHssf};
-        let path1 = Basis/System/FilePath.filePath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls") |> Result.getWithDefault(Basis/System/FilePath.empty());
+        let path1 = Basis/System/Path.newPath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls") |> Result.getWithDefault(Basis/System/Path.empty());
         match runHssf(r, test01(), path1) { 
             case Err(msg) => println("Error: ${msg}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)

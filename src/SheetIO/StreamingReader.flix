@@ -22,7 +22,7 @@
 
 namespace SheetIO/StreamingReader {
 
-    use System.FilePath.{FilePath};
+    use System.Path.{Path};
 
     use SheetIO.RowEvaluator;
     use SheetIO.RowEvaluator.{RowEvaluator};
@@ -53,12 +53,12 @@ namespace SheetIO/StreamingReader {
     ///
     /// Returns a new StreamingReader Handle (iterator and a "close" handle).
     ///
-    pub def newStreamingReaderHandle(src: System.FilePath, sheetName: String): Result[StreamingReaderHandle[POIRow], String] & Impure =
+    pub def newStreamingReaderHandle(src: System.Path, sheetName: String): Result[StreamingReaderHandle[POIRow], String] & Impure =
         import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetName(##java.nio.file.Path, String);
         import flixspt.sheetio.StreamingRowIterator.hasNext();
         import flixspt.sheetio.StreamingRowIterator.next();
         try {
-            let FilePath(src1) = src;
+            let Path(src1) = src;
             let primIter = createIteratorWithSheetName(src1, sheetName);
             let iterDone = () -> if (hasNext(primIter)) false else true;
             let iterNext = () -> {
@@ -79,12 +79,12 @@ namespace SheetIO/StreamingReader {
     ///
     /// Returns a new StreamingReader Handle for sheet at `ix`.
     ///
-    pub def newStreamingReaderHandleWithIndex(src: System.FilePath, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] & Impure =
+    pub def newStreamingReaderHandleWithIndex(src: System.Path, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] & Impure =
         import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetNumber(##java.nio.file.Path, Int32);
         import flixspt.sheetio.StreamingRowIterator.hasNext();
         import flixspt.sheetio.StreamingRowIterator.next();
         try {
-            let FilePath(src1) = src;
+            let Path(src1) = src;
             let primIter = createIteratorWithSheetNumber(src1, sheetIndex);
             let iterDone = () -> if (hasNext(primIter)) false else true;
             let iterNext = () -> {

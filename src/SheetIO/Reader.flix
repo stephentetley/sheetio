@@ -26,14 +26,14 @@ namespace SheetIO/Reader {
 /*
     pub type alias XlsxSource = 
         { sheet :: String
-        , path :: Interop/System.FilePath
+        , path :: Interop/System.Path
         }
 
 
     pub def allRows(eval: RowEvaluator[r, a], src: XlsxSource): Result[List[a], String] & Impure =
         SheetIO/SheetReader.runXlsx(allRows1(eval, src.sheet), src.path)
 
-    pub def allRowsOfSheets(eval: RowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.FilePath): Result[List[a], String] & Impure =
+    pub def allRowsOfSheets(eval: RowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(allRows1(eval), sheets);        
         SheetIO/SheetReader.runXlsx(readSheets, path)
 
@@ -47,7 +47,7 @@ namespace SheetIO/Reader {
     pub def someRows(eval: RowEvaluator[r, Option[a]], src: XlsxSource): Result[List[a], String] & Impure =        
         SheetIO/SheetReader.runXlsx(someRows1(eval, src.sheet), src.path)
 
-    pub def someRowsOfSheets(eval: RowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.FilePath): Result[List[a], String] & Impure =
+    pub def someRowsOfSheets(eval: RowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(someRows1(eval), sheets);        
         SheetIO/SheetReader.runXlsx(readSheets, path)
 
@@ -62,7 +62,7 @@ namespace SheetIO/Reader {
     pub def allNamedRows(eval: NamedRowEvaluator[r, a], src: XlsxSource): Result[List[a], String] & Impure =
         SheetIO/SheetReader.runXlsx(allNamedRows1(eval, src.sheet), src.path)
 
-    pub def allNamedRowsOfSheets(eval: NamedRowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.FilePath): Result[List[a], String] & Impure =
+    pub def allNamedRowsOfSheets(eval: NamedRowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(allNamedRows1(eval), sheets);        
         SheetIO/SheetReader.runXlsx(readSheets, path)
 
@@ -78,7 +78,7 @@ namespace SheetIO/Reader {
     pub def someNamedRows(eval: NamedRowEvaluator[r, Option[a]], src: XlsxSource): Result[List[a], String] & Impure =
         SheetIO/SheetReader.runXlsx(someNamedRows1(eval, src.sheet), src.path)
 
-    pub def someNamedRowsOfSheets(eval: NamedRowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.FilePath): Result[List[a], String] & Impure =
+    pub def someNamedRowsOfSheets(eval: NamedRowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(someNamedRows1(eval), sheets);        
         SheetIO/SheetReader.runXlsx(readSheets, path)
 

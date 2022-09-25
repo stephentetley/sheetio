@@ -17,7 +17,7 @@ namespace TestReadRowStarts {
     def runtest(r: Region[r], description: String, action: WorkbookReader[r, List[(String, Int32)], List[(String, Int32)]]): Unit & Impure =
         use SheetIO/WorkbookReader.runXlsx;
         println(description);
-        let path1 = Basis/System/FilePath.filePath("e:/coding/flix/sheetio/data/row_starts.xlsx") |> Result.getWithDefault(Basis/System/FilePath.empty());
+        let path1 = Basis/System/Path.newPath("e:/coding/flix/sheetio/data/row_starts.xlsx") |> Result.getWithDefault(Basis/System/Path.empty());
         match runXlsx(r, action, path1) { 
             case Err(msg) => println("Error: ${msg}")
             case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)

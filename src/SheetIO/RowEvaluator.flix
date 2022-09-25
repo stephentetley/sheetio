@@ -423,7 +423,7 @@ namespace SheetIO/RowEvaluator {
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
 */
-    /// Change to List?
+    /// List (not Array) avoids region allocation...
     pub def getRowContents(): RowEvaluator[r, ka, List[String]] \ Read(r) =
         getRowContentsWith(getContentAt)
 

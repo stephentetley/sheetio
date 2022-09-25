@@ -66,7 +66,7 @@ namespace SheetIO {
 namespace SheetIO/WorkbookReader {
 
     use ToString.toString;
-    use Basis/System.FilePath;
+    use Basis/System.Path;
 
     use SheetIO.WorkbookReader;
     use SheetIO.WorkbookReader.{WorkbookReader};
@@ -85,14 +85,14 @@ namespace SheetIO/WorkbookReader {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+    pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         runXssf(r, ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+    pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         runOnFile(r, ma, path) 
 
-    def runOnFile(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] \ IO = 
+    def runOnFile(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         use Result.{flatMap};
         let path1   = toString(path);
         let file    = Interop/IO/File.newFile(r, path1);
@@ -104,7 +104,7 @@ namespace SheetIO/WorkbookReader {
         
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: FilePath): Result[a, String] & Impure = 
+    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] & Impure = 
         runOnFile(r, ma, path)
 
 

@@ -99,7 +99,7 @@ namespace SheetIO/NamedRowEvaluator {
         let step = (acc, key) -> { 
             let (col, counts, indices) = acc; 
             match Map.get(key, counts) {
-                case None => (col + 1, Map.insert(key, 1, counts), Map.insert(key, col, indices))
+                case None    => (col + 1, Map.insert(key, 1, counts), Map.insert(key, col, indices))
                 case Some(i) => (col + 1, Map.insert(key, i + 1, counts), Map.insert("${key}.${i}", col, indices))
             }
         };        

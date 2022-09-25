@@ -55,7 +55,7 @@ namespace SheetIO {
 
 namespace SheetIO/WorkbookWriter {
 
-    use Basis/System.FilePath;
+    use Basis/System.Path;
 
     use SheetIO.WorkbookWriter;
     use SheetIO.WorkbookWriter.{WorkbookWriter};
@@ -78,12 +78,12 @@ namespace SheetIO/WorkbookWriter {
     use Interop/Apache/Poi/SS/Usermodel.Sheet;
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ {IO, Write(r)} = 
+    pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, Write(r)} = 
         runXssf(r, ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ {IO, Write(r)} = 
+    pub def runXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, Write(r)} = 
         use Result.{flatMap};
         let outpath = ToString.toString(path);
         let* outs   = Interop/IO/FileOutputStream.newWithPath(outpath);
@@ -97,13 +97,13 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ IO = 
+    pub def runAppendXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
         runAppendXssf(r, ma, path)
     
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "newWithFile" not "new"...
-    pub def runAppendXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] \ IO = 
+    pub def runAppendXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
         use Result.{flatMap};
         let path1   = ToString.toString(path);
         let file    = Interop/IO/File.newFile(r, path1);
@@ -118,8 +118,8 @@ namespace SheetIO/WorkbookWriter {
 /*
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
-                            template: FilePath, 
-                            outPath: FilePath): Result[a, String] & Impure =
+                            template: Path, 
+                            outPath: Path): Result[a, String] & Impure =
         use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
         use Result.{flatMap};
         let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
@@ -132,7 +132,7 @@ namespace SheetIO/WorkbookWriter {
 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookWriter[r, a, a], path: FilePath): Result[a, String] & Impure = 
+    pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] & Impure = 
         use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
         use Result.{flatMap};
         let path1   = ToString.toString(path);
@@ -143,8 +143,8 @@ namespace SheetIO/WorkbookWriter {
         Ok(ans)
 
     pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
-                            template: FilePath, 
-                            outPath: FilePath): Result[a, String] & Impure =
+                            template: Path, 
+                            outPath: Path): Result[a, String] & Impure =
         use Result.{flatMap};
         use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
         let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));

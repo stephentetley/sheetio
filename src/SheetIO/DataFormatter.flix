@@ -43,7 +43,6 @@ namespace SheetIO/DataFormatter {
     /// Returns a new mutable DataFormatter.
     ///
     pub def newWithLocale(r: Region[r], loc: Locale): DataFormatter[r] \ Write(r) =
-        let loc1 = Basis/I18n/Locale.getLocale(loc);
-        Interop/Apache/Poi/SS/Usermodel/DataFormatter.newWithLocale(r, loc1)
+        Interop/Apache/Poi/SS/Usermodel/DataFormatter.newWithLocale(r, loc)
         
 }
