@@ -6,7 +6,7 @@ namespace Test01 {
     @test
     def testAll(): Unit \ IO = region r {
         use SheetIO/WorkbookReader.{runXlsx};
-        let path1 = Basis/System/Path.newPath("G:/work/assets/uxl/LANGS_uxl01.xlsx") |> Result.getWithDefault(Basis/System/Path.empty());
+        let path1 = Basis/NIO/File/Path.newPath("G:/work/assets/uxl/LANGS_uxl01.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runXlsx(r, test01(), path1) { 
             case Err(_) => println("err")
             case Ok(xs) => List.foreach(x -> println("${x.name}: ${x.start} .. ${x.end}"), xs)

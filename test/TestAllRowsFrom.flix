@@ -16,7 +16,7 @@ namespace TestAllRowsFrom {
     def runtest(r: Region[r],  description: String, action: WorkbookReader[r, List[String], List[String]]): Unit \ IO =
         use SheetIO/WorkbookReader.runXlsx;
         println(description);
-        let path1 = Basis/System/Path.newPath("e:/coding/flix/sheetio/data/one_to_ten.xlsx") |> Result.getWithDefault(Basis/System/Path.empty());
+        let path1 = Basis/NIO/File/Path.newPath("e:/coding/flix/sheetio/data/one_to_ten.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runXlsx(r, action, path1) { 
             case Err(msg) => println("Error: ${msg}")
             case Ok(xs) => List.foreach(println, xs)

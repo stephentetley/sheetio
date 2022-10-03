@@ -55,7 +55,7 @@ namespace SheetIO {
 
 namespace SheetIO/WorkbookWriter {
 
-    use Basis/System.Path;
+    use Basis/NIO/File.Path;
 
     use SheetIO.WorkbookWriter;
     use SheetIO.WorkbookWriter.{WorkbookWriter};

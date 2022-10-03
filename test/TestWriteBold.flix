@@ -7,7 +7,7 @@ namespace TestWriteBold {
 
     @test
     def testAll(): Int32 & Impure = region r {
-        let path1 = Basis/System/Path.newPath("E:/coding/flix/sheetio/data/bold_out1.xlsx") |> Result.getWithDefault(Basis/System/Path.empty());
+        let path1 = Basis/NIO/File/Path.newPath("E:/coding/flix/sheetio/data/bold_out1.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match SheetIO/WorkbookWriter.runXlsx(r, write1(), path1) { 
             case Err(e) => {println("Error: ${e}"); 1}
             case Ok()   => {println("[writer done]"); 0}
