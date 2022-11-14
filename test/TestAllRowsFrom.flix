@@ -19,7 +19,7 @@ namespace TestAllRowsFrom {
         let path1 = Basis/NIO/File/Path.newPath("e:/coding/flix/sheetio/data/one_to_ten.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runXlsx(r, action, path1) { 
             case Err(msg) => println("Error: ${msg}")
-            case Ok(xs) => List.foreach(println, xs)
+            case Ok(xs) => List.forEach(println, xs)
         }
 
     def test01(start: Int32): WorkbookReader[r, ka, List[String]] \ Read(r) = 

@@ -11,11 +11,11 @@ namespace TestRead01 {
         let path1 = Basis/NIO/File/Path.newPath("G:/work/assets/lifting-equipment-reports/_Temp01.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runXlsx(r, test01(), path1) { 
             case Err(e) => println("Error: ${e}")
-            case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test01: ${a}, ${b}")} , xs)
+            case Ok(xs) => List.forEach(x -> { let (a,b) = x; println("test01: ${a}, ${b}")} , xs)
         };
         match runXlsx(r, test02(), path1) { 
             case Err(e) => println("Error: ${e}")
-            case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("test02: ${a}, ${b}")} , xs)
+            case Ok(xs) => List.forEach(x -> { let (a,b) = x; println("test02: ${a}, ${b}")} , xs)
         };
         0
     }

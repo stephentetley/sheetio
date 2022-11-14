@@ -20,7 +20,7 @@ namespace TestReadRowStarts {
         let path1 = Basis/NIO/File/Path.newPath("e:/coding/flix/sheetio/data/row_starts.xlsx") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runXlsx(r, action, path1) { 
             case Err(msg) => println("Error: ${msg}")
-            case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
+            case Ok(xs) => List.forEach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
         }
 
     def test01(): WorkbookReader[r, ka, List[(String, Int32)]] \ Read(r) = 

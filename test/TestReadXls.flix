@@ -10,7 +10,7 @@ namespace TestReadXls {
         let path1 = Basis/NIO/File/Path.newPath("e:/coding/flix/sheetio/data/poi-ex-elle-ess.xls") |> Result.getWithDefault(Basis/NIO/File/Path.empty());
         match runHssf(r, test01(), path1) { 
             case Err(msg) => println("Error: ${msg}")
-            case Ok(xs) => List.foreach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
+            case Ok(xs) => List.forEach(x -> { let (a,b) = x; println("${a}, ${b}")} , xs)
         };
         0
     }

@@ -229,7 +229,7 @@ namespace SheetIO/SheetReader {
 
 
     /// This might be expressive enough to write all `RowEvaluator` traversals with...
-    def foldRowsTraversal(range: {start :: Int32, end :: Int32}, 
+    def foldRowsTraversal(range: {start = Int32, end = Int32}, 
                             skipErrors: Bool,
                             f: (b, a, Int32) -> b \ ef, 
                             s: b, 
@@ -253,7 +253,7 @@ namespace SheetIO/SheetReader {
 
 
     /// This might be expressive enough to write all `RowEvaluator` traversals with...
-    def foldNamedRowsTraversal(range: {start :: Int32, end :: Int32}, 
+    def foldNamedRowsTraversal(range: {start = Int32, end = Int32}, 
                                 skipErrors: Bool,
                                 headers: List[String],
                                 f: (b, a, Int32) -> b \ ef, 
@@ -293,7 +293,7 @@ namespace SheetIO/SheetReader {
         let* end = getPhysicalNumberOfRows();
         foldRowsTraversal({start = start, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-    pub def rowsInRange(range: {start :: Int32, end :: Int32}, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
+    pub def rowsInRange(range: {start = Int32, end = Int32}, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
 
@@ -303,7 +303,7 @@ namespace SheetIO/SheetReader {
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = 1, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
 
-    pub def allNamedRowsFrom(pos: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
+    pub def allNamedRowsFrom(pos: {headerIndex = Int32, start = Int32}, eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, List[a]] \ { Read(r) } =
         let* headers = getHeaders(pos.headerIndex);
         let* end = getPhysicalNumberOfRows();
         foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
