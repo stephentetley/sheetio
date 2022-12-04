@@ -31,7 +31,7 @@ namespace SheetIO/DataFormatter {
     use Basis/Util.Locale;
 
     use SheetIO.DataFormatter;
-    use SheetIO.DataFormatter.{DataFormatter};
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter.{DataFormatter};
 
     ///
     /// Returns a new mutable DataFormatter.

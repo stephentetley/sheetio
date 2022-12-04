@@ -20,7 +20,7 @@ namespace Interop/Apache/Poi/OOXML {
     pub enum POIXMLDocument[_: Region](##org.apache.poi.ooxml.POIXMLDocument)
 
     instance Scoped[POIXMLDocument] {
-        pub def regionOf(_: POIXMLDocument[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: POIXMLDocument[r]): Region[r] = unsafe_cast () as Region[r]
     }
 
     pub class SubPOIXMLDocument[t: Region -> Type] {

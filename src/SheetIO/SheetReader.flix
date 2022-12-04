@@ -207,8 +207,8 @@ namespace SheetIO/SheetReader {
     pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
         use Result.flatMap;
         liftGetterResult(sheet -> {
-            let r = () as Region[r];
             let* row = Interop/Apache/Poi/SS/Usermodel/Sheet.getRow(ix, sheet);
+            let r    = Scoped.regionOf(row);
             SheetIO/RowEvaluator.runRowEvaluator(r, eval, row)
         })
         
@@ -234,11 +234,11 @@ namespace SheetIO/SheetReader {
                             f: (b, a, Int32) -> b \ ef, 
                             s: b, 
                             eval: RowEvaluator[r, a, a]): SheetReader[r, ka, b] \ { Read(r), ef } = 
-        let r1 = () as Region[r];
         let* rowIter = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
             case None      => point(s1)
             case Some(row) => {
+                let r1 = Scoped.regionOf(row);
                 let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
                     match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, row) {
@@ -259,11 +259,11 @@ namespace SheetIO/SheetReader {
                                 f: (b, a, Int32) -> b \ ef, 
                                 s: b, 
                                 eval: NamedRowEvaluator[r, a, a]): SheetReader[r, ka, b] \ { Read(r), ef } =
-        let r1 = () as Region[r];
         let* rowIter        = getRowIterator();
         def loop(s1) = match Iterator.next(rowIter) {
             case None     => point(s1)
             case Some(row) => {
+                let r1     = Scoped.regionOf(row);
                 let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
                     match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, row) {

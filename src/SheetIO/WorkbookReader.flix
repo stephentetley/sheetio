@@ -227,7 +227,7 @@ namespace SheetIO/WorkbookReader {
         liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
 
     pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
-        liftActionResult(_ -> {let r = () as Region[r]; SheetIO/SheetReader.runSheetReader(r, eval, sheet)})
+        liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO/SheetReader.runSheetReader(r, eval, sheet)})
 
 
 }

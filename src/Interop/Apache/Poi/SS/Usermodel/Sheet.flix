@@ -21,7 +21,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
     pub enum Sheet[_: Region](##org.apache.poi.ss.usermodel.Sheet)
 
     instance Scoped[Sheet] {
-        pub def regionOf(_: Sheet[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: Sheet[r]): Region[r] = unsafe_cast () as Region[r]
     }
 
 
@@ -99,7 +99,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/Sheet {
     pub def rowIterator(sheet: Sheet[r]): Iterator[Row[r], r] \ Write(r) = 
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
         let r = Scoped.regionOf(sheet);
-        let ocast = obj -> Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, obj as ##org.apache.poi.ss.usermodel.Row);
+        let ocast = obj -> Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, unsafe_cast obj as ##org.apache.poi.ss.usermodel.Row);
         let Sheet(sheet1) = sheet;
         let iterHH = rowIterator(sheet1);
         Interop/Util/IteratorZ.wrapHH(r, iterHH) 

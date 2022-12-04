@@ -358,7 +358,7 @@ namespace SheetIO/SheetWriter {
 
     pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ Write(r) =
         let* row        = createRow!(ix);
-        let r           = () as Region[r];
+        let r           = Scoped.regionOf(row);
         let* style      = askStyle();
         liftActionResult(_ -> SheetIO/RowSetter.runRowSetter!(r, ma, style, row)) 
 

@@ -23,17 +23,17 @@ namespace Interop/Apache/Poi/HSSF/Usermodel {
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
     instance Scoped[HSSFWorkbook] {
-        pub def regionOf(_: HSSFWorkbook[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: HSSFWorkbook[r]): Region[r] = unsafe_cast () as Region[r]
     }
 
     instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[HSSFWorkbook] {
         pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
             let HSSFWorkbook(d1) = d;
-            Workbook(d1 as ##org.apache.poi.ss.usermodel.Workbook)
+            Workbook(unsafe_cast d1 as ##org.apache.poi.ss.usermodel.Workbook)
 
         pub def fromWorkbook(d: Workbook[r]): HSSFWorkbook[r] = 
             let Workbook(d1) = d;
-            HSSFWorkbook(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook) 
+            HSSFWorkbook(unsafe_cast d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook) 
     }
 
 }

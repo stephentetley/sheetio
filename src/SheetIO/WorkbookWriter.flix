@@ -64,15 +64,10 @@ namespace SheetIO/WorkbookWriter {
     use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
 
     use SheetIO.CellStyle;
-    use SheetIO.CellStyle.{CellStyle};
     use SheetIO.CellStyleSetter;
-    use SheetIO.CellStyleSetter.{CellStyleSetter};
     use SheetIO.DataFormat;
-    use SheetIO.DataFormat.{DataFormat};
     use SheetIO.Font;
-    use SheetIO.Font.{Font};
     use SheetIO.FontSetter;
-    use SheetIO.FontSetter.{FontSetter};
     use SheetIO.SheetWriter;
     
     use Interop/Apache/Poi/SS/Usermodel.Sheet;
@@ -245,7 +240,7 @@ namespace SheetIO/WorkbookWriter {
 
     pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ Write(r) =
         let* font   = liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.createFont!);
-        let r1      = () as Region[r];
+        let r1      = Scoped.regionOf(font);
         let* _      = liftActionResult(_ -> SheetIO/FontSetter.runFontSetter!(r1, mx, font));
         point(font)
 
@@ -253,14 +248,14 @@ namespace SheetIO/WorkbookWriter {
 
     pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
         let* style  = liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.createCellStyle!);
-        let r1      = () as Region[r];
+        let r1      = Scoped.regionOf(style);
         let* _      = liftActionResult(_ -> SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, style));
         point(style)
 
 
 
     pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] \ Write(r) =
-        let r1 = () as Region[r];
+        let r1 = Scoped.regionOf(sheet);
         liftActionResult(_ -> SheetIO/SheetWriter.runSheetWriter!(r1, writer, None, sheet))
 
 

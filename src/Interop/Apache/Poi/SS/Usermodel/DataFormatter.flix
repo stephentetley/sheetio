@@ -22,7 +22,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
     pub enum DataFormatter[_: Region](##org.apache.poi.ss.usermodel.DataFormatter)
 
     instance Scoped[DataFormatter] {
-        pub def regionOf(_: DataFormatter[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: DataFormatter[r]): Region[r] = unsafe_cast () as Region[r]
     }
 }
 

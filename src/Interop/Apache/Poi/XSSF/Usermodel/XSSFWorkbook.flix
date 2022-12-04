@@ -24,28 +24,28 @@ namespace Interop/Apache/Poi/XSSF/Usermodel {
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
     instance Scoped[XSSFWorkbook] {
-        pub def regionOf(_: XSSFWorkbook[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: XSSFWorkbook[r]): Region[r] = unsafe_cast () as Region[r]
     }
 
 
     instance Interop/Apache/Poi/OOXML.SubPOIXMLDocument[XSSFWorkbook] {
         pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
             let XSSFWorkbook(d1) = d;
-            POIXMLDocument(d1 as ##org.apache.poi.ooxml.POIXMLDocument)
+            POIXMLDocument(unsafe_cast d1 as ##org.apache.poi.ooxml.POIXMLDocument)
 
         pub def fromPOIXMLDocument(d: POIXMLDocument[r]): XSSFWorkbook[r] = 
             let POIXMLDocument(d1) = d;
-            XSSFWorkbook(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+            XSSFWorkbook(unsafe_cast d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
     }
 
     instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[XSSFWorkbook] {
         pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
             let XSSFWorkbook(d1) = d;
-            Workbook(d1 as ##org.apache.poi.ss.usermodel.Workbook)
+            Workbook(unsafe_cast d1 as ##org.apache.poi.ss.usermodel.Workbook)
 
         pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
             let Workbook(d1) = d;
-            XSSFWorkbook(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+            XSSFWorkbook(unsafe_cast d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
     }
 
 }

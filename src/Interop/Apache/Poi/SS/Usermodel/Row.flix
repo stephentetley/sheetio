@@ -21,7 +21,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
     pub enum Row[_: Region](##org.apache.poi.ss.usermodel.Row)
 
     instance Scoped[Row] {
-        pub def regionOf(_: Row[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: Row[r]): Region[r] = unsafe_cast () as Region[r]
     }
 }
 

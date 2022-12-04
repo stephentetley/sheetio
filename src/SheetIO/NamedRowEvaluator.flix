@@ -19,7 +19,6 @@
 
 namespace SheetIO {
 
-    use SheetIO/Internal/EvalError.{EvalError};
     use SheetIO.DataFormatter;
 
 

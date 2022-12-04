@@ -21,7 +21,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
     pub enum Workbook[_: Region](##org.apache.poi.ss.usermodel.Workbook)
 
     instance Scoped[Workbook] {
-        pub def regionOf(_: Workbook[r]): Region[r] = () as Region[r]
+        pub def regionOf(_: Workbook[r]): Region[r] = unsafe_cast () as Region[r]
     }
 
     pub class SubWorkbook[t: Region -> Type] {
