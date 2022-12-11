@@ -430,7 +430,7 @@ namespace SheetIO/RowEvaluator {
 
     pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, List[a]] \ {Read(r), ef} =
         let* end    = getLastCellNum();
-        getRowContentsWithHelper(evalCell, end, 0, ks -> unsafe_cast point(ks) as \ ef)
+        getRowContentsWithHelper(evalCell, end, 0, ks -> unsafe_cast point(ks) as _ \ ef)
 
 
     // Should be tail recursive as bind is in the contiuation

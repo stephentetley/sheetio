@@ -169,7 +169,7 @@ namespace SheetIO/RowSetter {
                         };
             let _       = match style { 
                             case Some(sty1) => Interop/Apache/Poi/SS/Usermodel/Cell.setCellStyle!(sty1, cell)
-                            case None       => unsafe_cast () as \ r
+                            case None       => unsafe_cast () as _ \ r
                         };
             Ok(cell)
         };
