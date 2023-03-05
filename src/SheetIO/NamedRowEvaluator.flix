@@ -26,13 +26,13 @@ namespace SheetIO {
     pub enum NamedRowEvaluator[r: Region, ka: Type, a: Type](
         Graded.EnvEvaluator[ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
-
-    instance Functor[NamedRowEvaluator[r, ka]] {
+/*
+    instance GradedFunctor[NamedRowEvaluator[r, ka]] {
         pub def map(f: a -> b & ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] & ef = 
             SheetIO/NamedRowEvaluator.map(f, o)
     }
 
-    instance Applicative[NamedRowEvaluator[r, ka]] {
+    instance GradedApplicative[NamedRowEvaluator[r, ka]] {
         pub def point(x: a): NamedRowEvaluator[r, ka, a] = 
             SheetIO/NamedRowEvaluator.point(x)
 
@@ -40,21 +40,21 @@ namespace SheetIO {
             SheetIO/NamedRowEvaluator.ap(f, x)
     }
 
-    instance Monad[NamedRowEvaluator[r, ka]] {
+    instance GradedMonad[NamedRowEvaluator[r, ka]] {
         pub def flatMap(f: a -> NamedRowEvaluator[r, ka, b] & ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] & ef =
             SheetIO/NamedRowEvaluator.flatMap(f, o)
     }
 
-    instance MonadZero[NamedRowEvaluator[r, ka]] {
+    instance GradedZero[NamedRowEvaluator[r, ka]] {
         pub def empty(): NamedRowEvaluator[r, ka, a] = SheetIO/NamedRowEvaluator.empty()
     }
 
-    instance MonadLib.MonadOr[NamedRowEvaluator[r, ka]] {
+    instance GradedOr[NamedRowEvaluator[r, ka]] {
         pub def orelse(a: NamedRowEvaluator[r, ka, a], b: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, a] =
             SheetIO/NamedRowEvaluator.orelse(a, b)
     }
 
-    instance MonadLib.MonadError[NamedRowEvaluator[r, ka]] {
+    instance GradedError[NamedRowEvaluator[r, ka]] {
         pub def throwError(err: String): NamedRowEvaluator[r, ka, a] =
             SheetIO/NamedRowEvaluator.throwError(err)
 
@@ -64,7 +64,7 @@ namespace SheetIO {
         pub def catchError(m: NamedRowEvaluator[r, ka, a], hdl: String -> NamedRowEvaluator[r, ka, a] \ ef): NamedRowEvaluator[r, ka, a] \ ef =
             SheetIO/NamedRowEvaluator.catchError(m, hdl)
     }
-
+*/
 }
 
 namespace SheetIO/NamedRowEvaluator {
@@ -92,7 +92,7 @@ namespace SheetIO/NamedRowEvaluator {
         , formatter = Interop/Apache/Poi/SS/Usermodel.DataFormatter[r]
         }
 
-
+/*
     /// Duplicate column names are allowed - subsequent key duplicates are named with a suffixed index:
     /// "name", "name.1", "name.2", , "name.3" ...
     pub def makeHeaders(names: List[String]): Map[String, Int32] =
@@ -108,7 +108,7 @@ namespace SheetIO/NamedRowEvaluator {
 
 
 
-    pub def getNamedRowEvaluator(x: NamedRowEvaluator[r, ka, a]): MonadLib.EnvEvaluator[r, ka, Env[r], Row[r], a] = 
+    pub def getNamedRowEvaluator(x: NamedRowEvaluator[r, ka, a]): Graded.EnvEvaluator[r, ka, Env[r], Row[r], a] = 
         let NamedRowEvaluator(x1) = x;
         x1
         
@@ -120,49 +120,49 @@ namespace SheetIO/NamedRowEvaluator {
             { columnIndices = makeHeaders(headings)
             , formatter = Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r)
             };
-        MonadLib/EnvEvaluator.runEnvEvaluator(r, getNamedRowEvaluator(ma), env, st)
+        Graded/EnvEvaluator.runEnvEvaluator(r, getNamedRowEvaluator(ma), env, st)
 
 
     pub def point(x: a): NamedRowEvaluator[r, ka, a] = 
-        NamedRowEvaluator(MonadLib/EnvEvaluator.point(x))
+        NamedRowEvaluator(Graded/EnvEvaluator.point(x))
 
 
     pub def map(f: a -> b \ ef, ma: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.map(f, getNamedRowEvaluator(ma)))
+        NamedRowEvaluator(Graded/EnvEvaluator.map(f, getNamedRowEvaluator(ma)))
 
     pub def ap(mf: NamedRowEvaluator[r, ka, a -> b \ ef], ma: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.ap(getNamedRowEvaluator(mf), getNamedRowEvaluator(ma)))
+        NamedRowEvaluator(Graded/EnvEvaluator.ap(getNamedRowEvaluator(mf), getNamedRowEvaluator(ma)))
 
     pub def flatMap(f: a -> NamedRowEvaluator[r, ka, b] \ ef, ma: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.flatMap(f >> getNamedRowEvaluator, getNamedRowEvaluator(ma)))
+        NamedRowEvaluator(Graded/EnvEvaluator.flatMap(f >> getNamedRowEvaluator, getNamedRowEvaluator(ma)))
 
     pub def throwError(msg: String): NamedRowEvaluator[r, ka, a] = 
-        NamedRowEvaluator(MonadLib/EnvEvaluator.throwError(msg))
+        NamedRowEvaluator(Graded/EnvEvaluator.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, a] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.mapError(f, getNamedRowEvaluator(ma)))
+        NamedRowEvaluator(Graded/EnvEvaluator.mapError(f, getNamedRowEvaluator(ma)))
 
     pub def catchError(ma: NamedRowEvaluator[r, ka, a], f: String -> NamedRowEvaluator[r, ka, a] \ ef): NamedRowEvaluator[r, ka, a] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.catchError(getNamedRowEvaluator(ma), f >> getNamedRowEvaluator))
+        NamedRowEvaluator(Graded/EnvEvaluator.catchError(getNamedRowEvaluator(ma), f >> getNamedRowEvaluator))
 
     pub def empty(): NamedRowEvaluator[r, ka, a] = 
-        NamedRowEvaluator(MonadLib/EnvEvaluator.empty())
+        NamedRowEvaluator(Graded/EnvEvaluator.empty())
         
     pub def orelse(ma: NamedRowEvaluator[r, ka, a], mb: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, a] =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.orelse(getNamedRowEvaluator(ma), getNamedRowEvaluator(mb)))
+        NamedRowEvaluator(Graded/EnvEvaluator.orelse(getNamedRowEvaluator(ma), getNamedRowEvaluator(mb)))
 
     def liftGetter(f: Env[r] -> Row[r] -> a \ ef): NamedRowEvaluator[r, ka, a] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.liftGetter(f))
+        NamedRowEvaluator(Graded/EnvEvaluator.liftGetter(f))
     
     def liftGetterResult(f: Env[r] -> Row[r] -> Result[a, err] \ ef): NamedRowEvaluator[r, ka, a] \ ef with ToString[err]=
-        NamedRowEvaluator(MonadLib/EnvEvaluator.liftGetterResult(f))
+        NamedRowEvaluator(Graded/EnvEvaluator.liftGetterResult(f))
 
     pub def liftAction(f: Unit -> a \ ef): NamedRowEvaluator[r, ka, a] \ ef =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.liftAction(f))
+        NamedRowEvaluator(Graded/EnvEvaluator.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): NamedRowEvaluator[r, ka, a] \ ef with ToString[err] =
-        NamedRowEvaluator(MonadLib/EnvEvaluator.liftActionResult(f))
+        NamedRowEvaluator(Graded/EnvEvaluator.liftActionResult(f))
    
      
 
@@ -347,17 +347,16 @@ namespace SheetIO/NamedRowEvaluator {
     pub def getLocalDateTimeNamedWithFormat(label: String, 
                                             fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): NamedRowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
         let* s = getStringNamed(label);
-        MonadLib/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
+        Graded/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
   
     /// Cell must be readable as a String
     pub def getLocalTimeDateNamedWithPattern(label: String, 
                                                 patt: String): NamedRowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
-        let* fmt    = MonadLib/MonadError.liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
+        let* fmt    = Graded/MonadError.liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringNamed(label);
-        MonadLib/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
+        Graded/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
 
-   
-/*  
+     
 
     pub def getLocalDateNamed(label: String): NamedRowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
         getLocalDateTimeNamed(label)

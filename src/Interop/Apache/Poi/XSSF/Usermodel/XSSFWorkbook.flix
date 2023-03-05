@@ -23,11 +23,6 @@ namespace Interop/Apache/Poi/XSSF/Usermodel {
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
-    instance Scoped[XSSFWorkbook] {
-        pub def regionOf(_: XSSFWorkbook[r]): Region[r] = unsafe_cast () as Region[r]
-    }
-
-
     instance Interop/Apache/Poi/OOXML.SubPOIXMLDocument[XSSFWorkbook] {
         pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
             let XSSFWorkbook(d1) = d;

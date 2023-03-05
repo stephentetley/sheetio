@@ -22,9 +22,6 @@ namespace Interop/Apache/Poi/HSSF/Usermodel {
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
-    instance Scoped[HSSFWorkbook] {
-        pub def regionOf(_: HSSFWorkbook[r]): Region[r] = unsafe_cast () as Region[r]
-    }
 
     instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[HSSFWorkbook] {
         pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 

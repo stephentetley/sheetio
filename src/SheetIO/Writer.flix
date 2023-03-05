@@ -18,8 +18,8 @@
 
 namespace SheetIO/Writer {
 
-    use SheetIO.RowSetter;
-    use SheetIO.SheetWriter;
+    use SheetIO.RowSetter
+    use SheetIO.SheetWriter
 
 /*
 

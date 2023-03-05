@@ -18,8 +18,11 @@
 namespace SheetIO {
 
 
-    pub enum FontSetter[r: Region, ka: Type, a: Type](MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Font[r], a])
+    pub enum FontSetter[r: Region, ka: Type, a: Type](
+        Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Font[r], a]
+    )
 
+/*
     instance Functor[FontSetter[r, ka]] {
         pub def map(f: a -> b & ef, o: FontSetter[r, ka, a]): FontSetter[r, ka, b] & ef = 
             SheetIO/FontSetter.map(f, o)
@@ -49,16 +52,18 @@ namespace SheetIO {
         pub def catchError(ma: FontSetter[r, ka, a], f: String -> FontSetter[r, ka, a] \ ef): FontSetter[r, ka, a] \ ef =
             SheetIO/FontSetter.catchError(ma, f)
     }
+*/
 
 }
 
 namespace SheetIO/FontSetter {
 
-    use SheetIO.FontSetter;
-    use SheetIO.FontSetter.FontSetter;
-    use Interop/Apache/Poi/SS/Usermodel.Font;
-    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
+    use SheetIO.FontSetter
+    use SheetIO.FontSetter.FontSetter
+    use Interop/Apache/Poi/SS/Usermodel.Font
+    use Interop/Apache/Poi/SS/Usermodel.Font.{Font}
 
+/*
     pub def getFontSetter(x: FontSetter[r, ka, a]): MonadLib.MutStateError[r, ka, Font[r], a] = 
         let FontSetter(x1) = x;
         x1
@@ -127,5 +132,5 @@ namespace SheetIO/FontSetter {
 
 
     /// TODO others need enums...
-
+*/
 }

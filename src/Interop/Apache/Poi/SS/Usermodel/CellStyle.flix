@@ -20,9 +20,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 
     pub enum CellStyle[_: Region](##org.apache.poi.ss.usermodel.CellStyle)
 
-    instance Scoped[CellStyle] {
-        pub def regionOf(_: CellStyle[r]): Region[r] = unsafe_cast () as Region[r]
-    }
+
 }
 
 namespace Interop/Apache/Poi/SS/Usermodel/CellStyle {

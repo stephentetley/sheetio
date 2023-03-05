@@ -23,14 +23,14 @@ namespace SheetIO {
 
     pub enum RowSetter[r: Region, ka: Type, a: Type](
         Graded.EnvMutStateError[r, ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+/*
 
-
-    instance Functor[RowSetter[r, ka]] {
+    instance GradedFunctor[RowSetter[r, ka]] {
         pub def map(f: a -> b & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
             SheetIO/RowSetter.map(f, o)
     }
 
-    instance Applicative[RowSetter[r, ka]] {
+    instance GradedApplicative[RowSetter[r, ka]] {
         pub def point(x: a): RowSetter[r, ka, a] = 
             SheetIO/RowSetter.point(x)
 
@@ -38,19 +38,19 @@ namespace SheetIO {
             SheetIO/RowSetter.ap(f, x)
     }
 
-    instance Monad[RowSetter[r, ka]] {
+    instance GradedMonad[RowSetter[r, ka]] {
         pub def flatMap(f: a -> RowSetter[r, ka, b] & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
             SheetIO/RowSetter.flatMap(f, o)
     }
 
-    instance MonadZero[RowSetter[r, ka]] {
+    instance GradedZero[RowSetter[r, ka]] {
         pub def empty(): RowSetter[r, ka, a] = 
             SheetIO/RowSetter.empty()
     }
 
-    // No MonadOr
+    // No GradedOr
 
-    instance Graded.MonadError[RowSetter[r, ka]] {
+    instance GradedError[RowSetter[r, ka]] {
         pub def throwError(msg: String): RowSetter[r, ka, a] = 
             SheetIO/RowSetter.throwError(msg)
 
@@ -60,6 +60,7 @@ namespace SheetIO {
         pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
             SheetIO/RowSetter.catchError(ma, f)
     }
+*/
 
 }
 
@@ -77,7 +78,7 @@ namespace SheetIO/RowSetter {
     use Interop/Apache/Poi/SS/Usermodel.Row
     use Interop/Apache/Poi/SS/Usermodel.Row.{Row}
 
-
+/*
     pub def getRowSetter(x: RowSetter[r, ka, a]): Graded.EnvMutStateError[r, ka, Option[CellStyle[r]], Row[r], a] = 
         let RowSetter(x1) = x;
         x1
@@ -135,28 +136,19 @@ namespace SheetIO/RowSetter {
         RowSetter(Graded/EnvMutStateError.localEnv(f, getRowSetter(ma)))
 
 
-/*
-    pub def liftOption(x: Option[a], errMsg: String): RowSetter[r, a] = match x { 
-        case Some(x1) => point(x1)
-        case None     => throwError(errMsg)
-    }
-    
-    pub def liftResult(x: Result[a, String]): RowSetter[r, a] = match x { 
-        case Ok(x1)   => point(x1)
-        case Err(msg) => throwError(msg)
-    }
-    
-    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowSetter[r, a] = match x { 
-        case Ok(x1) => point(x1)
-        case Err(e) => throwError(makeErrMsg(e))
-    }
 
-    pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowSetter[r, a] = match x { 
-        case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
-    }
+    
+    // pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowSetter[r, a] = match x { 
+    //     case Ok(x1) => point(x1)
+    //     case Err(e) => throwError(makeErrMsg(e))
+    // }
 
-*/
+    // pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowSetter[r, a] = match x { 
+    //     case Success(x1) => point(x1)
+    //     case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
+    // }
+
+
 
     /// This also sets the CellStyle...
     def createOrGetCell(ix: Int32): RowSetter[r, ka, Cell[r]] \ Write(r) = 
@@ -224,21 +216,21 @@ namespace SheetIO/RowSetter {
         putNumericAt!(ix, n)
 
 
-/*
-
-    pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, ka, Unit] \ Write(r) =
-        use Time.LocalDateTime.{LocalDateTime};
-        let  LocalDateTime(dt1) = dt;
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
 
+    // pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, ka, Unit] \ Write(r) =
+    //     use Time.LocalDateTime.{LocalDateTime};
+    //     let  LocalDateTime(dt1) = dt;
+    //     liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
-    pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, ka, Unit] \ Write(r) =
-        use Time.LocalDate.{LocalDate};
-        let  LocalDate(dt1) = dt;
-        liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
+
+
+    // pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, ka, Unit] \ Write(r) =
+    //     use Time.LocalDate.{LocalDate};
+    //     let  LocalDate(dt1) = dt;
+    //     liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
  
-*/ 
+ 
     pub def putHeaders!(l: List[String]): RowSetter[r, ka, Unit] \ Write(r) = 
         putHeadersHelper!(l, 0)
         
@@ -289,6 +281,6 @@ namespace SheetIO/RowSetter {
         case Some(n) => putFloat64At!(ix, n)
         case None    => putBlankAt!(ix)
     }
-
+*/
 }
 

@@ -20,9 +20,7 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 
     pub enum Font[_: Region](##org.apache.poi.ss.usermodel.Font)
 
-    instance Scoped[Font] {
-        pub def regionOf(_: Font[r]): Region[r] = unsafe_cast () as Region[r]
-    }
+
 }
 
 namespace Interop/Apache/Poi/SS/Usermodel/Font {

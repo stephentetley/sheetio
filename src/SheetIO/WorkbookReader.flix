@@ -21,7 +21,7 @@ namespace SheetIO {
     pub enum WorkbookReader[r: Region, ka: Type, a: Type](
         Graded.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
 
-
+/*
     instance GradedFunctor[WorkbookReader[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef = 
             SheetIO/WorkbookReader.map(f, o)
@@ -60,6 +60,7 @@ namespace SheetIO {
         pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
             SheetIO/WorkbookReader.catchError(ma, f)
     }
+*/
 
 }
 
@@ -83,7 +84,7 @@ namespace SheetIO/WorkbookReader {
 
     use SheetIO.SheetReader
 
-
+/*
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         runXssf(r, ma, path)
@@ -162,47 +163,17 @@ namespace SheetIO/WorkbookReader {
         WorkbookReader(Graded/Evaluator.liftActionResult(f))
 
 
-/*
+
     ///
     /// Expose the result of operation `ma`.
     ///
     /// By definition this never fails.
     ///
-    pub def result(ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, Result[a, String]] = 
-        WorkbookReader(wb -> 
-            let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
-            Ok(ans)
-        )
-
-    pub def guard(x: Bool): WorkbookReader[r, ka, Unit] = 
-        match x { 
-            case true  => point()
-            case false => throwError("guard")
-        }
-*/
-
-
-/*
-    pub def liftOption(x: Option[a], errMsg: String): WorkbookReader[r, ka, a] = match x { 
-        case Some(x1) => point(x1)
-        case None     => throwError(errMsg)
-    }
-
-    pub def liftResult(x: Result[a, String]): WorkbookReader[r, ka, a] = match x { 
-        case Ok(x1)   => point(x1)
-        case Err(msg) => throwError(msg)
-    }
-
-    pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): WorkbookReader[r, ka, a] = match x { 
-        case Ok(x1) => point(x1)
-        case Err(e) => throwError(makeErrMsg(e))
-    }
-
-    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): WorkbookReader[r, ka, a] = match x { 
-        case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
-    }
-*/
+    // pub def result(ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, Result[a, String]] = 
+    //     WorkbookReader(wb -> 
+    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+    //         Ok(ans)
+    //     )
 
 
 
@@ -229,5 +200,5 @@ namespace SheetIO/WorkbookReader {
     pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
         liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO/SheetReader.runSheetReader(r, eval, sheet)})
 
-
+*/
 }

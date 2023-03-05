@@ -18,11 +18,11 @@
 
 namespace SheetIO/Reader {
 
-    use Functor.{<$>};
+    use GradedFunctor.{<$>}
 
-    use SheetIO.NamedRowEvaluator;
-    use SheetIO.RowEvaluator;
-    use SheetIO.SheetReader;
+    use SheetIO.NamedRowEvaluator
+    use SheetIO.RowEvaluator
+    use SheetIO.SheetReader
 /*
     pub type alias XlsxSource = 
         { sheet :: String

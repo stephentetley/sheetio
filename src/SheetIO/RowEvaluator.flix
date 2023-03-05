@@ -24,12 +24,13 @@ namespace SheetIO {
     pub enum RowEvaluator[r: Region, ka: Type, a: Type](
         Graded.EnvEvaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
-    instance Functor[RowEvaluator[r, ka]] {
+/*
+    instance GradedFunctor[RowEvaluator[r, ka]] {
         pub def map(f: a -> b & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef = 
             SheetIO/RowEvaluator.map(f, o)
     }
 
-    instance Applicative[RowEvaluator[r, ka]] {
+    instance GradedApplicative[RowEvaluator[r, ka]] {
         pub def point(x: a): RowEvaluator[r, ka, a] = 
             SheetIO/RowEvaluator.point(x)
 
@@ -37,21 +38,21 @@ namespace SheetIO {
             SheetIO/RowEvaluator.ap(f, x)
     }
 
-    instance Monad[RowEvaluator[r, ka]] {
+    instance GradedMonad[RowEvaluator[r, ka]] {
         pub def flatMap(f: a -> RowEvaluator[r, ka, b] & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef =
             SheetIO/RowEvaluator.flatMap(f, o)
     }
 
-    instance MonadZero[RowEvaluator[r, ka]] {
+    instance GradedZero[RowEvaluator[r, ka]] {
         pub def empty(): RowEvaluator[r, ka, a] = SheetIO/RowEvaluator.throwError("empty")
     }
 
-    instance Graded.MonadOr[RowEvaluator[r, ka]] {
+    instance GradedOr[RowEvaluator[r, ka]] {
         pub def orelse(a: RowEvaluator[r, ka, a], b: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] =
             SheetIO/RowEvaluator.orelse(a, b)
     }
 
-    instance Graded.MonadError[RowEvaluator[r, ka]] {
+    instance GradedError[RowEvaluator[r, ka]] {
         pub def throwError(err: String): RowEvaluator[r, ka, a] =
             SheetIO/RowEvaluator.throwError(err)
 
@@ -61,6 +62,7 @@ namespace SheetIO {
         pub def catchError(m: RowEvaluator[r, ka, a], hdl: String -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, a] \ ef =
             SheetIO/RowEvaluator.catchError(m, hdl)
     }
+*/    
 }
 
 namespace SheetIO/RowEvaluator {
@@ -82,7 +84,7 @@ namespace SheetIO/RowEvaluator {
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     
-
+/*
 
     pub def getRowEvaluator(x: RowEvaluator[r, ka, a]): Graded.EnvEvaluator[r, ka, DataFormatter[r], Row[r], a] = 
         let RowEvaluator(x1) = x;
@@ -333,7 +335,7 @@ namespace SheetIO/RowEvaluator {
         let* s      = getStringAt(ix);
         GradedError.liftResult(Time/LocalDateTime.parse(fmt, s))
 
-/*
+
     pub def getLocalDateAt(ix: Int32): RowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
         getLocalDateTimeAt(ix)
             |> map(Time/LocalDateTime.toLocalDate)
@@ -385,7 +387,7 @@ namespace SheetIO/RowEvaluator {
 
     pub def getOptionLocalDateTimeAt(ix: Int32): RowEvaluator[r, ka, Option[Time.LocalDateTime]] \ Read(r) = 
         getIfNotEmpty(ix, getLocalDateTimeAt)
-*/
+
         
     pub def getFirstCellNum(): RowEvaluator[r, ka, Int32] \ Read(r) =
         liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getFirstCellNum(row) |> Int16.toInt32)
@@ -394,7 +396,7 @@ namespace SheetIO/RowEvaluator {
         liftGetter((_, row) -> Interop/Apache/Poi/SS/Usermodel/Row.getLastCellNum(row) |> Int16.toInt32)
             |> map(n -> if (n > 0) n - 1 else n)
 
-/*
+
     def queryFontAt(ix: Int32, 
                     fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): RowEvaluator[r, ka, a] \ { Read(r), ef } = 
         use Result.flatMap;
@@ -422,7 +424,7 @@ namespace SheetIO/RowEvaluator {
     pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
         queryFontAt(ix, SheetIO/Internal/Font.getStrikeout)
 
-*/
+
     /// List (not Array) avoids region allocation...
     pub def getRowContents(): RowEvaluator[r, ka, List[String]] \ Read(r) =
         getRowContentsWith(getContentAt)
@@ -443,7 +445,7 @@ namespace SheetIO/RowEvaluator {
         else 
             getRowContentsWithHelper(evalCell, end, ix + 1, ss -> evalCell(ix) >>= s -> k(s :: ss))
 
-/*
+
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
     pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r, ka1, Array[String, r2]] \ { Read(r1), Write(r2) } =

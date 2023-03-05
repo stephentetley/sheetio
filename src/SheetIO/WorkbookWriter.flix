@@ -22,6 +22,7 @@ namespace SheetIO {
     pub enum WorkbookWriter[r: Region, ka: Type, a: Type](
         Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
 
+/*
     instance GradedFunctor[WorkbookWriter[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef = 
             SheetIO/WorkbookWriter.map(f, o)
@@ -50,6 +51,7 @@ namespace SheetIO {
         pub def catchError(ma: WorkbookWriter[r, ka, a], f: String -> WorkbookWriter[r, ka, a] \ ef): WorkbookWriter[r, ka, a] \ ef =
             SheetIO/WorkbookWriter.catchError(ma, f)
     }
+*/
 
 }
 
@@ -72,6 +74,7 @@ namespace SheetIO/WorkbookWriter {
     
     use Interop/Apache/Poi/SS/Usermodel.Sheet;
 
+/*
     /// Excel 2007 OOXML (.xlsx) format.
     pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, Write(r)} = 
         runXssf(r, ma, path)
@@ -110,46 +113,45 @@ namespace SheetIO/WorkbookWriter {
         let* _      = Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook.close!(wb);
         Ok(ans)
 
-/*
+
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
-    pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
-                            template: Path, 
-                            outPath: Path): Result[a, String] & Impure =
-        use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
-        use Result.{flatMap};
-        let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
-        let path1   = ToString.toString(outPath);
-        let* wb     = openXSSFWorkbook(path1) as ##org.apache.poi.ss.usermodel.Workbook;
-        let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
-        let* _      = writeXSSFWorkbook(wb, path1);
-        let* _      = closeXSSFWorkbook(wb);
-        Ok(ans)
+    // pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
+    //                         template: Path, 
+    //                         outPath: Path): Result[a, String] & Impure =
+    //     use SheetIO/Internal/Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
+    //     use Result.{flatMap};
+    //     let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
+    //     let path1   = ToString.toString(outPath);
+    //     let* wb     = openXSSFWorkbook(path1) as ##org.apache.poi.ss.usermodel.Workbook;
+    //     let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
+    //     let* _      = writeXSSFWorkbook(wb, path1);
+    //     let* _      = closeXSSFWorkbook(wb);
+    //     Ok(ans)
 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] & Impure = 
-        use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
-        use Result.{flatMap};
-        let path1   = ToString.toString(path);
-        let* wb     = newHSSFWorkbook() as ##org.apache.poi.ss.usermodel.Workbook;
-        let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
-        let* _      = writeHSSFWorkbook(wb, path1);
-        let* _      = closeHSSFWorkbook(wb);
-        Ok(ans)
+    // pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] & Impure = 
+    //     use SheetIO/Internal/Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
+    //     use Result.{flatMap};
+    //     let path1   = ToString.toString(path);
+    //     let* wb     = newHSSFWorkbook() as ##org.apache.poi.ss.usermodel.Workbook;
+    //     let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
+    //     let* _      = writeHSSFWorkbook(wb, path1);
+    //     let* _      = closeHSSFWorkbook(wb);
+    //     Ok(ans)
 
-    pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
-                            template: Path, 
-                            outPath: Path): Result[a, String] & Impure =
-        use Result.{flatMap};
-        use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
-        let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
-        let outPath1    = ToString.toString(outPath);
-        let* wb         = openHSSFWorkbook(outPath1) as ##org.apache.poi.ss.usermodel.Workbook;
-        let* ans        = runWorkbookWriter!(() as Region[r], ma, wb);
-        let* _          = writeHSSFWorkbook(wb, outPath1);
-        let* _          = closeHSSFWorkbook(wb);
-        Ok(ans)
-*/
+    // pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
+    //                         template: Path, 
+    //                         outPath: Path): Result[a, String] & Impure =
+    //     use Result.{flatMap};
+    //     use SheetIO/Internal/Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
+    //     let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
+    //     let outPath1    = ToString.toString(outPath);
+    //     let* wb         = openHSSFWorkbook(outPath1) as ##org.apache.poi.ss.usermodel.Workbook;
+    //     let* ans        = runWorkbookWriter!(() as Region[r], ma, wb);
+    //     let* _          = writeHSSFWorkbook(wb, outPath1);
+    //     let* _          = closeHSSFWorkbook(wb);
+    //     Ok(ans)
 
     pub def getWorkbookWriter(x: WorkbookWriter[r, ka, a]): Graded.MutStateError[r, ka, Workbook[r], a] = 
         let WorkbookWriter(x1) = x;
@@ -258,167 +260,145 @@ namespace SheetIO/WorkbookWriter {
         liftActionResult(_ -> SheetIO/SheetWriter.runSheetWriter!(r1, writer, None, sheet))
 
 
-/*
 
 
-    pub def guard(x: Bool): SheetWriter[r, Unit] = 
-        match x { 
-            case true => point()
-            case false => throwError("guard")
-        }
+    // pub def liftAction(fn: Unit -> a & Impure): SheetWriter[r, a] = 
+    //     SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
+
+    // pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetWriter[r, a] = 
+    //     SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
 
+    // pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): SheetWriter[r, a] = match x { 
+    //     case Ok(x1) => point(x1)
+    //     case Err(e) => throwError(makeErrMsg(e))
+    // }
 
-    pub def liftAction(fn: Unit -> a & Impure): SheetWriter[r, a] = 
-        SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
+    // pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetWriter[r, a] = match x { 
+    //     case Success(x1) => point(x1)
+    //     case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
+    // }
 
-    pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetWriter[r, a] = 
-        SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
+    // pub def mapWithIndexM(mf: (a, Int32) -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, List[b]] =
+    //     SheetWriter((wb, style, s1) ->
+    //         mapWithIndexMHelper(wb, style, s1, mf, 0, xs, e -> Err(e), (s2, ys) -> Ok((s2, ys)))
+    //     )
 
-    pub def liftOption(x: Option[a], errMsg: String): SheetWriter[r, a] = match x { 
-        case Some(x1) => point(x1)
-        case None => throwError(errMsg)
-    }
+    // ///
+    // /// Helper function for `mapM`.
+    // ///
+    // def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+    //                         style: Option[CellStyle],
+    //                         s1: Cursors,
+    //                         mf: (a, Int32) -> SheetWriter[r, b], 
+    //                         ix : Int32, 
+    //                         xs: List[a], 
+    //                         fk: String -> Result[(Cursors, List[b]), String], 
+    //                         sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
+    //     match xs {
+    //         case Nil => sk(s1, Nil)
+    //         case x :: rs => {
+    //             let ma = mf(x, ix);
+    //             match apply1(ma, wb, style, s1) {
+    //                 case Err(e) => fk(e)
+    //                 case Ok((s2, x1)) => mapWithIndexMHelper(wb, style, s2, mf, ix + 1, rs, fk, (s3, ks) -> sk(s3, x1 :: ks))
+    //             }
+    //         }
+    //     }
 
-    pub def liftResult(x: Result[a, String]): SheetWriter[r, a] = match x { 
-        case Ok(x1)   => point(x1)
-        case Err(msg) => throwError(msg)
-    }
+    // pub def mapWithIndexX(mf: (a, Int32) -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, Unit] =
+    //     SheetWriter((wb, style, s1) ->
+    //         mapWithIndexXHelper(wb, style, s1, mf, 0, xs, e -> Err(e), s2 -> Ok((s2, ())))
+    //     )
 
-    pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): SheetWriter[r, a] = match x { 
-        case Ok(x1) => point(x1)
-        case Err(e) => throwError(makeErrMsg(e))
-    }
-
-    pub def liftValidation(x: Validation[a, e], makeErrMsg: List[e] -> String): SheetWriter[r, a] = match x { 
-        case Success(x1) => point(x1)
-        case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
-    }
-*/
-
-
-/*
-
-    pub def mapWithIndexM(mf: (a, Int32) -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, List[b]] =
-        SheetWriter((wb, style, s1) ->
-            mapWithIndexMHelper(wb, style, s1, mf, 0, xs, e -> Err(e), (s2, ys) -> Ok((s2, ys)))
-        )
-
-    ///
-    /// Helper function for `mapM`.
-    ///
-    def mapWithIndexMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            style: Option[CellStyle],
-                            s1: Cursors,
-                            mf: (a, Int32) -> SheetWriter[r, b], 
-                            ix : Int32, 
-                            xs: List[a], 
-                            fk: String -> Result[(Cursors, List[b]), String], 
-                            sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
-        match xs {
-            case Nil => sk(s1, Nil)
-            case x :: rs => {
-                let ma = mf(x, ix);
-                match apply1(ma, wb, style, s1) {
-                    case Err(e) => fk(e)
-                    case Ok((s2, x1)) => mapWithIndexMHelper(wb, style, s2, mf, ix + 1, rs, fk, (s3, ks) -> sk(s3, x1 :: ks))
-                }
-            }
-        }
-
-    pub def mapWithIndexX(mf: (a, Int32) -> SheetWriter[r, b], xs: List[a]): SheetWriter[r, Unit] =
-        SheetWriter((wb, style, s1) ->
-            mapWithIndexXHelper(wb, style, s1, mf, 0, xs, e -> Err(e), s2 -> Ok((s2, ())))
-        )
-
-    def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                            style: Option[CellStyle],
-                            s1: Cursors,
-                            mf: (a, Int32) -> SheetWriter[r, b],
-                            ix: Int32, 
-                            xs: List[a], 
-                            fk: String -> Result[(Cursors, Unit), String], 
-                            sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
-        match xs {
-            case Nil => sk(s1)
-            case x :: rs => {
-                let ma = mf(x, ix);
-                match apply1(ma, wb, style, s1) {
-                    case Err(e) => fk(e)
-                    case Ok((s2, _)) => mapWithIndexXHelper(wb, style, s2, mf, ix + 1, rs, fk, sk)
-                }
-            }
-        }
+    // def mapWithIndexXHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+    //                         style: Option[CellStyle],
+    //                         s1: Cursors,
+    //                         mf: (a, Int32) -> SheetWriter[r, b],
+    //                         ix: Int32, 
+    //                         xs: List[a], 
+    //                         fk: String -> Result[(Cursors, Unit), String], 
+    //                         sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
+    //     match xs {
+    //         case Nil => sk(s1)
+    //         case x :: rs => {
+    //             let ma = mf(x, ix);
+    //             match apply1(ma, wb, style, s1) {
+    //                 case Err(e) => fk(e)
+    //                 case Ok((s2, _)) => mapWithIndexXHelper(wb, style, s2, mf, ix + 1, rs, fk, sk)
+    //             }
+    //         }
+    //     }
 
 
     ///
     /// `forM` is `mapM` with its arguments flipped.
     ///
-    pub def forM(xs: List[a], f: a -> SheetWriter[r, b]): SheetWriter[r, List[b]] = mapM(f, xs)
+    // pub def forM(xs: List[a], f: a -> SheetWriter[r, b]): SheetWriter[r, List[b]] = mapM(f, xs)
 
     ///
     /// `forX` is `mapX` with its arguments flipped.
     ///
-    pub def forX(xs: List[a], f: a -> SheetWriter[r, b]): SheetWriter[r, Unit] = mapX(f, xs)
+    // pub def forX(xs: List[a], f: a -> SheetWriter[r, b]): SheetWriter[r, Unit] = mapX(f, xs)
 
 
-    pub def foldM(mf: (b, a) -> SheetWriter[r, b], start: b, xs: List[a]): SheetWriter[r, b] =
-        SheetWriter((wb, style, s1) ->
-            foldMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac) -> Ok((s2, ac)))
-        )
+    // pub def foldM(mf: (b, a) -> SheetWriter[r, b], start: b, xs: List[a]): SheetWriter[r, b] =
+    //     SheetWriter((wb, style, s1) ->
+    //         foldMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac) -> Ok((s2, ac)))
+    //     )
 
-    def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
-                    style: Option[CellStyle],
-                    s1: Cursors,
-                    mf: (b, a) -> SheetWriter[r, b], 
-                    acc: b, 
-                    xs: List[a], 
-                    fk: String -> Result[(Cursors, b), String], 
-                    sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
-        match xs {
-            case Nil => sk(s1, acc)
-            case x :: rs => {
-                let ma = mf(acc, x);
-                match apply1(ma, wb, style, s1) {
-                    case Err(e) => fk(e)
-                    case Ok((s2, acc1)) => foldMHelper(wb, style, s2, mf, acc1, rs, fk, sk)
-                }
-            }
-        }
+    // def foldMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook, 
+    //                 style: Option[CellStyle],
+    //                 s1: Cursors,
+    //                 mf: (b, a) -> SheetWriter[r, b], 
+    //                 acc: b, 
+    //                 xs: List[a], 
+    //                 fk: String -> Result[(Cursors, b), String], 
+    //                 sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
+    //     match xs {
+    //         case Nil => sk(s1, acc)
+    //         case x :: rs => {
+    //             let ma = mf(acc, x);
+    //             match apply1(ma, wb, style, s1) {
+    //                 case Err(e) => fk(e)
+    //                 case Ok((s2, acc1)) => foldMHelper(wb, style, s2, mf, acc1, rs, fk, sk)
+    //             }
+    //         }
+    //     }
 
-    pub def mapAccumM(mf: (ac, a) -> SheetWriter[r, (ac, b)], start: ac, xs: List[a]): SheetWriter[r, (ac, List[b])] =
-        SheetWriter((wb, style, s1) ->
-            mapAccumMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac, ks) -> Ok((s2, (ac, ks))))
-        )
+    // pub def mapAccumM(mf: (ac, a) -> SheetWriter[r, (ac, b)], start: ac, xs: List[a]): SheetWriter[r, (ac, List[b])] =
+    //     SheetWriter((wb, style, s1) ->
+    //         mapAccumMHelper(wb, style, s1, mf, start, xs, e -> Err(e), (s2, ac, ks) -> Ok((s2, (ac, ks))))
+    //     )
 
-    def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
-                        style: Option[CellStyle],
-                        s1: Cursors,
-                        mf: (ac, a) -> SheetWriter[r, (ac, b)],
-                        ac: ac,
-                        xs: List[a],
-                        fk: String -> Result[(Cursors, (ac, List[b])), String],
-                        sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
-        match xs {
-            case Nil => sk(s1, ac, Nil)
-            case x :: rs => {
-                let ma = mf(ac, x);
-                match apply1(ma, wb, style, s1) {
-                    case Err(e) => fk(e)
-                    case Ok((s2, (ac1, x1))) => mapAccumMHelper(wb, style, s2, mf, ac1, rs, fk, (s3, ac2, ks) -> sk(s3, ac2, x1 :: ks))
-                }
-            }
-        }
+    // def mapAccumMHelper(wb: ##org.apache.poi.ss.usermodel.Workbook,
+    //                     style: Option[CellStyle],
+    //                     s1: Cursors,
+    //                     mf: (ac, a) -> SheetWriter[r, (ac, b)],
+    //                     ac: ac,
+    //                     xs: List[a],
+    //                     fk: String -> Result[(Cursors, (ac, List[b])), String],
+    //                     sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
+    //     match xs {
+    //         case Nil => sk(s1, ac, Nil)
+    //         case x :: rs => {
+    //             let ma = mf(ac, x);
+    //             match apply1(ma, wb, style, s1) {
+    //                 case Err(e) => fk(e)
+    //                 case Ok((s2, (ac1, x1))) => mapAccumMHelper(wb, style, s2, mf, ac1, rs, fk, (s3, ac2, ks) -> sk(s3, ac2, x1 :: ks))
+    //             }
+    //         }
+    //     }
 
-    ///
-    /// `mapAccumX` is a synonym for `foldM`.
-    ///
-    pub def mapAccumX(mf: (ac, a) -> SheetWriter[r, ac], start: ac, xs: List[a]): SheetWriter[r, ac] = foldM(mf, start, xs)
+    // ///
+    // /// `mapAccumX` is a synonym for `foldM`.
+    // ///
+    // pub def mapAccumX(mf: (ac, a) -> SheetWriter[r, ac], start: ac, xs: List[a]): SheetWriter[r, ac] = foldM(mf, start, xs)
 
     
     
-    /// Although this is `SheetWriter` some introspection (reading) is needed, 
-    /// e.g. if we are writing to a template file
+    // /// Although this is `SheetWriter` some introspection (reading) is needed, 
+    // /// e.g. if we are writing to a template file
 
 */
 
