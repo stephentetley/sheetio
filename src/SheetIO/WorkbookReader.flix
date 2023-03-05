@@ -19,15 +19,15 @@ namespace SheetIO {
 
 
     pub enum WorkbookReader[r: Region, ka: Type, a: Type](
-        MonadLib.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+        Graded.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
 
 
-    instance Functor[WorkbookReader[r, ka]] {
+    instance GradedFunctor[WorkbookReader[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef = 
             SheetIO/WorkbookReader.map(f, o)
     }
 
-    instance Applicative[WorkbookReader[r, ka]] {
+    instance GradedApplicative[WorkbookReader[r, ka]] {
         pub def point(x: a): WorkbookReader[r, ka, a] = 
             SheetIO/WorkbookReader.point(x)
 
@@ -35,22 +35,22 @@ namespace SheetIO {
             SheetIO/WorkbookReader.ap(f, x)
     }
 
-    instance Monad[WorkbookReader[r, ka]] {
+    instance GradedMonad[WorkbookReader[r, ka]] {
         pub def flatMap(f: a -> WorkbookReader[r, ka, b] & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef =
             SheetIO/WorkbookReader.flatMap(f, o)
     }
 
-    instance MonadZero[WorkbookReader[r, ka]] {
+    instance GradedZero[WorkbookReader[r, ka]] {
         pub def empty(): WorkbookReader[r, ka, a] = 
             SheetIO/WorkbookReader.empty()
     }
 
-    instance MonadLib.MonadOr[WorkbookReader[r, ka]] {
+    instance GradedOr[WorkbookReader[r, ka]] {
         pub def orelse(a: WorkbookReader[r, ka, a], b: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
             SheetIO/WorkbookReader.orelse(a, b)
     }
 
-    instance MonadLib.MonadError[WorkbookReader[r, ka]] {
+    instance GradedError[WorkbookReader[r, ka]] {
         pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
             SheetIO/WorkbookReader.throwError(msg)
 
@@ -65,23 +65,23 @@ namespace SheetIO {
 
 namespace SheetIO/WorkbookReader {
 
-    use ToString.toString;
-    use Basis/NIO/File.Path;
+    use ToString.toString
+    use Basis/NIO/File.Path
 
-    use SheetIO.WorkbookReader;
-    use SheetIO.WorkbookReader.{WorkbookReader};
+    use SheetIO.WorkbookReader
+    use SheetIO.WorkbookReader.{WorkbookReader}
 
-    use Interop/Apache/Poi/SS/Usermodel.Sheet;
-    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
-    use Interop/Apache/Poi/SS/Usermodel.Workbook;
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/SS/Usermodel.Sheet
+    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet}
+    use Interop/Apache/Poi/SS/Usermodel.Workbook
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook}
 
-    use SheetIO.RowEvaluator;
-    use SheetIO.RowEvaluator.{RowEvaluator};
-    use SheetIO.NamedRowEvaluator;
-    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
+    use SheetIO.RowEvaluator
+    use SheetIO.RowEvaluator.{RowEvaluator}
+    use SheetIO.NamedRowEvaluator
+    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
-    use SheetIO.SheetReader;
+    use SheetIO.SheetReader
 
 
     /// Excel 2007 OOXML (.xlsx) format.
@@ -108,7 +108,7 @@ namespace SheetIO/WorkbookReader {
         runOnFile(r, ma, path)
 
 
-    pub def getWorkbookReader(x: WorkbookReader[r, ka, a]): MonadLib.Evaluator[r, ka, Workbook[r], a] = 
+    pub def getWorkbookReader(x: WorkbookReader[r, ka, a]): Graded.Evaluator[r, ka, Workbook[r], a] = 
         let WorkbookReader(x1) = x;
         x1
 
@@ -116,50 +116,50 @@ namespace SheetIO/WorkbookReader {
     pub def runWorkbookReader(r: Region[r], 
                                 ma: WorkbookReader[r, a, a], 
                                 st: Workbook[r]): Result[a, String] \ r =
-        MonadLib/Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
+        Graded/Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
 
     pub def point(x: a): WorkbookReader[r, ka, a] = 
-        WorkbookReader(MonadLib/Evaluator.point(x))
+        WorkbookReader(Graded/Evaluator.point(x))
 
 
 
     pub def map(f: a -> b \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(MonadLib/Evaluator.map(f, getWorkbookReader(ma)))
+        WorkbookReader(Graded/Evaluator.map(f, getWorkbookReader(ma)))
 
     pub def ap(mf: WorkbookReader[r, ka, a -> b \ ef], ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(MonadLib/Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
+        WorkbookReader(Graded/Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
 
     pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(MonadLib/Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
+        WorkbookReader(Graded/Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
 
     pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
-        WorkbookReader(MonadLib/Evaluator.throwError(msg))
+        WorkbookReader(Graded/Evaluator.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(MonadLib/Evaluator.mapError(f, getWorkbookReader(ma)))
+        WorkbookReader(Graded/Evaluator.mapError(f, getWorkbookReader(ma)))
 
     pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(MonadLib/Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
+        WorkbookReader(Graded/Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
 
     pub def empty(): WorkbookReader[r, ka, a] = 
-        WorkbookReader(MonadLib/Evaluator.empty())
+        WorkbookReader(Graded/Evaluator.empty())
         
     pub def orelse(ma: WorkbookReader[r, ka, a], mb: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
-        WorkbookReader(MonadLib/Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
+        WorkbookReader(Graded/Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
 
     def liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(MonadLib/Evaluator.liftGetter(f))
+        WorkbookReader(Graded/Evaluator.liftGetter(f))
     
     def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(MonadLib/Evaluator.liftGetterResult(f))
+        WorkbookReader(Graded/Evaluator.liftGetterResult(f))
 
 
     pub def liftAction(f: Unit -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(MonadLib/Evaluator.liftAction(f))
+        WorkbookReader(Graded/Evaluator.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(MonadLib/Evaluator.liftActionResult(f))
+        WorkbookReader(Graded/Evaluator.liftActionResult(f))
 
 
 /*

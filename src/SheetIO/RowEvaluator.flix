@@ -22,7 +22,7 @@ namespace SheetIO {
 
     // pass around DataFormatter[r]
     pub enum RowEvaluator[r: Region, ka: Type, a: Type](
-        MonadLib.EnvEvaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvEvaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
     instance Functor[RowEvaluator[r, ka]] {
         pub def map(f: a -> b & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef = 
@@ -46,12 +46,12 @@ namespace SheetIO {
         pub def empty(): RowEvaluator[r, ka, a] = SheetIO/RowEvaluator.throwError("empty")
     }
 
-    instance MonadLib.MonadOr[RowEvaluator[r, ka]] {
+    instance Graded.MonadOr[RowEvaluator[r, ka]] {
         pub def orelse(a: RowEvaluator[r, ka, a], b: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] =
             SheetIO/RowEvaluator.orelse(a, b)
     }
 
-    instance MonadLib.MonadError[RowEvaluator[r, ka]] {
+    instance Graded.MonadError[RowEvaluator[r, ka]] {
         pub def throwError(err: String): RowEvaluator[r, ka, a] =
             SheetIO/RowEvaluator.throwError(err)
 
@@ -65,26 +65,26 @@ namespace SheetIO {
 
 namespace SheetIO/RowEvaluator {
 
-    use Monad.{>>=};
-    use Functor.{<$>};
+    
+    use GradedError.{swapError}
+    use GradedMonad.{>>=}
+    use GradedFunctor.{<$>}
+    use Time/Format.DateTimeFormatter
+    
+    use SheetIO.RowEvaluator
+    use SheetIO.RowEvaluator.{RowEvaluator}
 
-    use Time/Format.DateTimeFormatter;
-    use MonadLib/MonadError.{swapError};
+    use Interop/Apache/Poi/SS/Usermodel.Cell
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter
+    use Interop/Apache/Poi/SS/Usermodel.Row
 
-    use SheetIO.RowEvaluator;
-    use SheetIO.RowEvaluator.{RowEvaluator};
-
-    use Interop/Apache/Poi/SS/Usermodel.Cell;
-    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/SS/Usermodel.Row;
-
-    use SheetIO.CellType;
-    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+    use SheetIO.CellType
+    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     
 
 
-    pub def getRowEvaluator(x: RowEvaluator[r, ka, a]): MonadLib.EnvEvaluator[r, ka, DataFormatter[r], Row[r], a] = 
+    pub def getRowEvaluator(x: RowEvaluator[r, ka, a]): Graded.EnvEvaluator[r, ka, DataFormatter[r], Row[r], a] = 
         let RowEvaluator(x1) = x;
         x1
         
@@ -92,50 +92,50 @@ namespace SheetIO/RowEvaluator {
                                 ma: RowEvaluator[r, a, a], 
                                 st: Row[r]): Result[a, String] \ r =
         let env = Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r);
-        MonadLib/EnvEvaluator.runEnvEvaluator(r, getRowEvaluator(ma), env, st)
+        Graded/EnvEvaluator.runEnvEvaluator(r, getRowEvaluator(ma), env, st)
 
 
     pub def point(x: a): RowEvaluator[r, ka, a] = 
-        RowEvaluator(MonadLib/EnvEvaluator.point(x))
+        RowEvaluator(Graded/EnvEvaluator.point(x))
 
     pub def map(f: a -> b \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.map(f, getRowEvaluator(ma)))
+        RowEvaluator(Graded/EnvEvaluator.map(f, getRowEvaluator(ma)))
 
     pub def ap(mf: RowEvaluator[r, ka, a -> b \ ef], ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.ap(getRowEvaluator(mf), getRowEvaluator(ma)))
+        RowEvaluator(Graded/EnvEvaluator.ap(getRowEvaluator(mf), getRowEvaluator(ma)))
 
     pub def flatMap(f: a -> RowEvaluator[r, ka, b] \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.flatMap(f >> getRowEvaluator, getRowEvaluator(ma)))
+        RowEvaluator(Graded/EnvEvaluator.flatMap(f >> getRowEvaluator, getRowEvaluator(ma)))
 
     pub def throwError(msg: String): RowEvaluator[r, ka, a] = 
-        RowEvaluator(MonadLib/EnvEvaluator.throwError(msg))
+        RowEvaluator(Graded/EnvEvaluator.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.mapError(f, getRowEvaluator(ma)))
+        RowEvaluator(Graded/EnvEvaluator.mapError(f, getRowEvaluator(ma)))
 
     pub def catchError(ma: RowEvaluator[r, ka, a], f: String -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, a] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.catchError(getRowEvaluator(ma), f >> getRowEvaluator))
+        RowEvaluator(Graded/EnvEvaluator.catchError(getRowEvaluator(ma), f >> getRowEvaluator))
 
     pub def empty(): RowEvaluator[r, ka, a] = 
-        RowEvaluator(MonadLib/EnvEvaluator.empty())
+        RowEvaluator(Graded/EnvEvaluator.empty())
         
     pub def orelse(ma: RowEvaluator[r, ka, a], mb: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] =
-        RowEvaluator(MonadLib/EnvEvaluator.orelse(getRowEvaluator(ma), getRowEvaluator(mb)))
+        RowEvaluator(Graded/EnvEvaluator.orelse(getRowEvaluator(ma), getRowEvaluator(mb)))
 
     def liftGetter(f: DataFormatter[r] -> Row[r] -> a \ ef): RowEvaluator[r, ka, a] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.liftGetter(f))
+        RowEvaluator(Graded/EnvEvaluator.liftGetter(f))
     
     def liftGetterResult(f: DataFormatter[r] -> Row[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
-        RowEvaluator(MonadLib/EnvEvaluator.liftGetterResult(f))
+        RowEvaluator(Graded/EnvEvaluator.liftGetterResult(f))
 
 
 
     pub def liftAction(f: Unit -> a \ ef): RowEvaluator[r, ka, a] \ ef =
-        RowEvaluator(MonadLib/EnvEvaluator.liftAction(f))
+        RowEvaluator(Graded/EnvEvaluator.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
-        RowEvaluator(MonadLib/EnvEvaluator.liftActionResult(f))
+        RowEvaluator(Graded/EnvEvaluator.liftActionResult(f))
 
 
 
@@ -324,14 +324,14 @@ namespace SheetIO/RowEvaluator {
     pub def getLocalDateTimeAtWithFormat(ix: Int32, 
                                         fmt: DateTimeFormatter[Time/Format.DateTimeFormat]): RowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
         let* s = getStringAt(ix);
-        MonadLib/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
+        GradedError.liftResult(Time/LocalDateTime.parse(fmt, s))
         
 
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
-        let* fmt    = MonadLib/MonadError.liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
+        let* fmt    = Graded/MonadError.liftResult(Time/Format/DateTimeFormatter.fromPattern(patt));
         let* s      = getStringAt(ix);
-        MonadLib/MonadError.liftResult(Time/LocalDateTime.parse(fmt, s))
+        GradedError.liftResult(Time/LocalDateTime.parse(fmt, s))
 
 /*
     pub def getLocalDateAt(ix: Int32): RowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
@@ -447,7 +447,7 @@ namespace SheetIO/RowEvaluator {
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
     pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r, ka1, Array[String, r2]] \ { Read(r1), Write(r2) } =
-        let eval = ix -> MonadLib/MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
+        let eval = ix -> Graded/MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
         getRowContentsWith(r, eval)
 
     def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) = 

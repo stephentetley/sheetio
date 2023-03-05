@@ -24,7 +24,7 @@ namespace SheetIO {
 
     /// Includes Map[columName: String => index: Int32]
     pub enum NamedRowEvaluator[r: Region, ka: Type, a: Type](
-        MonadLib.EnvEvaluator[r, ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvEvaluator[ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
 
     instance Functor[NamedRowEvaluator[r, ka]] {
@@ -69,21 +69,22 @@ namespace SheetIO {
 
 namespace SheetIO/NamedRowEvaluator {
 
-    use Functor.{<$>};
-    use Monad.{>>=};
     
-    use MonadLib/MonadError.{swapError};
-    use Time/Format.DateTimeFormatter;
+    use GradedError.{swapError}
+    use GradedFunctor.{<$>}
+    use GradedMonad.{>>=}
+    
+    use Time/Format.DateTimeFormatter
 
-    use SheetIO.NamedRowEvaluator;
-    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator};
+    use SheetIO.NamedRowEvaluator
+    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
-    use Interop/Apache/Poi/SS/Usermodel.Cell;
-    use Interop/Apache/Poi/SS/Usermodel.DataFormatter;
-    use Interop/Apache/Poi/SS/Usermodel.Row;
+    use Interop/Apache/Poi/SS/Usermodel.Cell
+    use Interop/Apache/Poi/SS/Usermodel.DataFormatter
+    use Interop/Apache/Poi/SS/Usermodel.Row
 
-    use SheetIO.CellType;
-    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString};
+    use SheetIO.CellType
+    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
 
     pub type alias Env[r: Region] = 

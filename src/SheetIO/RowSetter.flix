@@ -22,7 +22,7 @@ namespace SheetIO {
     /// TODO rename RowWriter?
 
     pub enum RowSetter[r: Region, ka: Type, a: Type](
-        MonadLib.EnvMutStateError[r, ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvMutStateError[r, ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
 
 
     instance Functor[RowSetter[r, ka]] {
@@ -50,7 +50,7 @@ namespace SheetIO {
 
     // No MonadOr
 
-    instance MonadLib.MonadError[RowSetter[r, ka]] {
+    instance Graded.MonadError[RowSetter[r, ka]] {
         pub def throwError(msg: String): RowSetter[r, ka, a] = 
             SheetIO/RowSetter.throwError(msg)
 
@@ -65,20 +65,20 @@ namespace SheetIO {
 
 namespace SheetIO/RowSetter {
 
-    use SheetIO.RowSetter;
-    use SheetIO.RowSetter.{RowSetter};
+    use SheetIO.RowSetter
+    use SheetIO.RowSetter.{RowSetter}
     
-    use MonadLib/MonadError.{swapError};
+    use GradedError.{swapError}
 
-    use Interop/Apache/Poi/SS/Usermodel.Cell;
-    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/SS/Usermodel.Row;
-    use Interop/Apache/Poi/SS/Usermodel.Row.{Row};
+    use Interop/Apache/Poi/SS/Usermodel.Cell
+    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell}
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle
+    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle}
+    use Interop/Apache/Poi/SS/Usermodel.Row
+    use Interop/Apache/Poi/SS/Usermodel.Row.{Row}
 
 
-    pub def getRowSetter(x: RowSetter[r, ka, a]): MonadLib.EnvMutStateError[r, ka, Option[CellStyle[r]], Row[r], a] = 
+    pub def getRowSetter(x: RowSetter[r, ka, a]): Graded.EnvMutStateError[r, ka, Option[CellStyle[r]], Row[r], a] = 
         let RowSetter(x1) = x;
         x1
 
@@ -87,52 +87,52 @@ namespace SheetIO/RowSetter {
                                 ma: RowSetter[r, a, a], 
                                 env: Option[CellStyle[r]],
                                 st: Row[r]): Result[a, String] \ r =
-        MonadLib/EnvMutStateError.runEnvMutStateError(r, getRowSetter(ma), env, st)
+        Graded/EnvMutStateError.runEnvMutStateError(r, getRowSetter(ma), env, st)
 
     pub def point(x: a): RowSetter[r, ka, a] = 
-        RowSetter(MonadLib/EnvMutStateError.point(x))
+        RowSetter(Graded/EnvMutStateError.point(x))
 
 
 
     pub def map(f: a -> b \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(MonadLib/EnvMutStateError.map(f, getRowSetter(x)))
+        RowSetter(Graded/EnvMutStateError.map(f, getRowSetter(x)))
 
     pub def ap(mf: RowSetter[r, ka, a -> b \ ef], ma: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(MonadLib/EnvMutStateError.ap(getRowSetter(mf), getRowSetter(ma)))
+        RowSetter(Graded/EnvMutStateError.ap(getRowSetter(mf), getRowSetter(ma)))
 
     pub def flatMap(k: a -> RowSetter[r, ka, b] \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b]  \ ef = 
-        RowSetter(MonadLib/EnvMutStateError.flatMap(k >> getRowSetter, getRowSetter(x)))
+        RowSetter(Graded/EnvMutStateError.flatMap(k >> getRowSetter, getRowSetter(x)))
 
 
     pub def throwError(msg: String): RowSetter[r, ka, a] = 
-        RowSetter(MonadLib/EnvMutStateError.throwError(msg))
+        RowSetter(Graded/EnvMutStateError.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef =
-        RowSetter(MonadLib/EnvMutStateError.mapError(f, getRowSetter(ma)))
+        RowSetter(Graded/EnvMutStateError.mapError(f, getRowSetter(ma)))
 
     pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(MonadLib/EnvMutStateError.catchError(getRowSetter(ma), f >> getRowSetter))
+        RowSetter(Graded/EnvMutStateError.catchError(getRowSetter(ma), f >> getRowSetter))
 
 
     pub def empty(): RowSetter[r, ka, a] = throwError("empty")
 
 
     def liftSetter!(f: Option[CellStyle[r]] -> Row[r] -> a \ ef): RowSetter[r, ka, a] \ ef  =
-        RowSetter(MonadLib/EnvMutStateError.liftSetter!(f))
+        RowSetter(Graded/EnvMutStateError.liftSetter!(f))
 
     def liftSetterResult!(f: Option[CellStyle[r]] -> Row[r] -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(MonadLib/EnvMutStateError.liftSetterResult!(f))
+        RowSetter(Graded/EnvMutStateError.liftSetterResult!(f))
     
     pub def liftAction(f: Unit -> a \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(MonadLib/EnvMutStateError.liftAction(f))
+        RowSetter(Graded/EnvMutStateError.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(MonadLib/EnvMutStateError.liftActionResult(f))
+        RowSetter(Graded/EnvMutStateError.liftActionResult(f))
 
 
     pub def localEnv(f: Option[CellStyle[r]] -> Option[CellStyle[r]] \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef = 
-        RowSetter(MonadLib/EnvMutStateError.localEnv(f, getRowSetter(ma)))
+        RowSetter(Graded/EnvMutStateError.localEnv(f, getRowSetter(ma)))
 
 
 /*

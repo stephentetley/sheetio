@@ -21,6 +21,8 @@ namespace SheetIO {
     ///
     /// DataFormatter
     ///
+    /// TODO this should probably be immutable
+    ///
     pub type alias DataFormatter[r: Region] = Interop/Apache/Poi/SS/Usermodel.DataFormatter[r]
 
 }
@@ -36,13 +38,13 @@ namespace SheetIO/DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def new(r: Region[r]): DataFormatter[r] \ Write(r) =
-        Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(r)
+    pub def new(rc: Region[r]): DataFormatter[r] \ Write(r) =
+        Interop/Apache/Poi/SS/Usermodel/DataFormatter.new(rc)
 
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(r: Region[r], loc: Locale): DataFormatter[r] \ Write(r) =
-        Interop/Apache/Poi/SS/Usermodel/DataFormatter.newWithLocale(r, loc)
+    pub def newWithLocale(rc: Region[r], loc: Locale): DataFormatter[r] \ Write(r) =
+        Interop/Apache/Poi/SS/Usermodel/DataFormatter.newWithLocale(rc, loc)
         
 }

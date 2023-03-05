@@ -20,14 +20,14 @@ namespace SheetIO {
 
 
     pub enum WorkbookWriter[r: Region, ka: Type, a: Type](
-        MonadLib.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+        Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
 
-    instance Functor[WorkbookWriter[r, ka]] {
+    instance GradedFunctor[WorkbookWriter[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef = 
             SheetIO/WorkbookWriter.map(f, o)
     }
 
-    instance Applicative[WorkbookWriter[r, ka]] {
+    instance GradedApplicative[WorkbookWriter[r, ka]] {
         pub def point(x: a): WorkbookWriter[r, ka, a] = 
             SheetIO/WorkbookWriter.point(x)
 
@@ -35,12 +35,12 @@ namespace SheetIO {
             SheetIO/WorkbookWriter.ap(f, x)
     }
 
-    instance Monad[WorkbookWriter[r, ka]] {
+    instance GradedMonad[WorkbookWriter[r, ka]] {
         pub def flatMap(f: a -> WorkbookWriter[r, ka, b] & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef =
             SheetIO/WorkbookWriter.flatMap(f, o)
     }
 
-    instance MonadLib.MonadError[WorkbookWriter[r, ka]] {
+    instance GradedError[WorkbookWriter[r, ka]] {
         pub def throwError(msg: String): WorkbookWriter[r, ka, a] = 
             SheetIO/WorkbookWriter.throwError(msg)
 
@@ -151,7 +151,7 @@ namespace SheetIO/WorkbookWriter {
         Ok(ans)
 */
 
-    pub def getWorkbookWriter(x: WorkbookWriter[r, ka, a]): MonadLib.MutStateError[r, ka, Workbook[r], a] = 
+    pub def getWorkbookWriter(x: WorkbookWriter[r, ka, a]): Graded.MutStateError[r, ka, Workbook[r], a] = 
         let WorkbookWriter(x1) = x;
         x1
 
@@ -159,50 +159,50 @@ namespace SheetIO/WorkbookWriter {
     pub def runWorkbookWriter!(r: Region[r], 
                                 ma: WorkbookWriter[r, a, a], 
                                 st: Workbook[r]): Result[a, String] \ r =
-        MonadLib/MutStateError.runMutStateError(r, getWorkbookWriter(ma), st)
+        Graded/MutStateError.runMutStateError(r, getWorkbookWriter(ma), st)
 
     pub def point(x: a): WorkbookWriter[r, ka, a] = 
-        WorkbookWriter(MonadLib/MutStateError.point(x))
+        WorkbookWriter(Graded/MutStateError.point(x))
 
 
     pub def map(f: a -> b \ ef, x: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef =
-        WorkbookWriter(MonadLib/MutStateError.map(f, getWorkbookWriter(x)))
+        WorkbookWriter(Graded/MutStateError.map(f, getWorkbookWriter(x)))
 
     pub def ap(mf: WorkbookWriter[r, ka, a -> b \ ef], ma: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef =
-        WorkbookWriter(MonadLib/MutStateError.ap(getWorkbookWriter(mf), getWorkbookWriter(ma)))
+        WorkbookWriter(Graded/MutStateError.ap(getWorkbookWriter(mf), getWorkbookWriter(ma)))
 
     pub def flatMap(k: a -> WorkbookWriter[r, ka, b] \ ef, x: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b]  \ ef = 
-        WorkbookWriter(MonadLib/MutStateError.flatMap(k >> getWorkbookWriter, getWorkbookWriter(x)))
+        WorkbookWriter(Graded/MutStateError.flatMap(k >> getWorkbookWriter, getWorkbookWriter(x)))
 
 
     pub def throwError(msg: String): WorkbookWriter[r, ka, a] = 
-        WorkbookWriter(MonadLib/MutStateError.throwError(msg))
+        WorkbookWriter(Graded/MutStateError.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, a] \ ef =
-        WorkbookWriter(MonadLib/MutStateError.mapError(f, getWorkbookWriter(ma)))
+        WorkbookWriter(Graded/MutStateError.mapError(f, getWorkbookWriter(ma)))
 
     pub def catchError(ma: WorkbookWriter[r, ka, a], f: String -> WorkbookWriter[r, ka, a] \ ef): WorkbookWriter[r, ka, a] \ ef =
-        WorkbookWriter(MonadLib/MutStateError.catchError(getWorkbookWriter(ma), f >> getWorkbookWriter))
+        WorkbookWriter(Graded/MutStateError.catchError(getWorkbookWriter(ma), f >> getWorkbookWriter))
 
     // def liftSetter!(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
-    //     WorkbookWriter(MonadLib/MutStateError.liftSetter!(f))
+    //     WorkbookWriter(Graded/MutStateError.liftSetter!(f))
 
     def liftSetterResult!(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
-        WorkbookWriter(MonadLib/MutStateError.liftSetterResult!(f))
+        WorkbookWriter(Graded/MutStateError.liftSetterResult!(f))
 
     def liftGetter(f: Workbook[r] -> a \ ef): WorkbookWriter[r, ka, a] \ ef  =
-        WorkbookWriter(MonadLib/MutStateError.liftGetter(f))
+        WorkbookWriter(Graded/MutStateError.liftGetter(f))
 
     def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
-        WorkbookWriter(MonadLib/MutStateError.liftGetterResult(f))
+        WorkbookWriter(Graded/MutStateError.liftGetterResult(f))
 
 
     pub def liftAction(f: Unit -> a \ ef): WorkbookWriter[r, ka, a] \ ef =
-        WorkbookWriter(MonadLib/MutStateError.liftAction(f))
+        WorkbookWriter(Graded/MutStateError.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookWriter[r, ka, a] \ ef with ToString[err] =
-        WorkbookWriter(MonadLib/MutStateError.liftActionResult(f))
+        WorkbookWriter(Graded/MutStateError.liftActionResult(f))
 
 
 
@@ -246,10 +246,9 @@ namespace SheetIO/WorkbookWriter {
 
 
 
-    pub def createCellStyle!(mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
+    pub def createCellStyle!(rc: Region[r], mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
         let* style  = liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.createCellStyle!);
-        let r1      = Scoped.regionOf(style);
-        let* _      = liftActionResult(_ -> SheetIO/CellStyleSetter.runCellStyleSetter!(r1, mx, style));
+        let* _      = liftActionResult(_ -> SheetIO/CellStyleSetter.runCellStyleSetter!(rc, mx, style));
         point(style)
 
 
