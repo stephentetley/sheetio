@@ -78,8 +78,8 @@ namespace SheetIO/CellType {
 
     def primEquals(x: ##org.apache.poi.ss.usermodel.CellType, y: ##org.apache.poi.ss.usermodel.CellType): Bool =
         import java.lang.Object.equals(##java.lang.Object): Bool & Pure;
-        let x1 = unsafe_cast x as ##java.lang.Object;
-        let y1 = unsafe_cast y as ##java.lang.Object;
+        let x1 = checked_cast(x);
+        let y1 = checked_cast(y);
         equals(x1, y1)
 
     pub def fromNative(x: Interop/Apache/Poi/SS/Usermodel.CellType): CellType = 
@@ -136,7 +136,7 @@ namespace SheetIO/CellType {
 
     pub def hashCode(x: CellType): Int32 =
         import java.lang.Enum.hashCode(): Int32 & Pure;
-        let x1 = unsafe_cast toNative(x) as ##java.lang.Enum;
+        let x1 = unchecked_cast(toNative(x) as ##java.lang.Enum);
         hashCode(x1)
 
 

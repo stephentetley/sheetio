@@ -26,21 +26,21 @@ namespace Interop/Apache/Poi/XSSF/Usermodel {
     instance Interop/Apache/Poi/OOXML.SubPOIXMLDocument[XSSFWorkbook] {
         pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
             let XSSFWorkbook(d1) = d;
-            POIXMLDocument(unsafe_cast d1 as ##org.apache.poi.ooxml.POIXMLDocument)
+            POIXMLDocument(checked_cast(d1))
 
         pub def fromPOIXMLDocument(d: POIXMLDocument[r]): XSSFWorkbook[r] = 
             let POIXMLDocument(d1) = d;
-            XSSFWorkbook(unsafe_cast d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
     instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[XSSFWorkbook] {
         pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
             let XSSFWorkbook(d1) = d;
-            Workbook(unsafe_cast d1 as ##org.apache.poi.ss.usermodel.Workbook)
+            Workbook(checked_cast(d1))
 
         pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
             let Workbook(d1) = d;
-            XSSFWorkbook(unsafe_cast d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook) 
+            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
 }

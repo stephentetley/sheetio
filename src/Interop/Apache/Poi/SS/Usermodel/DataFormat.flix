@@ -17,8 +17,9 @@
 
 namespace Interop/Apache/Poi/SS/Usermodel {
 
-    /// Mutable* / Interface
-
+    /// Mutable*  / Interface
+    ///
+    /// * Interface is immutable but subclass XSSFDataFormat is mutable.
     pub enum DataFormat[_: Region](##org.apache.poi.ss.usermodel.DataFormat)
 
 
@@ -41,7 +42,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/DataFormat {
         getFormat(df1, ix) |> Object.toOption
 
     /// Creates a new format if not found and returns its index.
-    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ Write(r) = 
+    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ Read(r) = 
         import org.apache.poi.ss.usermodel.DataFormat.getFormat(String): Int16 \ r; 
         let DataFormat(df1) = df;
         getFormat(df1, format)
