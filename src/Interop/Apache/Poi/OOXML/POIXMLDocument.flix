@@ -30,11 +30,11 @@ namespace Interop/Apache/Poi/OOXML {
 
 namespace Interop/Apache/Poi/OOXML/POIXMLDocument {
 
-    use Interop/Apache/Poi/OOXML.POIXMLDocument;
-    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument};
-    use Interop/Apache/Poi/OOXML.SubPOIXMLDocument;
-    use Interop/IO.OutputStream;
-    use Interop/IO.SubOutputStream;
+    use Interop/Apache/Poi/OOXML.POIXMLDocument
+    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument}
+    use Interop/Apache/Poi/OOXML.SubPOIXMLDocument
+    use Interop/IO.OutputStream
+    use Interop/IO.SubOutputStream
     
 
     // XSSF (OOXML) concretely
@@ -52,18 +52,13 @@ namespace Interop/Apache/Poi/OOXML/POIXMLDocument {
     /// Write workbook.
     ///
     pub def write![r: Region, outs: Region -> Type, wb: Region -> Type]
-                (out: outs[r], wb: wb[r]): Result[Unit, String] \ {IO, Read(r)} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
-        try {
+                (out: outs[r], wb: wb[r]): Result[String, Unit] \ {IO, Read(r)} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};
             let wb1  = Interop/Apache/Poi/OOXML/SubPOIXMLDocument.toPOIXMLDocument(wb) |> getHH;
             let out1 = Interop/IO/SubOutputStream.toOutputStream(out) |> Interop/IO/OutputStream.getHH;
-            write(wb1, out1);
-            Ok()
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            write(wb1, out1)
+        })
 
 
 }

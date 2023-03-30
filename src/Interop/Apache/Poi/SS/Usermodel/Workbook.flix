@@ -48,27 +48,19 @@ namespace Interop/Apache/Poi/SS/Usermodel/Workbook {
     pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): Workbook[r] =
         Workbook(s)
     
-    pub def close!(wb: Workbook[r]): Result[Unit, String] \ Write(r) =         
-        try {
+    pub def close!(wb: Workbook[r]): Result[String, Unit] \ Write(r) =         
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;
             let Workbook(wb1) = wb;
-            close(wb1) |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            close(wb1)
+        })
 
-    pub def createSheet!(name: String, wb: Workbook[r]): Result[Sheet[r], String] \ Write(r) =         
-        try {
+    pub def createSheet!(name: String, wb: Workbook[r]): Result[String, Sheet[r]] \ Write(r) =         
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.createSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r;
             let Workbook(wb1) = wb;
-            createSheet(wb1, name) |> Sheet |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            createSheet(wb1, name) |> Sheet
+        })
 
 
     pub def getNumberOfSheets(wb: Workbook[r]): Int32 \ Read(r) = 
@@ -88,16 +80,12 @@ namespace Interop/Apache/Poi/SS/Usermodel/Workbook {
         getSheet(wb1, name) |> Object.toOption |> Option.map(Sheet)
 
 
-    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[Sheet[r], String] \ Read(r) = 
-        try {
+    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[String, Sheet[r]] \ Read(r) = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r;
             let Workbook(wb1) = wb;
-            getSheetAt(wb1, ix) |> Sheet |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            getSheetAt(wb1, ix) |> Sheet
+        })
 
 
     pub def getFontAt(ix: Int32, wb: Workbook[r]): Option[Font[r]] \ Read(r) = 
@@ -106,16 +94,12 @@ namespace Interop/Apache/Poi/SS/Usermodel/Workbook {
         getFontAt(wb1, ix) |> Object.toOption |> Option.map(Font)
 
 
-    pub def createCellStyle!(wb: Workbook[r]): Result[CellStyle[r], String] \ Write(r) = 
-        try {
+    pub def createCellStyle!(wb: Workbook[r]): Result[String, CellStyle[r]] \ Write(r) = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
             let Workbook(wb1) = wb;
-            createCellStyle(wb1) |> CellStyle |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            createCellStyle(wb1) |> CellStyle
+        })
 
     pub def createFont!(wb: Workbook[r]): Font[r] \ Write(r) = 
         import org.apache.poi.ss.usermodel.Workbook.createFont(): ##org.apache.poi.ss.usermodel.Font \ r; 

@@ -24,7 +24,7 @@ namespace SheetIO {
 
     /// Includes Map[columName: String => index: Int32]
     pub enum NamedRowEvaluator[r: Region, ka: Type, a: Type](
-        Graded.EnvEvaluator[ka, SheetIO/NamedRowEvaluator.Env[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvMutStateError[ka, SheetIO/NamedRowEvaluator.Env, Interop/Apache/Poi/SS/Usermodel.Row[r], r, a])
 
 /*
     instance GradedFunctor[NamedRowEvaluator[r, ka]] {
@@ -86,10 +86,9 @@ namespace SheetIO/NamedRowEvaluator {
     use SheetIO.CellType
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
-
-    pub type alias Env[r: Region] = 
+    pub type alias Env = 
         { columnIndices = Map[String, Int32]
-        , formatter = Interop/Apache/Poi/SS/Usermodel.DataFormatter[r]
+        , formatter = Interop/Apache/Poi/SS/Usermodel.DataFormatter
         }
 
 /*

@@ -19,7 +19,7 @@ namespace SheetIO {
 
 
     pub enum FontSetter[r: Region, ka: Type, a: Type](
-        Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Font[r], a]
+        Graded.MutStateError[ka, Interop/Apache/Poi/SS/Usermodel.Font[r], r, a]
     )
 
 /*

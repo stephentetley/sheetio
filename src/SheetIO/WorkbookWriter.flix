@@ -20,7 +20,7 @@ namespace SheetIO {
 
 
     pub enum WorkbookWriter[r: Region, ka: Type, a: Type](
-        Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+        Graded.MutStateError[ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], r, a])
 
 /*
     instance GradedFunctor[WorkbookWriter[r, ka]] {

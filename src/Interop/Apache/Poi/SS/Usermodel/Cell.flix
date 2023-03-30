@@ -47,52 +47,36 @@ namespace Interop/Apache/Poi/SS/Usermodel/Cell {
         getCellType(cell1) |> CellType
 
 
-    pub def getBooleanCellValue(cell: Cell[r]): Result[Bool, String] \ Read(r) =  
-        try {
+    pub def getBooleanCellValue(cell: Cell[r]): Result[String, Bool] \ Read(r) =  
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(): Bool \ r;
             let Cell(cell1) = cell;
-            getBooleanCellValue(cell1) |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            getBooleanCellValue(cell1)
+        })
 
 
     pub def getStringCellValue(cell: Cell[r]): Result[String, String] \ Read(r) = 
-        try {
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Cell.getStringCellValue(): String \ r; 
             let Cell(cell1) = cell;
             let ans = getStringCellValue(cell1);
-            if (not Object.isNull(ans)) Ok(ans) else Ok("")
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            if (not Object.isNull(ans)) ans else ""
+        })
 
-    pub def getNumericCellValue(cell: Cell[r]): Result[Float64, String] \ Read(r) = 
-        try {
+    pub def getNumericCellValue(cell: Cell[r]): Result[String, Float64] \ Read(r) = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 \ r;
             let Cell(cell1) = cell;
-            getNumericCellValue(cell1) |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            getNumericCellValue(cell1)
+        })
 
 
-    pub def getLocalDateTimeCellValue(cell: Cell[r]): Result[##java.time.LocalDateTime, String] \ Read(r) = 
-        try { 
+    pub def getLocalDateTimeCellValue(cell: Cell[r]): Result[String, ##java.time.LocalDateTime] \ Read(r) = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime \ r;
             let Cell(cell1) = cell;
-            getLocalDateTimeCellValue(cell1) |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            getLocalDateTimeCellValue(cell1)
+        })
 
 
     pub def setCellValueBoolean!(value: Bool, cell: Cell[r]): Unit \ Write(r) = 

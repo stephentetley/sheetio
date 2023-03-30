@@ -16,10 +16,12 @@
 
 namespace Interop/Apache/Poi/XSSF/Usermodel {
 
-    use Interop/Apache/Poi/OOXML.POIXMLDocument;
-    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument};
-    use Interop/Apache/Poi/SS/Usermodel.Workbook;
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
+    use Interop/Apache/Poi/OOXML.POIXMLDocument
+    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument}
+    use Interop/Apache/Poi/SS/Usermodel.Workbook
+    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook}
+    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook
+    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook.{XSSFWorkbook}
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
@@ -73,46 +75,33 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
     ///
     /// Open for reading.
     ///
-    pub def newWithFile(file: File[r]): Result[XSSFWorkbook[r], String] \ IO = 
-        try {
+    pub def newWithFile(file: File[r]): Result[String, XSSFWorkbook[r]] \ IO = 
+        Result.tryCatch(_ -> {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.File): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
             let file1 = Interop/IO/File.getHH(file);
-            newXSSFWorkbook(file1) |> XSSFWorkbook |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            newXSSFWorkbook(file1) |> XSSFWorkbook
+        })
 
 
     ///
     /// Open for reading.
     ///
-    pub def newWithInputStream[ins: Region -> Type, r: Region](ins: ins[r]): Result[XSSFWorkbook[r], String] \ IO with SubInputStream[ins] = 
-        try {
+    pub def newWithInputStream[ins: Region -> Type, r: Region](ins: ins[r]): Result[String, XSSFWorkbook[r]] \ IO with SubInputStream[ins] = 
+        Result.tryCatch(_ -> {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
             let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
-            newXSSFWorkbook(ins1) |> XSSFWorkbook |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            newXSSFWorkbook(ins1) |> XSSFWorkbook
+        })
 
 
     /// `write(OutputStream)` is method on superclass `POIXMLDocument` 
 
 
-    pub def close!(wb: XSSFWorkbook[r]): Result[Unit, String] \ {IO, Write(r)} = 
-        try {
+    pub def close!(wb: XSSFWorkbook[r]): Result[String, Unit] \ {IO, Write(r)} = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(): Unit \ {IO, r}; 
             let XSSFWorkbook(wb1) = wb;
-            let _ = close(wb1);
-            Ok()
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            close(wb1)
+        })
 
 }

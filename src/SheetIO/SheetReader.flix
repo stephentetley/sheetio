@@ -19,7 +19,7 @@ namespace SheetIO {
 
 
     pub enum SheetReader[r: Region, ka: Type, a: Type](
-        Graded.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Sheet[r], a])
+        Graded.Evaluator[ka, Interop/Apache/Poi/SS/Usermodel.Sheet[r], r, a])
 /*
 
 

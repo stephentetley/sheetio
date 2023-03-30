@@ -22,7 +22,7 @@ namespace SheetIO {
 
     // pass around DataFormatter[r]
     pub enum RowEvaluator[r: Region, ka: Type, a: Type](
-        Graded.EnvEvaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter[r], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvMutStateError[ka, Interop/Apache/Poi/SS/Usermodel.DataFormatter, Interop/Apache/Poi/SS/Usermodel.Row[r], r, a])
 
 /*
     instance GradedFunctor[RowEvaluator[r, ka]] {

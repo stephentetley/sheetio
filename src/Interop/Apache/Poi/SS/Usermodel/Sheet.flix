@@ -76,7 +76,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/Sheet {
         getWorkbook(sheet1) |> Workbook
 
 
-    pub def getRow(ix: Int32, sheet: Sheet[r]): Result[Row[r], String] \ Read(r) = 
+    pub def getRow(ix: Int32, sheet: Sheet[r]): Result[String, Row[r]] \ Read(r) = 
         import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r; 
         let Sheet(sheet1) = sheet;
         let ans = getRow(sheet1, ix);
@@ -90,13 +90,13 @@ namespace Interop/Apache/Poi/SS/Usermodel/Sheet {
         let Sheet(sheet1) = sheet; 
         createRow(sheet1, ix) |> Row
 
-    pub def rowIterator(sheet: Sheet[r]): Iterator[Row[r], r] \ Write(r) = 
-        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator & r;
+    pub def rowIterator(rc: Region[r1], sheet: Sheet[r]): Iterator[Row[r1], r and r1, r1] \ Write(r) = 
+        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
         // let r = Scoped.regionOf(sheet);
-        let ocast = obj -> Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(r, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
+        let ocast = obj -> Interop/Apache/Poi/SS/Usermodel/Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
         let Sheet(sheet1) = sheet;
         let iterHH = rowIterator(sheet1);
-        Interop/Util/IteratorZ.wrapHH(r, iterHH) 
-            |> Interop/Util/IteratorZ.toFlixIterator(ocast)
+        Interop/Util/IteratorZ.wrapHH(rc, iterHH) 
+            |> Interop/Util/IteratorZ.toFlixIterator(rc, ocast)
 
 }

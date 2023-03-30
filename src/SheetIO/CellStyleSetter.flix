@@ -17,12 +17,12 @@
 
 namespace SheetIO {
 
-
+/*
     pub enum CellStyleSetter[r: Region, ka: Type, a: Type](
         Graded.MutStateError[r, ka, Interop/Apache/Poi/SS/Usermodel.CellStyle[r], a]
     )
 
-/*
+
     instance GradedFunctor[CellStyleSetter[r, ka]] {
         pub def map(f: a -> b \ ef, o: CellStyleSetter[r, ka, a]): CellStyleSetter[r, ka, b] \ ef = 
             SheetIO/CellStyleSetter.map(f, o)
@@ -56,7 +56,7 @@ namespace SheetIO {
 }
 
 namespace SheetIO/CellStyleSetter {
-
+/*
     use SheetIO.CellStyleSetter
     use SheetIO.CellStyleSetter.{CellStyleSetter}
 
@@ -65,7 +65,7 @@ namespace SheetIO/CellStyleSetter {
     use Interop/Apache/Poi/SS/Usermodel.Font
     use Interop/Apache/Poi/SS/Usermodel.Font.{Font}
 
-/*
+
     pub def getCellStyleSetter(x: CellStyleSetter[r, ka, a]): MonadLib.MutStateError[r, ka, CellStyle[r], a] = 
         let CellStyleSetter(x1) = x;
         x1

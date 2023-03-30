@@ -56,16 +56,12 @@ namespace Interop/Apache/Poi/SS/Usermodel/Row {
         let Row(row1) = row;
         getSheet(row1) |> Sheet
 
-    pub def createCell!(ix: Int32, row: Row[r]): Result[Cell[r], String] \ Write(r) = 
-        try {
+    pub def createCell!(ix: Int32, row: Row[r]): Result[String, Cell[r]] \ Write(r) = 
+        Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r;
             let Row(row1) = row;
-            createCell(row1, ix) |> Cell |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            createCell(row1, ix) |> Cell
+        })
 
 
     pub def getFirstCellNum(row: Row[r]): Int16 \ Read(r) = 

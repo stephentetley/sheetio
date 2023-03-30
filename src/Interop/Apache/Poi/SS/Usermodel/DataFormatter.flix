@@ -28,8 +28,8 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
 
     use Interop/Util.Locale
-    use Interop/Flix.ResultSetter
-    use Interop/Flix.ResultSetter.ResultSetter
+    use Interop/Flix.Setter
+    use Interop/Flix.Setter.{Setter}
 
     use Interop/Apache/Poi/SS/Usermodel.DataFormatter
     use Interop/Apache/Poi/SS/Usermodel.DataFormatter.{DataFormatter}
@@ -42,9 +42,10 @@ namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
         let DataFormatter(df1) = df;
         df1
 
-    pub def new(rc: Region[r], fs: List[ResultSetter[DataFormatter, r]]): Result[String, DataFormatter] \ Write(r) = 
+    /// TODO - use enum of DataFormatter actions...
+    pub def new(rc: Region[r], fs: Setter[DataFormatter, r]): Result[String, DataFormatter] \ Write(r) = 
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter \ {} as new1;
-        DataFormatter(new1()) |> Interop/Flix/ResultSetter.apply(rc, fs)
+        DataFormatter(new1()) |> Interop/Flix/Setter.apply(rc, fs)
 
 
     ///

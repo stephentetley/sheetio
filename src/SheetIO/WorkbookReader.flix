@@ -19,7 +19,7 @@ namespace SheetIO {
 
 
     pub enum WorkbookReader[r: Region, ka: Type, a: Type](
-        Graded.Evaluator[r, ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], a])
+        Graded.Evaluator[ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], r, a])
 
 /*
     instance GradedFunctor[WorkbookReader[r, ka]] {

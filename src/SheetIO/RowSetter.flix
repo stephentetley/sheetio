@@ -19,10 +19,9 @@
 
 namespace SheetIO {
 
-    /// TODO rename RowWriter?
 
     pub enum RowSetter[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[r, ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], a])
+        Graded.EnvMutStateError[ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], r, a])
 /*
 
     instance GradedFunctor[RowSetter[r, ka]] {

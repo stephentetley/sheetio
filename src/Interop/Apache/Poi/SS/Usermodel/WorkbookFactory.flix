@@ -23,16 +23,12 @@ namespace Interop/Apache/Poi/SS/Usermodel/WorkbookFactory {
     use Interop/IO.SubInputStream
     
     pub def createWithInputStream![r: Region, ins: Region -> Type]
-                                (ins: ins[r]): Result[Workbook[r], String] \ Write(r) with SubInputStream[ins] =
-        try {
+                                (ins: ins[r]): Result[String, Workbook[r]] \ Write(r) with SubInputStream[ins] =
+        Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ r;
             let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
-            create(ins1) |> Workbook |> Ok
-        } catch {
-            case ex: ##java.lang.Exception =>
-                import java.lang.Throwable.getMessage(): String \ {};
-                Err(getMessage(ex))
-        }
+            create(ins1) |> Workbook
+        })
 
 
 }
