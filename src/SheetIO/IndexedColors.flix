@@ -16,7 +16,7 @@
 
 
 
-namespace SheetIO {
+mod SheetIO {
 
 
     pub enum IndexedColors { 
@@ -81,9 +81,9 @@ namespace SheetIO {
 
 }
 
-namespace SheetIO/IndexedColors {
+mod SheetIO.IndexedColors {
 
-    use SheetIO.IndexedColors;
+    use SheetIO.IndexedColors
     
 
     def toNative(x: IndexedColors): ##org.apache.poi.ss.usermodel.IndexedColors = 
@@ -145,63 +145,63 @@ namespace SheetIO/IndexedColors {
         import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getYELLOW;
         import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getYELLOW1;
         match x {
-            case SheetIO/IndexedColors.Aqua                 => getAQUA()
-            case SheetIO/IndexedColors.Automatic            => getAUTOMATIC()
-            case SheetIO/IndexedColors.Black                => getBLACK()
-            case SheetIO/IndexedColors.Black1               => getBLACK1()
-            case SheetIO/IndexedColors.Blue                 => getBLUE()
-            case SheetIO/IndexedColors.BlueGrey             => getBLUE_GREY()
-            case SheetIO/IndexedColors.Blue1                => getBLUE1()
-            case SheetIO/IndexedColors.BrightGreen          => getBRIGHT_GREEN()
-            case SheetIO/IndexedColors.BrightGreen1         => getBRIGHT_GREEN1()
-            case SheetIO/IndexedColors.Brown                => getBROWN()
-            case SheetIO/IndexedColors.Coral                => getCORAL()
-            case SheetIO/IndexedColors.CornflowerBlue       => getCORNFLOWER_BLUE()
-            case SheetIO/IndexedColors.DarkBlue             => getDARK_BLUE()
-            case SheetIO/IndexedColors.DarkGreen            => getDARK_GREEN()
-            case SheetIO/IndexedColors.DarkRed              => getDARK_RED()
-            case SheetIO/IndexedColors.DarkTeal             => getDARK_TEAL()
-            case SheetIO/IndexedColors.DarkYellow           => getDARK_YELLOW()
-            case SheetIO/IndexedColors.Gold                 => getGOLD()
-            case SheetIO/IndexedColors.Green                => getGREEN()
-            case SheetIO/IndexedColors.Grey25Percent        => getGREY_25_PERCENT()
-            case SheetIO/IndexedColors.Grey40Percent        => getGREY_40_PERCENT()
-            case SheetIO/IndexedColors.Grey50Percent        => getGREY_50_PERCENT()
-            case SheetIO/IndexedColors.Grey80Percent        => getGREY_80_PERCENT()
-            case SheetIO/IndexedColors.Indigo               => getINDIGO()
-            case SheetIO/IndexedColors.Lavender             => getLAVENDER()
-            case SheetIO/IndexedColors.LemonChiffon         => getLEMON_CHIFFON()
-            case SheetIO/IndexedColors.LightBlue            => getLIGHT_BLUE()
-            case SheetIO/IndexedColors.LightCornflowerBlue  => getLIGHT_CORNFLOWER_BLUE() 
-            case SheetIO/IndexedColors.LightGreen           => getLIGHT_GREEN()
-            case SheetIO/IndexedColors.LightOrange          => getLIGHT_ORANGE()
-            case SheetIO/IndexedColors.LightTurquoise       => getLIGHT_TURQUOISE()
-            case SheetIO/IndexedColors.LightTurquoise1      => getLIGHT_TURQUOISE1()
-            case SheetIO/IndexedColors.LightYellow          => getLIGHT_YELLOW()
-            case SheetIO/IndexedColors.Lime                 => getLIME()
-            case SheetIO/IndexedColors.Maroon               => getMAROON()
-            case SheetIO/IndexedColors.OliveGreen           => getOLIVE_GREEN()
-            case SheetIO/IndexedColors.Orange               => getORANGE()
-            case SheetIO/IndexedColors.Orchid               => getORCHID()
-            case SheetIO/IndexedColors.PaleBlue             => getPALE_BLUE()
-            case SheetIO/IndexedColors.Pink                 => getPINK()
-            case SheetIO/IndexedColors.Pink1                => getPINK1()
-            case SheetIO/IndexedColors.Plum                 => getPLUM()
-            case SheetIO/IndexedColors.Red                  => getRED()
-            case SheetIO/IndexedColors.Red1                 => getRED1() 
-            case SheetIO/IndexedColors.Rose                 => getROSE()
-            case SheetIO/IndexedColors.RoyalBlue            => getROYAL_BLUE()
-            case SheetIO/IndexedColors.SeaGreen             => getSEA_GREEN()
-            case SheetIO/IndexedColors.SkyBlue              => getSKY_BLUE()
-            case SheetIO/IndexedColors.Tan                  => getTAN()
-            case SheetIO/IndexedColors.Teal                 => getTEAL()
-            case SheetIO/IndexedColors.Turquoise            => getTURQUOISE()
-            case SheetIO/IndexedColors.Turquoise1           => getTURQUOISE1()
-            case SheetIO/IndexedColors.Violet               => getVIOLET()
-            case SheetIO/IndexedColors.White                => getWHITE()
-            case SheetIO/IndexedColors.White1               => getWHITE1()
-            case SheetIO/IndexedColors.Yellow               => getYELLOW()
-            case SheetIO/IndexedColors.Yellow1              => getYELLOW1()
+            case SheetIO.IndexedColors.Aqua                 => getAQUA()
+            case SheetIO.IndexedColors.Automatic            => getAUTOMATIC()
+            case SheetIO.IndexedColors.Black                => getBLACK()
+            case SheetIO.IndexedColors.Black1               => getBLACK1()
+            case SheetIO.IndexedColors.Blue                 => getBLUE()
+            case SheetIO.IndexedColors.BlueGrey             => getBLUE_GREY()
+            case SheetIO.IndexedColors.Blue1                => getBLUE1()
+            case SheetIO.IndexedColors.BrightGreen          => getBRIGHT_GREEN()
+            case SheetIO.IndexedColors.BrightGreen1         => getBRIGHT_GREEN1()
+            case SheetIO.IndexedColors.Brown                => getBROWN()
+            case SheetIO.IndexedColors.Coral                => getCORAL()
+            case SheetIO.IndexedColors.CornflowerBlue       => getCORNFLOWER_BLUE()
+            case SheetIO.IndexedColors.DarkBlue             => getDARK_BLUE()
+            case SheetIO.IndexedColors.DarkGreen            => getDARK_GREEN()
+            case SheetIO.IndexedColors.DarkRed              => getDARK_RED()
+            case SheetIO.IndexedColors.DarkTeal             => getDARK_TEAL()
+            case SheetIO.IndexedColors.DarkYellow           => getDARK_YELLOW()
+            case SheetIO.IndexedColors.Gold                 => getGOLD()
+            case SheetIO.IndexedColors.Green                => getGREEN()
+            case SheetIO.IndexedColors.Grey25Percent        => getGREY_25_PERCENT()
+            case SheetIO.IndexedColors.Grey40Percent        => getGREY_40_PERCENT()
+            case SheetIO.IndexedColors.Grey50Percent        => getGREY_50_PERCENT()
+            case SheetIO.IndexedColors.Grey80Percent        => getGREY_80_PERCENT()
+            case SheetIO.IndexedColors.Indigo               => getINDIGO()
+            case SheetIO.IndexedColors.Lavender             => getLAVENDER()
+            case SheetIO.IndexedColors.LemonChiffon         => getLEMON_CHIFFON()
+            case SheetIO.IndexedColors.LightBlue            => getLIGHT_BLUE()
+            case SheetIO.IndexedColors.LightCornflowerBlue  => getLIGHT_CORNFLOWER_BLUE() 
+            case SheetIO.IndexedColors.LightGreen           => getLIGHT_GREEN()
+            case SheetIO.IndexedColors.LightOrange          => getLIGHT_ORANGE()
+            case SheetIO.IndexedColors.LightTurquoise       => getLIGHT_TURQUOISE()
+            case SheetIO.IndexedColors.LightTurquoise1      => getLIGHT_TURQUOISE1()
+            case SheetIO.IndexedColors.LightYellow          => getLIGHT_YELLOW()
+            case SheetIO.IndexedColors.Lime                 => getLIME()
+            case SheetIO.IndexedColors.Maroon               => getMAROON()
+            case SheetIO.IndexedColors.OliveGreen           => getOLIVE_GREEN()
+            case SheetIO.IndexedColors.Orange               => getORANGE()
+            case SheetIO.IndexedColors.Orchid               => getORCHID()
+            case SheetIO.IndexedColors.PaleBlue             => getPALE_BLUE()
+            case SheetIO.IndexedColors.Pink                 => getPINK()
+            case SheetIO.IndexedColors.Pink1                => getPINK1()
+            case SheetIO.IndexedColors.Plum                 => getPLUM()
+            case SheetIO.IndexedColors.Red                  => getRED()
+            case SheetIO.IndexedColors.Red1                 => getRED1() 
+            case SheetIO.IndexedColors.Rose                 => getROSE()
+            case SheetIO.IndexedColors.RoyalBlue            => getROYAL_BLUE()
+            case SheetIO.IndexedColors.SeaGreen             => getSEA_GREEN()
+            case SheetIO.IndexedColors.SkyBlue              => getSKY_BLUE()
+            case SheetIO.IndexedColors.Tan                  => getTAN()
+            case SheetIO.IndexedColors.Teal                 => getTEAL()
+            case SheetIO.IndexedColors.Turquoise            => getTURQUOISE()
+            case SheetIO.IndexedColors.Turquoise1           => getTURQUOISE1()
+            case SheetIO.IndexedColors.Violet               => getVIOLET()
+            case SheetIO.IndexedColors.White                => getWHITE()
+            case SheetIO.IndexedColors.White1               => getWHITE1()
+            case SheetIO.IndexedColors.Yellow               => getYELLOW()
+            case SheetIO.IndexedColors.Yellow1              => getYELLOW1()
         }
 
     pub def getIndex(x: IndexedColors): Int16 = 

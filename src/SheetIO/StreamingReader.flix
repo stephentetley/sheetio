@@ -20,7 +20,7 @@
 
 /*
 
-namespace SheetIO/StreamingReader {
+mod SheetIO.StreamingReader {
 
     use System.Path.{Path};
 
@@ -107,20 +107,20 @@ namespace SheetIO/StreamingReader {
     /// 
     pub def indexedRowIterator(start: Int32, eval: RowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
         let RowEvaluator(eval1) = eval;
-        let fmt = SheetIO/Internal/DataFormatter.new();
+        let fmt = SheetIO.Internal.DataFormatter.new();
         src |> Iterator.drop(start) |> Iterator.map(Result.flatMap(eval1(fmt)))
 
 
     
     pub def namedRowIterator(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
         let NamedRowEvaluator(eval1) = eval;
-        let RowEvaluator(headerEval1) = SheetIO/RowEvaluator.getRowContents();
-        let fmt = SheetIO/Internal/DataFormatter.new();
+        let RowEvaluator(headerEval1) = SheetIO.RowEvaluator.getRowContents();
+        let fmt = SheetIO.Internal.DataFormatter.new();
         let src1 = if (headersLine > 0) Iterator.drop(headersLine - 1, src) else src;
         match Iterator.head(src1) {
             case Some(Ok(hrow)) => {
                 let arr = Result.getWithDefault(headerEval1(fmt, hrow), Array.new("", 0));
-                let lookups = SheetIO/NamedRowEvaluator.makeHeaders(arr); 
+                let lookups = SheetIO.NamedRowEvaluator.makeHeaders(arr); 
                 Iterator.map(Result.flatMap(eval1(lookups, fmt)), src1)
             }
             case Some(Err(msg)) => Iterator.repeat(Err("namedRowIterator - ${msg}"), 1)

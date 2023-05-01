@@ -15,58 +15,58 @@
  */
 
 
-namespace SheetIO {
+mod SheetIO {
 
 
     /// Imperative writing is not a writer monad (which has backtracking)
     /// Imparative writing uses mutable state
 
     pub enum SheetWriter[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Sheet[r], r, a]
+        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.Sheet[r], r, a]
     )
 
 /*
     instance Functor[SheetWriter[r, ka]] {
         pub def map(f: a -> b & ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] & ef = 
-            SheetIO/SheetWriter.map(f, o)
+            SheetIO.SheetWriter.map(f, o)
     }
 
     instance Applicative[SheetWriter[r, ka]] {
         pub def point(x: a): SheetWriter[r, ka, a] = 
-            SheetIO/SheetWriter.point(x)
+            SheetIO.SheetWriter.point(x)
 
         pub def ap(f: SheetWriter[r, ka, a -> b & ef], x: SheetWriter[r, ka, a]) : SheetWriter[r, ka, b] & ef = 
-            SheetIO/SheetWriter.ap(f, x)
+            SheetIO.SheetWriter.ap(f, x)
     }
 
     instance Monad[SheetWriter[r, ka]] {
         pub def flatMap(f: a -> SheetWriter[r, ka, b] & ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] & ef =
-            SheetIO/SheetWriter.flatMap(f, o)
+            SheetIO.SheetWriter.flatMap(f, o)
     }
 
     instance Graded.MonadError[SheetWriter[r, ka]] {
         pub def throwError(msg: String): SheetWriter[r, ka, a] = 
-            SheetIO/SheetWriter.throwError(msg)
+            SheetIO.SheetWriter.throwError(msg)
 
         pub def mapError(f: String -> String \ ef, ma: SheetWriter[r, ka, a]): SheetWriter[r, ka, a] \ ef =
-            SheetIO/SheetWriter.mapError(f, ma)
+            SheetIO.SheetWriter.mapError(f, ma)
 
         pub def catchError(ma: SheetWriter[r, ka, a], f: String -> SheetWriter[r, ka, a] \ ef): SheetWriter[r, ka, a] \ ef =
-            SheetIO/SheetWriter.catchError(ma, f)
+            SheetIO.SheetWriter.catchError(ma, f)
     }
 */
 
 }
 
-namespace SheetIO/SheetWriter {
+mod SheetIO.SheetWriter {
 
     use SheetIO.SheetWriter
     use SheetIO.SheetWriter.{SheetWriter}
     use SheetIO.RowSetter
     
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle
-    use Interop/Apache/Poi/SS/Usermodel.Row
-    use Interop/Apache/Poi/SS/Usermodel.Sheet
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle
+    use Interop.Apache.Poi.SS.Usermodel.Row
+    use Interop.Apache.Poi.SS.Usermodel.Sheet
 
 /*
     pub def getSheetWriter(x: SheetWriter[r, ka, a]): Graded.EnvMutStateError[r, ka, Option[CellStyle[r]], Sheet[r], a] = 
@@ -78,46 +78,46 @@ namespace SheetIO/SheetWriter {
                                 ma: SheetWriter[r, a, a],
                                 env: Option[CellStyle[r]],
                                 st: Sheet[r]): Result[a, String] \ r =
-        Graded/EnvMutStateError.runEnvMutStateError(r, getSheetWriter(ma), env, st)
+        Graded.EnvMutStateError.runEnvMutStateError(r, getSheetWriter(ma), env, st)
 
     pub def point(x: a): SheetWriter[r, ka, a] = 
-        SheetWriter(Graded/EnvMutStateError.point(x))
+        SheetWriter(Graded.EnvMutStateError.point(x))
 
     pub def map(f: a -> b \ ef, x: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] \ ef =
-        SheetWriter(Graded/EnvMutStateError.map(f, getSheetWriter(x)))
+        SheetWriter(Graded.EnvMutStateError.map(f, getSheetWriter(x)))
 
     pub def ap(mf: SheetWriter[r, ka, a -> b \ ef], ma: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] \ ef =
-        SheetWriter(Graded/EnvMutStateError.ap(getSheetWriter(mf), getSheetWriter(ma)))
+        SheetWriter(Graded.EnvMutStateError.ap(getSheetWriter(mf), getSheetWriter(ma)))
 
     pub def flatMap(k: a -> SheetWriter[r, ka, b] \ ef, x: SheetWriter[r, ka, a]): SheetWriter[r, ka, b]  \ ef = 
-        SheetWriter(Graded/EnvMutStateError.flatMap(k >> getSheetWriter, getSheetWriter(x)))
+        SheetWriter(Graded.EnvMutStateError.flatMap(k >> getSheetWriter, getSheetWriter(x)))
 
 
     pub def throwError(msg: String): SheetWriter[r, ka, a] = 
-        SheetWriter(Graded/EnvMutStateError.throwError(msg))
+        SheetWriter(Graded.EnvMutStateError.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: SheetWriter[r, ka, a]): SheetWriter[r, ka, a] \ ef =
-        SheetWriter(Graded/EnvMutStateError.mapError(f, getSheetWriter(ma)))
+        SheetWriter(Graded.EnvMutStateError.mapError(f, getSheetWriter(ma)))
 
     pub def catchError(ma: SheetWriter[r, ka, a], f: String -> SheetWriter[r, ka, a] \ ef): SheetWriter[r, ka, a] \ ef =
-        SheetWriter(Graded/EnvMutStateError.catchError(getSheetWriter(ma), f >> getSheetWriter))
+        SheetWriter(Graded.EnvMutStateError.catchError(getSheetWriter(ma), f >> getSheetWriter))
 
     def liftSetter!(f: Option[CellStyle[r]] -> Sheet[r] -> a \ ef): SheetWriter[r, ka, a] \ ef  =
-        SheetWriter(Graded/EnvMutStateError.liftSetter!(f))
+        SheetWriter(Graded.EnvMutStateError.liftSetter!(f))
 
     // def liftSetterResult!(f: CellStyle[r] -> Result[a, err] \ ef): SheetWriter[r, ka, a] \ ef with ToString[err] =
-    //     SheetWriter(Graded/EnvMutStateError.liftSetterResult!(f))
+    //     SheetWriter(Graded.EnvMutStateError.liftSetterResult!(f))
     
     pub def liftAction(f: Unit -> a \ ef): SheetWriter[r, ka, a] \ ef =
-        SheetWriter(Graded/EnvMutStateError.liftAction(f))
+        SheetWriter(Graded.EnvMutStateError.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): SheetWriter[r, ka, a] \ ef with ToString[err] =
-        SheetWriter(Graded/EnvMutStateError.liftActionResult(f))
+        SheetWriter(Graded.EnvMutStateError.liftActionResult(f))
 
 
     def askEnv(): SheetWriter[r, ka, Option[CellStyle[r]]] =
-        SheetWriter(Graded/EnvMutStateError.askEnv())
+        SheetWriter(Graded.EnvMutStateError.askEnv())
     
         
 
@@ -314,13 +314,13 @@ namespace SheetIO/SheetWriter {
 
 
     pub def getFormat(x: DataFormat, format: String): SheetWriter[r, ka, Int16] =
-        use SheetIO/Internal/Workbook.{getFormat};
+        use SheetIO.Internal.Workbook.{getFormat};
         let DataFormat(x1) = x;
         liftActionResult(_ -> getFormat(x1, format))
 
 
     def getSheetName(x: Sheet): SheetWriter[r, ka, String] =
-        use SheetIO/Internal/Sheet.{getSheetName};
+        use SheetIO.Internal.Sheet.{getSheetName};
         let Sheet(x1) = x;
         liftActionResult(_ -> getSheetName(x1))
 
@@ -331,14 +331,14 @@ namespace SheetIO/SheetWriter {
 
     // createRow
     def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
-        liftSetter!((_, sheet) -> Interop/Apache/Poi/SS/Usermodel/Sheet.createRow!(ix, sheet))
+        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.Sheet.createRow!(ix, sheet))
 
 
     pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ Write(r) =
         let* row        = createRow!(ix);
         let r           = Scoped.regionOf(row);
         let* style      = askStyle();
-        liftActionResult(_ -> SheetIO/RowSetter.runRowSetter!(r, ma, style, row)) 
+        liftActionResult(_ -> SheetIO.RowSetter.runRowSetter!(r, ma, style, row)) 
 
 
 
@@ -351,7 +351,7 @@ namespace SheetIO/SheetWriter {
 
     /// Headers are written to Row 0, all subsequent rows are *data*.
     pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ Write(r)  = 
-        let* _      = setRow!(0, SheetIO/RowSetter.putHeaders!(headers));
+        let* _      = setRow!(0, SheetIO.RowSetter.putHeaders!(headers));
         let* _      = allRowsForm!(1, writer, rows);
         point()
 

@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
+mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
 
-
-namespace Interop/Apache/Poi/SS/Usermodel/WorkbookFactory {
-
-    use Interop/Apache/Poi/SS/Usermodel.Workbook;
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook};
-    use Interop/IO.SubInputStream
+    use Interop.Apache.Poi.SS.Usermodel.Workbook
+    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Interop.IO.SubInputStream
     
     pub def createWithInputStream![r: Region, ins: Region -> Type]
                                 (ins: ins[r]): Result[String, Workbook[r]] \ Write(r) with SubInputStream[ins] =
         Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ r;
-            let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
+            let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;
             create(ins1) |> Workbook
         })
 

@@ -15,7 +15,7 @@
  */
 
 
-namespace Interop/Apache/Poi/SS/Usermodel {
+mod Interop.Apache.Poi.SS.Usermodel {
 
     /// "Immutable with Setter"
 
@@ -25,16 +25,16 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 }
 
 
-namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
+mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
 
-    use Interop/Util.Locale
-    use Interop/Flix.Setter
-    use Interop/Flix.Setter.{Setter}
+    use Interop.Util.Locale
+    use Interop.Flix.Setter
+    use Interop.Flix.Setter.{Setter}
 
-    use Interop/Apache/Poi/SS/Usermodel.DataFormatter
-    use Interop/Apache/Poi/SS/Usermodel.DataFormatter.{DataFormatter}
-    use Interop/Apache/Poi/SS/Usermodel.Cell
-    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell}
+    use Interop.Apache.Poi.SS.Usermodel.DataFormatter
+    use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
+    use Interop.Apache.Poi.SS.Usermodel.Cell
+    use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
     
 
 
@@ -45,7 +45,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
     /// TODO - use enum of DataFormatter actions...
     pub def new(rc: Region[r], fs: Setter[DataFormatter, r]): Result[String, DataFormatter] \ Write(r) = 
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter \ {} as new1;
-        DataFormatter(new1()) |> Interop/Flix/Setter.apply(rc, fs)
+        DataFormatter(new1()) |> Interop.Flix.Setter.apply(rc, fs)
 
 
     ///
@@ -53,7 +53,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/DataFormatter {
     ///
     pub def newWithLocale(_: Region[r], loc: Locale): DataFormatter \ Write(r) = 
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as newDataFormatter;
-        let loc1 = Interop/Util/Locale.getHH(loc);
+        let loc1 = Interop.Util.Locale.getHH(loc);
         newDataFormatter(loc1) |> DataFormatter
 
 

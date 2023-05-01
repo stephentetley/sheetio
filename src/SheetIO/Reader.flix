@@ -16,7 +16,7 @@
 
 
 
-namespace SheetIO/Reader {
+mod SheetIO.Reader {
 
     use GradedFunctor.{<$>}
 
@@ -26,49 +26,49 @@ namespace SheetIO/Reader {
 /*
     pub type alias XlsxSource = 
         { sheet :: String
-        , path :: Interop/System.Path
+        , path :: Interop.System.Path
         }
 
 
     pub def allRows(eval: RowEvaluator[r, a], src: XlsxSource): Result[List[a], String] & Impure =
-        SheetIO/SheetReader.runXlsx(allRows1(eval, src.sheet), src.path)
+        SheetIO.SheetReader.runXlsx(allRows1(eval, src.sheet), src.path)
 
-    pub def allRowsOfSheets(eval: RowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
+    pub def allRowsOfSheets(eval: RowEvaluator[r, a], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(allRows1(eval), sheets);        
-        SheetIO/SheetReader.runXlsx(readSheets, path)
+        SheetIO.SheetReader.runXlsx(readSheets, path)
 
 
     def allRows1(eval: RowEvaluator[r, a], sheetName: String): SheetReader[r, List[a]] =
-        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allRows};
+        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, allRows};
         let* s1     = getSheetNamed(sheetName);
         let* xs     = allRows(eval, s1);
         point(xs)
 
     pub def someRows(eval: RowEvaluator[r, Option[a]], src: XlsxSource): Result[List[a], String] & Impure =        
-        SheetIO/SheetReader.runXlsx(someRows1(eval, src.sheet), src.path)
+        SheetIO.SheetReader.runXlsx(someRows1(eval, src.sheet), src.path)
 
-    pub def someRowsOfSheets(eval: RowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
+    pub def someRowsOfSheets(eval: RowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(someRows1(eval), sheets);        
-        SheetIO/SheetReader.runXlsx(readSheets, path)
+        SheetIO.SheetReader.runXlsx(readSheets, path)
 
 
     def someRows1(eval: RowEvaluator[r, Option[a]], sheetName: String): SheetReader[r, List[a]] =
-        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, someRows};
+        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, someRows};
         let* s1     = getSheetNamed(sheetName);
         let* xs     = someRows(eval, s1);
         point(xs)
 
 
     pub def allNamedRows(eval: NamedRowEvaluator[r, a], src: XlsxSource): Result[List[a], String] & Impure =
-        SheetIO/SheetReader.runXlsx(allNamedRows1(eval, src.sheet), src.path)
+        SheetIO.SheetReader.runXlsx(allNamedRows1(eval, src.sheet), src.path)
 
-    pub def allNamedRowsOfSheets(eval: NamedRowEvaluator[r, a], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
+    pub def allNamedRowsOfSheets(eval: NamedRowEvaluator[r, a], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(allNamedRows1(eval), sheets);        
-        SheetIO/SheetReader.runXlsx(readSheets, path)
+        SheetIO.SheetReader.runXlsx(readSheets, path)
 
 
     def allNamedRows1(eval: NamedRowEvaluator[r, a], sheetName: String): SheetReader[r, List[a]] =
-        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, allNamedRows};
+        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, allNamedRows};
         let* s1     = getSheetNamed(sheetName);
         let* xs     = allNamedRows(eval, s1);
         point(xs)
@@ -76,15 +76,15 @@ namespace SheetIO/Reader {
     
 
     pub def someNamedRows(eval: NamedRowEvaluator[r, Option[a]], src: XlsxSource): Result[List[a], String] & Impure =
-        SheetIO/SheetReader.runXlsx(someNamedRows1(eval, src.sheet), src.path)
+        SheetIO.SheetReader.runXlsx(someNamedRows1(eval, src.sheet), src.path)
 
-    pub def someNamedRowsOfSheets(eval: NamedRowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox/System.Path): Result[List[a], String] & Impure =
+    pub def someNamedRowsOfSheets(eval: NamedRowEvaluator[r, Option[a]], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] & Impure =
         let readSheets = List.flatten <$> Traversable.traverse(someNamedRows1(eval), sheets);        
-        SheetIO/SheetReader.runXlsx(readSheets, path)
+        SheetIO.SheetReader.runXlsx(readSheets, path)
 
 
     def someNamedRows1(eval: NamedRowEvaluator[r, Option[a]], sheetName: String): SheetReader[r, List[a]] =
-        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, someNamedRows};
+        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, someNamedRows};
         let* s1     = getSheetNamed(sheetName);
         let* xs     = someNamedRows(eval, s1);
         point(xs)
@@ -93,13 +93,13 @@ namespace SheetIO/Reader {
     pub def foldAllRows(combine: (b, a) -> b & ef, 
                         ac: b, 
                         eval: RowEvaluator[r, a], src: XlsxSource): Result[b, String] & Impure =
-        use SheetIO/SheetReader.{flatMap, point, getSheetNamed, foldAllRows};
+        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, foldAllRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = foldAllRows(combine, ac, eval, s1);
             point(xs)
         };
-        SheetIO/SheetReader.runXlsx(readStep(), src.path)
+        SheetIO.SheetReader.runXlsx(readStep(), src.path)
 
 
     pub def foldSomeRows(combine: (b, a) -> b & ef, 
@@ -117,13 +117,13 @@ namespace SheetIO/Reader {
                                 ac: b, 
                                 eval: NamedRowEvaluator[r, a],
                                 src: XlsxSource): Result[b, String] & Impure =
-        use SheetIO/SheetReader.{bind, flatMap, point, getSheetNamed, foldAllNamedRows};
+        use SheetIO.SheetReader.{bind, flatMap, point, getSheetNamed, foldAllNamedRows};
         let readStep = () -> { 
             let* s1     = getSheetNamed(src.sheet);
             let* xs     = foldAllNamedRows(combine, ac, eval, s1);
             point(xs)
         };
-        SheetIO/SheetReader.runXlsx(readStep(), src.path)
+        SheetIO.SheetReader.runXlsx(readStep(), src.path)
 
 
     pub def foldSomeNamedRows(combine: (b, a) -> b & ef, 
@@ -144,11 +144,11 @@ namespace SheetIO/Reader {
         foldAllNamedRows((ac, x) -> ac <+> x, #{}, eval, src)
 
     pub def someRelations(eval: RowEvaluator[r, #{| reln}], src: XlsxSource): Result[#{| reln}, String] & Impure =
-        foldAllRows((ac, x) -> ac <+> x, #{}, SheetIO/RowEvaluator.withDefault(eval, #{}), src)
+        foldAllRows((ac, x) -> ac <+> x, #{}, SheetIO.RowEvaluator.withDefault(eval, #{}), src)
 
 
     pub def someNamedRelations(eval: NamedRowEvaluator[r, #{| reln}], src: XlsxSource): Result[#{| reln}, String] & Impure =
-        foldAllNamedRows((ac, x) -> ac <+> x, #{}, SheetIO/NamedRowEvaluator.withDefault(eval, #{}), src)
+        foldAllNamedRows((ac, x) -> ac <+> x, #{}, SheetIO.NamedRowEvaluator.withDefault(eval, #{}), src)
 
 */
 }

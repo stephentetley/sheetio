@@ -15,67 +15,67 @@
  */
 
 
-namespace SheetIO {
+mod SheetIO {
 
 
     pub enum WorkbookReader[r: Region, ka: Type, a: Type](
-        Graded.Evaluator[ka, Interop/Apache/Poi/SS/Usermodel.Workbook[r], r, a])
+        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Workbook[r], r, a])
 
 /*
     instance GradedFunctor[WorkbookReader[r, ka]] {
         pub def map(f: a -> b & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef = 
-            SheetIO/WorkbookReader.map(f, o)
+            SheetIO.WorkbookReader.map(f, o)
     }
 
     instance GradedApplicative[WorkbookReader[r, ka]] {
         pub def point(x: a): WorkbookReader[r, ka, a] = 
-            SheetIO/WorkbookReader.point(x)
+            SheetIO.WorkbookReader.point(x)
 
         pub def ap(f: WorkbookReader[r, ka, a -> b & ef], x: WorkbookReader[r, ka, a]) : WorkbookReader[r, ka, b] & ef = 
-            SheetIO/WorkbookReader.ap(f, x)
+            SheetIO.WorkbookReader.ap(f, x)
     }
 
     instance GradedMonad[WorkbookReader[r, ka]] {
         pub def flatMap(f: a -> WorkbookReader[r, ka, b] & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef =
-            SheetIO/WorkbookReader.flatMap(f, o)
+            SheetIO.WorkbookReader.flatMap(f, o)
     }
 
     instance GradedZero[WorkbookReader[r, ka]] {
         pub def empty(): WorkbookReader[r, ka, a] = 
-            SheetIO/WorkbookReader.empty()
+            SheetIO.WorkbookReader.empty()
     }
 
     instance GradedOr[WorkbookReader[r, ka]] {
         pub def orelse(a: WorkbookReader[r, ka, a], b: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
-            SheetIO/WorkbookReader.orelse(a, b)
+            SheetIO.WorkbookReader.orelse(a, b)
     }
 
     instance GradedError[WorkbookReader[r, ka]] {
         pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
-            SheetIO/WorkbookReader.throwError(msg)
+            SheetIO.WorkbookReader.throwError(msg)
 
         pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
-            SheetIO/WorkbookReader.mapError(f, ma)
+            SheetIO.WorkbookReader.mapError(f, ma)
 
         pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
-            SheetIO/WorkbookReader.catchError(ma, f)
+            SheetIO.WorkbookReader.catchError(ma, f)
     }
 */
 
 }
 
-namespace SheetIO/WorkbookReader {
+mod SheetIO.WorkbookReader {
 
     use ToString.toString
-    use Basis/NIO/File.Path
+    use Basis.NIO.File.Path
 
     use SheetIO.WorkbookReader
     use SheetIO.WorkbookReader.{WorkbookReader}
 
-    use Interop/Apache/Poi/SS/Usermodel.Sheet
-    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet}
-    use Interop/Apache/Poi/SS/Usermodel.Workbook
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook}
+    use Interop.Apache.Poi.SS.Usermodel.Sheet
+    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
+    use Interop.Apache.Poi.SS.Usermodel.Workbook
+    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     use SheetIO.RowEvaluator
     use SheetIO.RowEvaluator.{RowEvaluator}
@@ -96,11 +96,11 @@ namespace SheetIO/WorkbookReader {
     def runOnFile(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         use Result.{flatMap};
         let path1   = toString(path);
-        let file    = Interop/IO/File.newFile(r, path1);
-        let* ins    = Interop/IO/FileInputStream.newWithFile(file);
-        let* wb     = Interop/Apache/Poi/SS/Usermodel/WorkbookFactory.createWithInputStream!(ins);
+        let file    = Interop.IO.File.newFile(r, path1);
+        let* ins    = Interop.IO.FileInputStream.newWithFile(file);
+        let* wb     = Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream!(ins);
         let* ans    = runWorkbookReader(r, ma, wb);
-        let* _      = Interop/Apache/Poi/SS/Usermodel/Workbook.close!(wb);
+        let* _      = Interop.Apache.Poi.SS.Usermodel.Workbook.close!(wb);
         Ok(ans)
         
 
@@ -117,50 +117,50 @@ namespace SheetIO/WorkbookReader {
     pub def runWorkbookReader(r: Region[r], 
                                 ma: WorkbookReader[r, a, a], 
                                 st: Workbook[r]): Result[a, String] \ r =
-        Graded/Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
+        Graded.Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
 
     pub def point(x: a): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded/Evaluator.point(x))
+        WorkbookReader(Graded.Evaluator.point(x))
 
 
 
     pub def map(f: a -> b \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded/Evaluator.map(f, getWorkbookReader(ma)))
+        WorkbookReader(Graded.Evaluator.map(f, getWorkbookReader(ma)))
 
     pub def ap(mf: WorkbookReader[r, ka, a -> b \ ef], ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded/Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
+        WorkbookReader(Graded.Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
 
     pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded/Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
+        WorkbookReader(Graded.Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
 
     pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded/Evaluator.throwError(msg))
+        WorkbookReader(Graded.Evaluator.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded/Evaluator.mapError(f, getWorkbookReader(ma)))
+        WorkbookReader(Graded.Evaluator.mapError(f, getWorkbookReader(ma)))
 
     pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded/Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
+        WorkbookReader(Graded.Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
 
     pub def empty(): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded/Evaluator.empty())
+        WorkbookReader(Graded.Evaluator.empty())
         
     pub def orelse(ma: WorkbookReader[r, ka, a], mb: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
-        WorkbookReader(Graded/Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
+        WorkbookReader(Graded.Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
 
     def liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded/Evaluator.liftGetter(f))
+        WorkbookReader(Graded.Evaluator.liftGetter(f))
     
     def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(Graded/Evaluator.liftGetterResult(f))
+        WorkbookReader(Graded.Evaluator.liftGetterResult(f))
 
 
     pub def liftAction(f: Unit -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded/Evaluator.liftAction(f))
+        WorkbookReader(Graded.Evaluator.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(Graded/Evaluator.liftActionResult(f))
+        WorkbookReader(Graded.Evaluator.liftActionResult(f))
 
 
 
@@ -171,7 +171,7 @@ namespace SheetIO/WorkbookReader {
     ///
     // pub def result(ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, Result[a, String]] = 
     //     WorkbookReader(wb -> 
-    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO.Internal.EvalError.getText);
     //         Ok(ans)
     //     )
 
@@ -180,7 +180,7 @@ namespace SheetIO/WorkbookReader {
     // WorkbookReader
 
     pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ Read(r) =
-        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getNumberOfSheets)
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets)
 
     pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ Read(r) =
         let* n  = getNumberOfSheets();
@@ -189,16 +189,16 @@ namespace SheetIO/WorkbookReader {
 
 
     def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ Read(r) =
-        liftGetter(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetName(ix))
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix))
 
     pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
-        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
     pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
-        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Workbook.getSheetAt(ix))
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix))
 
     pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
-        liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO/SheetReader.runSheetReader(r, eval, sheet)})
+        liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO.SheetReader.runSheetReader(r, eval, sheet)})
 
 */
 }

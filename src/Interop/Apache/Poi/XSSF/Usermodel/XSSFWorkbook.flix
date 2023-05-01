@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/XSSF/Usermodel {
+mod Interop.Apache.Poi.XSSF.Usermodel {
 
-    use Interop/Apache/Poi/OOXML.POIXMLDocument
-    use Interop/Apache/Poi/OOXML.POIXMLDocument.{POIXMLDocument}
-    use Interop/Apache/Poi/SS/Usermodel.Workbook
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook}
-    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook
-    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook.{XSSFWorkbook}
+    use Interop.Apache.Poi.OOXML.POIXMLDocument
+    use Interop.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+    use Interop.Apache.Poi.SS.Usermodel.Workbook
+    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
+    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
-    instance Interop/Apache/Poi/OOXML.SubPOIXMLDocument[XSSFWorkbook] {
+    instance Interop.Apache.Poi.OOXML.SubPOIXMLDocument[XSSFWorkbook] {
         pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
             let XSSFWorkbook(d1) = d;
             POIXMLDocument(checked_cast(d1))
@@ -35,7 +35,7 @@ namespace Interop/Apache/Poi/XSSF/Usermodel {
             XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
-    instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[XSSFWorkbook] {
+    instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[XSSFWorkbook] {
         pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
             let XSSFWorkbook(d1) = d;
             Workbook(checked_cast(d1))
@@ -47,13 +47,15 @@ namespace Interop/Apache/Poi/XSSF/Usermodel {
 
 }
 
-namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
+mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
+    
+    use Interop.IO.File
+    use Interop.IO.InputStream
+    use Interop.IO.SubInputStream
 
-    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook;
-    use Interop/Apache/Poi/XSSF/Usermodel.XSSFWorkbook.{XSSFWorkbook};
-    use Interop/IO.File;
-    use Interop/IO.InputStream;
-    use Interop/IO.SubInputStream;
+    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
+    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
+    
 
     // XSSF (OOXML) concretely
 
@@ -78,7 +80,7 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
     pub def newWithFile(file: File[r]): Result[String, XSSFWorkbook[r]] \ IO = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.File): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
-            let file1 = Interop/IO/File.getHH(file);
+            let file1 = Interop.IO.File.getHH(file);
             newXSSFWorkbook(file1) |> XSSFWorkbook
         })
 
@@ -89,7 +91,7 @@ namespace Interop/Apache/Poi/XSSF/Usermodel/XSSFWorkbook {
     pub def newWithInputStream[ins: Region -> Type, r: Region](ins: ins[r]): Result[String, XSSFWorkbook[r]] \ IO with SubInputStream[ins] = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
-            let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
+            let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;
             newXSSFWorkbook(ins1) |> XSSFWorkbook
         })
 

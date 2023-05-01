@@ -15,65 +15,65 @@
  */
 
 
-namespace SheetIO {
+mod SheetIO {
 
 
     pub enum SheetReader[r: Region, ka: Type, a: Type](
-        Graded.Evaluator[ka, Interop/Apache/Poi/SS/Usermodel.Sheet[r], r, a])
+        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Sheet[r], r, a])
 /*
 
 
     instance Functor[SheetReader[r, ka]] {
         pub def map(f: a -> b \ ef, o: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef = 
-            SheetIO/SheetReader.map(f, o)
+            SheetIO.SheetReader.map(f, o)
     }
 
     instance Applicative[SheetReader[r, ka]] {
         pub def point(x: a): SheetReader[r, ka, a] = 
-            SheetIO/SheetReader.point(x)
+            SheetIO.SheetReader.point(x)
 
         pub def ap(f: SheetReader[r, ka, a -> b \ ef], x: SheetReader[r, ka, a]) : SheetReader[r, ka, b] \ ef = 
-            SheetIO/SheetReader.ap(f, x)
+            SheetIO.SheetReader.ap(f, x)
     }
 
     instance Monad[SheetReader[r, ka]] {
         pub def flatMap(f: a -> SheetReader[r, ka, b] \ ef, o: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
-            SheetIO/SheetReader.flatMap(f, o)
+            SheetIO.SheetReader.flatMap(f, o)
     }
 
     instance MonadZero[SheetReader[r, ka]] {
-        pub def empty(): SheetReader[r, ka, a] = SheetIO/SheetReader.throwError("empty")
+        pub def empty(): SheetReader[r, ka, a] = SheetIO.SheetReader.throwError("empty")
     }
 
     instance Graded.MonadOr[SheetReader[r, ka]] {
         pub def orelse(a: SheetReader[r, ka, a], b: SheetReader[r, ka, a]): SheetReader[r, ka, a] =
-            SheetIO/SheetReader.orelse(a, b)
+            SheetIO.SheetReader.orelse(a, b)
     }
 
     instance Graded.MonadError[SheetReader[r, ka]] {
         pub def throwError(msg: String): SheetReader[r, ka, a] = 
-            SheetIO/SheetReader.throwError(msg)
+            SheetIO.SheetReader.throwError(msg)
 
         pub def mapError(f: String -> String \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, a] \ ef =
-            SheetIO/SheetReader.mapError(f, ma)
+            SheetIO.SheetReader.mapError(f, ma)
 
         pub def catchError(ma: SheetReader[r, ka, a], f: String -> SheetReader[r, ka, a] \ ef): SheetReader[r, ka, a] \ ef =
-            SheetIO/SheetReader.catchError(ma, f)
+            SheetIO.SheetReader.catchError(ma, f)
     }
 
 */
 }
 
-namespace SheetIO/SheetReader {
+mod SheetIO.SheetReader {
 
     use GradedMonad.{>>=}
 
     use SheetIO.SheetReader
     use SheetIO.SheetReader.{SheetReader}
 
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle
-    use Interop/Apache/Poi/SS/Usermodel.Row
-    use Interop/Apache/Poi/SS/Usermodel.Sheet
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle
+    use Interop.Apache.Poi.SS.Usermodel.Row
+    use Interop.Apache.Poi.SS.Usermodel.Sheet
 
     use SheetIO.RowEvaluator
     use SheetIO.RowEvaluator.{RowEvaluator}
@@ -89,49 +89,49 @@ namespace SheetIO/SheetReader {
     pub def runSheetReader(r: Region[r], 
                             ma: SheetReader[r, a, a],
                             st: Sheet[r]): Result[a, String] \ r =
-        Graded/Evaluator.runEvaluator(r, getSheetReader(ma), st)
+        Graded.Evaluator.runEvaluator(r, getSheetReader(ma), st)
 
     pub def point(x: a): SheetReader[r, ka, a] = 
-        SheetReader(Graded/Evaluator.point(x))
+        SheetReader(Graded.Evaluator.point(x))
 
     pub def map(f: a -> b \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
-        SheetReader(Graded/Evaluator.map(f, getSheetReader(ma)))
+        SheetReader(Graded.Evaluator.map(f, getSheetReader(ma)))
 
     pub def ap(mf: SheetReader[r, ka, a -> b \ ef], ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
-        SheetReader(Graded/Evaluator.ap(getSheetReader(mf), getSheetReader(ma)))
+        SheetReader(Graded.Evaluator.ap(getSheetReader(mf), getSheetReader(ma)))
 
     pub def flatMap(f: a -> SheetReader[r, ka, b] \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, b] \ ef =
-        SheetReader(Graded/Evaluator.flatMap(f >> getSheetReader, getSheetReader(ma)))
+        SheetReader(Graded.Evaluator.flatMap(f >> getSheetReader, getSheetReader(ma)))
 
     pub def throwError(msg: String): SheetReader[r, ka, a] = 
-        SheetReader(Graded/Evaluator.throwError(msg))
+        SheetReader(Graded.Evaluator.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: SheetReader[r, ka, a]): SheetReader[r, ka, a] \ ef =
-        SheetReader(Graded/Evaluator.mapError(f, getSheetReader(ma)))
+        SheetReader(Graded.Evaluator.mapError(f, getSheetReader(ma)))
 
     pub def catchError(ma: SheetReader[r, ka, a], f: String -> SheetReader[r, ka, a] \ ef): SheetReader[r, ka, a] \ ef =
-        SheetReader(Graded/Evaluator.catchError(getSheetReader(ma), f >> getSheetReader))
+        SheetReader(Graded.Evaluator.catchError(getSheetReader(ma), f >> getSheetReader))
 
     pub def empty(): SheetReader[r, ka, a] = 
-        SheetReader(Graded/Evaluator.empty())
+        SheetReader(Graded.Evaluator.empty())
         
     pub def orelse(ma: SheetReader[r, ka, a], mb: SheetReader[r, ka, a]): SheetReader[r, ka, a] =
-        SheetReader(Graded/Evaluator.orelse(getSheetReader(ma), getSheetReader(mb)))
+        SheetReader(Graded.Evaluator.orelse(getSheetReader(ma), getSheetReader(mb)))
 
     def liftGetter(f: Sheet[r] -> a \ ef): SheetReader[r, ka, a] \ ef =
-        SheetReader(Graded/Evaluator.liftGetter(f))
+        SheetReader(Graded.Evaluator.liftGetter(f))
     
     def liftGetterResult(f: Sheet[r] -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
-        SheetReader(Graded/Evaluator.liftGetterResult(f))
+        SheetReader(Graded.Evaluator.liftGetterResult(f))
 
 
 
     pub def liftAction(f: Unit -> a \ ef): SheetReader[r, ka, a] \ ef =
-        SheetReader(Graded/Evaluator.liftAction(f))
+        SheetReader(Graded.Evaluator.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
-        SheetReader(Graded/Evaluator.liftActionResult(f))
+        SheetReader(Graded.Evaluator.liftActionResult(f))
 
 
     // pub def testM(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Bool] =
@@ -149,7 +149,7 @@ namespace SheetIO/SheetReader {
     ///
     // pub def result(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Result[a, String]] = 
     //     SheetReader(wb -> 
-    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO/Internal/EvalError.getText);
+    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO.Internal.EvalError.getText);
     //         Ok(ans)
     //     )
 
@@ -173,28 +173,28 @@ namespace SheetIO/SheetReader {
  
 
     pub def getSheetName(): SheetReader[r, ka, String] \ Read(r) =
-        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getSheetName)
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName)
 
 
     pub def getFirstRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getFirstRowNum >> Option.toOk("getFirstRowNum"))
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum >> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
     pub def getLastRowNum(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftGetterResult(Interop/Apache/Poi/SS/Usermodel/Sheet.getLastRowNum >> Option.toOk("getLastRowNum"))
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum >> Option.toOk("getLastRowNum"))
 
 
     pub def getPhysicalNumberOfRows(): SheetReader[r, ka, Int32] \ Read(r) =
-        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.getPhysicalNumberOfRows)
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows)
 
 
     pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, a]): SheetReader[r, ka, a] \ Read(r) =
         use Result.flatMap;
         liftGetterResult(sheet -> {
-            let* row = Interop/Apache/Poi/SS/Usermodel/Sheet.getRow(ix, sheet);
+            let* row = Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
             let r    = Scoped.regionOf(row);
-            SheetIO/RowEvaluator.runRowEvaluator(r, eval, row)
+            SheetIO.RowEvaluator.runRowEvaluator(r, eval, row)
         })
         
 
@@ -203,13 +203,13 @@ namespace SheetIO/SheetReader {
     /// than trying to use `getLastRowNum` to find the end.
     ///
     def getRowIterator(): SheetReader[r, ka, Iterator[Row[r], r]] \ Read(r) =
-        liftGetter(Interop/Apache/Poi/SS/Usermodel/Sheet.rowIterator)
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator)
 
 
 
 
     pub def getHeaders(headerIndex: Int32): SheetReader[r, ka, List[String]] \ Read(r) =
-        getRowAt(headerIndex, SheetIO/RowEvaluator.getRowContents())
+        getRowAt(headerIndex, SheetIO.RowEvaluator.getRowContents())
 
 
 
@@ -224,9 +224,9 @@ namespace SheetIO/SheetReader {
             case None      => point(s1)
             case Some(row) => {
                 let r1 = Scoped.regionOf(row);
-                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
+                let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/RowEvaluator.runRowEvaluator(r1, eval, row) {
+                    match SheetIO.RowEvaluator.runRowEvaluator(r1, eval, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -249,9 +249,9 @@ namespace SheetIO/SheetReader {
             case None     => point(s1)
             case Some(row) => {
                 let r1     = Scoped.regionOf(row);
-                let rownum = Interop/Apache/Poi/SS/Usermodel/Row.getRowNum(row);
+                let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
                 if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO/NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, row) {
+                    match SheetIO.NamedRowEvaluator.runNamedRowEvaluator(r1, eval, headers, row) {
                         case Err(_)  => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
                         case Ok(ans) => loop(f(s1, ans, rownum))
                     }
@@ -310,19 +310,19 @@ namespace SheetIO/SheetReader {
     //                 x: Row): SheetReader[r, ka, a] =
     //     let RowEvaluator(f) = eval;
     //     let Row(x1) = x;
-    //     liftActionResult(_ -> f(fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
+    //     liftActionResult(_ -> f(fmt, x1) |> Result.mapErr(SheetIO.EvalError.toString))
 
 
 
     // pub def namedRowsInRange(ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] = 
     //     let NamedRowEvaluator(f) = eval;
     //     let checker         = row -> {
-    //         let ix = SheetIO/Internal/Row.getRowNum(row);
+    //         let ix = SheetIO.Internal.Row.getRowNum(row);
     //         if (ix >= b and ix < e) Some(row) else None
     //     };
-    //     let* fmt            = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
-    //     let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-    //     let* xs             = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
+    //     let* fmt            = liftAction(_ -> SheetIO.Internal.DataFormatter.new());
+    //     let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox.Deprecated.Cursor.filterMap(checker));
+    //     let* xs             = liftActionResult(_ -> FlixSandbox.Deprecated.Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO.EvalError.toString), strm) |> FlixSandbox.Deprecated.Cursor.toList!);
     //     point(xs)
 
     // pub def nameRowEval(indices: Map[String, Int32], 
@@ -330,7 +330,7 @@ namespace SheetIO/SheetReader {
     //                     eval: NamedRowEvaluator[r, a], x: Row): SheetReader[r, ka, a] =
     //     let NamedRowEvaluator(f) = eval;
     //     let Row(x1) = x;
-    //     liftActionResult(_ -> f(indices, fmt, x1) |> Result.mapErr(SheetIO/EvalError.toString))
+    //     liftActionResult(_ -> f(indices, fmt, x1) |> Result.mapErr(SheetIO.EvalError.toString))
 
 
 
@@ -342,17 +342,17 @@ namespace SheetIO/SheetReader {
     // pub def namedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] =   
     //     let NamedRowEvaluator(f)    = eval;
     //     let checker         = row -> {
-    //         let ix = SheetIO/Internal/Row.getRowNum(row);
+    //         let ix = SheetIO.Internal.Row.getRowNum(row);
     //         if (ix >= r.start) Some(row) else None
     //     };
-    //     let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
+    //     let* fmt        = liftAction(_ -> SheetIO.Internal.DataFormatter.new());
     //     let* row0       = getRowAt(sheet, r.headerIndex);
     //     let* ixs        = region r1 {
-    //         let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
-    //         point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
+    //         let* hdrs = rowEval(fmt, SheetIO.RowEvaluator.getRowContents(r1), row0);
+    //         point(SheetIO.NamedRowEvaluator.makeHeaders(hdrs))
     //     };
-    //     let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-    //     let* xs         = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.toList!);
+    //     let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox.Deprecated.Cursor.filterMap(checker));
+    //     let* xs         = liftActionResult(_ -> FlixSandbox.Deprecated.Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO.EvalError.toString), strm) |> FlixSandbox.Deprecated.Cursor.toList!);
     //     point(xs)
 
 
@@ -373,17 +373,17 @@ namespace SheetIO/SheetReader {
                                 combine: (b, a) -> b \ ef, ac: b, eval: NamedRowEvaluator[r, a], sheet: Sheet): SheetReader[r, ka, b] =
         let NamedRowEvaluator(f) = eval;
         let checker         = row -> {
-            let ix = SheetIO/Internal/Row.getRowNum(row);
+            let ix = SheetIO.Internal.Row.getRowNum(row);
             if (ix >= r.start) Some(row) else None
         };
-        let* fmt        = liftAction(_ -> SheetIO/Internal/DataFormatter.new());
+        let* fmt        = liftAction(_ -> SheetIO.Internal.DataFormatter.new());
         let* row0       = getRowAt(sheet, r.headerIndex);
         let* ixs        = region r1 { 
-            let* hdrs = rowEval(fmt, SheetIO/RowEvaluator.getRowContents(r1), row0);
-            point(SheetIO/NamedRowEvaluator.makeHeaders(hdrs))
+            let* hdrs = rowEval(fmt, SheetIO.RowEvaluator.getRowContents(r1), row0);
+            point(SheetIO.NamedRowEvaluator.makeHeaders(hdrs))
         };
-        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox/Deprecated/Cursor.filterMap(checker));
-        let* ans        = liftActionResult(_ -> FlixSandbox/Deprecated/Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO/EvalError.toString), strm) |> FlixSandbox/Deprecated/Cursor.fold!(combine, ac));
+        let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox.Deprecated.Cursor.filterMap(checker));
+        let* ans        = liftActionResult(_ -> FlixSandbox.Deprecated.Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO.EvalError.toString), strm) |> FlixSandbox.Deprecated.Cursor.fold!(combine, ac));
         point(ans)
 
 
@@ -404,12 +404,12 @@ namespace SheetIO/SheetReader {
             let iter = newRowCursor(x1);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
-                , next      = FlixSandbox/Deprecated/Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
+                , next      = FlixSandbox.Deprecated.Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
                 , finalize  = () -> () as & Impure
             };
-            FlixSandbox/Deprecated/Cursor.makeCursor(cursorAlg)
+            FlixSandbox.Deprecated.Cursor.makeCursor(cursorAlg)
         } catch {
-            case _: ##java.lang.Exception => FlixSandbox/Deprecated/Cursor.failure("newPOIRowStream")
+            case _: ##java.lang.Exception => FlixSandbox.Deprecated.Cursor.failure("newPOIRowStream")
         }
 
     pub def mapWithIndexM(mf: (a, Int32) -> SheetReader[r, ka, b], xs: List[a]): SheetReader[r, ka, List[b]] =

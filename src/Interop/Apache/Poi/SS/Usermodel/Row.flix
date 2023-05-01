@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/SS/Usermodel {
+mod Interop.Apache.Poi.SS.Usermodel {
 
     /// Mutable / Interface
 
@@ -23,15 +23,15 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 
 }
 
-namespace Interop/Apache/Poi/SS/Usermodel/Row {
+mod Interop.Apache.Poi.SS.Usermodel.Row {
 
 
-    use Interop/Apache/Poi/SS/Usermodel.Row;
-    use Interop/Apache/Poi/SS/Usermodel.Row.{Row};
-    use Interop/Apache/Poi/SS/Usermodel.Cell;
-    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell};
-    use Interop/Apache/Poi/SS/Usermodel.Sheet;
-    use Interop/Apache/Poi/SS/Usermodel.Sheet.{Sheet};
+    use Interop.Apache.Poi.SS.Usermodel.Row
+    use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
+    use Interop.Apache.Poi.SS.Usermodel.Cell
+    use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
+    use Interop.Apache.Poi.SS.Usermodel.Sheet
+    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
     pub def getHH(row: Row[r]): ##org.apache.poi.ss.usermodel.Row =
         let Row(row1) = row;

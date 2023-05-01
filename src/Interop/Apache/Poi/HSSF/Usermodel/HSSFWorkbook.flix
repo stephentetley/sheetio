@@ -15,17 +15,17 @@
  */
 
 
-namespace Interop/Apache/Poi/HSSF/Usermodel {
+mod Interop.Apache.Poi.HSSF.Usermodel {
 
-    use Interop/Apache/Poi/SS/Usermodel.Workbook
-    use Interop/Apache/Poi/SS/Usermodel.Workbook.{Workbook}
-    use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook
-    use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook.{HSSFWorkbook}
+    use Interop.Apache.Poi.SS.Usermodel.Workbook
+    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
+    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
 
-    instance Interop/Apache/Poi/SS/Usermodel.SubWorkbook[HSSFWorkbook] {
+    instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[HSSFWorkbook] {
         pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
             let HSSFWorkbook(d1) = d;
             Workbook(checked_cast(d1))
@@ -37,11 +37,11 @@ namespace Interop/Apache/Poi/HSSF/Usermodel {
 
 }
 
-namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
+mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
 
-    use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook
-    use Interop/Apache/Poi/HSSF/Usermodel.HSSFWorkbook.{HSSFWorkbook}
-    use Interop/IO.SubInputStream
+    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
+    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
+    use Interop.IO.SubInputStream
 
 
     pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
@@ -65,7 +65,7 @@ namespace Interop/Apache/Poi/HSSF/Usermodel/HSSFWorkbook {
     pub def newWithInputStream[ins: Region -> Type, r: Region](_: Region[r], ins: ins[r]): Result[String, HSSFWorkbook[r]] \ IO with SubInputStream[ins] = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream): ##org.apache.poi.hssf.usermodel.HSSFWorkbook \ IO as newHSSFWorkbook;
-            let ins1 = Interop/IO/SubInputStream.toInputStream(ins) |> Interop/IO/InputStream.getHH;
+            let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;
             newHSSFWorkbook(ins1) |> HSSFWorkbook
         })
 /*

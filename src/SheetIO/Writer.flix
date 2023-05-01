@@ -16,7 +16,7 @@
 
 
 
-namespace SheetIO/Writer {
+mod SheetIO.Writer {
 
     use SheetIO.RowSetter
     use SheetIO.SheetWriter
@@ -36,7 +36,7 @@ namespace SheetIO/Writer {
 
     /// Write a workbook containing a single sheet
     pub def writeWorkSheet(sheetWriter: WorkSheetWriter[a], path: Path): Result[Unit, String] & Impure =
-        SheetIO/SheetWriter.runXlsx(writeSheet(sheetWriter), path)
+        SheetIO.SheetWriter.runXlsx(writeSheet(sheetWriter), path)
 
     /// It is not viable to write a list of WorkSheetWriter as a list of WorkSheetWriter's are unlikely 
     /// to have the same row type.
@@ -44,11 +44,11 @@ namespace SheetIO/Writer {
 
     /// Add a Sheet to an existing Workbook
     pub def addWorkSheet(sheetWriter: WorkSheetWriter[a], path: Path): Result[Unit, String] & Impure =
-        SheetIO/SheetWriter.runAppendXlsx(writeSheet(sheetWriter), path)
+        SheetIO.SheetWriter.runAppendXlsx(writeSheet(sheetWriter), path)
 
 
     def writeSheet(sheetWriter: WorkSheetWriter[a]): SheetWriter[r, Unit] = 
-        use SheetIO/SheetWriter.{flatMap, point, createSheet, allRows, allRowsWithHeaders};
+        use SheetIO.SheetWriter.{flatMap, point, createSheet, allRows, allRowsWithHeaders};
         match sheetWriter.headers {
             case None => {
                 let* s1     = createSheet(sheetWriter.sheetName);

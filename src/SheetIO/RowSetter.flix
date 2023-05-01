@@ -17,65 +17,65 @@
 
 /// Use `Option[CellStyle]` as a Reader env in the Monad to allow inherited styles.
 
-namespace SheetIO {
+mod SheetIO {
 
 
     pub enum RowSetter[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, Option[Interop/Apache/Poi/SS/Usermodel.CellStyle[r]], Interop/Apache/Poi/SS/Usermodel.Row[r], r, a])
+        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.Row[r], r, a])
 /*
 
     instance GradedFunctor[RowSetter[r, ka]] {
         pub def map(f: a -> b & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
-            SheetIO/RowSetter.map(f, o)
+            SheetIO.RowSetter.map(f, o)
     }
 
     instance GradedApplicative[RowSetter[r, ka]] {
         pub def point(x: a): RowSetter[r, ka, a] = 
-            SheetIO/RowSetter.point(x)
+            SheetIO.RowSetter.point(x)
 
         pub def ap(f: RowSetter[r, ka, a -> b \ ef], x: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
-            SheetIO/RowSetter.ap(f, x)
+            SheetIO.RowSetter.ap(f, x)
     }
 
     instance GradedMonad[RowSetter[r, ka]] {
         pub def flatMap(f: a -> RowSetter[r, ka, b] & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-            SheetIO/RowSetter.flatMap(f, o)
+            SheetIO.RowSetter.flatMap(f, o)
     }
 
     instance GradedZero[RowSetter[r, ka]] {
         pub def empty(): RowSetter[r, ka, a] = 
-            SheetIO/RowSetter.empty()
+            SheetIO.RowSetter.empty()
     }
 
     // No GradedOr
 
     instance GradedError[RowSetter[r, ka]] {
         pub def throwError(msg: String): RowSetter[r, ka, a] = 
-            SheetIO/RowSetter.throwError(msg)
+            SheetIO.RowSetter.throwError(msg)
 
         pub def mapError(f: String -> String \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef =
-            SheetIO/RowSetter.mapError(f, ma)
+            SheetIO.RowSetter.mapError(f, ma)
 
         pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
-            SheetIO/RowSetter.catchError(ma, f)
+            SheetIO.RowSetter.catchError(ma, f)
     }
 */
 
 }
 
-namespace SheetIO/RowSetter {
+mod SheetIO.RowSetter {
 
     use SheetIO.RowSetter
     use SheetIO.RowSetter.{RowSetter}
     
     use GradedError.{swapError}
 
-    use Interop/Apache/Poi/SS/Usermodel.Cell
-    use Interop/Apache/Poi/SS/Usermodel.Cell.{Cell}
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle}
-    use Interop/Apache/Poi/SS/Usermodel.Row
-    use Interop/Apache/Poi/SS/Usermodel.Row.{Row}
+    use Interop.Apache.Poi.SS.Usermodel.Cell
+    use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Interop.Apache.Poi.SS.Usermodel.Row
+    use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
 
 /*
     pub def getRowSetter(x: RowSetter[r, ka, a]): Graded.EnvMutStateError[r, ka, Option[CellStyle[r]], Row[r], a] = 
@@ -87,52 +87,52 @@ namespace SheetIO/RowSetter {
                                 ma: RowSetter[r, a, a], 
                                 env: Option[CellStyle[r]],
                                 st: Row[r]): Result[a, String] \ r =
-        Graded/EnvMutStateError.runEnvMutStateError(r, getRowSetter(ma), env, st)
+        Graded.EnvMutStateError.runEnvMutStateError(r, getRowSetter(ma), env, st)
 
     pub def point(x: a): RowSetter[r, ka, a] = 
-        RowSetter(Graded/EnvMutStateError.point(x))
+        RowSetter(Graded.EnvMutStateError.point(x))
 
 
 
     pub def map(f: a -> b \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(Graded/EnvMutStateError.map(f, getRowSetter(x)))
+        RowSetter(Graded.EnvMutStateError.map(f, getRowSetter(x)))
 
     pub def ap(mf: RowSetter[r, ka, a -> b \ ef], ma: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(Graded/EnvMutStateError.ap(getRowSetter(mf), getRowSetter(ma)))
+        RowSetter(Graded.EnvMutStateError.ap(getRowSetter(mf), getRowSetter(ma)))
 
     pub def flatMap(k: a -> RowSetter[r, ka, b] \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b]  \ ef = 
-        RowSetter(Graded/EnvMutStateError.flatMap(k >> getRowSetter, getRowSetter(x)))
+        RowSetter(Graded.EnvMutStateError.flatMap(k >> getRowSetter, getRowSetter(x)))
 
 
     pub def throwError(msg: String): RowSetter[r, ka, a] = 
-        RowSetter(Graded/EnvMutStateError.throwError(msg))
+        RowSetter(Graded.EnvMutStateError.throwError(msg))
 
     pub def mapError(f: String -> String \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded/EnvMutStateError.mapError(f, getRowSetter(ma)))
+        RowSetter(Graded.EnvMutStateError.mapError(f, getRowSetter(ma)))
 
     pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded/EnvMutStateError.catchError(getRowSetter(ma), f >> getRowSetter))
+        RowSetter(Graded.EnvMutStateError.catchError(getRowSetter(ma), f >> getRowSetter))
 
 
     pub def empty(): RowSetter[r, ka, a] = throwError("empty")
 
 
     def liftSetter!(f: Option[CellStyle[r]] -> Row[r] -> a \ ef): RowSetter[r, ka, a] \ ef  =
-        RowSetter(Graded/EnvMutStateError.liftSetter!(f))
+        RowSetter(Graded.EnvMutStateError.liftSetter!(f))
 
     def liftSetterResult!(f: Option[CellStyle[r]] -> Row[r] -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(Graded/EnvMutStateError.liftSetterResult!(f))
+        RowSetter(Graded.EnvMutStateError.liftSetterResult!(f))
     
     pub def liftAction(f: Unit -> a \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded/EnvMutStateError.liftAction(f))
+        RowSetter(Graded.EnvMutStateError.liftAction(f))
     
         
     pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(Graded/EnvMutStateError.liftActionResult(f))
+        RowSetter(Graded.EnvMutStateError.liftActionResult(f))
 
 
     pub def localEnv(f: Option[CellStyle[r]] -> Option[CellStyle[r]] \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef = 
-        RowSetter(Graded/EnvMutStateError.localEnv(f, getRowSetter(ma)))
+        RowSetter(Graded.EnvMutStateError.localEnv(f, getRowSetter(ma)))
 
 
 
@@ -152,14 +152,14 @@ namespace SheetIO/RowSetter {
     /// This also sets the CellStyle...
     def createOrGetCell(ix: Int32): RowSetter[r, ka, Cell[r]] \ Write(r) = 
         use Result.{flatMap};
-        use Interop/Apache/Poi/SS/Usermodel/Row.{createCell!};
+        use Interop.Apache.Poi.SS.Usermodel.Row.{createCell!};
         let body = (style, row) -> {
-            let* cell   = match Interop/Apache/Poi/SS/Usermodel/Row.getCell(ix, row) {
+            let* cell   = match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
                             case Some(ans)  => if (not Object.isNull(ans)) Ok(ans) else createCell!(ix, row)
                             case None       => createCell!(ix, row)
                         };
             let _       = match style { 
-                            case Some(sty1) => Interop/Apache/Poi/SS/Usermodel/Cell.setCellStyle!(sty1, cell)
+                            case Some(sty1) => Interop.Apache.Poi.SS.Usermodel.Cell.setCellStyle!(sty1, cell)
                             case None       => unsafe_cast () as _ \ r
                         };
             Ok(cell)
@@ -182,18 +182,18 @@ namespace SheetIO/RowSetter {
 
 
     pub def putBlankAt!(ix: Int32): RowSetter[r, ka, Unit] \ Write(r) =
-        liftCellSetter!(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.setBlank!(cell))
+        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setBlank!(cell))
 
 
     pub def putStringAt!(ix: Int32, value: String): RowSetter[r, ka, Unit] \ Write(r) =
-        liftCellSetter!(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.setCellValueString!(value, cell))
+        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueString!(value, cell))
 
     pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[r, ka, Unit] \ Write(r) =
-        liftCellSetter!(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.setCellValueBoolean!(value, cell))
+        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueBoolean!(value, cell))
 
 
     def putNumericAt!(ix: Int32, value: Float64): RowSetter[r, ka, Unit] \ Write(r) =
-        liftCellSetter!(ix, (_, cell) -> Interop/Apache/Poi/SS/Usermodel/Cell.setCellValueDouble!(value, cell))
+        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueDouble!(value, cell))
 
     pub def putInt8At!(ix: Int32, n: Int8): RowSetter[r, ka, Unit] \ Write(r) =
         putNumericAt!(ix, Int8.toFloat64(n))
@@ -220,14 +220,14 @@ namespace SheetIO/RowSetter {
     // pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, ka, Unit] \ Write(r) =
     //     use Time.LocalDateTime.{LocalDateTime};
     //     let  LocalDateTime(dt1) = dt;
-    //     liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDateTime!(r, dt1, cell))
+    //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
 
 
     // pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, ka, Unit] \ Write(r) =
     //     use Time.LocalDate.{LocalDate};
     //     let  LocalDate(dt1) = dt;
-    //     liftPrimCell(ix, (r, cell, _) -> SheetIO/Internal/Cell.setCellValueLocalDate!(r, dt1, cell))
+    //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDate!(r, dt1, cell))
  
  
     pub def putHeaders!(l: List[String]): RowSetter[r, ka, Unit] \ Write(r) = 

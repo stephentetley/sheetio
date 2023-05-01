@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-namespace Interop/Apache/Poi/SS/Usermodel {
+mod Interop.Apache.Poi.SS.Usermodel {
 
     /// Mutable
 
@@ -23,12 +23,12 @@ namespace Interop/Apache/Poi/SS/Usermodel {
 
 }
 
-namespace Interop/Apache/Poi/SS/Usermodel/CellStyle {
+mod Interop.Apache.Poi.SS.Usermodel.CellStyle {
 
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle;
-    use Interop/Apache/Poi/SS/Usermodel.CellStyle.{CellStyle};
-    use Interop/Apache/Poi/SS/Usermodel.Font;
-    use Interop/Apache/Poi/SS/Usermodel.Font.{Font};
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle
+    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Interop.Apache.Poi.SS.Usermodel.Font
+    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
 
     pub def getHH(cs: CellStyle[r]): ##org.apache.poi.ss.usermodel.CellStyle =
         let CellStyle(cs1) = cs;
@@ -96,7 +96,7 @@ namespace Interop/Apache/Poi/SS/Usermodel/CellStyle {
             let ans = cloneStyleFrom(style, styleToClone);
             Ok(ans)
         } catch {
-            case ex: ##java.lang.Exception => SheetIO/Internal/PrimError.primErr(r, "cloneStyleFrom!", ex)
+            case ex: ##java.lang.Exception => SheetIO.Internal.PrimError.primErr(r, "cloneStyleFrom!", ex)
         }
 */
 }
