@@ -21,8 +21,8 @@ mod Interop.Apache.Poi.SS.Usermodel.DateUtil {
     use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
 
     /// Caller should test we have a NUMERIC cell first...
-    pub def isCellDateFormatted(cell: Cell[r]): Bool \ Read(r) = 
-        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool & r;
+    pub def isCellDateFormatted(cell: Cell[r]): Bool \ r = 
+        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool \ r;
         let Cell(cell1) = cell;
         isCellDateFormatted(cell1)
 
