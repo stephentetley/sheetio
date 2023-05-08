@@ -7,10 +7,10 @@ license     = "Apache-2.0"
 authors     = ["Stephen Tetley <stephen.tetley@gmail.com>"]
 
 [dependencies]
-"github:stephentetley/basis-base"                = "0.2.2"
-"github:stephentetley/flix-time"                 = "0.2.2"
-"github:stephentetley/graded-lib"                = "0.4.0"
-"github:stephentetley/interop-base"              = "0.3.1"
+"github:stephentetley/basis-base"                = "0.3.0"
+"github:stephentetley/flix-time"                 = "0.2.3"
+"github:stephentetley/graded-lib"                = "0.5.0"
+"github:stephentetley/interop-base"              = "0.4.0"
 
 
 [mvn-dependencies]

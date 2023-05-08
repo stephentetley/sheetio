@@ -19,50 +19,60 @@ mod SheetIO {
 
     use SheetIO.DataFormatter;
     
+    /// TODO - add EnvEvaluator to GradedLib?
 
     // pass around DataFormatter[r]
-    pub enum RowEvaluator[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, Interop.Apache.Poi.SS.Usermodel.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Row[r], r, a])
+    pub enum RowEvaluator[r: Region, ka: Type, ef: Bool, a: Type](
+        Graded.EnvEvaluator[ka, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a])
 
-/*
+
     instance GradedFunctor[RowEvaluator[r, ka]] {
-        pub def map(f: a -> b & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef = 
-            SheetIO.RowEvaluator.map(f, o)
+        pub def map(f: a -> b \ ef1, 
+                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, b] = 
+            SheetIO.RowEvaluator.map(f, ma)
     }
 
     instance GradedApplicative[RowEvaluator[r, ka]] {
-        pub def point(x: a): RowEvaluator[r, ka, a] = 
+        pub def point(x: a): RowEvaluator[r, ka, ef, a] = 
             SheetIO.RowEvaluator.point(x)
 
-        pub def ap(f: RowEvaluator[r, ka, a -> b & ef], x: RowEvaluator[r, ka, a]) : RowEvaluator[r, ka, b] & ef = 
-            SheetIO.RowEvaluator.ap(f, x)
+        pub def ap(f: RowEvaluator[r, ka, ef1, a -> b \ ef2], 
+                    ma: RowEvaluator[r, ka, ef, a]) : RowEvaluator[r, ka, ef and ef1 and ef2, b] = 
+            SheetIO.RowEvaluator.ap(f, ma)
     }
 
     instance GradedMonad[RowEvaluator[r, ka]] {
-        pub def flatMap(f: a -> RowEvaluator[r, ka, b] & ef, o: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] & ef =
-            SheetIO.RowEvaluator.flatMap(f, o)
+        pub def flatMap(f: a -> RowEvaluator[r, ka, ef1, b] \ ef2, 
+                        ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
+            SheetIO.RowEvaluator.flatMap(f, ma)
     }
 
     instance GradedZero[RowEvaluator[r, ka]] {
-        pub def empty(): RowEvaluator[r, ka, a] = SheetIO.RowEvaluator.throwError("empty")
+        pub def empty(): RowEvaluator[r, ka, ef, a] = SheetIO.RowEvaluator.throwError("empty")
     }
 
     instance GradedOr[RowEvaluator[r, ka]] {
-        pub def orelse(a: RowEvaluator[r, ka, a], b: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] =
-            SheetIO.RowEvaluator.orelse(a, b)
+        pub def orelse(ma: RowEvaluator[r, ka, ef1, a], 
+                        mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 and ef2, a] =
+            SheetIO.RowEvaluator.orelse(ma, mb)
     }
 
     instance GradedError[RowEvaluator[r, ka]] {
-        pub def throwError(err: String): RowEvaluator[r, ka, a] =
+        pub def throwError(err: String): RowEvaluator[r, ka, ef, a] =
             SheetIO.RowEvaluator.throwError(err)
 
-        pub def mapError(f: String -> String \ ef, m: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] \ef =
-            SheetIO.RowEvaluator.mapError(f, m)
+        pub def mapError(f: String -> String \ ef1, 
+                            ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, a] =
+            SheetIO.RowEvaluator.mapError(f, ma)
 
-        pub def catchError(m: RowEvaluator[r, ka, a], hdl: String -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, a] \ ef =
-            SheetIO.RowEvaluator.catchError(m, hdl)
+        pub def catchError(ma: RowEvaluator[r, ka, ef, a], 
+                            hdl: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef and ef1 and ef2, a] =
+            SheetIO.RowEvaluator.catchError(ma, hdl)
+
+        pub def reifyError(ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef, Result[String, a]] =
+            SheetIO.RowEvaluator.reifyError(ma)
     }
-*/    
+
 }
 
 mod SheetIO.RowEvaluator {
@@ -84,101 +94,113 @@ mod SheetIO.RowEvaluator {
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     
-/*
 
-    pub def getRowEvaluator(x: RowEvaluator[r, ka, a]): Graded.EnvEvaluator[r, ka, DataFormatter[r], Row[r], a] = 
+    pub def getRowEvaluator(x: RowEvaluator[r, ka, ef, a]): Graded.EnvEvaluator[ka, DataFormatter, Row[r], ef, a] = 
         let RowEvaluator(x1) = x;
         x1
+    
+
+    pub def runRowEvaluator(ma: RowEvaluator[r, a, ef, a], 
+                                st: Row[r]): Result[String, a] \ ef =
+        let env = ???;
+        Graded.EnvEvaluator.runEnvEvaluator(getRowEvaluator(ma), env, st)
         
-    pub def runRowEvaluator(r: Region[r], 
-                                ma: RowEvaluator[r, a, a], 
-                                st: Row[r]): Result[a, String] \ r =
-        let env = Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(r);
-        Graded.EnvEvaluator.runEnvEvaluator(r, getRowEvaluator(ma), env, st)
 
-
-    pub def point(x: a): RowEvaluator[r, ka, a] = 
+    pub def point(x: a): RowEvaluator[r, ka, ef, a] = 
         RowEvaluator(Graded.EnvEvaluator.point(x))
-
-    pub def map(f: a -> b \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
+   
+    pub def map(f: a -> b \ ef1, 
+                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, b] =
         RowEvaluator(Graded.EnvEvaluator.map(f, getRowEvaluator(ma)))
 
-    pub def ap(mf: RowEvaluator[r, ka, a -> b \ ef], ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
+    pub def ap(mf: RowEvaluator[r, ka, ef1, a -> b \ ef2], 
+                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
         RowEvaluator(Graded.EnvEvaluator.ap(getRowEvaluator(mf), getRowEvaluator(ma)))
 
-    pub def flatMap(f: a -> RowEvaluator[r, ka, b] \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, b] \ ef =
+    pub def flatMap(f: a -> RowEvaluator[r, ka, ef1, b] \ ef2, 
+                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
         RowEvaluator(Graded.EnvEvaluator.flatMap(f >> getRowEvaluator, getRowEvaluator(ma)))
 
-    pub def throwError(msg: String): RowEvaluator[r, ka, a] = 
+    pub def throwError(msg: String): RowEvaluator[r, ka, ef, a] = 
         RowEvaluator(Graded.EnvEvaluator.throwError(msg))
 
-    pub def mapError(f: String -> String \ ef, ma: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] \ ef =
+    pub def mapError(f: String -> String \ ef1, ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, a] =
         RowEvaluator(Graded.EnvEvaluator.mapError(f, getRowEvaluator(ma)))
 
-    pub def catchError(ma: RowEvaluator[r, ka, a], f: String -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, a] \ ef =
+    pub def catchError(ma: RowEvaluator[r, ka, ef, a], 
+                        f: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef and ef1 and ef2, a] =
         RowEvaluator(Graded.EnvEvaluator.catchError(getRowEvaluator(ma), f >> getRowEvaluator))
 
-    pub def empty(): RowEvaluator[r, ka, a] = 
-        RowEvaluator(Graded.EnvEvaluator.empty())
-        
-    pub def orelse(ma: RowEvaluator[r, ka, a], mb: RowEvaluator[r, ka, a]): RowEvaluator[r, ka, a] =
-        RowEvaluator(Graded.EnvEvaluator.orelse(getRowEvaluator(ma), getRowEvaluator(mb)))
+    pub def reifyError(ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef, Result[String, a]] =
+        RowEvaluator(Graded.EnvEvaluator.reifyError(getRowEvaluator(ma)))
 
-    def liftGetter(f: DataFormatter[r] -> Row[r] -> a \ ef): RowEvaluator[r, ka, a] \ ef =
+    pub def empty(): RowEvaluator[r, ka, ef, a] = 
+        RowEvaluator(Graded.EnvEvaluator.empty())
+
+    pub def orelse(ma: RowEvaluator[r, ka, ef1, a], mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 and ef2, a] =
+        RowEvaluator(Graded.EnvEvaluator.orelse(getRowEvaluator(ma), getRowEvaluator(mb)))
+   
+    /// `Graded.EnvEvaluator.liftGetter` not sufficiently polymorphic...
+    def liftGetter(f: Row[r] -> a \ ef): RowEvaluator[r, ka, ef, a] =
         RowEvaluator(Graded.EnvEvaluator.liftGetter(f))
     
-    def liftGetterResult(f: DataFormatter[r] -> Row[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
+    /// `Graded.EnvEvaluator.liftGetterResult` not sufficiently polymorphic...
+    def liftGetterResult(f: Row[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef, a] with ToString[err] =
         RowEvaluator(Graded.EnvEvaluator.liftGetterResult(f))
 
+    def _liftGetterWithEnv(f: DataFormatter -> Row[r] -> a \ ef): RowEvaluator[r, ka, ef, a] =
+        RowEvaluator(Graded.EnvEvaluator.liftGetterWithEnv(f))
+    
+    def liftGetterResultWithEnv(f: DataFormatter -> Row[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef, a] with ToString[err] =
+        RowEvaluator(Graded.EnvEvaluator.liftGetterResultWithEnv(f))
 
 
-    pub def liftAction(f: Unit -> a \ ef): RowEvaluator[r, ka, a] \ ef =
-        RowEvaluator(Graded.EnvEvaluator.liftAction(f))
+
+    // pub def liftAction(f: Unit -> a \ ef): RowEvaluator[r, ka, a] \ ef =
+    //     RowEvaluator(Graded.EnvEvaluator.liftAction(f))
     
         
-    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
-        RowEvaluator(Graded.EnvEvaluator.liftActionResult(f))
+    // pub def liftActionResult(f: Unit -> Result[err, a] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
+    //     RowEvaluator(Graded.EnvEvaluator.liftActionResult(f))
 
 
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
     // // so FactIO's API indexes from 0.
 
-    def getCellAt(ix: Int32): RowEvaluator[r, ka, Cell[r]] \ Read(r) = 
-        liftGetterResult((_, row) -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellAt(${ix})"))
+    def getCellAt(ix: Int32): RowEvaluator[r, ka, r, Cell[r]] = 
+        liftGetterResult(row -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellAt(${ix})"))
 
 
-    def liftCellGetter(ix: Int32, 
-                        fn: DataFormatter[r] -> Cell[r] -> a \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } =
-        liftGetterResult((fmt, row) -> 
+    def _liftCellGetter(ix: Int32, 
+                        fn: DataFormatter -> Cell[r] -> a \ ef): RowEvaluator[r, ka, ef and r, a] =
+        liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Ok
                 case None       => Err("liftCellGetter(${ix})")
             }
-            
         )
 
-    def liftCellGetterResult(ix: Int32, 
-                            fn: DataFormatter[r] -> Cell[r] -> Result[a, err] \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } with ToString[err] =
-        liftGetterResult((fmt, row) -> 
+    def _liftCellGetterResult(ix: Int32, 
+                            fn: DataFormatter -> Cell[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef and r, a] with ToString[err] =
+        liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Result.mapErr(ToString.toString)
                 case None       => Err("liftCellGetterResult(${ix})")
             }
-            
         )
 
-    pub def getRowNum(): RowEvaluator[r, ka, Int32] \ Read(r) = 
-        liftGetter((_, row) -> Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row))
+    pub def getRowNum(): RowEvaluator[r, ka, r, Int32] = 
+        liftGetter(row -> Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row))
 
 
-    pub def getSheetName(): RowEvaluator[r, ka, String] \ Read(r) = 
-        liftGetter((_, row) -> {
+    pub def getSheetName(): RowEvaluator[r, ka, r, String] = 
+        liftGetter(row -> {
             let sheet = Interop.Apache.Poi.SS.Usermodel.Row.getSheet(row);
             Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet)
         })
             
-
+/*
     /// Get the column index from the column identifier "A", "B", ... "AA", "AB", ...
     pub def getColumnIndex(s: String): RowEvaluator[r, ka, Int32] = 
         liftAction(_ -> 
@@ -188,23 +210,22 @@ mod SheetIO.RowEvaluator {
 
 
     /// Uses the default DataFormatter
-    pub def getContentAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
+    pub def getContentAt(ix: Int32): RowEvaluator[r, ka, ef and r, String] =
         liftCellGetter(ix, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
 
 
     /// Uses the default DataFormatter
     pub def getTrimmedContentAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
         map(String.trim, getContentAt(ix))
-
-    pub def isNullAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
+*/
+    pub def isNullAt(ix: Int32): RowEvaluator[r, ka, r, Bool] = 
         Object.isNull <$> getCellAt(ix)
 
-
-    pub def getNullAt(ix: Int32): RowEvaluator[r, ka, Unit] \ Read(r) = 
-        let* cell = getCellAt(ix);
+    pub def getNullAt(ix: Int32): RowEvaluator[r, ka, r, Unit] = 
+        getCellAt(ix)   >>= cell -> 
         if (Object.isNull(cell)) point() else throwError("getNullAt(${ix})")
 
-
+/*
     pub def getCellTypeAt(ix: Int32): RowEvaluator[r, ka, CellType] \ Read(r) =
         liftCellGetter(ix, (_, cell) -> {
             Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 

@@ -23,8 +23,8 @@ mod SheetIO {
 
 
     /// Includes Map[columName: String => index: Int32]
-    pub enum NamedRowEvaluator[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, SheetIO.NamedRowEvaluator.Env, Interop.Apache.Poi.SS.Usermodel.Row[r], r, a])
+    pub enum NamedRowEvaluator[r: Region, ka: Type, ef: Bool, a: Type](
+        Graded.EnvMutStateError[ka, SheetIO.NamedRowEvaluator.Env, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a])
 
 /*
     instance GradedFunctor[NamedRowEvaluator[r, ka]] {
