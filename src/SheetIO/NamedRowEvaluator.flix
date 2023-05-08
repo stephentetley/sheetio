@@ -28,7 +28,7 @@ mod SheetIO {
 
 /*
     instance GradedFunctor[NamedRowEvaluator[r, ka]] {
-        pub def map(f: a -> b & ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] & ef = 
+        pub def map(f: a -> b \ ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] \ ef = 
             SheetIO.NamedRowEvaluator.map(f, o)
     }
 
@@ -36,12 +36,12 @@ mod SheetIO {
         pub def point(x: a): NamedRowEvaluator[r, ka, a] = 
             SheetIO.NamedRowEvaluator.point(x)
 
-        pub def ap(f: NamedRowEvaluator[r, ka, a -> b & ef], x: NamedRowEvaluator[r, ka, a]) : NamedRowEvaluator[r, ka, b] & ef = 
+        pub def ap(f: NamedRowEvaluator[r, ka, a -> b \ ef], x: NamedRowEvaluator[r, ka, a]) : NamedRowEvaluator[r, ka, b] \ ef = 
             SheetIO.NamedRowEvaluator.ap(f, x)
     }
 
     instance GradedMonad[NamedRowEvaluator[r, ka]] {
-        pub def flatMap(f: a -> NamedRowEvaluator[r, ka, b] & ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] & ef =
+        pub def flatMap(f: a -> NamedRowEvaluator[r, ka, b] \ ef, o: NamedRowEvaluator[r, ka, a]): NamedRowEvaluator[r, ka, b] \ ef =
             SheetIO.NamedRowEvaluator.flatMap(f, o)
     }
 
@@ -413,7 +413,7 @@ mod SheetIO.NamedRowEvaluator {
 
 
     def queryFontAt(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] & ef): NamedRowEvaluator[r, ka, a] \ { Read(r), ef } = 
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): NamedRowEvaluator[r, ka, a] \ { Read(r), ef } = 
         use Result.flatMap;
         liftPrim((r, _, row) -> 
             let* cell   = SheetIO.Internal.Row.getCell(r, ix, row);

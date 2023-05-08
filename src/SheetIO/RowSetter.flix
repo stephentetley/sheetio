@@ -25,7 +25,7 @@ mod SheetIO {
 /*
 
     instance GradedFunctor[RowSetter[r, ka]] {
-        pub def map(f: a -> b & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
+        pub def map(f: a -> b \ ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
             SheetIO.RowSetter.map(f, o)
     }
 
@@ -38,7 +38,7 @@ mod SheetIO {
     }
 
     instance GradedMonad[RowSetter[r, ka]] {
-        pub def flatMap(f: a -> RowSetter[r, ka, b] & ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
+        pub def flatMap(f: a -> RowSetter[r, ka, b] \ ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
             SheetIO.RowSetter.flatMap(f, o)
     }
 

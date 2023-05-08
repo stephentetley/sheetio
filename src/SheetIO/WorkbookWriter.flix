@@ -24,7 +24,7 @@ mod SheetIO {
 
 /*
     instance GradedFunctor[WorkbookWriter[r, ka]] {
-        pub def map(f: a -> b & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef = 
+        pub def map(f: a -> b \ ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef = 
             SheetIO.WorkbookWriter.map(f, o)
     }
 
@@ -32,12 +32,12 @@ mod SheetIO {
         pub def point(x: a): WorkbookWriter[r, ka, a] = 
             SheetIO.WorkbookWriter.point(x)
 
-        pub def ap(f: WorkbookWriter[r, ka, a -> b & ef], x: WorkbookWriter[r, ka, a]) : WorkbookWriter[r, ka, b] & ef = 
+        pub def ap(f: WorkbookWriter[r, ka, a -> b \ ef], x: WorkbookWriter[r, ka, a]) : WorkbookWriter[r, ka, b] \ ef = 
             SheetIO.WorkbookWriter.ap(f, x)
     }
 
     instance GradedMonad[WorkbookWriter[r, ka]] {
-        pub def flatMap(f: a -> WorkbookWriter[r, ka, b] & ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] & ef =
+        pub def flatMap(f: a -> WorkbookWriter[r, ka, b] \ ef, o: WorkbookWriter[r, ka, a]): WorkbookWriter[r, ka, b] \ ef =
             SheetIO.WorkbookWriter.flatMap(f, o)
     }
 
@@ -115,7 +115,7 @@ mod SheetIO.WorkbookWriter {
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     // pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
     //                         template: Path, 
-    //                         outPath: Path): Result[a, String] & Impure =
+    //                         outPath: Path): Result[a, String] \ IO =
     //     use SheetIO.Internal.Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
     //     use Result.{flatMap};
     //     let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
@@ -128,7 +128,7 @@ mod SheetIO.WorkbookWriter {
 
 
     /// Excel 97 binary (.xls) format.
-    // pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] & Impure = 
+    // pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
     //     use SheetIO.Internal.Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
     //     use Result.{flatMap};
     //     let path1   = ToString.toString(path);
@@ -140,7 +140,7 @@ mod SheetIO.WorkbookWriter {
 
     // pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
     //                         template: Path, 
-    //                         outPath: Path): Result[a, String] & Impure =
+    //                         outPath: Path): Result[a, String] \ IO =
     //     use Result.{flatMap};
     //     use SheetIO.Internal.Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
     //     let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
@@ -260,10 +260,10 @@ mod SheetIO.WorkbookWriter {
 
 
 
-    // pub def liftAction(fn: Unit -> a & Impure): SheetWriter[r, a] = 
+    // pub def liftAction(fn: Unit -> a \ IO): SheetWriter[r, a] = 
     //     SheetWriter((_, _, s1)-> {let a = fn(); Ok((s1, a)) })
 
-    // pub def liftActionResult(fn: Unit -> Result[a, String] & Impure): SheetWriter[r, a] = 
+    // pub def liftActionResult(fn: Unit -> Result[a, String] \ IO): SheetWriter[r, a] = 
     //     SheetWriter((_, _, s1) -> {let ans = fn(); Result.map(x -> (s1, x), ans)})
 
 
@@ -292,7 +292,7 @@ mod SheetIO.WorkbookWriter {
     //                         ix : Int32, 
     //                         xs: List[a], 
     //                         fk: String -> Result[(Cursors, List[b]), String], 
-    //                         sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
+    //                         sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, Nil)
     //         case x :: rs => {
@@ -316,7 +316,7 @@ mod SheetIO.WorkbookWriter {
     //                         ix: Int32, 
     //                         xs: List[a], 
     //                         fk: String -> Result[(Cursors, Unit), String], 
-    //                         sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
+    //                         sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1)
     //         case x :: rs => {
@@ -352,7 +352,7 @@ mod SheetIO.WorkbookWriter {
     //                 acc: b, 
     //                 xs: List[a], 
     //                 fk: String -> Result[(Cursors, b), String], 
-    //                 sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
+    //                 sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, acc)
     //         case x :: rs => {
@@ -376,7 +376,7 @@ mod SheetIO.WorkbookWriter {
     //                     ac: ac,
     //                     xs: List[a],
     //                     fk: String -> Result[(Cursors, (ac, List[b])), String],
-    //                     sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
+    //                     sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, ac, Nil)
     //         case x :: rs => {

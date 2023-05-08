@@ -395,17 +395,17 @@ mod SheetIO.SheetReader {
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] & Impure =
-        import new flixspt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flixspt.sheetio.POIRowIterator & Impure as newRowCursor;
-        import flixspt.sheetio.POIRowIterator.hasNext(): Bool & Impure as ffiHasNext;
-        import flixspt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row & Impure as ffiNext;
+    def getRowCursor(x: Sheet): Cursor[String, ##org.apache.poi.ss.usermodel.Row] \ IO =
+        import new flixspt.sheetio.POIRowIterator(##org.apache.poi.ss.usermodel.Sheet): ##flixspt.sheetio.POIRowIterator \ IO as newRowCursor;
+        import flixspt.sheetio.POIRowIterator.hasNext(): Bool \ IO as ffiHasNext;
+        import flixspt.sheetio.POIRowIterator.next(): ##org.apache.poi.ss.usermodel.Row \ IO as ffiNext;
         try {
             let Sheet(x1)       = x;
             let iter = newRowCursor(x1);
             let cursorAlg =  {
                   hasNext   = () -> ffiHasNext(iter)
                 , next      = FlixSandbox.Deprecated.Cursor.guardThunk(_ -> ffiNext(iter), "next failed")
-                , finalize  = () -> () as & Impure
+                , finalize  = () -> () as \ IO
             };
             FlixSandbox.Deprecated.Cursor.makeCursor(cursorAlg)
         } catch {
@@ -425,7 +425,7 @@ mod SheetIO.SheetReader {
                             ix : Int32, 
                             xs: List[a], 
                             fk: String -> Result[List[b], String], 
-                            sk: List[b] -> Result[List[b], String]): Result[List[b], String] & Impure =
+                            sk: List[b] -> Result[List[b], String]): Result[List[b], String] \ IO =
         match xs {
             case Nil => sk(Nil)
             case x :: rs => {
@@ -447,7 +447,7 @@ mod SheetIO.SheetReader {
                             ix: Int32, 
                             xs: List[a], 
                             fk: String -> Result[Unit, String], 
-                            sk: Unit -> Result[Unit, String]): Result[Unit, String] & Impure =
+                            sk: Unit -> Result[Unit, String]): Result[Unit, String] \ IO =
         match xs {
             case Nil => sk()
             case x :: rs => {
@@ -494,7 +494,7 @@ mod SheetIO.SheetReader {
                     acc: b, 
                     xs: List[a], 
                     fk: String -> Result[b, String], 
-                    sk: b -> Result[b, String]): Result[b, String] & Impure =
+                    sk: b -> Result[b, String]): Result[b, String] \ IO =
         match xs {
             case Nil => sk(acc)
             case x :: rs => {
@@ -516,7 +516,7 @@ mod SheetIO.SheetReader {
                         ac: ac,
                         xs: List[a],
                         fk: String -> Result[(ac, List[b]), String],
-                        sk: (ac, List[b]) -> Result[(ac, List[b]), String]): Result[(ac, List[b]), String] & Impure =
+                        sk: (ac, List[b]) -> Result[(ac, List[b]), String]): Result[(ac, List[b]), String] \ IO =
         match xs {
             case Nil => sk(ac, Nil)
             case x :: rs => {

@@ -87,63 +87,63 @@ mod SheetIO.IndexedColors {
     
 
     def toNative(x: IndexedColors): ##org.apache.poi.ss.usermodel.IndexedColors = 
-        import static get org.apache.poi.ss.usermodel.IndexedColors.AQUA: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getAQUA;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.AUTOMATIC: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getAUTOMATIC;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BLACK: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBLACK;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BLACK1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBLACK1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE_GREY: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBLUE_GREY;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBLUE1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BRIGHT_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBRIGHT_GREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BRIGHT_GREEN1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBRIGHT_GREEN1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.BROWN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getBROWN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.CORAL: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getCORAL;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.CORNFLOWER_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getCORNFLOWER_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getDARK_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getDARK_GREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_RED: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getDARK_RED;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_TEAL: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getDARK_TEAL;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getDARK_YELLOW;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GOLD: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGOLD;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGREY_25_PERCENT;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_40_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGREY_40_PERCENT;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_50_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGREY_50_PERCENT;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_80_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getGREY_80_PERCENT;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.INDIGO: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getINDIGO;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LAVENDER: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLAVENDER;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LEMON_CHIFFON: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLEMON_CHIFFON;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_CORNFLOWER_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_CORNFLOWER_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_GREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_ORANGE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_ORANGE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_TURQUOISE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_TURQUOISE1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIGHT_YELLOW;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.LIME: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getLIME;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.MAROON: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getMAROON;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.OLIVE_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getOLIVE_GREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.ORANGE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getORANGE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.ORCHID: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getORCHID;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.PALE_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getPALE_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.PINK: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getPINK;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.PINK1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getPINK1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.PLUM: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getPLUM;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.RED: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getRED;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.RED1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getRED1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.ROSE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getROSE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.ROYAL_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getROYAL_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.SEA_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getSEA_GREEN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.SKY_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getSKY_BLUE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.TAN: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getTAN;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.TEAL: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getTEAL;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.TURQUOISE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getTURQUOISE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.TURQUOISE1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getTURQUOISE1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.VIOLET: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getVIOLET;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.WHITE: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getWHITE;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.WHITE1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getWHITE1;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getYELLOW;
-        import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW1: ##org.apache.poi.ss.usermodel.IndexedColors & Pure as getYELLOW1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.AQUA: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getAQUA;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.AUTOMATIC: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getAUTOMATIC;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BLACK: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBLACK;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BLACK1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBLACK1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE_GREY: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBLUE_GREY;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BLUE1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBLUE1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BRIGHT_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBRIGHT_GREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BRIGHT_GREEN1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBRIGHT_GREEN1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.BROWN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getBROWN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.CORAL: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getCORAL;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.CORNFLOWER_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getCORNFLOWER_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getDARK_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getDARK_GREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_RED: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getDARK_RED;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_TEAL: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getDARK_TEAL;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.DARK_YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getDARK_YELLOW;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GOLD: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGOLD;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_25_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGREY_25_PERCENT;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_40_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGREY_40_PERCENT;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_50_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGREY_50_PERCENT;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.GREY_80_PERCENT: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getGREY_80_PERCENT;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.INDIGO: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getINDIGO;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LAVENDER: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLAVENDER;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LEMON_CHIFFON: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLEMON_CHIFFON;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_CORNFLOWER_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_CORNFLOWER_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_GREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_ORANGE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_ORANGE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_TURQUOISE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_TURQUOISE1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_TURQUOISE1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIGHT_YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIGHT_YELLOW;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.LIME: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getLIME;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.MAROON: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getMAROON;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.OLIVE_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getOLIVE_GREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.ORANGE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getORANGE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.ORCHID: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getORCHID;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.PALE_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getPALE_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.PINK: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getPINK;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.PINK1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getPINK1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.PLUM: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getPLUM;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.RED: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getRED;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.RED1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getRED1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.ROSE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getROSE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.ROYAL_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getROYAL_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.SEA_GREEN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getSEA_GREEN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.SKY_BLUE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getSKY_BLUE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.TAN: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getTAN;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.TEAL: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getTEAL;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.TURQUOISE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getTURQUOISE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.TURQUOISE1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getTURQUOISE1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.VIOLET: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getVIOLET;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.WHITE: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getWHITE;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.WHITE1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getWHITE1;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getYELLOW;
+        import static get org.apache.poi.ss.usermodel.IndexedColors.YELLOW1: ##org.apache.poi.ss.usermodel.IndexedColors \ {} as getYELLOW1;
         match x {
             case SheetIO.IndexedColors.Aqua                 => getAQUA()
             case SheetIO.IndexedColors.Automatic            => getAUTOMATIC()
@@ -205,7 +205,7 @@ mod SheetIO.IndexedColors {
         }
 
     pub def getIndex(x: IndexedColors): Int16 = 
-        import org.apache.poi.ss.usermodel.IndexedColors.getIndex(): Int16 & Pure;
+        import org.apache.poi.ss.usermodel.IndexedColors.getIndex(): Int16 \ {};
         let x1 = toNative(x);
         getIndex(x1)
 

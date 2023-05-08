@@ -27,7 +27,7 @@ mod SheetIO {
 
 /*
     instance Functor[SheetWriter[r, ka]] {
-        pub def map(f: a -> b & ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] & ef = 
+        pub def map(f: a -> b \ ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] \ ef = 
             SheetIO.SheetWriter.map(f, o)
     }
 
@@ -35,12 +35,12 @@ mod SheetIO {
         pub def point(x: a): SheetWriter[r, ka, a] = 
             SheetIO.SheetWriter.point(x)
 
-        pub def ap(f: SheetWriter[r, ka, a -> b & ef], x: SheetWriter[r, ka, a]) : SheetWriter[r, ka, b] & ef = 
+        pub def ap(f: SheetWriter[r, ka, a -> b \ ef], x: SheetWriter[r, ka, a]) : SheetWriter[r, ka, b] \ ef = 
             SheetIO.SheetWriter.ap(f, x)
     }
 
     instance Monad[SheetWriter[r, ka]] {
-        pub def flatMap(f: a -> SheetWriter[r, ka, b] & ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] & ef =
+        pub def flatMap(f: a -> SheetWriter[r, ka, b] \ ef, o: SheetWriter[r, ka, a]): SheetWriter[r, ka, b] \ ef =
             SheetIO.SheetWriter.flatMap(f, o)
     }
 
@@ -189,7 +189,7 @@ mod SheetIO.SheetWriter {
     //                         ix : Int32, 
     //                         xs: List[a], 
     //                         fk: String -> Result[(Cursors, List[b]), String], 
-    //                         sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] & Impure =
+    //                         sk: (Cursors, List[b]) -> Result[(Cursors, List[b]), String]): Result[(Cursors, List[b]), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, Nil)
     //         case x :: rs => {
@@ -213,7 +213,7 @@ mod SheetIO.SheetWriter {
     //                         ix: Int32, 
     //                         xs: List[a], 
     //                         fk: String -> Result[(Cursors, Unit), String], 
-    //                         sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] & Impure =
+    //                         sk: Cursors -> Result[(Cursors, Unit), String]): Result[(Cursors, Unit), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1)
     //         case x :: rs => {
@@ -250,7 +250,7 @@ mod SheetIO.SheetWriter {
     //                 acc: b, 
     //                 xs: List[a], 
     //                 fk: String -> Result[(Cursors, b), String], 
-    //                 sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] & Impure =
+    //                 sk: (Cursors, b) -> Result[(Cursors, b), String]): Result[(Cursors, b), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, acc)
     //         case x :: rs => {
@@ -274,7 +274,7 @@ mod SheetIO.SheetWriter {
     //                     ac: ac,
     //                     xs: List[a],
     //                     fk: String -> Result[(Cursors, (ac, List[b])), String],
-    //                     sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] & Impure =
+    //                     sk: (Cursors, ac, List[b]) -> Result[(Cursors, (ac, List[b])), String]): Result[(Cursors, (ac, List[b])), String] \ IO =
     //     match xs {
     //         case Nil => sk(s1, ac, Nil)
     //         case x :: rs => {
@@ -297,8 +297,8 @@ mod SheetIO.SheetWriter {
 
     def getCursorAndIncr(sheetName: String): SheetWriter[r, ka, Int32] = 
         SheetWriter((_, _, s1) -> match Map.get(sheetName, s1) {
-            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, s1), ix)) as & Impure
-            case None       => Ok((Map.insert(sheetName, 1, s1), 0)) as & Impure
+            case Some(ix)   => Ok((Map.adjust(x -> x + 1, sheetName, s1), ix)) as \ IO
+            case None       => Ok((Map.insert(sheetName, 1, s1), 0)) as \ IO
         })
 
     
@@ -325,7 +325,7 @@ mod SheetIO.SheetWriter {
         liftActionResult(_ -> getSheetName(x1))
 
     def setCursorHelper(sheetName: String, n: Int32): SheetWriter[r, ka, Unit] = 
-        SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as & Impure)
+        SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as \ IO)
 
 
 

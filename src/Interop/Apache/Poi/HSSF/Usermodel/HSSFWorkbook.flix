@@ -73,10 +73,10 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     /// Write workbook.
     ///
     pub def writeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook, 
-                              path: String): Result[Unit, String] & Impure = 
-        import new java.io.FileOutputStream(String): ##java.io.FileOutputStream & Impure as newFileOutputStream;
-        import java.io.FileOutputStream.close(): Unit & Impure;
-        import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit & Impure; 
+                              path: String): Result[Unit, String] \ IO = 
+        import new java.io.FileOutputStream(String): ##java.io.FileOutputStream \ IO as newFileOutputStream;
+        import java.io.FileOutputStream.close(): Unit \ IO;
+        import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ IO; 
         try {
             let fostream = newFileOutputStream(path);
             let fostream1 = fostream as ##java.io.OutputStream;

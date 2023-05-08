@@ -35,7 +35,7 @@ mod SheetIO.StreamingReader {
 
     pub enum StreamingReaderHandle[a]((##flixspt.sheetio.StreamingRowIterator, Iterator[Result[a, String]]))
 
-    pub def close(handle: StreamingReaderHandle[a]): Result[Unit, String] & Impure =
+    pub def close(handle: StreamingReaderHandle[a]): Result[Unit, String] \ IO =
         import flixspt.sheetio.StreamingRowIterator.close();
         let StreamingReaderHandle((x1, _)) = handle;
         try {
@@ -53,7 +53,7 @@ mod SheetIO.StreamingReader {
     ///
     /// Returns a new StreamingReader Handle (iterator and a "close" handle).
     ///
-    pub def newStreamingReaderHandle(src: System.Path, sheetName: String): Result[StreamingReaderHandle[POIRow], String] & Impure =
+    pub def newStreamingReaderHandle(src: System.Path, sheetName: String): Result[StreamingReaderHandle[POIRow], String] \ IO =
         import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetName(##java.nio.file.Path, String);
         import flixspt.sheetio.StreamingRowIterator.hasNext();
         import flixspt.sheetio.StreamingRowIterator.next();
@@ -79,7 +79,7 @@ mod SheetIO.StreamingReader {
     ///
     /// Returns a new StreamingReader Handle for sheet at `ix`.
     ///
-    pub def newStreamingReaderHandleWithIndex(src: System.Path, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] & Impure =
+    pub def newStreamingReaderHandleWithIndex(src: System.Path, sheetIndex: Int32): Result[StreamingReaderHandle[POIRow], String] \ IO =
         import flixspt.sheetio.StreamingRowIterator:createIteratorWithSheetNumber(##java.nio.file.Path, Int32);
         import flixspt.sheetio.StreamingRowIterator.hasNext();
         import flixspt.sheetio.StreamingRowIterator.next();
@@ -105,14 +105,14 @@ mod SheetIO.StreamingReader {
     /// 
     /// Improved answer type...
     /// 
-    pub def indexedRowIterator(start: Int32, eval: RowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
+    pub def indexedRowIterator(start: Int32, eval: RowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] \ IO = 
         let RowEvaluator(eval1) = eval;
         let fmt = SheetIO.Internal.DataFormatter.new();
         src |> Iterator.drop(start) |> Iterator.map(Result.flatMap(eval1(fmt)))
 
 
     
-    pub def namedRowIterator(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] & Impure = 
+    pub def namedRowIterator(headersLine: Int32, eval: NamedRowEvaluator[a], src: Iterator[Result[POIRow, String]]): Iterator[Result[a, String]] \ IO = 
         let NamedRowEvaluator(eval1) = eval;
         let RowEvaluator(headerEval1) = SheetIO.RowEvaluator.getRowContents();
         let fmt = SheetIO.Internal.DataFormatter.new();

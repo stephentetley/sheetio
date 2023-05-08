@@ -23,7 +23,7 @@ mod SheetIO {
 
 /*
     instance GradedFunctor[WorkbookReader[r, ka]] {
-        pub def map(f: a -> b & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef = 
+        pub def map(f: a -> b \ ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef = 
             SheetIO.WorkbookReader.map(f, o)
     }
 
@@ -31,12 +31,12 @@ mod SheetIO {
         pub def point(x: a): WorkbookReader[r, ka, a] = 
             SheetIO.WorkbookReader.point(x)
 
-        pub def ap(f: WorkbookReader[r, ka, a -> b & ef], x: WorkbookReader[r, ka, a]) : WorkbookReader[r, ka, b] & ef = 
+        pub def ap(f: WorkbookReader[r, ka, a -> b \ ef], x: WorkbookReader[r, ka, a]) : WorkbookReader[r, ka, b] \ ef = 
             SheetIO.WorkbookReader.ap(f, x)
     }
 
     instance GradedMonad[WorkbookReader[r, ka]] {
-        pub def flatMap(f: a -> WorkbookReader[r, ka, b] & ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] & ef =
+        pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
             SheetIO.WorkbookReader.flatMap(f, o)
     }
 
@@ -105,7 +105,7 @@ mod SheetIO.WorkbookReader {
         
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] & Impure = 
+    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         runOnFile(r, ma, path)
 
 
