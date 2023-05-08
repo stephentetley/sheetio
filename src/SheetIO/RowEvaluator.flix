@@ -101,7 +101,7 @@ mod SheetIO.RowEvaluator {
     
 
     pub def runRowEvaluator(ma: RowEvaluator[r, a, ef, a], 
-                                st: Row[r]): Result[String, a] \ ef =
+                            st: Row[r]): Result[String, a] \ ef =
         let env = ???;
         Graded.EnvEvaluator.runEnvEvaluator(getRowEvaluator(ma), env, st)
         
