@@ -92,7 +92,6 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
 
     pub def rowIterator(rc: Region[r1], sheet: Sheet[r]): Iterator[Row[r1], r and r1, r1] \ Write(r) = 
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
-        // let r = Scoped.regionOf(sheet);
         let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
         let Sheet(sheet1) = sheet;
         let iterHH = rowIterator(sheet1);
