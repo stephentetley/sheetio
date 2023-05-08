@@ -80,7 +80,7 @@ mod SheetIO.RowEvaluator {
     
     use GradedError.{swapError}
     use GradedMonad.{>>=}
-    use GradedFunctor.{<$>}
+    use GradedFunctor.{<$$>}
     use Time.Format.DateTimeFormatter
     
     use SheetIO.RowEvaluator
@@ -156,8 +156,8 @@ mod SheetIO.RowEvaluator {
 
 
 
-    // pub def liftAction(f: Unit -> a \ ef): RowEvaluator[r, ka, a] \ ef =
-    //     RowEvaluator(Graded.EnvEvaluator.liftAction(f))
+    pub def liftAction(f: Unit -> a \ ef): RowEvaluator[r, ka, ef, a] =
+        RowEvaluator(Graded.EnvEvaluator.liftAction(f))
     
         
     // pub def liftActionResult(f: Unit -> Result[err, a] \ ef): RowEvaluator[r, ka, a] \ ef with ToString[err] =
@@ -172,7 +172,7 @@ mod SheetIO.RowEvaluator {
         liftGetterResult(row -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellAt(${ix})"))
 
 
-    def _liftCellGetter(ix: Int32, 
+    def liftCellGetter(ix: Int32, 
                         fn: DataFormatter -> Cell[r] -> a \ ef): RowEvaluator[r, ka, ef and r, a] =
         liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
@@ -181,7 +181,7 @@ mod SheetIO.RowEvaluator {
             }
         )
 
-    def _liftCellGetterResult(ix: Int32, 
+    def liftCellGetterResult(ix: Int32, 
                             fn: DataFormatter -> Cell[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef and r, a] with ToString[err] =
         liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
@@ -200,140 +200,140 @@ mod SheetIO.RowEvaluator {
             Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet)
         })
             
-/*
+
     /// Get the column index from the column identifier "A", "B", ... "AA", "AB", ...
-    pub def getColumnIndex(s: String): RowEvaluator[r, ka, Int32] = 
+    /// Effect not sufficiently polymorphic...
+    pub def getColumnIndex(s: String): RowEvaluator[r, ka, ef, Int32] = 
         liftAction(_ -> 
             let addr = Interop.Apache.Poi.SS.Util.CellAddress.cellAddressWithAddress(s + "1");
-            Interop.Apache.Poi.SS.Util.CellAddress.getColumn(addr)
+            checked_ecast(Interop.Apache.Poi.SS.Util.CellAddress.getColumn(addr))
         )
 
 
     /// Uses the default DataFormatter
-    pub def getContentAt(ix: Int32): RowEvaluator[r, ka, ef and r, String] =
+    pub def getContentAt(ix: Int32): RowEvaluator[r, ka, r, String] =
         liftCellGetter(ix, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
 
 
     /// Uses the default DataFormatter
-    pub def getTrimmedContentAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
+    pub def getTrimmedContentAt(ix: Int32): RowEvaluator[r, ka, r, String] =
         map(String.trim, getContentAt(ix))
-*/
+
     pub def isNullAt(ix: Int32): RowEvaluator[r, ka, r, Bool] = 
-        Object.isNull <$> getCellAt(ix)
+        getCellAt(ix) <$$> Object.isNull
 
     pub def getNullAt(ix: Int32): RowEvaluator[r, ka, r, Unit] = 
         getCellAt(ix)   >>= cell -> 
         if (Object.isNull(cell)) point() else throwError("getNullAt(${ix})")
 
-/*
-    pub def getCellTypeAt(ix: Int32): RowEvaluator[r, ka, CellType] \ Read(r) =
+
+    pub def getCellTypeAt(ix: Int32): RowEvaluator[r, ka, r, CellType] =
         liftCellGetter(ix, (_, cell) -> {
             Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
                 |> SheetIO.CellType.fromNative
         })
 
 
-    pub def isBlankAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
-        let* typ = getCellTypeAt(ix);
+    pub def isBlankAt(ix: Int32): RowEvaluator[r, ka, r, Bool] = 
+        getCellTypeAt(ix) >>= typ ->
         match typ { 
             case TyBlank => point(true)
             case _       => point(false)
         } |> swapError("isBlankAt(${ix})")
 
 
-    pub def getBlankAt(ix: Int32): RowEvaluator[r, ka, Unit] \ Read(r) = 
+    pub def getBlankAt(ix: Int32): RowEvaluator[r, ka, r, Unit] = 
         let errMsg = "getBlankAt(${ix})";
-        let* typ = getCellTypeAt(ix);
+        getCellTypeAt(ix) >>= typ ->
         match typ { 
             case TyBlank => point()
             case _       => throwError(errMsg)
         } |> swapError(errMsg)
 
     /// Error if the cell type is numeric.
-    pub def getStringAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
+    pub def getStringAt(ix: Int32): RowEvaluator[r, ka, r, String] =
         liftCellGetterResult(ix, (_, row) -> Interop.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(row))
 
 
     /// TODO - wrong name or should return Bool...
-    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[r, ka, String] \ Read(r) =    
+    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowEvaluator[r, ka, r, String] =
         let errMsg = "getSatifiesAt(${ix})";
         let step = () -> getContentAt(ix) >>= x -> 
                     if (test(x)) point(x) else throwError(errMsg);
         step() |> swapError(errMsg)
 
 
-    pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) =
+    pub def getNonEmptyContentAt(ix: Int32): RowEvaluator[r, ka, r, String] =
         getSatifiesAt(ix, x -> not String.isEmpty(String.trim(x)))
             |> map(String.trim)
             |> swapError("getNonEmptyContentAt(${ix})")
 
 
-    pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[r, ka, String] \ Read(r) =
-        let* x = isNullAt(ix);
-        let* y = isBlankAt(ix);
-        if (x or y) point(d) else getStringAt(ix)
+    pub def getStringAtWithDefault(ix: Int32, d: String): RowEvaluator[r, ka, r, String]=
+        isNullAt(ix)    >>= nullc -> 
+        isBlankAt(ix)   >>= blankc -> 
+        if (nullc or blankc) point(d) else getStringAt(ix)
 
 
-    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter[r]): RowEvaluator[r, ka, String] \Read(r) =
+    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowEvaluator[r, ka, r, String] =
         liftCellGetter(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, dfmt))
 
 
-    pub def getBoolAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) =
+    pub def getBoolAt(ix: Int32): RowEvaluator[r, ka, r, Bool] =
         liftCellGetterResult(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell))
-
 
     /// Error if the cell type is String or cell value is not a readable double.
     /// Returns 0 for blank cells.
-    pub def getNumericAt(ix: Int32): RowEvaluator[r, ka, Float64] \ Read(r) =
+    pub def getNumericAt(ix: Int32): RowEvaluator[r, ka, r, Float64] =
         liftCellGetterResult(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell))
 
 
-    def getNumAt(ix: Int32, conv: Float64 -> Option[a]): RowEvaluator[r, ka, a] \ Read(r) =
-        let* n = getNumericAt(ix);
+    def getNumAt(ix: Int32, conv: Float64 -> Option[a]): RowEvaluator[r, ka, r, a] =
+        getNumericAt(ix) >>= n -> 
         match conv(n) {
             case Some(i) => point(i)
             case None    => throwError("getNumAt")
         }
 
 
-    pub def getInt8At(ix: Int32): RowEvaluator[r, ka, Int8] \ Read(r) =
+    pub def getInt8At(ix: Int32): RowEvaluator[r, ka, r, Int8] =
         getNumAt(ix, Float64.tryToInt8) 
             |> swapError("getInt8At")
 
-    pub def getInt16At(ix: Int32): RowEvaluator[r, ka, Int16] \ Read(r) =
+    pub def getInt16At(ix: Int32): RowEvaluator[r, ka, r, Int16] =
         getNumAt(ix, Float64.tryToInt16) 
             |> swapError("getInt16At")
 
-    pub def getInt32At(ix: Int32): RowEvaluator[r, ka, Int32] \ Read(r) =
+    pub def getInt32At(ix: Int32): RowEvaluator[r, ka, r, Int32] =
         getNumAt(ix, Float64.tryToInt32) 
             |> swapError("getInt32At")
 
-    pub def getInt64At(ix: Int32): RowEvaluator[r, ka, Int64] \ Read(r) =
+    pub def getInt64At(ix: Int32): RowEvaluator[r, ka, r, Int64] =
         getNumAt(ix, Float64.tryToInt64) 
             |> swapError("getInt64At")
 
-    pub def getFloat32At(ix: Int32): RowEvaluator[r, ka, Float32] \ Read(r) =
+    pub def getFloat32At(ix: Int32): RowEvaluator[r, ka, r, Float32] =
         getNumAt(ix, Float64.tryToFloat32) 
             |> swapError("getFloat32At")
     
-    pub def getFloat64At(ix: Int32): RowEvaluator[r, ka, Float64] \ Read(r) = 
+    pub def getFloat64At(ix: Int32): RowEvaluator[r, ka, r, Float64] = 
         getNumAt(ix, x -> Some(x)) 
             |> swapError("getFloat64At")
 
 
-    def isDateFormattedAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
+    def isDateFormattedAt(ix: Int32): RowEvaluator[r, ka, r, Bool] = 
         liftCellGetter(ix, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com.questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
     ///
-    pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
+    pub def getLocalDateTimeAt(ix: Int32): RowEvaluator[r, ka, r, Time.LocalDateTime] = 
         use Time.LocalDateTime.{LocalDateTime};
-        let* ctype = getCellTypeAt(ix);
+        getCellTypeAt(ix) >>= ctype ->
         if (ctype == TyNumeric) {
-            let* dtCell = isDateFormattedAt(ix);
+            isDateFormattedAt(ix) >>= dtCell ->
             if (dtCell) {
-                let* dt = liftCellGetterResult(ix, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell));
+                liftCellGetterResult(ix, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeAt - null")
                 else
@@ -345,81 +345,80 @@ mod SheetIO.RowEvaluator {
 
     /// Cell must be readable as a String
     pub def getLocalDateTimeAtWithFormat(ix: Int32, 
-                                        fmt: DateTimeFormatter[Time.Format.DateTimeFormat]): RowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
-        let* s = getStringAt(ix);
+                                        fmt: DateTimeFormatter[Time.Format.DateTimeFormat]): RowEvaluator[r, ka, r, Time.LocalDateTime] = 
+        getStringAt(ix) >>= s ->
         GradedError.liftResult(Time.LocalDateTime.parse(fmt, s))
-        
+
 
     /// Cell must be readable as a String
-    pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[r, ka, Time.LocalDateTime] \ Read(r) = 
-        let* fmt    = Graded.MonadError.liftResult(Time.Format.DateTimeFormatter.fromPattern(patt));
-        let* s      = getStringAt(ix);
+    pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowEvaluator[r, ka, r, Time.LocalDateTime] = 
+        GradedError.liftResult(Time.Format.DateTimeFormatter.fromPattern(patt)) >>= fmt ->
+        getStringAt(ix)                                                         >>= s   ->
         GradedError.liftResult(Time.LocalDateTime.parse(fmt, s))
 
 
-    pub def getLocalDateAt(ix: Int32): RowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
+    pub def getLocalDateAt(ix: Int32): RowEvaluator[r, ka, r, Time.LocalDate] = 
         getLocalDateTimeAt(ix)
             |> map(Time.LocalDateTime.toLocalDate)
             |> swapError("getLocalDateAt(${ix})")
 
 
-
     /// Cell must be readable as a String
     pub def getLocalDateAtWithFormat(ix: Int32, 
-                                    fmt: DateTimeFormatter[Time.Format.DateFormat]): RowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
-        let* s = getStringAt(ix);
-        liftResult(Time.LocalDate.parse(fmt, s))
-        
+                                    fmt: DateTimeFormatter[Time.Format.DateFormat]): RowEvaluator[r, ka, r, Time.LocalDate] = 
+        getStringAt(ix) >>= s -> 
+        GradedError.liftResult(Time.LocalDate.parse(fmt, s))
+
 
     /// Cell must be readable as a String
-    pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[r, ka, Time.LocalDate] \ Read(r) = 
-        let* fmt    = liftResult(Time.Format.DateTimeFormatter.fromPattern(patt));
-        let* s      = getStringAt(ix);
-        liftResult(Time.LocalDate.parse(fmt, s))
+    pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowEvaluator[r, ka, r, Time.LocalDate] = 
+        GradedError.liftResult(Time.Format.DateTimeFormatter.fromPattern(patt)) >>= fmt ->
+        getStringAt(ix)                                                         >>= s   ->
+        GradedError.liftResult(Time.LocalDate.parse(fmt, s))
         
 
-    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[r, ka, a] \ Read(r)): RowEvaluator[r, ka, Option[a]] \ Read(r) = 
-        let* x1 = isNullAt(ix);
-        let* y1 = isBlankAt(ix);
-        if (x1 or y1) point(None) else map(Some, getter(ix))
+    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and r, Option[a]] = 
+        isNullAt(ix)    >>= nullc   ->
+        isBlankAt(ix)   >>= blankc  ->
+        if (nullc or blankc) point(None) else map(Some, getter(ix))
 
-    pub def getOptionStringAt(ix: Int32): RowEvaluator[r, ka, Option[String]] \ Read(r) =
+    pub def getOptionStringAt(ix: Int32): RowEvaluator[r, ka, r, Option[String]] =
         getIfNotEmpty(ix, getStringAt)
 
 
 
-    pub def getOptionInt8At(ix: Int32): RowEvaluator[r, ka, Option[Int8]] \ Read(r) =
+    pub def getOptionInt8At(ix: Int32): RowEvaluator[r, ka, r, Option[Int8]] =
         getIfNotEmpty(ix, getInt8At)
 
-    pub def getOptionInt16At(ix: Int32): RowEvaluator[r, ka, Option[Int16]] \ Read(r) =
+    pub def getOptionInt16At(ix: Int32): RowEvaluator[r, ka, r, Option[Int16]] =
         getIfNotEmpty(ix, getInt16At)
 
-    pub def getOptionInt32At(ix: Int32): RowEvaluator[r, ka, Option[Int32]] \ Read(r) =
+    pub def getOptionInt32At(ix: Int32): RowEvaluator[r, ka, r, Option[Int32]] =
         getIfNotEmpty(ix, getInt32At)
 
-    pub def getOptionInt64At(ix: Int32): RowEvaluator[r, ka, Option[Int64]] \ Read(r) =
+    pub def getOptionInt64At(ix: Int32): RowEvaluator[r, ka, r, Option[Int64]] =
         getIfNotEmpty(ix, getInt64At)
 
-    pub def getOptionFloat32At(ix: Int32): RowEvaluator[r, ka, Option[Float32]] \ Read(r) =
+    pub def getOptionFloat32At(ix: Int32): RowEvaluator[r, ka, r, Option[Float32]] =
         getIfNotEmpty(ix, getFloat32At)
     
-    pub def getOptionFloat64At(ix: Int32): RowEvaluator[r, ka, Option[Float64]] \ Read(r) = 
+    pub def getOptionFloat64At(ix: Int32): RowEvaluator[r, ka, r, Option[Float64]] = 
         getIfNotEmpty(ix, getFloat64At)
 
-    pub def getOptionLocalDateTimeAt(ix: Int32): RowEvaluator[r, ka, Option[Time.LocalDateTime]] \ Read(r) = 
+    pub def getOptionLocalDateTimeAt(ix: Int32): RowEvaluator[r, ka, r, Option[Time.LocalDateTime]] = 
         getIfNotEmpty(ix, getLocalDateTimeAt)
+      
+    pub def getFirstCellNum(): RowEvaluator[r, ka, r, Int32] =
+        liftGetter(row -> Interop.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row) |> Int16.toInt32)
 
-        
-    pub def getFirstCellNum(): RowEvaluator[r, ka, Int32] \ Read(r) =
-        liftGetter((_, row) -> Interop.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row) |> Int16.toInt32)
-
-    pub def getLastCellNum(): RowEvaluator[r, ka, Int32] \ Read(r) =
-        liftGetter((_, row) -> Interop.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row) |> Int16.toInt32)
+    pub def getLastCellNum(): RowEvaluator[r, ka, r, Int32] =
+        liftGetter(row -> Interop.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row) |> Int16.toInt32)
             |> map(n -> if (n > 0) n - 1 else n)
 
 
+/*
     def queryFontAt(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): RowEvaluator[r, ka, a] \ { Read(r), ef } = 
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): RowEvaluator[r, ka, ef and r, a] = 
         use Result.flatMap;
         liftPrim((r, _, row) -> 
             let* cell   = SheetIO.Internal.Row.getCell(r, ix, row);
@@ -432,9 +431,6 @@ mod SheetIO.RowEvaluator {
             Ok(ans)
         )
 
-
-
-
     pub def getIsBoldAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
         queryFontAt(ix, SheetIO.Internal.Font.getBold)
 
@@ -444,41 +440,40 @@ mod SheetIO.RowEvaluator {
 
     pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
         queryFontAt(ix, SheetIO.Internal.Font.getStrikeout)
-
+*/
 
     /// List (not Array) avoids region allocation...
-    pub def getRowContents(): RowEvaluator[r, ka, List[String]] \ Read(r) =
+    pub def getRowContents(): RowEvaluator[r, ka, r, Vector[String]] =
         getRowContentsWith(getContentAt)
 
 
-    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[r, ka, a] \ ef): RowEvaluator[r, ka, List[a]] \ {Read(r), ef} =
-        let* end    = getLastCellNum();
-        getRowContentsWithHelper(evalCell, end, 0, ks -> unsafe_cast point(ks) as _ \ ef)
+    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and r, Vector[a]] =
+        getLastCellNum()                                            >>= end ->
+        getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks)) >>= xs  ->
+        point(List.toVector(xs))
 
 
     // Should be tail recursive as bind is in the contiuation
-    def getRowContentsWithHelper(evalCell: Int32 -> RowEvaluator[r, ka, a] \ ef, 
+    def getRowContentsWithHelper(evalCell: Int32 -> RowEvaluator[r, ka, ef, a], 
                                     end: Int32, 
                                     ix: Int32, 
-                                    k: List[a] -> RowEvaluator[r, ka, List[a]] \ ef): RowEvaluator[r, ka, List[a]] \ ef =
+                                    k: List[a] -> RowEvaluator[r, ka, ef, List[a]]): RowEvaluator[r, ka, ef, List[a]] =
         if (ix > end)
             k(Nil)
         else 
             getRowContentsWithHelper(evalCell, end, ix + 1, ss -> evalCell(ix) >>= s -> k(s :: ss))
 
-
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.
-    pub def getRowContentsIsoLocalDateTime(r: Region[r2]): RowEvaluator[r, ka1, Array[String, r2]] \ { Read(r1), Write(r2) } =
-        let eval = ix -> Graded.MonadOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
-        getRowContentsWith(r, eval)
+    pub def getRowContentsIsoLocalDateTime(): RowEvaluator[r, ka, r, Vector[String]]  =
+        let eval = ix -> GradedOr.orelse(getIsoLocalDateTimeAsString(ix), getContentAt(ix));
+        getRowContentsWith(eval)
 
-    def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, ka, String] \ Read(r) = 
+    def getIsoLocalDateTimeAsString(ix: Int32): RowEvaluator[r, ka, r, String] = 
         let fmt = Time.Format.DateTimeFormatter.iso_local_date_time();
-        let* dt = getLocalDateTimeAt(ix);
-        let s   = Time.LocalDateTime.format(fmt, dt);
-        point(s)
+        getLocalDateTimeAt(ix)                              >>= dt  ->
+        point(Time.LocalDateTime.format(fmt, dt))
 
-*/
+
 
 }
