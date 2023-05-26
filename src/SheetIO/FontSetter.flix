@@ -18,14 +18,14 @@
 mod SheetIO {
 
 
-    pub enum FontSetter[r: Region, ka: Type, ef: Bool, a: Type](
+    pub enum FontSetter[r: Region, ka: Type, ef: Eff, a: Type](
         Graded.MutStateError[ka, Interop.Apache.Poi.SS.Usermodel.Font[r], ef, a]
     )
 
 
     instance GradedFunctor[FontSetter[r, ka]] {
         pub def map(f: a -> b \ ef1, 
-                    o: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1, b] = 
+                    o: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1, b] = 
             SheetIO.FontSetter.map(f, o)
     }
 
@@ -34,13 +34,13 @@ mod SheetIO {
             SheetIO.FontSetter.point(x)
 
         pub def ap(f: FontSetter[r, ka, ef1, a -> b \ ef2], 
-                    x: FontSetter[r, ka, ef, a]) : FontSetter[r, ka, ef and ef1 and ef2, b] = 
+                    x: FontSetter[r, ka, ef, a]) : FontSetter[r, ka, ef + ef1 + ef2, b] = 
             SheetIO.FontSetter.ap(f, x)
     }
 
     instance GradedMonad[FontSetter[r, ka]] {
         pub def flatMap(f: a -> FontSetter[r, ka, ef1, b] \ ef2, 
-                        o: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1 and ef2, b] =
+                        o: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1 + ef2, b] =
             SheetIO.FontSetter.flatMap(f, o)
     }
 
@@ -50,11 +50,11 @@ mod SheetIO {
             SheetIO.FontSetter.throwError(msg)
 
         pub def mapError(f: String -> String \ ef1, 
-                            ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1, a] =
+                            ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1, a] =
             SheetIO.FontSetter.mapError(f, ma)
 
         pub def catchError(ma: FontSetter[r, ka, ef, a], 
-                            f: String -> FontSetter[r, ka, ef1, a] \ ef2): FontSetter[r, ka, ef and ef1 and ef2, a] =
+                            f: String -> FontSetter[r, ka, ef1, a] \ ef2): FontSetter[r, ka, ef + ef1 + ef2, a] =
             SheetIO.FontSetter.catchError(ma, f)
 
         pub def reifyError(ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef, Result[String, a]] =
@@ -83,15 +83,15 @@ mod SheetIO.FontSetter {
     pub def point(x: a): FontSetter[r, ka, ef, a] = 
         FontSetter(Graded.MutStateError.point(x))
 
-    pub def map(f: a -> b \ ef1, x: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1, b]  =
+    pub def map(f: a -> b \ ef1, x: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1, b]  =
         FontSetter(Graded.MutStateError.map(f, getFontSetter(x)))
 
     pub def ap(mf: FontSetter[r, ka, ef1, a -> b \ ef2], 
-                ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1 and ef2, b] =
+                ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1 + ef2, b] =
         FontSetter(Graded.MutStateError.ap(getFontSetter(mf), getFontSetter(ma)))
 
     pub def flatMap(k: a -> FontSetter[r, ka, ef1, b] \ ef2, 
-                    x: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1 and ef2, b] = 
+                    x: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1 + ef2, b] = 
         FontSetter(Graded.MutStateError.flatMap(k >> getFontSetter, getFontSetter(x)))
 
 
@@ -99,11 +99,11 @@ mod SheetIO.FontSetter {
         FontSetter(Graded.MutStateError.throwError(msg))
 
     pub def mapError(f: String -> String \ ef1, 
-                        ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef and ef1, a] =
+                        ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef + ef1, a] =
         FontSetter(Graded.MutStateError.mapError(f, getFontSetter(ma)))
 
     pub def catchError(ma: FontSetter[r, ka, ef, a], 
-                        f: String -> FontSetter[r, ka, ef1, a] \ ef2): FontSetter[r, ka, ef and ef1 and ef2, a] =
+                        f: String -> FontSetter[r, ka, ef1, a] \ ef2): FontSetter[r, ka, ef + ef1 + ef2, a] =
         FontSetter(Graded.MutStateError.catchError(getFontSetter(ma), f >> getFontSetter))
 
     pub def reifyError(ma: FontSetter[r, ka, ef, a]): FontSetter[r, ka, ef, Result[String, a]] =

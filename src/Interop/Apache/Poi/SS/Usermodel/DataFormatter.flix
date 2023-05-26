@@ -21,6 +21,11 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
     pub enum DataFormatter(##org.apache.poi.ss.usermodel.DataFormatter)
 
+    pub enum MutDataFormatter[_: Region](##org.apache.poi.ss.usermodel.DataFormatter)
+
+
+    /// DataFormatter "builders" in POI return void ...
+    pub type alias DataFormatterInit[r: Region] = MutDataFormatter[r] -> Unit \ r
 
 }
 
@@ -53,7 +58,7 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as newDataFormatter;
         let loc1 = Interop.Util.Locale.getHH(loc);
         newDataFormatter(loc1) |> DataFormatter
-
+*/
 
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
@@ -63,7 +68,7 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
         let DataFormatter(df1) = df;
         let Cell(cell1) = cell;
         formatCellValue(df1, cell1)
-*/
+
 
 }
 
