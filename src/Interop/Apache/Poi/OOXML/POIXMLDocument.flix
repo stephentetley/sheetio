@@ -52,7 +52,7 @@ mod Interop.Apache.Poi.OOXML.POIXMLDocument {
     /// Write workbook.
     ///
     pub def write![r: Region, outs: Region -> Type, wb: Region -> Type]
-                (out: outs[r], wb: wb[r]): Result[String, Unit] \ {IO, Read(r)} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
+                (out: outs[r], wb: wb[r]): Result[String, Unit] \ {IO, r} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};
             let wb1  = Interop.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb) |> getHH;

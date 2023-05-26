@@ -74,12 +74,12 @@ mod SheetIO.WorkbookWriter {
 
 /*
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, Write(r)} = 
+    pub def runXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, r} = 
         runXssf(r, ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, Write(r)} = 
+    pub def runXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ {IO, r} = 
         use Result.{flatMap};
         let outpath = ToString.toString(path);
         let* outs   = Interop.IO.FileOutputStream.newWithPath(outpath);
@@ -206,39 +206,39 @@ mod SheetIO.WorkbookWriter {
 
 
 
-    pub def createSheet!(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Write(r) =
+    pub def createSheet!(name: String): WorkbookWriter[r, ka, Sheet[r]] \ r =
         liftSetterResult!(Interop.Apache.Poi.SS.Usermodel.Workbook.createSheet!(name))
 
 
-    pub def getSheetNamed(name: String): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
+    pub def getSheetNamed(name: String): WorkbookWriter[r, ka, Sheet[r]] \ r =
         liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
 
-    pub def getSheetNames(): WorkbookWriter[r, ka, List[String]] \ Read(r) =
+    pub def getSheetNames(): WorkbookWriter[r, ka, List[String]] \ r =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0, n);
         Traversable.traverse(getSheetName, ixs)      
     
-    pub def getNumberOfSheets(): WorkbookWriter[r, ka, Int32] \ Read(r) =
+    pub def getNumberOfSheets(): WorkbookWriter[r, ka, Int32] \ r =
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets)
 
-    pub def getSheetName(ix: Int32): WorkbookWriter[r, ka, String] \ Read(r) =
+    pub def getSheetName(ix: Int32): WorkbookWriter[r, ka, String] \ r =
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix))
 
  
-    pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ Read(r) =
+    pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ r =
         liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix))
 
 
-    pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] \ Write(r) =
+    pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] \ r =
         liftAction(_ -> Interop.Apache.Poi.SS.Usermodel.DataFormat.getFormatNamed!(format, df))
 
 
-    pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] \ Write(r) =
+    pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] \ r =
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.createDataFormat!)
 
 
-    pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ Write(r) =
+    pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ r =
         let* font   = liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.createFont!);
         let r1      = Scoped.regionOf(font);
         let* _      = liftActionResult(_ -> SheetIO.FontSetter.runFontSetter!(r1, mx, font));
@@ -246,14 +246,14 @@ mod SheetIO.WorkbookWriter {
 
 
 
-    pub def createCellStyle!(rc: Region[r], mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ Write(r) =
+    pub def createCellStyle!(rc: Region[r], mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ r =
         let* style  = liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.createCellStyle!);
         let* _      = liftActionResult(_ -> SheetIO.CellStyleSetter.runCellStyleSetter!(rc, mx, style));
         point(style)
 
 
 
-    pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] \ Write(r) =
+    pub def withSheetWriter(writer: SheetWriter[r, a, a], sheet: Sheet[r]): WorkbookWriter[r, ka, a] \ r =
         let r1 = Scoped.regionOf(sheet);
         liftActionResult(_ -> SheetIO.SheetWriter.runSheetWriter!(r1, writer, None, sheet))
 

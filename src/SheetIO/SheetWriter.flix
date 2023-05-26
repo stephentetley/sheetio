@@ -330,11 +330,11 @@ mod SheetIO.SheetWriter {
 
 
     // createRow
-    def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ Write(r) =
+    def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ r =
         liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.Sheet.createRow!(ix, sheet))
 
 
-    pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ Write(r) =
+    pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ r =
         let* row        = createRow!(ix);
         let r           = Scoped.regionOf(row);
         let* style      = askStyle();
@@ -342,15 +342,15 @@ mod SheetIO.SheetWriter {
 
 
 
-    pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, ka, Unit] \ Write(r) = 
+    pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
         FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)
 
-    pub def allRowsForm!(start: Int32, writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ Write(r) = 
+    pub def allRowsForm!(start: Int32, writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
         FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix + start, writer(a)), rows)
 
 
     /// Headers are written to Row 0, all subsequent rows are *data*.
-    pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ Write(r)  = 
+    pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r  = 
         let* _      = setRow!(0, SheetIO.RowSetter.putHeaders!(headers));
         let* _      = allRowsForm!(1, writer, rows);
         point()

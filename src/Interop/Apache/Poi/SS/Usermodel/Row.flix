@@ -41,22 +41,22 @@ mod Interop.Apache.Poi.SS.Usermodel.Row {
     pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] =
         Row(prim)
 
-    pub def getRowNum(row: Row[r]): Int32 \ Read(r) = 
+    pub def getRowNum(row: Row[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 
         let Row(row1) = row;
         getRowNum(row1)
     
-    pub def getCell(ix: Int32, row: Row[r]): Option[Cell[r]] \ Read(r) = 
+    pub def getCell(ix: Int32, row: Row[r]): Option[Cell[r]] \ r = 
         import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r; 
         let Row(row1) = row;
         getCell(row1, ix) |> Object.toOption |> Option.map(Cell)
 
-    pub def getSheet(row: Row[r]): Sheet[r] \ Read(r) = 
+    pub def getSheet(row: Row[r]): Sheet[r] \ r = 
         import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ r;
         let Row(row1) = row;
         getSheet(row1) |> Sheet
 
-    pub def createCell!(ix: Int32, row: Row[r]): Result[String, Cell[r]] \ Write(r) = 
+    pub def createCell!(ix: Int32, row: Row[r]): Result[String, Cell[r]] \ r = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r;
             let Row(row1) = row;
@@ -64,21 +64,21 @@ mod Interop.Apache.Poi.SS.Usermodel.Row {
         })
 
 
-    pub def getFirstCellNum(row: Row[r]): Int16 \ Read(r) = 
+    pub def getFirstCellNum(row: Row[r]): Int16 \ r = 
         import org.apache.poi.ss.usermodel.Row.getFirstCellNum(): Int16 \ r;
         let Row(row1) = row;
         getFirstCellNum(row1)
 
 
     /// As per Java - index of last cell **plus 1**.
-    pub def getLastCellNum(row: Row[r]): Int16 \ Read(r) = 
+    pub def getLastCellNum(row: Row[r]): Int16 \ r = 
         import org.apache.poi.ss.usermodel.Row.getLastCellNum(): Int16 \ r; 
         let Row(row1) = row;
         getLastCellNum(row1)
 
 
     /// Number of cells used - do not use for trying to find end.
-    pub def getPhysicalNumberOfCells(row: Row[r]): Int32 \ Read(r) = 
+    pub def getPhysicalNumberOfCells(row: Row[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(): Int32 \ r; 
         let Row(row1) = row;
         getPhysicalNumberOfCells(row1)

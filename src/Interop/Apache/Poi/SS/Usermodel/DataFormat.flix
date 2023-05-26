@@ -36,13 +36,13 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormat {
         df1
 
 
-    pub def getFormatAt(ix: Int16, df: DataFormat[r]): Option[String] \ Read(r) = 
+    pub def getFormatAt(ix: Int16, df: DataFormat[r]): Option[String] \ r = 
         import org.apache.poi.ss.usermodel.DataFormat.getFormat(Int16): String \ r; 
         let DataFormat(df1) = df;
         getFormat(df1, ix) |> Object.toOption
 
     /// Creates a new format if not found and returns its index.
-    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ Read(r) = 
+    pub def getFormatNamed!(format: String, df: DataFormat[r]): Int16 \ r = 
         import org.apache.poi.ss.usermodel.DataFormat.getFormat(String): Int16 \ r; 
         let DataFormat(df1) = df;
         getFormat(df1, format)

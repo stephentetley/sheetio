@@ -37,13 +37,13 @@ mod SheetIO.DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def new(rc: Region[r]): DataFormatter[r] \ Write(r) =
+    pub def new(rc: Region[r]): DataFormatter[r] \ r =
         Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc)
 
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(rc: Region[r], loc: Locale): DataFormatter[r] \ Write(r) =
+    pub def newWithLocale(rc: Region[r], loc: Locale): DataFormatter[r] \ r =
         Interop.Apache.Poi.SS.Usermodel.DataFormatter.newWithLocale(rc, loc)
 */      
 }

@@ -28,8 +28,6 @@ mod Interop.Apache.Poi.SS.Usermodel {
 mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
 
     use Interop.Util.Locale
-    use Interop.Flix.Setter
-    use Interop.Flix.Setter.{Setter}
 
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
@@ -41,9 +39,9 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
     pub def getHH(df: DataFormatter): ##org.apache.poi.ss.usermodel.DataFormatter =
         let DataFormatter(df1) = df;
         df1
-
+/*
     /// TODO - use enum of DataFormatter actions...
-    pub def new(rc: Region[r], fs: Setter[DataFormatter, r]): Result[String, DataFormatter] \ Write(r) = 
+    pub def new(rc: Region[r], fs: Setter[DataFormatter, r]): Result[String, DataFormatter] \ r = 
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter \ {} as new1;
         DataFormatter(new1()) |> Interop.Flix.Setter.apply(rc, fs)
 
@@ -51,7 +49,7 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
     ///
     /// Returns a new mutable DataFormatter.
     ///
-    pub def newWithLocale(_: Region[r], loc: Locale): DataFormatter \ Write(r) = 
+    pub def newWithLocale(_: Region[r], loc: Locale): DataFormatter \ r = 
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as newDataFormatter;
         let loc1 = Interop.Util.Locale.getHH(loc);
         newDataFormatter(loc1) |> DataFormatter
@@ -60,12 +58,12 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
     /// TODO - it would be useful to allow users to make custom DataFormatters...
 
     /// This is a "service" ...
-    pub def formatCellValue(cell: Cell[r], df: DataFormatter): String \ Read(r) = 
+    pub def formatCellValue(cell: Cell[r], df: DataFormatter): String \ r = 
         import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String \ r; 
         let DataFormatter(df1) = df;
         let Cell(cell1) = cell;
         formatCellValue(df1, cell1)
-
+*/
 
 }
 

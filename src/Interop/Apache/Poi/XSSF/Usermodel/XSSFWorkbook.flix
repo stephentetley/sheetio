@@ -69,7 +69,7 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     ///
     /// Create new for writing.
     ///
-    pub def new(_: Region[r]): XSSFWorkbook[r] \ Write(r)  = 
+    pub def new(_: Region[r]): XSSFWorkbook[r] \ r  = 
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook():##org.apache.poi.xssf.usermodel.XSSFWorkbook \ r as newXSSFWorkbook;
         newXSSFWorkbook() |> XSSFWorkbook
 
@@ -99,7 +99,7 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     /// `write(OutputStream)` is method on superclass `POIXMLDocument` 
 
 
-    pub def close!(wb: XSSFWorkbook[r]): Result[String, Unit] \ {IO, Write(r)} = 
+    pub def close!(wb: XSSFWorkbook[r]): Result[String, Unit] \ {IO, r} = 
         Result.tryCatch(_ -> {
             import org.apache.poi.xssf.usermodel.XSSFWorkbook.close(): Unit \ {IO, r}; 
             let XSSFWorkbook(wb1) = wb;

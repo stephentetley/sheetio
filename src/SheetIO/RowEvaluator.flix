@@ -22,13 +22,13 @@ mod SheetIO {
     /// TODO - add EnvEvaluator to GradedLib?
 
     // pass around DataFormatter[r]
-    pub enum RowEvaluator[r: Region, ka: Type, ef: Bool, a: Type](
+    pub enum RowEvaluator[r: Region, ka: Type, ef: Eff, a: Type](
         Graded.EnvEvaluator[ka, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a])
 
 
     instance GradedFunctor[RowEvaluator[r, ka]] {
         pub def map(f: a -> b \ ef1, 
-                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, b] = 
+                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1, b] = 
             SheetIO.RowEvaluator.map(f, ma)
     }
 
@@ -37,13 +37,13 @@ mod SheetIO {
             SheetIO.RowEvaluator.point(x)
 
         pub def ap(f: RowEvaluator[r, ka, ef1, a -> b \ ef2], 
-                    ma: RowEvaluator[r, ka, ef, a]) : RowEvaluator[r, ka, ef and ef1 and ef2, b] = 
+                    ma: RowEvaluator[r, ka, ef, a]) : RowEvaluator[r, ka, ef + ef1 + ef2, b] = 
             SheetIO.RowEvaluator.ap(f, ma)
     }
 
     instance GradedMonad[RowEvaluator[r, ka]] {
         pub def flatMap(f: a -> RowEvaluator[r, ka, ef1, b] \ ef2, 
-                        ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
+                        ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1 + ef2, b] =
             SheetIO.RowEvaluator.flatMap(f, ma)
     }
 
@@ -53,7 +53,7 @@ mod SheetIO {
 
     instance GradedOr[RowEvaluator[r, ka]] {
         pub def orelse(ma: RowEvaluator[r, ka, ef1, a], 
-                        mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 and ef2, a] =
+                        mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 + ef2, a] =
             SheetIO.RowEvaluator.orelse(ma, mb)
     }
 
@@ -62,11 +62,11 @@ mod SheetIO {
             SheetIO.RowEvaluator.throwError(err)
 
         pub def mapError(f: String -> String \ ef1, 
-                            ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, a] =
+                            ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1, a] =
             SheetIO.RowEvaluator.mapError(f, ma)
 
         pub def catchError(ma: RowEvaluator[r, ka, ef, a], 
-                            hdl: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef and ef1 and ef2, a] =
+                            hdl: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef + ef1 + ef2, a] =
             SheetIO.RowEvaluator.catchError(ma, hdl)
 
         pub def reifyError(ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef, Result[String, a]] =
@@ -110,25 +110,25 @@ mod SheetIO.RowEvaluator {
         RowEvaluator(Graded.EnvEvaluator.point(x))
    
     pub def map(f: a -> b \ ef1, 
-                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, b] =
+                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1, b] =
         RowEvaluator(Graded.EnvEvaluator.map(f, getRowEvaluator(ma)))
 
     pub def ap(mf: RowEvaluator[r, ka, ef1, a -> b \ ef2], 
-                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
+                ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1 + ef2, b] =
         RowEvaluator(Graded.EnvEvaluator.ap(getRowEvaluator(mf), getRowEvaluator(ma)))
 
     pub def flatMap(f: a -> RowEvaluator[r, ka, ef1, b] \ ef2, 
-                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1 and ef2, b] =
+                    ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1 + ef2, b] =
         RowEvaluator(Graded.EnvEvaluator.flatMap(f >> getRowEvaluator, getRowEvaluator(ma)))
 
     pub def throwError(msg: String): RowEvaluator[r, ka, ef, a] = 
         RowEvaluator(Graded.EnvEvaluator.throwError(msg))
 
-    pub def mapError(f: String -> String \ ef1, ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and ef1, a] =
+    pub def mapError(f: String -> String \ ef1, ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + ef1, a] =
         RowEvaluator(Graded.EnvEvaluator.mapError(f, getRowEvaluator(ma)))
 
     pub def catchError(ma: RowEvaluator[r, ka, ef, a], 
-                        f: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef and ef1 and ef2, a] =
+                        f: String -> RowEvaluator[r, ka, ef1, a] \ ef2): RowEvaluator[r, ka, ef + ef1 + ef2, a] =
         RowEvaluator(Graded.EnvEvaluator.catchError(getRowEvaluator(ma), f >> getRowEvaluator))
 
     pub def reifyError(ma: RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef, Result[String, a]] =
@@ -137,7 +137,7 @@ mod SheetIO.RowEvaluator {
     pub def empty(): RowEvaluator[r, ka, ef, a] = 
         RowEvaluator(Graded.EnvEvaluator.empty())
 
-    pub def orelse(ma: RowEvaluator[r, ka, ef1, a], mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 and ef2, a] =
+    pub def orelse(ma: RowEvaluator[r, ka, ef1, a], mb: RowEvaluator[r, ka, ef2, a]): RowEvaluator[r, ka, ef1 + ef2, a] =
         RowEvaluator(Graded.EnvEvaluator.orelse(getRowEvaluator(ma), getRowEvaluator(mb)))
    
     /// `Graded.EnvEvaluator.liftGetter` not sufficiently polymorphic...
@@ -173,7 +173,7 @@ mod SheetIO.RowEvaluator {
 
 
     def liftCellGetter(ix: Int32, 
-                        fn: DataFormatter -> Cell[r] -> a \ ef): RowEvaluator[r, ka, ef and r, a] =
+                        fn: DataFormatter -> Cell[r] -> a \ ef): RowEvaluator[r, ka, ef + r, a] =
         liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Ok
@@ -182,7 +182,7 @@ mod SheetIO.RowEvaluator {
         )
 
     def liftCellGetterResult(ix: Int32, 
-                            fn: DataFormatter -> Cell[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef and r, a] with ToString[err] =
+                            fn: DataFormatter -> Cell[r] -> Result[err, a] \ ef): RowEvaluator[r, ka, ef + r, a] with ToString[err] =
         liftGetterResultWithEnv((fmt, row) -> 
             match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
                 case Some(cell) => fn(fmt, cell) |> Result.mapErr(ToString.toString)
@@ -377,7 +377,7 @@ mod SheetIO.RowEvaluator {
         GradedError.liftResult(Time.LocalDate.parse(fmt, s))
         
 
-    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and r, Option[a]] = 
+    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + r, Option[a]] = 
         isNullAt(ix)    >>= nullc   ->
         isBlankAt(ix)   >>= blankc  ->
         if (nullc or blankc) point(None) else map(Some, getter(ix))
@@ -418,7 +418,7 @@ mod SheetIO.RowEvaluator {
 
 /*
     def queryFontAt(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): RowEvaluator[r, ka, ef and r, a] = 
+                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): RowEvaluator[r, ka, ef + r, a] = 
         use Result.flatMap;
         liftPrim((r, _, row) -> 
             let* cell   = SheetIO.Internal.Row.getCell(r, ix, row);
@@ -431,14 +431,14 @@ mod SheetIO.RowEvaluator {
             Ok(ans)
         )
 
-    pub def getIsBoldAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
+    pub def getIsBoldAt(ix: Int32): RowEvaluator[r, ka, Bool] \ r = 
         queryFontAt(ix, SheetIO.Internal.Font.getBold)
 
 
-    pub def getIsItalicAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
+    pub def getIsItalicAt(ix: Int32): RowEvaluator[r, ka, Bool] \ r = 
         queryFontAt(ix, SheetIO.Internal.Font.getItalic)
 
-    pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[r, ka, Bool] \ Read(r) = 
+    pub def getIsStrikeoutAt(ix: Int32): RowEvaluator[r, ka, Bool] \ r = 
         queryFontAt(ix, SheetIO.Internal.Font.getStrikeout)
 */
 
@@ -447,7 +447,7 @@ mod SheetIO.RowEvaluator {
         getRowContentsWith(getContentAt)
 
 
-    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef and r, Vector[a]] =
+    pub def getRowContentsWith(evalCell: Int32 -> RowEvaluator[r, ka, ef, a]): RowEvaluator[r, ka, ef + r, Vector[a]] =
         getLastCellNum()                                            >>= end ->
         getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks)) >>= xs  ->
         point(List.toVector(xs))

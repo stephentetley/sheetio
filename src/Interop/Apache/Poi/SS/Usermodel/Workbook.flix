@@ -48,14 +48,14 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
     pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): Workbook[r] =
         Workbook(s)
     
-    pub def close!(wb: Workbook[r]): Result[String, Unit] \ Write(r) =         
+    pub def close!(wb: Workbook[r]): Result[String, Unit] \ r =         
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;
             let Workbook(wb1) = wb;
             close(wb1)
         })
 
-    pub def createSheet!(name: String, wb: Workbook[r]): Result[String, Sheet[r]] \ Write(r) =         
+    pub def createSheet!(name: String, wb: Workbook[r]): Result[String, Sheet[r]] \ r =         
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.createSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r;
             let Workbook(wb1) = wb;
@@ -63,24 +63,24 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
         })
 
 
-    pub def getNumberOfSheets(wb: Workbook[r]): Int32 \ Read(r) = 
+    pub def getNumberOfSheets(wb: Workbook[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(): Int32 \ r;
         let Workbook(wb1) = wb;
         getNumberOfSheets(wb1)
 
-    pub def getSheetName(ix: Int32, wb: Workbook[r]): String \ Read(r) = 
+    pub def getSheetName(ix: Int32, wb: Workbook[r]): String \ r = 
         import org.apache.poi.ss.usermodel.Workbook.getSheetName(Int32): String \ r;
         let Workbook(wb1) = wb;
         getSheetName(wb1, ix)
 
 
-    pub def getSheet(name: String, wb: Workbook[r]): Option[Sheet[r]] \ Read(r) = 
+    pub def getSheet(name: String, wb: Workbook[r]): Option[Sheet[r]] \ r = 
         import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r;
         let Workbook(wb1) = wb;
         getSheet(wb1, name) |> Object.toOption |> Option.map(Sheet)
 
 
-    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[String, Sheet[r]] \ Read(r) = 
+    pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[String, Sheet[r]] \ r = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r;
             let Workbook(wb1) = wb;
@@ -88,25 +88,25 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
         })
 
 
-    pub def getFontAt(ix: Int32, wb: Workbook[r]): Option[Font[r]] \ Read(r) = 
+    pub def getFontAt(ix: Int32, wb: Workbook[r]): Option[Font[r]] \ r = 
         import org.apache.poi.ss.usermodel.Workbook.getFontAt(Int32): ##org.apache.poi.ss.usermodel.Font \ r; 
         let Workbook(wb1) = wb;
         getFontAt(wb1, ix) |> Object.toOption |> Option.map(Font)
 
 
-    pub def createCellStyle!(wb: Workbook[r]): Result[String, CellStyle[r]] \ Write(r) = 
+    pub def createCellStyle!(wb: Workbook[r]): Result[String, CellStyle[r]] \ r = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
             let Workbook(wb1) = wb;
             createCellStyle(wb1) |> CellStyle
         })
 
-    pub def createFont!(wb: Workbook[r]): Font[r] \ Write(r) = 
+    pub def createFont!(wb: Workbook[r]): Font[r] \ r = 
         import org.apache.poi.ss.usermodel.Workbook.createFont(): ##org.apache.poi.ss.usermodel.Font \ r; 
         let Workbook(wb1) = wb;
         createFont(wb1) |> Font
 
-    pub def createDataFormat!(wb: Workbook[r]): DataFormat[r] \ Write(r) = 
+    pub def createDataFormat!(wb: Workbook[r]): DataFormat[r] \ r = 
         import org.apache.poi.ss.usermodel.Workbook.createDataFormat(): ##org.apache.poi.ss.usermodel.DataFormat \ r; 
         let Workbook(wb1) = wb;
         createDataFormat(wb1) |> DataFormat

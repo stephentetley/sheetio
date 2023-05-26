@@ -179,25 +179,25 @@ mod SheetIO.WorkbookReader {
 
     // WorkbookReader
 
-    pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ Read(r) =
+    pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ r =
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets)
 
-    pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ Read(r) =
+    pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ r =
         let* n  = getNumberOfSheets();
         let ixs = List.range(0,n);
         Traversable.traverse(getSheetNameWb, ixs)      
 
 
-    def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ Read(r) =
+    def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ r =
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix))
 
-    pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
+    pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ r =
         liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
-    pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ Read(r) =
+    pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ r =
         liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix))
 
-    pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ Read(r) =
+    pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ r =
         liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO.SheetReader.runSheetReader(r, eval, sheet)})
 
 */

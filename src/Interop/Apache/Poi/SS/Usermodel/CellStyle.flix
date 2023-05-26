@@ -39,50 +39,50 @@ mod Interop.Apache.Poi.SS.Usermodel.CellStyle {
         CellStyle(cs)
 
 
-    pub def setFont!(font: Font[r], cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setFont!(font: Font[r], cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit \ r; 
         let Font(font1) = font;
         let CellStyle(cs1) = cs;
         setFont(cs1, font1)
 
 
-    pub def getFontIndex(cs: CellStyle[r]): Int32 \ Read(r) = 
+    pub def getFontIndex(cs: CellStyle[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.getFontIndex(): Int32 \ r; 
         let CellStyle(cs1) = cs;
         getFontIndex(cs1)
         
 
-    pub def setWrapText!(wrapped: Bool, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setWrapText!(wrapped: Bool, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setWrapText(Bool): Unit \ r; 
         let CellStyle(cs1) = cs;
         setWrapText(cs1, wrapped)
 
  
-    pub def setIndention!(indent: Int16, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setIndention!(indent: Int16, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setIndention(Int16): Unit \ r; 
         let CellStyle(cs1) = cs;
         setIndention(cs1, indent)
 
     
 
-    pub def setFillForegroundColor!(color: Int16, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setFillForegroundColor!(color: Int16, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillForegroundColor(Int16): Unit \ r;
         let CellStyle(cs1) = cs;
         setFillForegroundColor(cs1, color)
 
     /// Note must set foreground color first
-    pub def setFillBackgroundColor!(color: Int16, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setFillBackgroundColor!(color: Int16, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setFillBackgroundColor(Int16): Unit \ r; 
         let CellStyle(cs1) = cs;
         setFillBackgroundColor(cs1, color)
 
 
-    pub def setShrinkToFit!(shrink: Bool, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setShrinkToFit!(shrink: Bool, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setShrinkToFit(Bool): Unit \ r; 
         let CellStyle(cs1) = cs;
         setShrinkToFit(cs1, shrink)
 
-    pub def setDataFormat!(value: Int16, cs: CellStyle[r]): Unit \ Write(r) = 
+    pub def setDataFormat!(value: Int16, cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setDataFormat(Int16): Unit \ r; 
         let CellStyle(cs1) = cs;
         setDataFormat(cs1, value)
@@ -90,7 +90,7 @@ mod Interop.Apache.Poi.SS.Usermodel.CellStyle {
 /*
     pub def cloneStyleFrom!(r: Region[r], 
                             styleToClone: ##org.apache.poi.ss.usermodel.CellStyle, 
-                            cs: CellStyle[r]): Result[Unit, PrimError] \ Write(r) = 
+                            cs: CellStyle[r]): Result[Unit, PrimError] \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.cloneStyleFrom(##org.apache.poi.ss.usermodel.CellStyle): Unit \ r; 
         try {
             let ans = cloneStyleFrom(style, styleToClone);
