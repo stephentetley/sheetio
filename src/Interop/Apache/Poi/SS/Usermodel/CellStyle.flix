@@ -17,7 +17,7 @@
 mod Interop.Apache.Poi.SS.Usermodel {
 
     /// Mutable
-
+    /// Interface
     pub enum CellStyle[_: Region](##org.apache.poi.ss.usermodel.CellStyle)
 
 

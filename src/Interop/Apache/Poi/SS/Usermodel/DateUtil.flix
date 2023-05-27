@@ -26,5 +26,11 @@ mod Interop.Apache.Poi.SS.Usermodel.DateUtil {
         let Cell(cell1) = cell;
         isCellDateFormatted(cell1)
 
+    /// 
+    pub def parseDateTime(s: String): Float64 \ r = 
+        import static org.apache.poi.ss.usermodel.DateUtil.parseDateTime(String): ##java.lang.Double \ r;
+        parseDateTime(s) |> Interop.Lang.Double.wrapHH |> Interop.Lang.Double.doubleValue
+
+
 }
 
