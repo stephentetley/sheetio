@@ -20,6 +20,7 @@ mod Interop.Apache.Poi.SS.Usermodel {
     /// Interface
     pub enum CellStyle[_: Region](##org.apache.poi.ss.usermodel.CellStyle)
 
+    
 
 }
 
@@ -38,6 +39,7 @@ mod Interop.Apache.Poi.SS.Usermodel.CellStyle {
     pub def wrapHH(_: Region[r], cs: ##org.apache.poi.ss.usermodel.CellStyle): CellStyle[r] =
         CellStyle(cs)
 
+    /// Blank / fresh CellStyles created from the workbook
 
     pub def setFont!(font: Font[r], cs: CellStyle[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.CellStyle.setFont(##org.apache.poi.ss.usermodel.Font): Unit \ r; 

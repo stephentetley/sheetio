@@ -78,7 +78,6 @@ mod SheetIO.WorkbookReader {
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     use SheetIO.RowEvaluator
-    use SheetIO.RowEvaluator.{RowEvaluator}
     use SheetIO.NamedRowEvaluator
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 

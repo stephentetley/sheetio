@@ -15,60 +15,23 @@
  */
 
 
-/// Use `Option[CellStyle]` as a Reader env in the Monad to allow inherited styles.
+/// TODO - Use `Option[CellStyle]` as a Reader env in the Monad to allow inherited styles?
 
 mod SheetIO {
 
 
-    pub enum RowSetter[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.Row[r], r, a])
-/*
-
-    instance GradedFunctor[RowSetter[r, ka]] {
-        pub def map(f: a -> b \ ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
-            SheetIO.RowSetter.map(f, o)
-    }
-
-    instance GradedApplicative[RowSetter[r, ka]] {
-        pub def point(x: a): RowSetter[r, ka, a] = 
-            SheetIO.RowSetter.point(x)
-
-        pub def ap(f: RowSetter[r, ka, a -> b \ ef], x: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef = 
-            SheetIO.RowSetter.ap(f, x)
-    }
-
-    instance GradedMonad[RowSetter[r, ka]] {
-        pub def flatMap(f: a -> RowSetter[r, ka, b] \ ef, o: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-            SheetIO.RowSetter.flatMap(f, o)
-    }
-
-    instance GradedZero[RowSetter[r, ka]] {
-        pub def empty(): RowSetter[r, ka, a] = 
-            SheetIO.RowSetter.empty()
-    }
-
-    // No GradedOr
-
-    instance GradedError[RowSetter[r, ka]] {
-        pub def throwError(msg: String): RowSetter[r, ka, a] = 
-            SheetIO.RowSetter.throwError(msg)
-
-        pub def mapError(f: String -> String \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef =
-            SheetIO.RowSetter.mapError(f, ma)
-
-        pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
-            SheetIO.RowSetter.catchError(ma, f)
-    }
-*/
+    pub type alias RowSetter[ka: Type, r: Region, ef: Eff, a: Type] = 
+        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a]
 
 }
 
 mod SheetIO.RowSetter {
 
-    use SheetIO.RowSetter
-    use SheetIO.RowSetter.{RowSetter}
-    
     use GradedError.{swapError}
+    use Graded.Builder.{liftSetter!, liftSetterResult!}
+
+    use SheetIO.RowSetter
+    
 
     use Interop.Apache.Poi.SS.Usermodel.Cell
     use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
@@ -77,66 +40,14 @@ mod SheetIO.RowSetter {
     use Interop.Apache.Poi.SS.Usermodel.Row
     use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
 
-/*
-    pub def getRowSetter(x: RowSetter[r, ka, a]): Graded.EnvMutStateError[r, ka, Option[CellStyle[r]], Row[r], a] = 
-        let RowSetter(x1) = x;
-        x1
 
     /// The state param `st` is expected to be mutated...
-    pub def runRowSetter!(r: Region[r], 
-                                ma: RowSetter[r, a, a], 
-                                env: Option[CellStyle[r]],
-                                st: Row[r]): Result[a, String] \ r =
-        Graded.EnvMutStateError.runEnvMutStateError(r, getRowSetter(ma), env, st)
+    pub def runRowSetter!(ma: RowSetter[a, r, ef, a], 
+                            st: Row[r]): Result[String, a] \ ef =
+        Graded.Builder.runBuilder(ma, st)
 
-    pub def point(x: a): RowSetter[r, ka, a] = 
-        RowSetter(Graded.EnvMutStateError.point(x))
+/*
 
-
-
-    pub def map(f: a -> b \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(Graded.EnvMutStateError.map(f, getRowSetter(x)))
-
-    pub def ap(mf: RowSetter[r, ka, a -> b \ ef], ma: RowSetter[r, ka, a]): RowSetter[r, ka, b] \ ef =
-        RowSetter(Graded.EnvMutStateError.ap(getRowSetter(mf), getRowSetter(ma)))
-
-    pub def flatMap(k: a -> RowSetter[r, ka, b] \ ef, x: RowSetter[r, ka, a]): RowSetter[r, ka, b]  \ ef = 
-        RowSetter(Graded.EnvMutStateError.flatMap(k >> getRowSetter, getRowSetter(x)))
-
-
-    pub def throwError(msg: String): RowSetter[r, ka, a] = 
-        RowSetter(Graded.EnvMutStateError.throwError(msg))
-
-    pub def mapError(f: String -> String \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded.EnvMutStateError.mapError(f, getRowSetter(ma)))
-
-    pub def catchError(ma: RowSetter[r, ka, a], f: String -> RowSetter[r, ka, a] \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded.EnvMutStateError.catchError(getRowSetter(ma), f >> getRowSetter))
-
-
-    pub def empty(): RowSetter[r, ka, a] = throwError("empty")
-
-
-    def liftSetter!(f: Option[CellStyle[r]] -> Row[r] -> a \ ef): RowSetter[r, ka, a] \ ef  =
-        RowSetter(Graded.EnvMutStateError.liftSetter!(f))
-
-    def liftSetterResult!(f: Option[CellStyle[r]] -> Row[r] -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(Graded.EnvMutStateError.liftSetterResult!(f))
-    
-    pub def liftAction(f: Unit -> a \ ef): RowSetter[r, ka, a] \ ef =
-        RowSetter(Graded.EnvMutStateError.liftAction(f))
-    
-        
-    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): RowSetter[r, ka, a] \ ef with ToString[err] =
-        RowSetter(Graded.EnvMutStateError.liftActionResult(f))
-
-
-    pub def localEnv(f: Option[CellStyle[r]] -> Option[CellStyle[r]] \ ef, ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] \ ef = 
-        RowSetter(Graded.EnvMutStateError.localEnv(f, getRowSetter(ma)))
-
-
-
-    
     // pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowSetter[r, a] = match x { 
     //     case Ok(x1) => point(x1)
     //     case Err(e) => throwError(makeErrMsg(e))

@@ -85,7 +85,6 @@ mod SheetIO.SheetReader {
     use Interop.Apache.Poi.SS.Usermodel.Sheet
 
     use SheetIO.RowEvaluator
-    use SheetIO.RowEvaluator.{RowEvaluator}
     use SheetIO.NamedRowEvaluator
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
@@ -195,11 +194,13 @@ mod SheetIO.SheetReader {
         liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows)
 
 
-    pub def getRowAt(ix: Int32, eval: RowEvaluator[r, a, ef, a]): SheetReader[r, ka, ef + r, a] =
+    pub def getRowAt(ix: Int32, eval: RowEvaluator[a, r, ef, a]): SheetReader[r, ka, ef + r, a] =
         use Result.flatMap;
         liftGetterResult(sheet -> {
-            forM (row <- Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
-                    ans <- SheetIO.RowEvaluator.runRowEvaluator(eval, row))
+            /// TODO - df should be "user facing"...
+            forM (df <- region rc {Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok()))};
+                    row <- Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
+                    ans <- SheetIO.RowEvaluator.runRowEvaluator(eval, df, row))
                 yield (ans)
         })
         

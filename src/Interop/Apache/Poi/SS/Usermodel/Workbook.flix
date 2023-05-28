@@ -21,6 +21,9 @@ mod Interop.Apache.Poi.SS.Usermodel {
     pub enum Workbook[_: Region](##org.apache.poi.ss.usermodel.Workbook)
 
 
+    pub enum MutWorkbook[_: Region](##org.apache.poi.ss.usermodel.Workbook)
+
+
     pub class SubWorkbook[t: Region -> Type] {
         pub def toWorkbook[r: Region](s: t[r]): Workbook[r]
         pub def fromWorkbook[r: Region](s: Workbook[r]): t[r]
@@ -62,6 +65,12 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
             createSheet(wb1, name) |> Sheet
         })
 
+    pub def cloneSheet!(num: Int32, wb: Workbook[r]): Result[String, Sheet[r]] \ r =         
+        Result.tryCatch(_ -> {
+            import org.apache.poi.ss.usermodel.Workbook.cloneSheet(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r;
+            let Workbook(wb1) = wb;
+            cloneSheet(wb1, num) |> Sheet
+        })
 
     pub def getNumberOfSheets(wb: Workbook[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.Workbook.getNumberOfSheets(): Int32 \ r;
@@ -93,7 +102,7 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
         let Workbook(wb1) = wb;
         getFontAt(wb1, ix) |> Object.toOption |> Option.map(Font)
 
-
+    /// Updates the workbook's style table.
     pub def createCellStyle!(wb: Workbook[r]): Result[String, CellStyle[r]] \ r = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.createCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 

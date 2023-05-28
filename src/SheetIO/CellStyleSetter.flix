@@ -38,6 +38,8 @@ mod SheetIO.CellStyleSetter {
 
 
     /// The state param `st` is expected to be mutated...
+    /// Blank CellStyles created from the workbook
+
     pub def runCellStyleSetter!(ma: CellStyleSetter[a, r, ef, a], 
                                 st: CellStyle[r]): Result[String, a] \ ef =
         Graded.Builder.runBuilder(ma, st)
