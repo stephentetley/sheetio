@@ -51,7 +51,7 @@ mod Interop.Apache.Poi.SS.Usermodel.Row {
         let Row(row1) = row;
         getCell(row1, ix) |> Object.toOption |> Option.map(Cell)
 
-    pub def getSheet(row: Row[r]): Sheet[r] \ r = 
+    pub def getSheet(row: Row[r]): Sheet \ r = 
         import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ r;
         let Row(row1) = row;
         getSheet(row1) |> Sheet

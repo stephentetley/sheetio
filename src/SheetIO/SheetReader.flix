@@ -18,67 +18,21 @@
 mod SheetIO {
 
 
-    pub enum SheetReader[r: Region, ka: Type, ef: Eff, a: Type](
-        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Sheet[r], ef, a])
-
-
-    instance GradedFunctor[SheetReader[r, ka]] {
-        pub def map(f: a -> b \ ef1, 
-                    ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1, b] = 
-            SheetIO.SheetReader.map(f, ma)
-    }
-
-    instance GradedApplicative[SheetReader[r, ka]] {
-        pub def point(x: a): SheetReader[r, ka, ef, a] = 
-            SheetIO.SheetReader.point(x)
-
-        pub def ap(mf: SheetReader[r, ka, ef1, a -> b \ ef2], 
-                    ma: SheetReader[r, ka, ef, a]) : SheetReader[r, ka, ef + ef1 + ef2, b] = 
-            SheetIO.SheetReader.ap(mf, ma)
-    }
-
-    instance GradedMonad[SheetReader[r, ka]] {
-        pub def flatMap(f: a -> SheetReader[r, ka, ef1, b] \ ef2, 
-                        ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1 + ef2, b] =
-            SheetIO.SheetReader.flatMap(f, ma)
-    }
-
-    instance GradedZero[SheetReader[r, ka]] {
-        pub def empty(): SheetReader[r, ka, ef, a] = 
-            SheetIO.SheetReader.empty()
-    }
-
-    instance GradedOr[SheetReader[r, ka]] {
-        pub def orelse(ma: SheetReader[r, ka, ef1, a], 
-                        mb: SheetReader[r, ka, ef2, a]): SheetReader[r, ka, ef1 + ef2, a] =
-            SheetIO.SheetReader.orelse(ma, mb)
-    }
-
-    instance GradedError[SheetReader[r, ka]] {
-        pub def throwError(msg: String): SheetReader[r, ka, ef, a] = 
-            SheetIO.SheetReader.throwError(msg)
-
-        pub def mapError(f: String -> String \ ef1, 
-                            ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1, a] =
-            SheetIO.SheetReader.mapError(f, ma)
-
-        pub def catchError(ma: SheetReader[r, ka, ef, a], 
-                            f: String -> SheetReader[r, ka, ef1, a] \ ef2): SheetReader[r, ka, ef + ef1 + ef2, a] =
-            SheetIO.SheetReader.catchError(ma, f)
-
-        pub def reifyError(ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef, Result[String, a]] =
-            SheetIO.SheetReader.reifyError(ma)
-    }
+    pub type alias SheetReader[ka: Type, ef: Eff, a: Type] = 
+        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Sheet, ef, a]
 
 
 }
 
 mod SheetIO.SheetReader {
 
+    use GradedFunctor.{<$$>}
+    use GradedApplicative.{point}
     use GradedMonad.{>>=}
+    use GradedError.{throwError, swapError}
+    use Graded.Evaluator.{liftGetter, liftGetterResult}
 
     use SheetIO.SheetReader
-    use SheetIO.SheetReader.{SheetReader}
 
     use Interop.Apache.Poi.SS.Usermodel.CellStyle
     use Interop.Apache.Poi.SS.Usermodel.Row
@@ -90,55 +44,12 @@ mod SheetIO.SheetReader {
 
 
 
-    pub def getSheetReader(x: SheetReader[r, ka, ef, a]): Graded.Evaluator[ka, Sheet[r], ef, a] = 
-        let SheetReader(x1) = x;
-        x1
 
-    pub def runSheetReader(ma: SheetReader[r, a, ef, a],
-                            s: Sheet[r]): Result[String, a] \ ef =
-        Graded.Evaluator.runEvaluator(getSheetReader(ma), s)
+    pub def runSheetReader(ma: SheetReader[a, ef, a],
+                            s: Sheet): Result[String, a] \ ef =
+        Graded.Evaluator.runEvaluator(ma, s)
 
-    pub def point(x: a): SheetReader[r, ka, ef, a] = 
-        SheetReader(Graded.Evaluator.point(x))
 
-    pub def map(f: a -> b \ ef1, 
-                ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1, b] =
-        SheetReader(Graded.Evaluator.map(f, getSheetReader(ma)))
-
-    pub def ap(mf: SheetReader[r, ka, ef1, a -> b \ ef2], 
-                ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1 + ef2, b] =
-        SheetReader(Graded.Evaluator.ap(getSheetReader(mf), getSheetReader(ma)))
-
-    pub def flatMap(f: a -> SheetReader[r, ka, ef1, b] \ ef2, 
-                    ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1 + ef2, b] =
-        SheetReader(Graded.Evaluator.flatMap(f >> getSheetReader, getSheetReader(ma)))
-
-    pub def throwError(msg: String): SheetReader[r, ka, ef, a] = 
-        SheetReader(Graded.Evaluator.throwError(msg))
-
-    pub def mapError(f: String -> String \ ef1, 
-                        ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef + ef1, a] =
-        SheetReader(Graded.Evaluator.mapError(f, getSheetReader(ma)))
-
-    pub def catchError(ma: SheetReader[r, ka, ef, a], 
-                        f: String -> SheetReader[r, ka, ef1, a] \ ef2): SheetReader[r, ka, ef + ef1 + ef2, a] =
-        SheetReader(Graded.Evaluator.catchError(getSheetReader(ma), f >> getSheetReader))
-
-    pub def reifyError(ma: SheetReader[r, ka, ef, a]): SheetReader[r, ka, ef, Result[String, a]] =
-        SheetReader(Graded.Evaluator.reifyError(getSheetReader(ma)))
-
-    pub def empty(): SheetReader[r, ka, ef, a] = 
-        SheetReader(Graded.Evaluator.empty())
-        
-    pub def orelse(ma: SheetReader[r, ka, ef1, a], 
-                    mb: SheetReader[r, ka, ef2, a]): SheetReader[r, ka, ef1 + ef2, a] =
-        SheetReader(Graded.Evaluator.orelse(getSheetReader(ma), getSheetReader(mb)))
-
-    def liftGetter(f: Sheet[r] -> a \ ef): SheetReader[r, ka, ef, a] =
-        SheetReader(Graded.Evaluator.liftGetter(f))
-    
-    def liftGetterResult(f: Sheet[r] -> Result[err, a] \ ef): SheetReader[r, ka, ef, a] with ToString[err] =
-        SheetReader(Graded.Evaluator.liftGetterResult(f))
 
 /*
 
@@ -177,32 +88,32 @@ mod SheetIO.SheetReader {
     // SheetReader
  
 
-    pub def getSheetName(): SheetReader[r, ka, r, String] =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName)
+    pub def getSheetName(): SheetReader[ka, ef, String] =
+        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(s)))
 
 
-    pub def getFirstRowNum(): SheetReader[r, ka, r, Int32] =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum >> Option.toOk("getFirstRowNum"))
+    pub def getFirstRowNum(): SheetReader[ka, ef, Int32] =
+        liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum(s)) |> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
-    pub def getLastRowNum(): SheetReader[r, ka, r, Int32] =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum >> Option.toOk("getLastRowNum"))
+    pub def getLastRowNum(): SheetReader[ka, ef, Int32] =
+        liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum(s)) |> Option.toOk("getLastRowNum"))
 
 
-    pub def getPhysicalNumberOfRows(): SheetReader[r, ka, r, Int32] =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows)
+    pub def getPhysicalNumberOfRows(): SheetReader[ka, ef, Int32] =
+        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows(s)))
 
 
-    pub def getRowAt(ix: Int32, eval: RowEvaluator[a, r, ef, a]): SheetReader[r, ka, ef + r, a] =
-        use Result.flatMap;
-        liftGetterResult(sheet -> {
-            /// TODO - df should be "user facing"...
-            forM (df <- region rc {Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok()))};
-                    row <- Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
-                    ans <- SheetIO.RowEvaluator.runRowEvaluator(eval, df, row))
-                yield (ans)
-        })
+    // pub def getRowAt(ix: Int32, eval: RowEvaluator[a, r, ef, a]): SheetReader[r, ka, ef + r, a] =
+    //     use Result.flatMap;
+    //     liftGetterResult(sheet -> {
+    //         /// TODO - df should be "user facing"...
+    //         forM (df <- region rc {Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok()))};
+    //                 row <- Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
+    //                 ans <- SheetIO.RowEvaluator.runRowEvaluator(eval, df, row))
+    //             yield (ans)
+    //     })
         
 
     ///
@@ -213,8 +124,8 @@ mod SheetIO.SheetReader {
     //     liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc))
 
 
-    pub def getHeaders(headerIndex: Int32): SheetReader[r, ka, r, Vector[String]] =
-        getRowAt(headerIndex, SheetIO.RowEvaluator.getRowContents())
+    // pub def getHeaders(headerIndex: Int32): SheetReader[ka, ef, Vector[String]] =
+    //     getRowAt(headerIndex, SheetIO.RowEvaluator.getRowContents())
 
 
 /*

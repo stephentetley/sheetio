@@ -16,9 +16,8 @@
 
 mod Interop.Apache.Poi.SS.Usermodel {
 
-    /// Mutable / Interface
 
-    pub enum Sheet[_: Region](##org.apache.poi.ss.usermodel.Sheet)
+    pub enum Sheet(##org.apache.poi.ss.usermodel.Sheet)
 
 
 }
@@ -32,21 +31,21 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
     use Interop.Apache.Poi.SS.Usermodel.Workbook
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
-    pub def getHH(sheet: Sheet[r]): ##org.apache.poi.ss.usermodel.Sheet =
+    pub def getHH(sheet: Sheet): ##org.apache.poi.ss.usermodel.Sheet =
         let Sheet(sheet1) = sheet;
         sheet1
    
-    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): Sheet[r] =
+    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): Sheet =
         Sheet(s)
 
 
-    pub def getSheetName(sheet: Sheet[r]): String \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String \ r; 
+    pub def getSheetName(sheet: Sheet): String = 
+        import org.apache.poi.ss.usermodel.Sheet.getSheetName(): String \ {}; 
         let Sheet(sheet1) = sheet;
         getSheetName(sheet1)
 
-    pub def getFirstRowNum(sheet: Sheet[r]): Option[Int32] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(): Int32 \ r;
+    pub def getFirstRowNum(sheet: Sheet): Option[Int32] = 
+        import org.apache.poi.ss.usermodel.Sheet.getFirstRowNum(): Int32 \ {};
         let Sheet(sheet1) = sheet;
         let ans = getFirstRowNum(sheet1);
         if (ans >= 0)
@@ -55,8 +54,8 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
             None
 
     /// Gets the last row number - this row could be "empty" if cells in the row have been written to but then cleared.
-    pub def getLastRowNum(sheet: Sheet[r]): Option[Int32] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 \ r;
+    pub def getLastRowNum(sheet: Sheet): Option[Int32] = 
+        import org.apache.poi.ss.usermodel.Sheet.getLastRowNum(): Int32 \ {};
         let Sheet(sheet1) = sheet;
         let ans = getLastRowNum(sheet1);
         if (ans >= 0)
@@ -65,19 +64,19 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
             None
 
     /// Number of rows used - do not use for trying to find end.
-    pub def getPhysicalNumberOfRows(sheet: Sheet[r]): Int32 \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 \ r; 
+    pub def getPhysicalNumberOfRows(sheet: Sheet): Int32 = 
+        import org.apache.poi.ss.usermodel.Sheet.getPhysicalNumberOfRows(): Int32 \ {}; 
         let Sheet(sheet1) = sheet;
         getPhysicalNumberOfRows(sheet1)
 
-    pub def getWorkbook(sheet: Sheet[r]): Workbook[r] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook \ r;
+    pub def getWorkbook(sheet: Sheet): Workbook = 
+        import org.apache.poi.ss.usermodel.Sheet.getWorkbook(): ##org.apache.poi.ss.usermodel.Workbook \ {};
         let Sheet(sheet1) = sheet;
         getWorkbook(sheet1) |> Workbook
 
 
-    pub def getRow(ix: Int32, sheet: Sheet[r]): Result[String, Row[r]] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r; 
+    pub def getRow(ix: Int32, sheet: Sheet): Result[String, Row[r]] = 
+        import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row \ {}; 
         let Sheet(sheet1) = sheet;
         let ans = getRow(sheet1, ix);
         if (not Object.isNull(ans))
@@ -85,12 +84,7 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
         else
             Err("getRow - null")
 
-    pub def createRow!(ix: Int32, sheet: Sheet[r]): Row[r] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r;
-        let Sheet(sheet1) = sheet; 
-        createRow(sheet1, ix) |> Row
-
-    pub def rowIterator(rc: Region[r1], sheet: Sheet[r]): Iterator[Row[r1], r + r1, r1] \ r = 
+    pub def rowIterator(rc: Region[r1], sheet: Sheet): Iterator[Row[r1], r + r1, r1] \ r = 
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
         let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
         let Sheet(sheet1) = sheet;

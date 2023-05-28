@@ -18,49 +18,8 @@
 mod SheetIO {
 
 
-    pub enum WorkbookReader[r: Region, ka: Type, a: Type](
-        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Workbook[r], r, a])
-
-/*
-    instance GradedFunctor[WorkbookReader[r, ka]] {
-        pub def map(f: a -> b \ ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef = 
-            SheetIO.WorkbookReader.map(f, o)
-    }
-
-    instance GradedApplicative[WorkbookReader[r, ka]] {
-        pub def point(x: a): WorkbookReader[r, ka, a] = 
-            SheetIO.WorkbookReader.point(x)
-
-        pub def ap(f: WorkbookReader[r, ka, a -> b \ ef], x: WorkbookReader[r, ka, a]) : WorkbookReader[r, ka, b] \ ef = 
-            SheetIO.WorkbookReader.ap(f, x)
-    }
-
-    instance GradedMonad[WorkbookReader[r, ka]] {
-        pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, o: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-            SheetIO.WorkbookReader.flatMap(f, o)
-    }
-
-    instance GradedZero[WorkbookReader[r, ka]] {
-        pub def empty(): WorkbookReader[r, ka, a] = 
-            SheetIO.WorkbookReader.empty()
-    }
-
-    instance GradedOr[WorkbookReader[r, ka]] {
-        pub def orelse(a: WorkbookReader[r, ka, a], b: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
-            SheetIO.WorkbookReader.orelse(a, b)
-    }
-
-    instance GradedError[WorkbookReader[r, ka]] {
-        pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
-            SheetIO.WorkbookReader.throwError(msg)
-
-        pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
-            SheetIO.WorkbookReader.mapError(f, ma)
-
-        pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
-            SheetIO.WorkbookReader.catchError(ma, f)
-    }
-*/
+    pub type alias WorkbookReader[ka: Type, ef: Eff, a: Type] =
+        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Workbook, ef, a]
 
 }
 
@@ -69,14 +28,13 @@ mod SheetIO.WorkbookReader {
     use ToString.toString
     use Basis.NIO.File.Path
 
-    use SheetIO.WorkbookReader
-    use SheetIO.WorkbookReader.{WorkbookReader}
 
     use Interop.Apache.Poi.SS.Usermodel.Sheet
     use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
     use Interop.Apache.Poi.SS.Usermodel.Workbook
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
+    use SheetIO.WorkbookReader
     use SheetIO.RowEvaluator
     use SheetIO.NamedRowEvaluator
     use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}

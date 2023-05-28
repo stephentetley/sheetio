@@ -21,7 +21,7 @@ mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
     use Interop.IO.SubInputStream
     
     pub def createWithInputStream![r: Region, ins: Region -> Type]
-                                (ins: ins[r]): Result[String, Workbook[r]] \ r with SubInputStream[ins] =
+                                (ins: ins[r]): Result[String, Workbook] \ r with SubInputStream[ins] =
         Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ r;
             let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;

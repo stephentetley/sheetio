@@ -22,7 +22,7 @@ mod SheetIO {
     /// Imparative writing uses mutable state
 
     pub enum SheetWriter[r: Region, ka: Type, a: Type](
-        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.Sheet[r], r, a]
+        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.MutSheet[r], r, a]
     )
 
 /*

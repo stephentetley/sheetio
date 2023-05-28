@@ -28,8 +28,8 @@ mod SheetIO {
 
     pub type alias Row[r: Region] = Interop.Apache.Poi.SS.Usermodel.Row[r]
     
-    pub type alias Sheet[r: Region] = Interop.Apache.Poi.SS.Usermodel.Sheet[r]
+    pub type alias Sheet = Interop.Apache.Poi.SS.Usermodel.Sheet
 
-    pub type alias Workbook[r: Region] = Interop.Apache.Poi.SS.Usermodel.Workbook[r]
+    pub type alias Workbook = Interop.Apache.Poi.SS.Usermodel.Workbook
 
 }

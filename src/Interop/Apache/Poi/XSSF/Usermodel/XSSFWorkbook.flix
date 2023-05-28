@@ -35,15 +35,15 @@ mod Interop.Apache.Poi.XSSF.Usermodel {
             XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
-    instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[XSSFWorkbook] {
-        pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
-            let XSSFWorkbook(d1) = d;
-            Workbook(checked_cast(d1))
+    // instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[XSSFWorkbook] {
+    //     pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
+    //         let XSSFWorkbook(d1) = d;
+    //         Workbook(checked_cast(d1))
 
-        pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
-            let Workbook(d1) = d;
-            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
-    }
+    //     pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
+    //         let Workbook(d1) = d;
+    //         XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
+    // }
 
 }
 

@@ -25,15 +25,15 @@ mod Interop.Apache.Poi.HSSF.Usermodel {
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
 
-    instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[HSSFWorkbook] {
-        pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
-            let HSSFWorkbook(d1) = d;
-            Workbook(checked_cast(d1))
+    // instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[HSSFWorkbook] {
+    //     pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
+    //         let HSSFWorkbook(d1) = d;
+    //         Workbook(checked_cast(d1))
 
-        pub def fromWorkbook(d: Workbook[r]): HSSFWorkbook[r] = 
-            let Workbook(d1) = d;
-            HSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook))
-    }
+    //     pub def fromWorkbook(d: Workbook[r]): HSSFWorkbook[r] = 
+    //         let Workbook(d1) = d;
+    //         HSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook))
+    // }
 
 }
 

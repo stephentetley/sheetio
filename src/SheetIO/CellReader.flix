@@ -27,6 +27,9 @@ mod SheetIO {
 mod SheetIO.CellReader {
 
     use GradedFunctor.{<$$>}
+    use GradedApplicative.{point}
+    use GradedMonad.{>>=}
+    use GradedError.{throwError, swapError}
     use Graded.EnvEvaluator.{liftGetter, liftGetterWithEnv}
 
     use SheetIO.CellReader
@@ -49,6 +52,17 @@ mod SheetIO.CellReader {
             Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
                 |> SheetIO.CellType.fromNative
         )
+
+    pub def isBlank(): CellReader[ka, r, r, Bool] = 
+        (getCellType() <$$> typ -> typ == TyBlank) |> swapError("isBlank")
+
+
+    pub def getBlank(): CellReader[ka, r, r, Unit] = 
+        (getCellType() >>= typ ->
+            match typ { 
+                case TyBlank => point()
+                case _       => throwError("getBlank")
+            }) |> swapError("getBlank")
 
 
 }

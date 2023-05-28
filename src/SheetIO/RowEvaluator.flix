@@ -17,8 +17,6 @@
 
 mod SheetIO {
 
-    use SheetIO.DataFormatter;
-    
     pub type alias RowEvaluator[ka: Type, r: Region, ef: Eff, a: Type] = 
         Graded.EnvEvaluator[ka, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a]
 

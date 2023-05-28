@@ -20,7 +20,7 @@ mod SheetIO {
 
 
     pub enum WorkbookWriter[r: Region, ka: Type, a: Type](
-        Graded.MutStateError[ka, Interop.Apache.Poi.SS.Usermodel.Workbook[r], r, a])
+        Graded.MutStateError[ka, Interop.Apache.Poi.SS.Usermodel.MutWorkbook[r], r, a])
 
 /*
     instance GradedFunctor[WorkbookWriter[r, ka]] {
