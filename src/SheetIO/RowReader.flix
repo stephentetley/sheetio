@@ -29,27 +29,31 @@ mod SheetIO.RowReader {
     use GradedApplicative.{point}
     use GradedMonad.{>>=}
     use GradedError.{throwError, swapError}
-    use Graded.EnvEvaluator.{liftGetter, liftGetterResult, liftGetterResultWithEnv, liftAction}
+    use Graded.EnvEvaluator.{ask, liftGetter, liftGetterResult, liftGetterResultWithEnv, liftAction, liftActionResult}
     use Time.Format.DateTimeFormatter
     
-    use SheetIO.RowReader
 
     use Interop.Apache.Poi.SS.Usermodel.Cell
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.Row
-
+    
+    use SheetIO.RowReader
+    use SheetIO.CellReader
     use SheetIO.CellType
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     
 
 
-    pub def runRowEvaluator(ma: RowReader[a, ef, a], 
+    pub def runRowReader(ma: RowReader[a, ef, a], 
                             env: DataFormatter,
                             st: Row): Result[String, a] \ ef =
         Graded.EnvEvaluator.runEnvEvaluator(ma, env, st)
         
 
+    pub def withCellReader(eval: CellReader[a, ef, a], cell: Cell): RowReader[ka, ef, a] =
+        ask()       >>= df -> 
+        liftActionResult(_ -> SheetIO.CellReader.runCellReader(eval, df, cell))
 
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
@@ -58,24 +62,6 @@ mod SheetIO.RowReader {
     pub def getCellAt(ix: Int32): RowReader[ka, ef, Cell] = 
         liftGetterResult(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row)) |> Option.toOk("getCellAt(${ix})"))
 
-
-    // def liftCellGetter(ix: Int32, 
-    //                     fn: DataFormatter -> Cell -> a \ ef): RowReader[ka, ef, a] =
-    //     liftGetterResultWithEnv((fmt, row) -> 
-    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-    //             case Some(cell) => fn(fmt, cell) |> Ok
-    //             case None       => Err("liftCellGetter(${ix})")
-    //         }
-    //     )
-
-    // def liftCellGetterResult(ix: Int32, 
-    //                         fn: DataFormatter -> Cell -> Result[err, a] \ ef): RowReader[ka, ef, a] with ToString[err] =
-    //     liftGetterResultWithEnv((fmt, row) -> 
-    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-    //             case Some(cell) => fn(fmt, cell) |> Result.mapErr(ToString.toString)
-    //             case None       => Err("liftCellGetterResult(${ix})")
-    //         }
-    //     )
 
     pub def getRowNum(): RowReader[ka, ef, Int32] = 
         liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
@@ -106,49 +92,6 @@ mod SheetIO.RowReader {
 
 
 /*
-    /// Uses the default DataFormatter
-    pub def getContentAt(ix: Int32): RowReader[ka, ef, String] =
-        liftCellGetter(ix, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
-
-
-    /// Uses the default DataFormatter
-    pub def getTrimmedContentAt(ix: Int32): RowReader[ka, ef, String] =
-        map(String.trim, getContentAt(ix))
-
-    pub def isNullAt(ix: Int32): RowReader[ka, ef, Bool] = 
-        getCellAt(ix) <$$> Object.isNull
-
-    pub def getNullAt(ix: Int32): RowReader[ka, ef, Unit] = 
-        getCellAt(ix)   >>= cell -> 
-        if (Object.isNull(cell)) point() else throwError("getNullAt(${ix})")
-
-
-    pub def getCellTypeAt(ix: Int32): RowReader[ka, ef, CellType] =
-        liftCellGetter(ix, (_, cell) -> {
-            Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
-                |> SheetIO.CellType.fromNative
-        })
-
-
-    pub def isBlankAt(ix: Int32): RowReader[ka, ef, Bool] = 
-        getCellTypeAt(ix) >>= typ ->
-        match typ { 
-            case TyBlank => point(true)
-            case _       => point(false)
-        } |> swapError("isBlankAt(${ix})")
-
-
-    pub def getBlankAt(ix: Int32): RowReader[ka, ef, Unit] = 
-        let errMsg = "getBlankAt(${ix})";
-        getCellTypeAt(ix) >>= typ ->
-        match typ { 
-            case TyBlank => point()
-            case _       => throwError(errMsg)
-        } |> swapError(errMsg)
-
-      
-
-
 
     /// List (not Array) avoids region allocation...
     pub def getRowContents(): RowReader[ka, ef, Vector[String]] =

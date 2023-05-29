@@ -73,6 +73,10 @@ mod SheetIO.WorkbookReader {
         Graded.Evaluator.runEvaluator(ma, st)
 
 
+    pub def withSheetReader(eval: SheetReader[a, ef, a], sheet: Sheet): WorkbookReader[ka, ef, a] =
+        liftActionResult(_ -> SheetIO.SheetReader.runSheetReader(eval, sheet))
+
+        
     // WorkbookReader
 
     pub def getNumberOfSheets(): WorkbookReader[ka, ef, Int32] =
@@ -97,8 +101,6 @@ mod SheetIO.WorkbookReader {
         liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
 
 
-    pub def withSheetReader(eval: SheetReader[a, ef, a], sheet: Sheet): WorkbookReader[ka, ef, a] =
-        liftActionResult(_ -> SheetIO.SheetReader.runSheetReader(eval, sheet))
 
 
 }

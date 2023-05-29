@@ -40,7 +40,7 @@ mod SheetIO.CellReader {
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
 
-    pub def runCellEvaluator(ma: CellReader[a, ef, a], 
+    pub def runCellReader(ma: CellReader[a, ef, a], 
                             env: DataFormatter,
                             st: Cell): Result[String, a] \ ef =
         Graded.EnvEvaluator.runEnvEvaluator(ma, env, st)

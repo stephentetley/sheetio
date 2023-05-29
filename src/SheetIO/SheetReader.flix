@@ -30,7 +30,7 @@ mod SheetIO.SheetReader {
     use GradedApplicative.{point}
     use GradedMonad.{>>=}
     use GradedError.{throwError, swapError}
-    use Graded.Evaluator.{liftGetter, liftGetterResult}
+    use Graded.Evaluator.{liftGetter, liftGetterResult, liftActionResult}
 
     use SheetIO.SheetReader
 
@@ -49,24 +49,13 @@ mod SheetIO.SheetReader {
         Graded.Evaluator.runEvaluator(ma, s)
 
 
-    // pub def testM(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Bool] =
-    //     SheetReader(wb -> 
-    //         match apply1(ma, wb) { 
-    //             case Ok(_)  => Ok(true)
-    //             case Err(_) => Ok(false)
-    //         }
-    //     )
-
-    ///
-    /// Expose the result of operation `ma`.
-    ///
-    /// By definition this never fails.
-    ///
-    // pub def result(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Result[a, String]] = 
-    //     SheetReader(wb -> 
-    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO.Internal.EvalError.getText);
-    //         Ok(ans)
-    //     )
+    pub def withRowReader(eval: RowReader[a, ef, a], row: Row): SheetReader[ka, ef, a] = region rc {
+        match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
+            case Ok(df) => liftActionResult(_ -> SheetIO.RowReader.runRowReader(eval, df, row))
+            case Err(_) => throwError("withRowReader")
+        }
+    }
+        
 
 
     // SheetReader
