@@ -37,7 +37,6 @@ mod SheetIO.WorkbookReader {
     use SheetIO.WorkbookReader
     use SheetIO.RowEvaluator
     use SheetIO.NamedRowEvaluator
-    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
     use SheetIO.SheetReader
 

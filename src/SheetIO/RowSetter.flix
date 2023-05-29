@@ -21,7 +21,7 @@ mod SheetIO {
 
 
     pub type alias RowSetter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a]
+        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.MutRow[r], ef, a]
 
 }
 
@@ -37,13 +37,13 @@ mod SheetIO.RowSetter {
     use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
     use Interop.Apache.Poi.SS.Usermodel.CellStyle
     use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.Row
-    use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
+    use Interop.Apache.Poi.SS.Usermodel.MutRow
+    use Interop.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
 
 
     /// The state param `st` is expected to be mutated...
     pub def runRowSetter!(ma: RowSetter[a, r, ef, a], 
-                            st: Row[r]): Result[String, a] \ ef =
+                            st: MutRow[r]): Result[String, a] \ ef =
         Graded.Builder.runBuilder(ma, st)
 
 /*

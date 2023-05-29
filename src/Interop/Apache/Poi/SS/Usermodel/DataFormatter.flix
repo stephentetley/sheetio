@@ -67,8 +67,8 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
 
 
     /// This is a "service" ...
-    pub def formatCellValue(cell: Cell[r], df: DataFormatter): String \ r = 
-        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String \ r; 
+    pub def formatCellValue(cell: Cell, df: DataFormatter): String = 
+        import org.apache.poi.ss.usermodel.DataFormatter.formatCellValue(##org.apache.poi.ss.usermodel.Cell): String \ {};
         let DataFormatter(df1) = df;
         let Cell(cell1) = cell;
         formatCellValue(df1, cell1)

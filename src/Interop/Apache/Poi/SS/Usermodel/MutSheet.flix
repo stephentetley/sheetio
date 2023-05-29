@@ -27,8 +27,8 @@ mod Interop.Apache.Poi.SS.Usermodel.MutSheet {
 
     use Interop.Apache.Poi.SS.Usermodel.MutSheet
     use Interop.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
-    use Interop.Apache.Poi.SS.Usermodel.Row
-    use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
+    use Interop.Apache.Poi.SS.Usermodel.MutRow
+    use Interop.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
     use Interop.Apache.Poi.SS.Usermodel.Workbook
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
@@ -76,26 +76,26 @@ mod Interop.Apache.Poi.SS.Usermodel.MutSheet {
         getWorkbook(sheet1) |> Workbook
 
 
-    pub def getRow(ix: Int32, sheet: MutSheet[r]): Result[String, Row[r]] \ r = 
+    pub def getRow(ix: Int32, sheet: MutSheet[r]): Result[String, MutRow[r]] \ r = 
         import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r; 
         let MutSheet(sheet1) = sheet;
         let ans = getRow(sheet1, ix);
         if (not Object.isNull(ans))
-            ans |> Row |> Ok
+            ans |> MutRow |> Ok
         else
             Err("getRow - null")
 
-    pub def createRow!(ix: Int32, sheet: MutSheet[r]): Row[r] \ r = 
+    pub def createRow!(ix: Int32, sheet: MutSheet[r]): MutRow[r] \ r = 
         import org.apache.poi.ss.usermodel.Sheet.createRow(Int32): ##org.apache.poi.ss.usermodel.Row \ r;
         let MutSheet(sheet1) = sheet; 
-        createRow(sheet1, ix) |> Row
+        createRow(sheet1, ix) |> MutRow
 
-    pub def rowIterator(rc: Region[r1], sheet: MutSheet[r]): Iterator[Row[r1], r + r1, r1] \ r = 
-        import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
-        let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
-        let MutSheet(sheet1) = sheet;
-        let iterHH = rowIterator(sheet1);
-        Interop.Util.IteratorZ.wrapHH(rc, iterHH) 
-            |> Interop.Util.IteratorZ.toFlixIterator(rc, ocast)
+    // pub def rowIterator(rc: Region[r1], sheet: MutSheet[r]): Iterator[Row[r1], r + r1, r1] \ r = 
+    //     import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
+    //     let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
+    //     let MutSheet(sheet1) = sheet;
+    //     let iterHH = rowIterator(sheet1);
+    //     Interop.Util.IteratorZ.wrapHH(rc, iterHH) 
+    //         |> Interop.Util.IteratorZ.toFlixIterator(rc, ocast)
 
 }

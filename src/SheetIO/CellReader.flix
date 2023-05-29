@@ -18,8 +18,8 @@
 
 mod SheetIO {
 
-    pub type alias CellReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.EnvEvaluator[ka, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Cell[r], ef, a]
+    pub type alias CellReader[ka: Type, ef: Eff, a: Type] = 
+        Graded.EnvEvaluator[ka, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Cell, ef, a]
 
     
 }
@@ -37,27 +37,27 @@ mod SheetIO.CellReader {
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     /// Uses the default DataFormatter
-    pub def getContent(): CellReader[ka, r, r, String] =
-        liftGetterWithEnv((fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
+    pub def getContent(): CellReader[ka, ef, String] =
+        liftGetterWithEnv((fmt, cell) -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt)))
 
     /// Uses the default DataFormatter
-    pub def getTrimmedContent(): CellReader[ka, r, r, String] =
+    pub def getTrimmedContent(): CellReader[ka, ef, String] =
         getContent() <$$> String.trim
 
-    pub def isNull(): CellReader[ka, r, r, Bool] = 
+    pub def isNull(): CellReader[ka, ef, Bool] = 
         liftGetter(cell -> checked_ecast(Object.isNull(cell)))
 
-    pub def getCellType(): CellReader[ka, r, r, CellType] =
+    pub def getCellType(): CellReader[ka, ef, CellType] =
         liftGetter(cell -> 
-            Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
+            checked_ecast(Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell))
                 |> SheetIO.CellType.fromNative
         )
 
-    pub def isBlank(): CellReader[ka, r, r, Bool] = 
+    pub def isBlank(): CellReader[ka, ef, Bool] = 
         (getCellType() <$$> typ -> typ == TyBlank) |> swapError("isBlank")
 
 
-    pub def getBlank(): CellReader[ka, r, r, Unit] = 
+    pub def getBlank(): CellReader[ka, ef, Unit] = 
         (getCellType() >>= typ ->
             match typ { 
                 case TyBlank => point()

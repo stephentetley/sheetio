@@ -23,72 +23,24 @@ mod SheetIO {
 
 
     /// Includes Map[columName: String => index: Int32]
-    pub enum NamedRowEvaluator[r: Region, ka: Type, ef: Eff, a: Type](
-        Graded.EnvEvaluator[ka, SheetIO.NamedRowEvaluator.Env, Interop.Apache.Poi.SS.Usermodel.Row[r], ef, a])
+    pub type alias NamedRowEvaluator[ka: Type, ef: Eff, a: Type] = 
+        Graded.EnvEvaluator[ka, SheetIO.NamedRowEvaluator.Env, Interop.Apache.Poi.SS.Usermodel.Row, ef, a]
 
-
-    instance GradedFunctor[NamedRowEvaluator[r, ka]] {
-        pub def map(f: a -> b \ ef1, 
-                    ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1, b] = 
-            SheetIO.NamedRowEvaluator.map(f, ma)
-    }
-
-    instance GradedApplicative[NamedRowEvaluator[r, ka]] {
-        pub def point(x: a): NamedRowEvaluator[r, ka, ef, a] = 
-            SheetIO.NamedRowEvaluator.point(x)
-
-        pub def ap(mf: NamedRowEvaluator[r, ka, ef1, a -> b \ ef2], 
-                    ma: NamedRowEvaluator[r, ka, ef, a]) : NamedRowEvaluator[r, ka, ef + ef1 + ef2, b] = 
-            SheetIO.NamedRowEvaluator.ap(mf, ma)
-    }
-
-    instance GradedMonad[NamedRowEvaluator[r, ka]] {
-        pub def flatMap(f: a -> NamedRowEvaluator[r, ka, ef1, b] \ ef2, 
-                        ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1 + ef2, b] =
-            SheetIO.NamedRowEvaluator.flatMap(f, ma)
-    }
-
-    instance GradedZero[NamedRowEvaluator[r, ka]] {
-        pub def empty(): NamedRowEvaluator[r, ka, ef, a] = 
-            SheetIO.NamedRowEvaluator.empty()
-    }
-
-    instance GradedOr[NamedRowEvaluator[r, ka]] {
-        pub def orelse(ma: NamedRowEvaluator[r, ka, ef1, a], 
-                        mb: NamedRowEvaluator[r, ka, ef2, a]): NamedRowEvaluator[r, ka, ef1 + ef2, a] =
-            SheetIO.NamedRowEvaluator.orelse(ma, mb)
-    }
-
-    instance GradedError[NamedRowEvaluator[r, ka]] {
-        pub def throwError(err: String): NamedRowEvaluator[r, ka, ef, a] =
-            SheetIO.NamedRowEvaluator.throwError(err)
-
-        pub def mapError(f: String -> String \ ef1, 
-                            ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1, a] =
-            SheetIO.NamedRowEvaluator.mapError(f, ma)
-
-        pub def catchError(ma: NamedRowEvaluator[r, ka, ef, a], 
-                            hdlr: String -> NamedRowEvaluator[r, ka, ef1, a] \ ef2): NamedRowEvaluator[r, ka, ef + ef1 + ef2, a] =
-            SheetIO.NamedRowEvaluator.catchError(ma, hdlr)
-        
-        pub def reifyError(ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef, Result[String, a]] =
-            SheetIO.NamedRowEvaluator.reifyError(ma)
-
-    }
 
 }
 
 mod SheetIO.NamedRowEvaluator {
 
     
-    use GradedError.{swapError}
-    use GradedFunctor.{<$$>}
+    use GradedFunctor.{map, <$$>}
+    use GradedApplicative.{point}
     use GradedMonad.{>>=}
+    use GradedError.{throwError, swapError}
+    use Graded.EnvEvaluator.{liftGetter, liftGetterResult, liftGetterResultWithEnv, liftAction}
     
     use Time.Format.DateTimeFormatter
 
     use SheetIO.NamedRowEvaluator
-    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
     use Interop.Apache.Poi.SS.Usermodel.Cell
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
@@ -118,129 +70,68 @@ mod SheetIO.NamedRowEvaluator {
 
 
 
-    pub def getNamedRowEvaluator(x: NamedRowEvaluator[r, ka, ef, a]): Graded.EnvEvaluator[ka, Env, Row[r], ef, a] = 
-        let NamedRowEvaluator(x1) = x;
-        x1
 
-    pub def runNamedRowEvaluator(ma: NamedRowEvaluator[r, a, ef, a],
+    pub def runNamedRowEvaluator(ma: NamedRowEvaluator[a, ef, a],
                                 headings: List[String],
-                                st: Row[r]): Result[String, a] \ ef =
+                                df: DataFormatter,
+                                st: Row): Result[String, a] \ ef =
         let env = 
             { columnIndices = makeHeaders(headings)
-            , formatter = ???
+            , formatter = df
             };
-        Graded.EnvEvaluator.runEnvEvaluator(getNamedRowEvaluator(ma), env, st)
+        Graded.EnvEvaluator.runEnvEvaluator(ma, env, st)
 
-
-    pub def point(x: a): NamedRowEvaluator[r, ka, ef, a] = 
-        NamedRowEvaluator(Graded.EnvEvaluator.point(x))
-
-
-    pub def map(f: a -> b \ ef1, 
-                ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1, b] =
-        NamedRowEvaluator(Graded.EnvEvaluator.map(f, getNamedRowEvaluator(ma)))
-
-    pub def ap(mf: NamedRowEvaluator[r, ka, ef1, a -> b \ ef2], 
-                ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1 + ef2, b] =
-        NamedRowEvaluator(Graded.EnvEvaluator.ap(getNamedRowEvaluator(mf), getNamedRowEvaluator(ma)))
-
-    pub def flatMap(f: a -> NamedRowEvaluator[r, ka, ef1, b] \ ef2, 
-                    ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1 + ef2, b] =
-        NamedRowEvaluator(Graded.EnvEvaluator.flatMap(f >> getNamedRowEvaluator, getNamedRowEvaluator(ma)))
-
-    pub def throwError(msg: String): NamedRowEvaluator[r, ka, ef, a] = 
-        NamedRowEvaluator(Graded.EnvEvaluator.throwError(msg))
-
-    pub def mapError(f: String -> String \ ef1, 
-                        ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef + ef1, a] =
-        NamedRowEvaluator(Graded.EnvEvaluator.mapError(f, getNamedRowEvaluator(ma)))
-
-    pub def catchError(ma: NamedRowEvaluator[r, ka, ef, a], 
-                        f: String -> NamedRowEvaluator[r, ka, ef1, a] \ ef2): NamedRowEvaluator[r, ka, ef + ef1 + ef2, a] =
-        NamedRowEvaluator(Graded.EnvEvaluator.catchError(getNamedRowEvaluator(ma), f >> getNamedRowEvaluator))
-
-    pub def reifyError(ma: NamedRowEvaluator[r, ka, ef, a]): NamedRowEvaluator[r, ka, ef, Result[String, a]] =
-        NamedRowEvaluator(Graded.EnvEvaluator.reifyError(getNamedRowEvaluator(ma)))
-
-
-    pub def empty(): NamedRowEvaluator[r, ka, ef, a] = 
-        NamedRowEvaluator(Graded.EnvEvaluator.empty())
-        
-    pub def orelse(ma: NamedRowEvaluator[r, ka, ef1, a], 
-                    mb: NamedRowEvaluator[r, ka, ef2, a]): NamedRowEvaluator[r, ka, ef1 + ef2, a] =
-        NamedRowEvaluator(Graded.EnvEvaluator.orelse(getNamedRowEvaluator(ma), getNamedRowEvaluator(mb)))
-
-    def liftGetter(f: Row[r] -> a \ ef): NamedRowEvaluator[r, ka, ef, a] =
-        NamedRowEvaluator(Graded.EnvEvaluator.liftGetter(f))
-    
-    def liftGetterResult(f: Row[r] -> Result[err, a] \ ef): NamedRowEvaluator[r, ka, ef, a] with ToString[err] =
-        NamedRowEvaluator(Graded.EnvEvaluator.liftGetterResult(f))
-
-    // def _liftGetterWithEnv(f: Env -> Row[r] -> a \ ef): NamedRowEvaluator[r, ka, ef, a] =
-    //     NamedRowEvaluator(Graded.EnvEvaluator.liftGetterWithEnv(f))
-    
-    def liftGetterResultWithEnv(f: Env -> Row[r] -> Result[err, a] \ ef): NamedRowEvaluator[r, ka, ef, a] with ToString[err] =
-        NamedRowEvaluator(Graded.EnvEvaluator.liftGetterResultWithEnv(f))
-
-
-    // pub def _liftAction(f: Unit -> a \ ef): NamedRowEvaluator[r, ka, ef, a] =
-    //     NamedRowEvaluator(Graded.EnvEvaluator.liftAction(f))
-    
-        
-    // pub def _liftActionResult(f: Unit -> Result[err, a] \ ef): NamedRowEvaluator[r, ka, ef, a] with ToString[err] =
-    //     NamedRowEvaluator(Graded.EnvEvaluator.liftActionResult(f))
-   
 
     // // Note - the primitive setX! functions index from 1, we add 1 to calls
     // // so FactIO's API indexes from 0.
     
-    def getIndex(label: String): NamedRowEvaluator[r, ka, Pure, Int32] =
-        liftGetterResultWithEnv((env, _) -> match Map.get(label, env.columnIndices) {
+    def getIndex(label: String): NamedRowEvaluator[ka, ef, Int32] =
+        liftGetterResultWithEnv((env, _) -> checked_ecast(match Map.get(label, env.columnIndices) {
             case Some(ix) => Ok(ix)
             case None     => Err("getIndex(${label}) no index")
-        })
+        }))
 
 
-    def getCellNamed(label: String): NamedRowEvaluator[r, ka, r, Cell[r]] =
+    pub def getCellNamed(label: String): NamedRowEvaluator[ka, ef, Cell] =
         getIndex(label) >>= ix -> 
         liftGetterResult(row -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
 
 
-    def liftCellGetter(label: String, 
-                        fn: DataFormatter -> Cell[r] -> a \ ef): NamedRowEvaluator[r, ka, ef + r, a] =
-        getIndex(label) >>= ix ->
-        liftGetterResultWithEnv((env, row) -> 
-            match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-                case Some(cell) => fn(env.formatter, cell) |> Ok
-                case None       => Err("liftCellGetter(${label})")
-            }
+    // def liftCellGetter(label: String, 
+    //                     fn: DataFormatter -> Cell -> a \ ef): NamedRowEvaluator[ka, ef, a] =
+    //     getIndex(label) >>= ix ->
+    //     liftGetterResultWithEnv((env, row) -> 
+    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
+    //             case Some(cell) => fn(env.formatter, cell) |> Ok
+    //             case None       => Err("liftCellGetter(${label})")
+    //         }
             
-        )
+    //     )
 
-    def liftCellGetterResult(label: String, 
-                            fn: DataFormatter -> Cell[r] -> Result[err, a] \ ef): NamedRowEvaluator[r, ka, ef + r, a] with ToString[err] =
-        getIndex(label) >>= ix ->
-        liftGetterResultWithEnv((env, row) -> 
-            match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-                case Some(cell) => fn(env.formatter, cell) |> Result.mapErr(ToString.toString)
-                case None       => Err("liftCellGetterResult(${label})")
-            }
+    // def liftCellGetterResult(label: String, 
+    //                         fn: DataFormatter -> Cell -> Result[err, a] \ ef): NamedRowEvaluator[ka, ef, a] with ToString[err] =
+    //     getIndex(label) >>= ix ->
+    //     liftGetterResultWithEnv((env, row) -> 
+    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
+    //             case Some(cell) => fn(env.formatter, cell) |> Result.mapErr(ToString.toString)
+    //             case None       => Err("liftCellGetterResult(${label})")
+    //         }
             
-        )
+    //     )
 
 
-    pub def getRowNum(): NamedRowEvaluator[r, ka, r, Int32] = 
-        liftGetter(row -> Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row))
+    pub def getRowNum(): NamedRowEvaluator[ka, ef, Int32] = 
+        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
 
-    pub def getSheetName(): NamedRowEvaluator[r, ka, r, String] = 
+    pub def getSheetName(): NamedRowEvaluator[ka, ef, String] = 
         liftGetter(row -> {
             let sheet = Interop.Apache.Poi.SS.Usermodel.Row.getSheet(row);
-            Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet)
+            checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
         })
 
-
+/*
     /// Uses the default DataFormatter
-    pub def getContentNamed(label: String): NamedRowEvaluator[r, ka, r, String] =
+    pub def getContentNamed(label: String): NamedRowEvaluator[ka, ef, String] =
         liftCellGetter(label, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
 
     /// Uses the default DataFormatter
@@ -436,8 +327,6 @@ mod SheetIO.NamedRowEvaluator {
         getIfNotEmpty(label, getLocalDateTimeNamed)
 
 
-
-/*
 
 
     def queryFontAt(ix: Int32, 

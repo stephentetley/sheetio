@@ -16,9 +16,8 @@
 
 mod Interop.Apache.Poi.SS.Usermodel {
 
-    /// Mutable / Interface
 
-    pub enum Row[_: Region](##org.apache.poi.ss.usermodel.Row)
+    pub enum Row(##org.apache.poi.ss.usermodel.Row)
 
 
 }
@@ -33,53 +32,47 @@ mod Interop.Apache.Poi.SS.Usermodel.Row {
     use Interop.Apache.Poi.SS.Usermodel.Sheet
     use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
-    pub def getHH(row: Row[r]): ##org.apache.poi.ss.usermodel.Row =
+    pub def getHH(row: Row): ##org.apache.poi.ss.usermodel.Row =
         let Row(row1) = row;
         row1
 
     
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): Row[r] =
+    pub def wrapHH(prim:  ##org.apache.poi.ss.usermodel.Row): Row =
         Row(prim)
 
-    pub def getRowNum(row: Row[r]): Int32 \ r = 
-        import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 
+    pub def getRowNum(row: Row): Int32 = 
+        import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ {}; 
         let Row(row1) = row;
         getRowNum(row1)
     
-    pub def getCell(ix: Int32, row: Row[r]): Option[Cell[r]] \ r = 
-        import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r; 
+    pub def getCell(ix: Int32, row: Row): Option[Cell] = 
+        import org.apache.poi.ss.usermodel.Row.getCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ {}; 
         let Row(row1) = row;
         getCell(row1, ix) |> Object.toOption |> Option.map(Cell)
 
-    pub def getSheet(row: Row[r]): Sheet \ r = 
-        import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ r;
+    pub def getSheet(row: Row): Sheet = 
+        import org.apache.poi.ss.usermodel.Row.getSheet(): ##org.apache.poi.ss.usermodel.Sheet \ {};
         let Row(row1) = row;
         getSheet(row1) |> Sheet
 
-    pub def createCell!(ix: Int32, row: Row[r]): Result[String, Cell[r]] \ r = 
-        Result.tryCatch(_ -> {
-            import org.apache.poi.ss.usermodel.Row.createCell(Int32): ##org.apache.poi.ss.usermodel.Cell \ r;
-            let Row(row1) = row;
-            createCell(row1, ix) |> Cell
-        })
 
 
-    pub def getFirstCellNum(row: Row[r]): Int16 \ r = 
-        import org.apache.poi.ss.usermodel.Row.getFirstCellNum(): Int16 \ r;
+    pub def getFirstCellNum(row: Row): Int16 = 
+        import org.apache.poi.ss.usermodel.Row.getFirstCellNum(): Int16 \ {};
         let Row(row1) = row;
         getFirstCellNum(row1)
 
 
     /// As per Java - index of last cell **plus 1**.
-    pub def getLastCellNum(row: Row[r]): Int16 \ r = 
-        import org.apache.poi.ss.usermodel.Row.getLastCellNum(): Int16 \ r; 
+    pub def getLastCellNum(row: Row): Int16 = 
+        import org.apache.poi.ss.usermodel.Row.getLastCellNum(): Int16 \ {}; 
         let Row(row1) = row;
         getLastCellNum(row1)
 
 
     /// Number of cells used - do not use for trying to find end.
-    pub def getPhysicalNumberOfCells(row: Row[r]): Int32 \ r = 
-        import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(): Int32 \ r; 
+    pub def getPhysicalNumberOfCells(row: Row): Int32 = 
+        import org.apache.poi.ss.usermodel.Row.getPhysicalNumberOfCells(): Int32 \ {}; 
         let Row(row1) = row;
         getPhysicalNumberOfCells(row1)
         

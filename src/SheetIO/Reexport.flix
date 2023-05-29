@@ -18,7 +18,7 @@
 
 mod SheetIO {
 
-    pub type alias Cell[r: Region] = Interop.Apache.Poi.SS.Usermodel.Cell[r]
+    pub type alias Cell = Interop.Apache.Poi.SS.Usermodel.Cell
 
     pub type alias CellStyle[r: Region] = Interop.Apache.Poi.SS.Usermodel.CellStyle[r]
 
@@ -26,7 +26,7 @@ mod SheetIO {
 
     pub type alias Font[r: Region] = Interop.Apache.Poi.SS.Usermodel.Font[r]
 
-    pub type alias Row[r: Region] = Interop.Apache.Poi.SS.Usermodel.Row[r]
+    pub type alias Row = Interop.Apache.Poi.SS.Usermodel.Row
     
     pub type alias Sheet = Interop.Apache.Poi.SS.Usermodel.Sheet
 

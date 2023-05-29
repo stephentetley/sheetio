@@ -75,7 +75,7 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
         getWorkbook(sheet1) |> Workbook
 
 
-    pub def getRow(ix: Int32, sheet: Sheet): Result[String, Row[r]] = 
+    pub def getRow(ix: Int32, sheet: Sheet): Result[String, Row] = 
         import org.apache.poi.ss.usermodel.Sheet.getRow(Int32): ##org.apache.poi.ss.usermodel.Row \ {}; 
         let Sheet(sheet1) = sheet;
         let ans = getRow(sheet1, ix);
@@ -84,9 +84,9 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
         else
             Err("getRow - null")
 
-    pub def rowIterator(rc: Region[r1], sheet: Sheet): Iterator[Row[r1], r + r1, r1] \ r = 
+    pub def rowIterator(rc: Region[r], sheet: Sheet): Iterator[Row, r, r] \ r = 
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
-        let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
+        let ocast = obj -> Row(unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
         let Sheet(sheet1) = sheet;
         let iterHH = rowIterator(sheet1);
         Interop.Util.IteratorZ.wrapHH(rc, iterHH) 

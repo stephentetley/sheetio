@@ -40,7 +40,6 @@ mod SheetIO.SheetReader {
 
     use SheetIO.RowEvaluator
     use SheetIO.NamedRowEvaluator
-    use SheetIO.NamedRowEvaluator.{NamedRowEvaluator}
 
 
 

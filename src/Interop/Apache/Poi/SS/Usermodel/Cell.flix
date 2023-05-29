@@ -18,7 +18,7 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
     /// Mutable / Interface
 
-    pub enum Cell[_: Region](##org.apache.poi.ss.usermodel.Cell)
+    pub enum Cell(##org.apache.poi.ss.usermodel.Cell)
 
 
 }
@@ -32,102 +32,56 @@ mod Interop.Apache.Poi.SS.Usermodel.Cell {
     use Interop.Apache.Poi.SS.Usermodel.CellType
     use Interop.Apache.Poi.SS.Usermodel.CellType.{CellType}
 
-    pub def getHH(cell: Cell[r]): ##org.apache.poi.ss.usermodel.Cell =
+    pub def getHH(cell: Cell): ##org.apache.poi.ss.usermodel.Cell =
         let Cell(cell1) = cell;
         cell1
 
 
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Cell): Cell[r] =
+    pub def wrapHH(prim:  ##org.apache.poi.ss.usermodel.Cell): Cell =
         Cell(prim)
 
 
-    pub def getCellType(cell: Cell[r]): CellType \ r = 
-        import org.apache.poi.ss.usermodel.Cell.getCellType(): ##org.apache.poi.ss.usermodel.CellType \ r; 
+    pub def getCellType(cell: Cell): CellType = 
+        import org.apache.poi.ss.usermodel.Cell.getCellType(): ##org.apache.poi.ss.usermodel.CellType \ {}; 
         let Cell(cell1) = cell;
         getCellType(cell1) |> CellType
 
 
-    pub def getBooleanCellValue(cell: Cell[r]): Result[String, Bool] \ r =  
+    pub def getBooleanCellValue(cell: Cell): Result[String, Bool] =  
         Result.tryCatch(_ -> {
-            import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(): Bool \ r;
+            import org.apache.poi.ss.usermodel.Cell.getBooleanCellValue(): Bool \ {};
             let Cell(cell1) = cell;
             getBooleanCellValue(cell1)
         })
 
 
-    pub def getStringCellValue(cell: Cell[r]): Result[String, String] \ r = 
+    pub def getStringCellValue(cell: Cell): Result[String, String] = 
         Result.tryCatch(_ -> {
-            import org.apache.poi.ss.usermodel.Cell.getStringCellValue(): String \ r; 
+            import org.apache.poi.ss.usermodel.Cell.getStringCellValue(): String \ {}; 
             let Cell(cell1) = cell;
             let ans = getStringCellValue(cell1);
             if (not Object.isNull(ans)) ans else ""
         })
 
-    pub def getNumericCellValue(cell: Cell[r]): Result[String, Float64] \ r = 
+    pub def getNumericCellValue(cell: Cell): Result[String, Float64] = 
         Result.tryCatch(_ -> {
-            import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 \ r;
+            import org.apache.poi.ss.usermodel.Cell.getNumericCellValue(): Float64 \ {};
             let Cell(cell1) = cell;
             getNumericCellValue(cell1)
         })
 
 
-    pub def getLocalDateTimeCellValue(cell: Cell[r]): Result[String, ##java.time.LocalDateTime] \ r = 
+    pub def getLocalDateTimeCellValue(cell: Cell): Result[String, ##java.time.LocalDateTime] = 
         Result.tryCatch(_ -> {
-            import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime \ r;
+            import org.apache.poi.ss.usermodel.Cell.getLocalDateTimeCellValue(): ##java.time.LocalDateTime \ {};
             let Cell(cell1) = cell;
             getLocalDateTimeCellValue(cell1)
         })
 
-
-    pub def setCellValueBoolean!(value: Bool, cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(Bool): Unit \ r; 
-        let Cell(cell1) = cell;
-        setCellValue(cell1, value)
-
-
-    pub def setCellValueDouble!(value: Float64,
-                                cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(Float64): Unit \ r; 
-        let Cell(cell1) = cell;
-        setCellValue(cell1, value)
-
-
-    pub def setCellValueString!(value: String,
-                                cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(String): Unit \ r;
-        let Cell(cell1) = cell;
-        setCellValue(cell1, value)
-
-
-    pub def setCellValueLocalDate!(value: ##java.time.LocalDate, cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDate): Unit \ r;
-        let Cell(cell1) = cell;
-        setCellValue(cell1, value)
-
-
-    pub def setCellValueLocalDateTime!(value: ##java.time.LocalDateTime, cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellValue(##java.time.LocalDateTime): Unit \ r;
-        let Cell(cell1) = cell;
-        setCellValue(cell1, value)
-
-
-
-    pub def setBlank!(cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setBlank(): Unit \ r;
-        let Cell(cell1) = cell;
-        setBlank(cell1)
-
-
-    pub def setCellStyle!(style: CellStyle[r], cell: Cell[r]): Unit \ r = 
-        import org.apache.poi.ss.usermodel.Cell.setCellStyle(##org.apache.poi.ss.usermodel.CellStyle): Unit \ r;
-        let Cell(cell1) = cell;
-        let CellStyle(style1) = style;
-        setCellStyle(cell1, style1)
-
-   pub def getCellStyle(cell: Cell[r]): CellStyle[r] \ r = 
-        import org.apache.poi.ss.usermodel.Cell.getCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ r; 
-        let Cell(cell1) = cell;
-        getCellStyle(cell1) |> CellStyle
+//    pub def getCellStyle(cell: Cell): CellStyle[r] = 
+//         import org.apache.poi.ss.usermodel.Cell.getCellStyle(): ##org.apache.poi.ss.usermodel.CellStyle \ {}; 
+//         let Cell(cell1) = cell;
+//         getCellStyle(cell1) |> CellStyle
 
 
 }

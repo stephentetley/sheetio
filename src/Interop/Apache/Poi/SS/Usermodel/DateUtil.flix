@@ -21,14 +21,14 @@ mod Interop.Apache.Poi.SS.Usermodel.DateUtil {
     use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
 
     /// Caller should test we have a NUMERIC cell first...
-    pub def isCellDateFormatted(cell: Cell[r]): Bool \ r = 
-        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool \ r;
+    pub def isCellDateFormatted(cell: Cell): Bool = 
+        import static org.apache.poi.ss.usermodel.DateUtil.isCellDateFormatted(##org.apache.poi.ss.usermodel.Cell): Bool \ {};
         let Cell(cell1) = cell;
         isCellDateFormatted(cell1)
 
     /// 
-    pub def parseDateTime(s: String): Float64 \ r = 
-        import static org.apache.poi.ss.usermodel.DateUtil.parseDateTime(String): ##java.lang.Double \ r;
+    pub def parseDateTime(s: String): Float64 = 
+        import static org.apache.poi.ss.usermodel.DateUtil.parseDateTime(String): ##java.lang.Double \ {};
         parseDateTime(s) |> Interop.Lang.Double.wrapHH |> Interop.Lang.Double.doubleValue
 
 
