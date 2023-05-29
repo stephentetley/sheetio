@@ -62,7 +62,7 @@ mod SheetIO.SheetWriter {
 
     use SheetIO.SheetWriter
     use SheetIO.SheetWriter.{SheetWriter}
-    use SheetIO.RowSetter
+    use SheetIO.RowWriter
     
     use Interop.Apache.Poi.SS.Usermodel.CellStyle
     use Interop.Apache.Poi.SS.Usermodel.Row
@@ -334,24 +334,24 @@ mod SheetIO.SheetWriter {
         liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.Sheet.createRow!(ix, sheet))
 
 
-    pub def setRow!(ix: Int32, ma: RowSetter[r, a, a]): SheetWriter[r, ka, a] \ r =
+    pub def setRow!(ix: Int32, ma: RowWriter[r, a, a]): SheetWriter[r, ka, a] \ r =
         let* row        = createRow!(ix);
         let r           = Scoped.regionOf(row);
         let* style      = askStyle();
-        liftActionResult(_ -> SheetIO.RowSetter.runRowSetter!(r, ma, style, row)) 
+        liftActionResult(_ -> SheetIO.RowWriter.runRowWriter!(r, ma, style, row)) 
 
 
 
-    pub def allRows!(writer: a -> RowSetter[r, Unit], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
+    pub def allRows!(writer: a -> RowWriter[r, Unit], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
         FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix, writer(a)), rows)
 
-    pub def allRowsForm!(start: Int32, writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
+    pub def allRowsForm!(start: Int32, writer: a -> RowWriter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r = 
         FoldableWithIndex.foreachMWithIndex((ix, a) -> setRow!(ix + start, writer(a)), rows)
 
 
     /// Headers are written to Row 0, all subsequent rows are *data*.
-    pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowSetter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r  = 
-        let* _      = setRow!(0, SheetIO.RowSetter.putHeaders!(headers));
+    pub def allRowsWithHeaders!(headers: List[String], writer: a -> RowWriter[r, b], rows: List[a]): SheetWriter[r, ka, Unit] \ r  = 
+        let* _      = setRow!(0, SheetIO.RowWriter.putHeaders!(headers));
         let* _      = allRowsForm!(1, writer, rows);
         point()
 

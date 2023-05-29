@@ -18,7 +18,7 @@
 
 mod SheetIO.Writer {
 
-    use SheetIO.RowSetter
+    use SheetIO.RowWriter
     use SheetIO.SheetWriter
 
 /*
@@ -30,7 +30,7 @@ mod SheetIO.Writer {
     pub type alias WorkSheetWriter[row] = 
         { sheetName :: String
         , headers :: Option[List[String]]
-        , setter :: row -> RowSetter[Unit]
+        , setter :: row -> RowWriter[Unit]
         , rows :: List[row]
         } 
 

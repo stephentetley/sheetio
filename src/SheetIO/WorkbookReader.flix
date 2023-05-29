@@ -35,8 +35,6 @@ mod SheetIO.WorkbookReader {
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     use SheetIO.WorkbookReader
-    use SheetIO.RowEvaluator
-    use SheetIO.NamedRowEvaluator
 
     use SheetIO.SheetReader
 

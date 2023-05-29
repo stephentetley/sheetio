@@ -20,17 +20,17 @@
 mod SheetIO {
 
 
-    pub type alias RowSetter[ka: Type, r: Region, ef: Eff, a: Type] = 
+    pub type alias RowWriter[ka: Type, r: Region, ef: Eff, a: Type] = 
         Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.MutRow[r], ef, a]
 
 }
 
-mod SheetIO.RowSetter {
+mod SheetIO.RowWriter {
 
     use GradedError.{swapError}
     use Graded.Builder.{liftSetter!, liftSetterResult!}
 
-    use SheetIO.RowSetter
+    use SheetIO.RowWriter
     
 
     use Interop.Apache.Poi.SS.Usermodel.Cell
@@ -42,18 +42,18 @@ mod SheetIO.RowSetter {
 
 
     /// The state param `st` is expected to be mutated...
-    pub def runRowSetter!(ma: RowSetter[a, r, ef, a], 
+    pub def runRowWriter!(ma: RowWriter[a, r, ef, a], 
                             st: MutRow[r]): Result[String, a] \ ef =
         Graded.Builder.runBuilder(ma, st)
 
 /*
 
-    // pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowSetter[r, a] = match x { 
+    // pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowWriter[r, a] = match x { 
     //     case Ok(x1) => point(x1)
     //     case Err(e) => throwError(makeErrMsg(e))
     // }
 
-    // pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowSetter[r, a] = match x { 
+    // pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowWriter[r, a] = match x { 
     //     case Success(x1) => point(x1)
     //     case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
     // }
@@ -61,7 +61,7 @@ mod SheetIO.RowSetter {
 
 
     /// This also sets the CellStyle...
-    def createOrGetCell(ix: Int32): RowSetter[r, ka, Cell[r]] \ r) = 
+    def createOrGetCell(ix: Int32): RowWriter[r, ka, Cell[r]] \ r) = 
         use Result.{flatMap};
         use Interop.Apache.Poi.SS.Usermodel.Row.{createCell!};
         let body = (style, row) -> {
@@ -78,73 +78,73 @@ mod SheetIO.RowSetter {
         liftSetterResult!(body)
 
     def liftCellSetter!(ix: Int32, 
-                        f: Option[CellStyle[r]] -> Cell[r] -> a \ ef): RowSetter[r, ka, a] \ { r, ef } =
+                        f: Option[CellStyle[r]] -> Cell[r] -> a \ ef): RowWriter[r, ka, a] \ { r, ef } =
         let* cell = createOrGetCell(ix);
         liftSetter!((style, _) -> f(style, cell))
 
     // def liftCellSetterResult!(ix: Int32, 
-    //                             f: Option[CellStyle[r]] -> Cell[r] -> Result[a, err] \ ef): RowSetter[r, ka, a] \ { r, ef } with ToString[err] =
+    //                             f: Option[CellStyle[r]] -> Cell[r] -> Result[a, err] \ ef): RowWriter[r, ka, a] \ { r, ef } with ToString[err] =
     //     let* cell = createOrGetCell(ix);
     //     liftSetterResult!((style, _) -> f(style, cell))
 
 
-    pub def localCellStyle(style: CellStyle[r], ma: RowSetter[r, ka, a]): RowSetter[r, ka, a] = 
+    pub def localCellStyle(style: CellStyle[r], ma: RowWriter[r, ka, a]): RowWriter[r, ka, a] = 
         localEnv(_ -> Some(style), ma)
 
 
-    pub def putBlankAt!(ix: Int32): RowSetter[r, ka, Unit] \ r =
+    pub def putBlankAt!(ix: Int32): RowWriter[r, ka, Unit] \ r =
         liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setBlank!(cell))
 
 
-    pub def putStringAt!(ix: Int32, value: String): RowSetter[r, ka, Unit] \ r =
+    pub def putStringAt!(ix: Int32, value: String): RowWriter[r, ka, Unit] \ r =
         liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueString!(value, cell))
 
-    pub def putBoolAt!(ix: Int32, value: Bool): RowSetter[r, ka, Unit] \ r =
+    pub def putBoolAt!(ix: Int32, value: Bool): RowWriter[r, ka, Unit] \ r =
         liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueBoolean!(value, cell))
 
 
-    def putNumericAt!(ix: Int32, value: Float64): RowSetter[r, ka, Unit] \ r =
+    def putNumericAt!(ix: Int32, value: Float64): RowWriter[r, ka, Unit] \ r =
         liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueDouble!(value, cell))
 
-    pub def putInt8At!(ix: Int32, n: Int8): RowSetter[r, ka, Unit] \ r =
+    pub def putInt8At!(ix: Int32, n: Int8): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, Int8.toFloat64(n))
 
-    pub def putInt16At!(ix: Int32, n: Int16): RowSetter[r, ka, Unit] \ r =
+    pub def putInt16At!(ix: Int32, n: Int16): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, Int16.toFloat64(n))
 
-    pub def putInt32At!(ix: Int32, n: Int32): RowSetter[r, ka, Unit] \ r =
+    pub def putInt32At!(ix: Int32, n: Int32): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, Int32.toFloat64(n))
 
 
-    pub def putInt64At!(ix: Int32, n: Int64): RowSetter[r, ka, Unit] \ r =
+    pub def putInt64At!(ix: Int32, n: Int64): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, Int64.toFloat64(n))
 
-    pub def putFloat32At!(ix: Int32, n: Float32): RowSetter[r, ka, Unit] \ r =
+    pub def putFloat32At!(ix: Int32, n: Float32): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, Float32.toFloat64(n))
 
-    pub def putFloat64At!(ix: Int32, n: Float64): RowSetter[r, ka, Unit] \ r =
+    pub def putFloat64At!(ix: Int32, n: Float64): RowWriter[r, ka, Unit] \ r =
         putNumericAt!(ix, n)
 
 
 
 
-    // pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowSetter[r, ka, Unit] \ r =
+    // pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowWriter[r, ka, Unit] \ r =
     //     use Time.LocalDateTime.{LocalDateTime};
     //     let  LocalDateTime(dt1) = dt;
     //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDateTime!(r, dt1, cell))
 
 
 
-    // pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowSetter[r, ka, Unit] \ r =
+    // pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowWriter[r, ka, Unit] \ r =
     //     use Time.LocalDate.{LocalDate};
     //     let  LocalDate(dt1) = dt;
     //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDate!(r, dt1, cell))
  
  
-    pub def putHeaders!(l: List[String]): RowSetter[r, ka, Unit] \ r = 
+    pub def putHeaders!(l: List[String]): RowWriter[r, ka, Unit] \ r = 
         putHeadersHelper!(l, 0)
         
-    def putHeadersHelper!(l: List[String], ix: Int32): RowSetter[r, ka, Unit] \ r = match l {
+    def putHeadersHelper!(l: List[String], ix: Int32): RowWriter[r, ka, Unit] \ r = match l {
         case Nil => point()
         case s :: rs => {
             let* _  = putStringAt!(ix, s);
@@ -152,42 +152,42 @@ mod SheetIO.RowSetter {
         }
     }
 
-    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionStringAt!(ix: Int32, x: Option[String]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(s) => putStringAt!(ix, s)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionBoolAt!(ix: Int32, x: Option[Bool]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(b) => putBoolAt!(ix, b)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionInt8At!(ix: Int32, x: Option[Int8]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putInt8At!(ix, n)
         case None    => putBlankAt!(ix)
         }
 
-    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionInt16At!(ix: Int32, x: Option[Int16]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putInt16At!(ix, n)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionInt32At!(ix: Int32, x: Option[Int32]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putInt32At!(ix, n)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionInt64At!(ix: Int32, x: Option[Int64]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putInt64At!(ix, n)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionFloat32At!(ix: Int32, x: Option[Float32]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putFloat32At!(ix, n)
         case None    => putBlankAt!(ix)
     }
 
-    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowSetter[r, ka, Unit] \ r = match x {
+    pub def putOptionFloat64At!(ix: Int32, x: Option[Float64]): RowWriter[r, ka, Unit] \ r = match x {
         case Some(n) => putFloat64At!(ix, n)
         case None    => putBlankAt!(ix)
     }
