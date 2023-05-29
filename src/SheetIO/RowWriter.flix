@@ -92,54 +92,8 @@ mod SheetIO.RowWriter {
         localEnv(_ -> Some(style), ma)
 
 
-    pub def putBlankAt!(ix: Int32): RowWriter[r, ka, Unit] \ r =
-        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setBlank!(cell))
 
 
-    pub def putStringAt!(ix: Int32, value: String): RowWriter[r, ka, Unit] \ r =
-        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueString!(value, cell))
-
-    pub def putBoolAt!(ix: Int32, value: Bool): RowWriter[r, ka, Unit] \ r =
-        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueBoolean!(value, cell))
-
-
-    def putNumericAt!(ix: Int32, value: Float64): RowWriter[r, ka, Unit] \ r =
-        liftCellSetter!(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.setCellValueDouble!(value, cell))
-
-    pub def putInt8At!(ix: Int32, n: Int8): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, Int8.toFloat64(n))
-
-    pub def putInt16At!(ix: Int32, n: Int16): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, Int16.toFloat64(n))
-
-    pub def putInt32At!(ix: Int32, n: Int32): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, Int32.toFloat64(n))
-
-
-    pub def putInt64At!(ix: Int32, n: Int64): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, Int64.toFloat64(n))
-
-    pub def putFloat32At!(ix: Int32, n: Float32): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, Float32.toFloat64(n))
-
-    pub def putFloat64At!(ix: Int32, n: Float64): RowWriter[r, ka, Unit] \ r =
-        putNumericAt!(ix, n)
-
-
-
-
-    // pub def putLocalDateTimeAt!(ix: Int32, dt: Time.LocalDateTime): RowWriter[r, ka, Unit] \ r =
-    //     use Time.LocalDateTime.{LocalDateTime};
-    //     let  LocalDateTime(dt1) = dt;
-    //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDateTime!(r, dt1, cell))
-
-
-
-    // pub def putLocalDateAt!(ix: Int32, dt: Time.LocalDate): RowWriter[r, ka, Unit] \ r =
-    //     use Time.LocalDate.{LocalDate};
-    //     let  LocalDate(dt1) = dt;
-    //     liftPrimCell(ix, (r, cell, _) -> SheetIO.Internal.Cell.setCellValueLocalDate!(r, dt1, cell))
- 
  
     pub def putHeaders!(l: List[String]): RowWriter[r, ka, Unit] \ r = 
         putHeadersHelper!(l, 0)
