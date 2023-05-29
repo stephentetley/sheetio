@@ -26,6 +26,10 @@ mod SheetIO {
 mod SheetIO.WorkbookReader {
 
     use ToString.toString
+
+    use GradedMonad.{>>=}
+    use Graded.Evaluator.{liftGetter}
+
     use Basis.NIO.File.Path
 
 
@@ -62,59 +66,11 @@ mod SheetIO.WorkbookReader {
     pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
         runOnFile(r, ma, path)
 
+*/
 
-    pub def getWorkbookReader(x: WorkbookReader[r, ka, a]): Graded.Evaluator[r, ka, Workbook[r], a] = 
-        let WorkbookReader(x1) = x;
-        x1
-
-
-    pub def runWorkbookReader(r: Region[r], 
-                                ma: WorkbookReader[r, a, a], 
-                                st: Workbook[r]): Result[a, String] \ r =
-        Graded.Evaluator.runEvaluator(r, getWorkbookReader(ma), st)
-
-    pub def point(x: a): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded.Evaluator.point(x))
-
-
-
-    pub def map(f: a -> b \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded.Evaluator.map(f, getWorkbookReader(ma)))
-
-    pub def ap(mf: WorkbookReader[r, ka, a -> b \ ef], ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded.Evaluator.ap(getWorkbookReader(mf), getWorkbookReader(ma)))
-
-    pub def flatMap(f: a -> WorkbookReader[r, ka, b] \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, b] \ ef =
-        WorkbookReader(Graded.Evaluator.flatMap(f >> getWorkbookReader, getWorkbookReader(ma)))
-
-    pub def throwError(msg: String): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded.Evaluator.throwError(msg))
-
-    pub def mapError(f: String -> String \ ef, ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded.Evaluator.mapError(f, getWorkbookReader(ma)))
-
-    pub def catchError(ma: WorkbookReader[r, ka, a], f: String -> WorkbookReader[r, ka, a] \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded.Evaluator.catchError(getWorkbookReader(ma), f >> getWorkbookReader))
-
-    pub def empty(): WorkbookReader[r, ka, a] = 
-        WorkbookReader(Graded.Evaluator.empty())
-        
-    pub def orelse(ma: WorkbookReader[r, ka, a], mb: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, a] =
-        WorkbookReader(Graded.Evaluator.orelse(getWorkbookReader(ma), getWorkbookReader(mb)))
-
-    def liftGetter(f: Workbook[r] -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded.Evaluator.liftGetter(f))
-    
-    def liftGetterResult(f: Workbook[r] -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(Graded.Evaluator.liftGetterResult(f))
-
-
-    pub def liftAction(f: Unit -> a \ ef): WorkbookReader[r, ka, a] \ ef =
-        WorkbookReader(Graded.Evaluator.liftAction(f))
-    
-        
-    pub def liftActionResult(f: Unit -> Result[a, err] \ ef): WorkbookReader[r, ka, a] \ ef with ToString[err] =
-        WorkbookReader(Graded.Evaluator.liftActionResult(f))
+    pub def runWorkbookReader(ma: WorkbookReader[a, ef, a], 
+                                st: Workbook): Result[String, a] \ ef =
+        Graded.Evaluator.runEvaluator(ma, st)
 
 
 
@@ -133,18 +89,21 @@ mod SheetIO.WorkbookReader {
 
     // WorkbookReader
 
-    pub def getNumberOfSheets(): WorkbookReader[r, ka, Int32] \ r =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets)
-
-    pub def getSheetNames(): WorkbookReader[r, ka, List[String]] \ r =
-        let* n  = getNumberOfSheets();
-        let ixs = List.range(0,n);
-        Traversable.traverse(getSheetNameWb, ixs)      
+    pub def getNumberOfSheets(): WorkbookReader[ka, ef, Int32] =
+        liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets(wb)))
 
 
-    def getSheetNameWb(ix: Int32): WorkbookReader[r, ka, String] \ r =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix))
+    pub def getSheetNames(): WorkbookReader[ka, ef, List[String]] =
+        getNumberOfSheets()     >>= n    -> {
+            let ixs = List.range(0, n);
+            GradedTraversable.traverse(getSheetName, ixs)
+        }
 
+
+    pub def getSheetName(ix: Int32): WorkbookReader[ka, ef, String] =
+        liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
+
+/*
     pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ r =
         liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 

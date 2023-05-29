@@ -19,30 +19,32 @@
 mod SheetIO.Reader {
 
     use GradedFunctor.{<$>}
+    use GradedMonad.{>>=}
 
+    use SheetIO.WorkbookReader
+    use SheetIO.SheetReader
     use SheetIO.NamedRowReader
     use SheetIO.RowReader
-    use SheetIO.SheetReader
-/*
+
     pub type alias XlsxSource = 
-        { sheet :: String
-        , path :: Interop.System.Path
+        { sheet = String
+        , path = Basis.NIO.File.Path
         }
 
 
-    pub def allRows(eval: RowReader[r, a], src: XlsxSource): Result[List[a], String] \ IO =
-        SheetIO.SheetReader.runXlsx(allRows1(eval, src.sheet), src.path)
+    // pub def allRows(eval: RowReader[a, ef, a], src: XlsxSource): Result[List[a], String] \ {ef, IO} =
+    //     SheetIO.WorkbookReader.runXlsx(allRowsAction(eval, src.sheet), src.path)
 
-    pub def allRowsOfSheets(eval: RowReader[r, a], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] \ IO =
-        let readSheets = List.flatten <$> Traversable.traverse(allRows1(eval), sheets);        
-        SheetIO.SheetReader.runXlsx(readSheets, path)
+    // def allRowsAction(eval: RowReader[ka, ef, a], sheetName: String): WorkbookReader[ka, ef, List[a]] =
+    //     SheetIO.WorkbookReader.getSheetNamed(sheetName) >>= sheet -> 
+    //     SheetIO.SheetReader.allRows(eval, s1)
+
+/*
+    // pub def allRowsOfSheets(eval: RowReader[r, a], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] \ IO =
+    //     let readSheets = List.flatten <$> Traversable.traverse(allRows1(eval), sheets);        
+    //     SheetIO.SheetReader.runXlsx(readSheets, path)
 
 
-    def allRows1(eval: RowReader[r, a], sheetName: String): SheetReader[r, List[a]] =
-        use SheetIO.SheetReader.{flatMap, point, getSheetNamed, allRows};
-        let* s1     = getSheetNamed(sheetName);
-        let* xs     = allRows(eval, s1);
-        point(xs)
 
     pub def someRows(eval: RowReader[r, Option[a]], src: XlsxSource): Result[List[a], String] \ IO =        
         SheetIO.SheetReader.runXlsx(someRows1(eval, src.sheet), src.path)

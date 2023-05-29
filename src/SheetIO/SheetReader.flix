@@ -49,17 +49,6 @@ mod SheetIO.SheetReader {
         Graded.Evaluator.runEvaluator(ma, s)
 
 
-
-/*
-
-    pub def liftAction(f: Unit -> a \ ef): SheetReader[r, ka, a] \ ef =
-        SheetReader(Graded.Evaluator.liftAction(f))
-    
-        
-    pub def liftActionResult(f: Unit -> Result[err, a] \ ef): SheetReader[r, ka, a] \ ef with ToString[err] =
-        SheetReader(Graded.Evaluator.liftActionResult(f))
-
-
     // pub def testM(ma: SheetReader[r, ka, a]): SheetReader[r, ka, Bool] =
     //     SheetReader(wb -> 
     //         match apply1(ma, wb) { 
@@ -78,10 +67,6 @@ mod SheetIO.SheetReader {
     //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO.Internal.EvalError.getText);
     //         Ok(ans)
     //     )
-
-
-
-*/
 
 
     // SheetReader
