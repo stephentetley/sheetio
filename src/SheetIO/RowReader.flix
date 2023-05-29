@@ -96,6 +96,15 @@ mod SheetIO.RowReader {
             checked_ecast(Interop.Apache.Poi.SS.Util.CellAddress.getColumn(addr))
         )
 
+
+    pub def getFirstCellNum(): RowReader[ka, ef, Int32] =
+        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row)) |> Int16.toInt32)
+
+    pub def getLastCellNum(): RowReader[ka, ef, Int32] =
+        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row)) |> Int16.toInt32)
+            |> map(n -> if (n > 0) n - 1 else n)
+
+
 /*
     /// Uses the default DataFormatter
     pub def getContentAt(ix: Int32): RowReader[ka, ef, String] =
@@ -137,196 +146,8 @@ mod SheetIO.RowReader {
             case _       => throwError(errMsg)
         } |> swapError(errMsg)
 
-    /// Error if the cell type is numeric.
-    pub def getStringAt(ix: Int32): RowReader[ka, ef, String] =
-        liftCellGetterResult(ix, (_, row) -> Interop.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(row))
-
-
-    /// TODO - wrong name or should return Bool...
-    pub def getSatifiesAt(ix: Int32, test: String -> Bool): RowReader[ka, ef, String] =
-        let errMsg = "getSatifiesAt(${ix})";
-        let step = () -> getContentAt(ix) >>= x -> 
-                    if (test(x)) point(x) else throwError(errMsg);
-        step() |> swapError(errMsg)
-
-
-    pub def getNonEmptyContentAt(ix: Int32): RowReader[ka, ef, String] =
-        getSatifiesAt(ix, x -> not String.isEmpty(String.trim(x)))
-            |> map(String.trim)
-            |> swapError("getNonEmptyContentAt(${ix})")
-
-
-    pub def getStringAtWithDefault(ix: Int32, d: String): RowReader[ka, ef, String]=
-        isNullAt(ix)    >>= nullc -> 
-        isBlankAt(ix)   >>= blankc -> 
-        if (nullc or blankc) point(d) else getStringAt(ix)
-
-
-    pub def getStringAtWithDataFormatter(ix: Int32, dfmt: DataFormatter): RowReader[ka, ef, String] =
-        liftCellGetter(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, dfmt))
-
-
-    pub def getBoolAt(ix: Int32): RowReader[ka, ef, Bool] =
-        liftCellGetterResult(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell))
-
-    /// Error if the cell type is String or cell value is not a readable double.
-    /// Returns 0 for blank cells.
-    pub def getNumericAt(ix: Int32): RowReader[ka, ef, Float64] =
-        liftCellGetterResult(ix, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell))
-
-
-    def getNumAt(ix: Int32, conv: Float64 -> Option[a]): RowReader[ka, ef, a] =
-        getNumericAt(ix) >>= n -> 
-        match conv(n) {
-            case Some(i) => point(i)
-            case None    => throwError("getNumAt")
-        }
-
-
-    pub def getInt8At(ix: Int32): RowReader[ka, ef, Int8] =
-        getNumAt(ix, Float64.tryToInt8) 
-            |> swapError("getInt8At")
-
-    pub def getInt16At(ix: Int32): RowReader[ka, ef, Int16] =
-        getNumAt(ix, Float64.tryToInt16) 
-            |> swapError("getInt16At")
-
-    pub def getInt32At(ix: Int32): RowReader[ka, ef, Int32] =
-        getNumAt(ix, Float64.tryToInt32) 
-            |> swapError("getInt32At")
-
-    pub def getInt64At(ix: Int32): RowReader[ka, ef, Int64] =
-        getNumAt(ix, Float64.tryToInt64) 
-            |> swapError("getInt64At")
-
-    pub def getFloat32At(ix: Int32): RowReader[ka, ef, Float32] =
-        getNumAt(ix, Float64.tryToFloat32) 
-            |> swapError("getFloat32At")
-    
-    pub def getFloat64At(ix: Int32): RowReader[ka, ef, Float64] = 
-        getNumAt(ix, x -> Some(x)) 
-            |> swapError("getFloat64At")
-
-
-    def isDateFormattedAt(ix: Int32): RowReader[ka, ef, Bool] = 
-        liftCellGetter(ix, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell))
-
-    /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
-    /// See https://stackoverflow.com.questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
-    ///
-    pub def getLocalDateTimeAt(ix: Int32): RowReader[ka, ef, Time.LocalDateTime] = 
-        use Time.LocalDateTime.{LocalDateTime};
-        getCellTypeAt(ix) >>= ctype ->
-        if (ctype == TyNumeric) {
-            isDateFormattedAt(ix) >>= dtCell ->
-            if (dtCell) {
-                liftCellGetterResult(ix, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
-                if (Object.isNull(dt))
-                    throwError("getLocalDateTimeAt - null")
-                else
-                    point(LocalDateTime(dt))
-            } else throwError("getLocalDateTimeAt - not a date")
-        } else throwError("getLocalDateTimeAt - not a date / not a numeric cell")
-
-
-
-    /// Cell must be readable as a String
-    pub def getLocalDateTimeAtWithFormat(ix: Int32, 
-                                        fmt: DateTimeFormatter[Time.Format.DateTimeFormat]): RowReader[ka, ef, Time.LocalDateTime] = 
-        getStringAt(ix) >>= s ->
-        GradedError.liftResult(Time.LocalDateTime.parse(fmt, s))
-
-
-    /// Cell must be readable as a String
-    pub def getLocalDateTimeAtWithPattern(ix: Int32, patt: String): RowReader[ka, ef, Time.LocalDateTime] = 
-        GradedError.liftResult(Time.Format.DateTimeFormatter.fromPattern(patt)) >>= fmt ->
-        getStringAt(ix)                                                         >>= s   ->
-        GradedError.liftResult(Time.LocalDateTime.parse(fmt, s))
-
-
-    pub def getLocalDateAt(ix: Int32): RowReader[ka, ef, Time.LocalDate] = 
-        getLocalDateTimeAt(ix)
-            |> map(Time.LocalDateTime.toLocalDate)
-            |> swapError("getLocalDateAt(${ix})")
-
-
-    /// Cell must be readable as a String
-    pub def getLocalDateAtWithFormat(ix: Int32, 
-                                    fmt: DateTimeFormatter[Time.Format.DateFormat]): RowReader[ka, ef, Time.LocalDate] = 
-        getStringAt(ix) >>= s -> 
-        GradedError.liftResult(Time.LocalDate.parse(fmt, s))
-
-
-    /// Cell must be readable as a String
-    pub def getLocalDateAtWithPattern(ix: Int32, patt: String): RowReader[ka, ef, Time.LocalDate] = 
-        GradedError.liftResult(Time.Format.DateTimeFormatter.fromPattern(patt)) >>= fmt ->
-        getStringAt(ix)                                                         >>= s   ->
-        GradedError.liftResult(Time.LocalDate.parse(fmt, s))
-        
-
-    def getIfNotEmpty(ix: Int32, getter: Int32 -> RowReader[ka, ef, a]): RowReader[ka, ef, Option[a]] = 
-        isNullAt(ix)    >>= nullc   ->
-        isBlankAt(ix)   >>= blankc  ->
-        if (nullc or blankc) point(None) else map(Some, getter(ix))
-
-    pub def getOptionStringAt(ix: Int32): RowReader[ka, ef, Option[String]] =
-        getIfNotEmpty(ix, getStringAt)
-
-
-
-    pub def getOptionInt8At(ix: Int32): RowReader[ka, ef, Option[Int8]] =
-        getIfNotEmpty(ix, getInt8At)
-
-    pub def getOptionInt16At(ix: Int32): RowReader[ka, ef, Option[Int16]] =
-        getIfNotEmpty(ix, getInt16At)
-
-    pub def getOptionInt32At(ix: Int32): RowReader[ka, ef, Option[Int32]] =
-        getIfNotEmpty(ix, getInt32At)
-
-    pub def getOptionInt64At(ix: Int32): RowReader[ka, ef, Option[Int64]] =
-        getIfNotEmpty(ix, getInt64At)
-
-    pub def getOptionFloat32At(ix: Int32): RowReader[ka, ef, Option[Float32]] =
-        getIfNotEmpty(ix, getFloat32At)
-    
-    pub def getOptionFloat64At(ix: Int32): RowReader[ka, ef, Option[Float64]] = 
-        getIfNotEmpty(ix, getFloat64At)
-
-    pub def getOptionLocalDateTimeAt(ix: Int32): RowReader[ka, ef, Option[Time.LocalDateTime]] = 
-        getIfNotEmpty(ix, getLocalDateTimeAt)
       
-    pub def getFirstCellNum(): RowReader[ka, ef, Int32] =
-        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row)) |> Int16.toInt32)
 
-    pub def getLastCellNum(): RowReader[ka, ef, Int32] =
-        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row)) |> Int16.toInt32)
-            |> map(n -> if (n > 0) n - 1 else n)
-
-
-
-    def queryFontAt(ix: Int32, 
-                    fn: Region[r] -> ##org.apache.poi.ss.usermodel.Font -> Result[a, PrimError] \ ef): RowReader[ka, r, ef + r, a] = 
-        use Result.flatMap;
-        liftPrim((r, _, row) -> 
-            let* cell   = SheetIO.Internal.Row.getCell(r, ix, row);
-            let* style  = SheetIO.Internal.Cell.getCellStyle(r, cell);
-            let* ixf    = SheetIO.Internal.CellStyle.getFontIndexAsInt(r, style);
-            let* sheet  = SheetIO.Internal.Row.getSheet(r, row);
-            let* wb     = SheetIO.Internal.Sheet.getWorkbook(r, sheet);
-            let* font   = SheetIO.Internal.Workbook.getFontAt(r, ixf, wb);
-            let* ans    = fn(r, font); 
-            Ok(ans)
-        )
-
-    pub def getIsBoldAt(ix: Int32): RowReader[ka, r, Bool] \ r = 
-        queryFontAt(ix, SheetIO.Internal.Font.getBold)
-
-
-    pub def getIsItalicAt(ix: Int32): RowReader[ka, r, Bool] \ r = 
-        queryFontAt(ix, SheetIO.Internal.Font.getItalic)
-
-    pub def getIsStrikeoutAt(ix: Int32): RowReader[ka, r, Bool] \ r = 
-        queryFontAt(ix, SheetIO.Internal.Font.getStrikeout)
 
 
     /// List (not Array) avoids region allocation...
