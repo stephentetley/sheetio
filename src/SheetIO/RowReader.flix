@@ -56,12 +56,12 @@ mod SheetIO.RowReader {
         liftActionResult(_ -> SheetIO.CellReader.runCellReader(eval, df, cell))
 
 
-    // // Note - the primitive setX! functions index from 1, we add 1 to calls
-    // // so FactIO's API indexes from 0.
-
     pub def getCellAt(ix: Int32): RowReader[ka, ef, Cell] = 
         liftGetterResult(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row)) |> Option.toOk("getCellAt(${ix})"))
 
+    pub def readCellAt(ix: Int32, eval: CellReader[a, ef, a]): RowReader[ka, ef, a] =
+        getCellAt(ix)    >>= cell -> 
+        withCellReader(eval, cell)
 
     pub def getRowNum(): RowReader[ka, ef, Int32] = 
         liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
@@ -91,28 +91,31 @@ mod SheetIO.RowReader {
             |> map(n -> if (n > 0) n - 1 else n)
 
 
+
+    pub def cellIterator(rc: Region[r]): RowReader[ka, ef + r, Iterator[Cell, r, r]] = 
+        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.cellIterator(rc, row)))
+
+
+    
+    /// Ideally we would not need to expose `rc` but due to types within the Iterator
+    /// it would otherwise leak...
+    pub def getRowContents(rc: Region[r]): RowReader[ka, ef + r, Vector[String]] =
+        getRowContentsWith(rc, SheetIO.CellReader.getContent())
+
+
+    /// Ideally we would not need to expose `rc` but due to types within the Iterator
+    /// it would otherwise leak...
+    pub def getRowContentsWith(rc: Region[r], eval: CellReader[a, ef, a]): RowReader[ka, ef + r, Vector[a]] =
+        let step = (acc, cell) -> { 
+            withCellReader(eval, cell) >>= a ->
+            point(Chain.snoc(acc, a))
+        };
+        cellIterator(rc) >>= iter -> 
+        GradedExtras.Iterator.foldLeftM(step, Chain.empty(), iter) >>= chain -> 
+        point(List.toVector(Chain.toList(chain)))
+
 /*
 
-    /// List (not Array) avoids region allocation...
-    pub def getRowContents(): RowReader[ka, ef, Vector[String]] =
-        getRowContentsWith(getContentAt)
-
-
-    pub def getRowContentsWith(evalCell: Int32 -> RowReader[ka, ef, a]): RowReader[ka, ef, Vector[a]] =
-        getLastCellNum()                                            >>= end ->
-        getRowContentsWithHelper(evalCell, end, 0, ks -> point(ks)) >>= xs  ->
-        point(List.toVector(xs))
-
-
-    // Should be tail recursive as bind is in the contiuation
-    def getRowContentsWithHelper(evalCell: Int32 -> RowReader[ka, ef, a], 
-                                    end: Int32, 
-                                    ix: Int32, 
-                                    k: List[a] -> RowReader[ka, ef, List[a]]): RowReader[ka, ef, List[a]] =
-        if (ix > end)
-            k(Nil)
-        else 
-            getRowContentsWithHelper(evalCell, end, ix + 1, ss -> evalCell(ix) >>= s -> k(s :: ss))
 
     /// Special version of `getRowContents` - date-times are rewritten to ISO local date time strings.
     /// This should avoid date mangling.

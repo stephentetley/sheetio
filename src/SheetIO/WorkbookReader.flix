@@ -76,7 +76,22 @@ mod SheetIO.WorkbookReader {
     pub def withSheetReader(eval: SheetReader[a, ef, a], sheet: Sheet): WorkbookReader[ka, ef, a] =
         liftActionResult(_ -> SheetIO.SheetReader.runSheetReader(eval, sheet))
 
-        
+    pub def getSheetNamed(name: String): WorkbookReader[ka, ef, Sheet] =
+        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
+
+    
+    pub def readSheetNamed(name: String, eval: SheetReader[a, ef, a]): WorkbookReader[ka, ef, a] =
+        getSheetNamed(name)     >>= sheet -> 
+        withSheetReader(eval, sheet)
+
+
+    pub def getSheetAt(ix: Int32): WorkbookReader[ka, ef, Sheet] =
+        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
+    
+    pub def readSheetAt(ix: Int32, eval: SheetReader[a, ef, a]): WorkbookReader[ka, ef, a] =
+        getSheetAt(ix)    >>= sheet -> 
+        withSheetReader(eval, sheet)
+
     // WorkbookReader
 
     pub def getNumberOfSheets(): WorkbookReader[ka, ef, Int32] =
@@ -93,12 +108,6 @@ mod SheetIO.WorkbookReader {
     pub def getSheetName(ix: Int32): WorkbookReader[ka, ef, String] =
         liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
 
-
-    pub def getSheetNamed(name: String): WorkbookReader[ka, ef, Sheet] =
-        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
-
-    pub def getSheetAt(ix: Int32): WorkbookReader[ka, ef, Sheet] =
-        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
 
 
 

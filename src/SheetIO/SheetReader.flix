@@ -55,10 +55,14 @@ mod SheetIO.SheetReader {
             case Err(_) => throwError("withRowReader")
         }
     }
+
+    pub def getRowAt(ix: Int32): SheetReader[ka, ef, Row] = 
+        liftGetterResult(sheet -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet)))
+    
+    pub def readRowAt(ix: Int32, eval: RowReader[a, ef, a]): SheetReader[ka, ef, a] =
+        getRowAt(ix)    >>= row -> 
+        withRowReader(eval, row)
         
-
-
-    // SheetReader
  
 
     pub def getSheetName(): SheetReader[ka, ef, String] =
@@ -77,24 +81,15 @@ mod SheetIO.SheetReader {
     pub def getPhysicalNumberOfRows(): SheetReader[ka, ef, Int32] =
         liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows(s)))
 
-
-    // pub def getRowAt(ix: Int32, eval: RowReader[a, r, ef, a]): SheetReader[r, ka, ef + r, a] =
-    //     use Result.flatMap;
-    //     liftGetterResult(sheet -> {
-    //         /// TODO - df should be "user facing"...
-    //         forM (df <- region rc {Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok()))};
-    //                 row <- Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet);
-    //                 ans <- SheetIO.RowReader.runRowReader(eval, df, row))
-    //             yield (ans)
-    //     })
-        
-
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    // def getRowIterator(rc: Region[r1]): SheetReader[r, ka, r, Iterator[Row[r1], r1, r1]] =
-    //     liftGetter(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc))
+    pub def rowIterator(rc: Region[r]): SheetReader[ka, ef + r, Iterator[Row, r, r]] = 
+        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
+
+
+
 
 
     // pub def getHeaders(headerIndex: Int32): SheetReader[ka, ef, Vector[String]] =

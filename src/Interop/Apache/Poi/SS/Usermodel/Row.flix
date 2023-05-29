@@ -77,4 +77,12 @@ mod Interop.Apache.Poi.SS.Usermodel.Row {
         getPhysicalNumberOfCells(row1)
         
 
+    pub def cellIterator(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
+        import org.apache.poi.ss.usermodel.Row.cellIterator(): ##java.util.Iterator \ r;
+        let ocast = obj -> Cell(unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Cell));
+        let Row(row1) = row;
+        let iterHH = cellIterator(row1);
+        Interop.Util.IteratorZ.wrapHH(rc, iterHH) 
+            |> Interop.Util.IteratorZ.toFlixIterator(rc, ocast)
+
 }
