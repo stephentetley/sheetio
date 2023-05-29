@@ -42,12 +42,14 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
     pub def wrapHH(wb: ##org.apache.poi.ss.usermodel.Workbook): Workbook =
         Workbook(wb)
     
-    // pub def close!(wb: Workbook[r]): Result[String, Unit] \ r =         
-    //     Result.tryCatch(_ -> {
-    //         import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;
-    //         let Workbook(wb1) = wb;
-    //         close(wb1)
-    //     })
+
+    /// Note - imperative operation, use a phantom region...
+    pub def close!(_: Region[r], wb: Workbook): Result[String, Unit] \ r =         
+        Result.tryCatch(_ -> {
+            import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;
+            let Workbook(wb1) = wb;
+            close(wb1)
+        })
 
 
     pub def getNumberOfSheets(wb: Workbook): Int32 = 
@@ -61,18 +63,18 @@ mod Interop.Apache.Poi.SS.Usermodel.Workbook {
         getSheetName(wb1, ix)
 
 
-    // pub def getSheet(name: String, wb: Workbook[r]): Option[Sheet[r]] \ r = 
-    //     import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ r;
-    //     let Workbook(wb1) = wb;
-    //     getSheet(wb1, name) |> Object.toOption |> Option.map(Sheet)
+    pub def getSheet(name: String, wb: Workbook): Option[Sheet] = 
+        import org.apache.poi.ss.usermodel.Workbook.getSheet(String): ##org.apache.poi.ss.usermodel.Sheet \ {};
+        let Workbook(wb1) = wb;
+        getSheet(wb1, name) |> Object.toOption |> Option.map(Sheet)
 
 
-    // pub def getSheetAt(ix: Int32, wb: Workbook[r]): Result[String, Sheet[r]] \ r = 
-    //     Result.tryCatch(_ -> {
-    //         import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ r;
-    //         let Workbook(wb1) = wb;
-    //         getSheetAt(wb1, ix) |> Sheet
-    //     })
+    pub def getSheetAt(ix: Int32, wb: Workbook): Result[String, Sheet] = 
+        Result.tryCatch(_ -> {
+            import org.apache.poi.ss.usermodel.Workbook.getSheetAt(Int32): ##org.apache.poi.ss.usermodel.Sheet \ {};
+            let Workbook(wb1) = wb;
+            getSheetAt(wb1, ix) |> Sheet
+        })
 
 
     // pub def getFontAt(ix: Int32, wb: Workbook[r]): Option[Font[r]] \ r = 

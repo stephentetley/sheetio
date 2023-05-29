@@ -28,7 +28,7 @@ mod SheetIO.WorkbookReader {
     use ToString.toString
 
     use GradedMonad.{>>=}
-    use Graded.Evaluator.{liftGetter}
+    use Graded.Evaluator.{liftGetter, liftGetterResult, liftActionResult}
 
     use Basis.NIO.File.Path
 
@@ -42,49 +42,35 @@ mod SheetIO.WorkbookReader {
 
     use SheetIO.SheetReader
 
-/*
+
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
-        runXssf(r, ma, path)
+    pub def runXlsx(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runXssf(ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
-        runOnFile(r, ma, path) 
-
-    def runOnFile(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
-        use Result.{flatMap};
-        let path1   = toString(path);
-        let file    = Interop.IO.File.newFile(r, path1);
-        let* ins    = Interop.IO.FileInputStream.newWithFile(file);
-        let* wb     = Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream!(ins);
-        let* ans    = runWorkbookReader(r, ma, wb);
-        let* _      = Interop.Apache.Poi.SS.Usermodel.Workbook.close!(wb);
-        Ok(ans)
-        
+    pub def runXssf(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runOnFile(ma, path) 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(r: Region[r], ma: WorkbookReader[r, a, a], path: Path): Result[a, String] \ IO = 
-        runOnFile(r, ma, path)
+    pub def runHssf(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runOnFile(ma, path)
 
-*/
+
+    def runOnFile(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = region rc {
+        forM (file  <- Basis.IO.FileInputStream.newWithPath(rc, path);
+                ins <- Basis.IO.FileInputStream.toInputStream(file) |> Ok;
+                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream!(ins);
+                ans <- runWorkbookReader(ma, wb);
+                _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb))
+            yield ans
+    }
+
+
+
 
     pub def runWorkbookReader(ma: WorkbookReader[a, ef, a], 
                                 st: Workbook): Result[String, a] \ ef =
         Graded.Evaluator.runEvaluator(ma, st)
-
-
-
-    ///
-    /// Expose the result of operation `ma`.
-    ///
-    /// By definition this never fails.
-    ///
-    // pub def result(ma: WorkbookReader[r, ka, a]): WorkbookReader[r, ka, Result[a, String]] = 
-    //     WorkbookReader(wb -> 
-    //         let ans = apply1(ma, wb) |> Result.mapErr(SheetIO.Internal.EvalError.getText);
-    //         Ok(ans)
-    //     )
-
 
 
     // WorkbookReader
@@ -103,15 +89,16 @@ mod SheetIO.WorkbookReader {
     pub def getSheetName(ix: Int32): WorkbookReader[ka, ef, String] =
         liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
 
-/*
-    pub def getSheetNamed(name: String): WorkbookReader[r, ka, Sheet[r]] \ r =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
-    pub def getSheetAt(ix: Int32): WorkbookReader[r, ka, Sheet[r]] \ r =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix))
+    pub def getSheetNamed(name: String): WorkbookReader[ka, ef, Sheet] =
+        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
 
-    pub def withSheetReader(eval: SheetReader[r, a, a], sheet: Sheet[r]): WorkbookReader[r, ka, a] \ r =
-        liftActionResult(_ -> {let r = Scoped.regionOf(sheet); SheetIO.SheetReader.runSheetReader(r, eval, sheet)})
+    pub def getSheetAt(ix: Int32): WorkbookReader[ka, ef, Sheet] =
+        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
 
-*/
+
+    pub def withSheetReader(eval: SheetReader[a, ef, a], sheet: Sheet): WorkbookReader[ka, ef, a] =
+        liftActionResult(_ -> SheetIO.SheetReader.runSheetReader(eval, sheet))
+
+
 }
