@@ -88,7 +88,7 @@ mod SheetIO.SheetReader {
         liftGetterWithRgn((rc, s) -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
 
 
-    /// TODO - is this cast acceptable?
+
     pub def getHeaders(rowIx: Int32): SheetReader[ka, r, ef + r, Vector[String]] =
         getRowAt(rowIx) >>= row -> 
         withRowReader(SheetIO.RowReader.getRowContents(), row)
