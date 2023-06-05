@@ -18,8 +18,8 @@
 mod SheetIO {
 
 
-    pub type alias WorkbookReader[ka: Type, ef: Eff, a: Type] =
-        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Workbook, ef, a]
+    pub type alias WorkbookReader[ka: Type, r: Region, ef: Eff, a: Type] = 
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Workbook, ef, a]
 
 }
 
@@ -28,7 +28,7 @@ mod SheetIO.WorkbookReader {
     use ToString.toString
 
     use GradedMonad.{>>=}
-    use Graded.Evaluator.{liftGetter, liftGetterResult, liftActionResult}
+    use Graded.RgnEnvEvaluator.{liftGetter, liftGetterResult, liftActionResult}
 
     use Basis.NIO.File.Path
 
@@ -44,68 +44,70 @@ mod SheetIO.WorkbookReader {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
-        runXssf(ma, path)
+    pub def runXlsx(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runXssf(rc, ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
-        runOnFile(ma, path) 
+    pub def runXssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runOnFile(rc, ma, path) 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
-        runOnFile(ma, path)
+    pub def runHssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+        runOnFile(rc, ma, path)
 
 
-    def runOnFile(ma: WorkbookReader[a, ef, a], path: Path): Result[String, a] \ {ef, IO} = region rc {
+    def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} =
         forM (file  <- Basis.IO.FileInputStream.newWithPath(rc, path);
                 ins <- Basis.IO.FileInputStream.toInputStream(file) |> Ok;
                 wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream!(ins);
-                ans <- runWorkbookReader(ma, wb);
+                ans <- runWorkbookReader(ma, rc, wb);
                 _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb))
             yield ans
-    }
 
 
 
 
-    pub def runWorkbookReader(ma: WorkbookReader[a, ef, a], 
-                                st: Workbook): Result[String, a] \ ef =
-        Graded.Evaluator.runEvaluator(ma, st)
+    pub def runWorkbookReader(ma: WorkbookReader[a, r, ef, a], 
+                                rc: Region[r],
+                                st: Workbook): Result[String, a] \ ef + r =        
+        match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
+            case Ok(df) => Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, st)
+            case Err(msg) => Err(msg)
+        }
 
+    pub def withSheetReader(eval: SheetReader[a, r, ef, a], sheet: Sheet): WorkbookReader[ka, r, ef, a] =
+        GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.SheetReader.runSheetReader(eval, rc, df, sheet))
 
-    pub def withSheetReader(eval: SheetReader[a, ef, a], sheet: Sheet): WorkbookReader[ka, ef, a] =
-        liftActionResult(_ -> SheetIO.SheetReader.runSheetReader(eval, sheet))
-
-    pub def getSheetNamed(name: String): WorkbookReader[ka, ef, Sheet] =
+    pub def getSheetNamed(name: String): WorkbookReader[ka, r, ef, Sheet] =
         liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
 
     
-    pub def readSheetNamed(name: String, eval: SheetReader[a, ef, a]): WorkbookReader[ka, ef, a] =
+    pub def readSheetNamed(name: String, eval: SheetReader[a, r, ef, a]): WorkbookReader[ka, r, ef, a] =
         getSheetNamed(name)     >>= sheet -> 
         withSheetReader(eval, sheet)
 
 
-    pub def getSheetAt(ix: Int32): WorkbookReader[ka, ef, Sheet] =
+    pub def getSheetAt(ix: Int32): WorkbookReader[ka, r, ef, Sheet] =
         liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
     
-    pub def readSheetAt(ix: Int32, eval: SheetReader[a, ef, a]): WorkbookReader[ka, ef, a] =
+    pub def readSheetAt(ix: Int32, eval: SheetReader[a, r, ef, a]): WorkbookReader[ka, r, ef, a] =
         getSheetAt(ix)    >>= sheet -> 
         withSheetReader(eval, sheet)
 
     // WorkbookReader
 
-    pub def getNumberOfSheets(): WorkbookReader[ka, ef, Int32] =
+    pub def getNumberOfSheets(): WorkbookReader[ka, r, ef, Int32] =
         liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets(wb)))
 
 
-    pub def getSheetNames(): WorkbookReader[ka, ef, List[String]] =
+    pub def getSheetNames(): WorkbookReader[ka, r, ef, List[String]] =
         getNumberOfSheets()     >>= n    -> {
             let ixs = List.range(0, n);
             GradedTraversable.traverse(getSheetName, ixs)
         }
 
 
-    pub def getSheetName(ix: Int32): WorkbookReader[ka, ef, String] =
+    pub def getSheetName(ix: Int32): WorkbookReader[ka, r, ef, String] =
         liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
 
 

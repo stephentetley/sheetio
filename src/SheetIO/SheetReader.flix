@@ -18,8 +18,8 @@
 mod SheetIO {
 
 
-    pub type alias SheetReader[ka: Type, ef: Eff, a: Type] = 
-        Graded.Evaluator[ka, Interop.Apache.Poi.SS.Usermodel.Sheet, ef, a]
+    pub type alias SheetReader[ka: Type, r: Region, ef: Eff, a: Type] = 
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Sheet, ef, a]
 
 
 }
@@ -30,7 +30,7 @@ mod SheetIO.SheetReader {
     use GradedApplicative.{point}
     use GradedMonad.{>>=}
     use GradedError.{throwError, swapError}
-    use Graded.Evaluator.{liftGetter, liftGetterResult, liftActionResult}
+    use Graded.RgnEnvEvaluator.{liftGetter, liftGetterResult, liftGetterWithRgn, liftActionResult}
 
     use SheetIO.SheetReader
 
@@ -44,57 +44,55 @@ mod SheetIO.SheetReader {
 
 
 
-    pub def runSheetReader(ma: SheetReader[a, ef, a],
+    pub def runSheetReader(ma: SheetReader[a, r, ef, a],
+                            rc: Region[r], 
+                            df: SheetIO.DataFormatter,
                             s: Sheet): Result[String, a] \ ef =
-        Graded.Evaluator.runEvaluator(ma, s)
+        Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, s)
 
 
-    pub def withRowReader(eval: RowReader[a, ef, a], row: Row): SheetReader[ka, ef, a] = region rc {
-        match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
-            case Ok(df) => liftActionResult(_ -> SheetIO.RowReader.runRowReader(eval, df, row))
-            case Err(_) => throwError("withRowReader")
-        }
-    }
+    pub def withRowReader(eval: RowReader[a, r, ef, a], row: Row): SheetReader[ka, r, ef, a] =
+        GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.RowReader.runRowReader(eval, rc, df, row))
 
-    pub def getRowAt(ix: Int32): SheetReader[ka, ef, Row] = 
+
+    pub def getRowAt(ix: Int32): SheetReader[ka, r, ef, Row] = 
         liftGetterResult(sheet -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet)))
     
-    pub def readRowAt(ix: Int32, eval: RowReader[a, ef, a]): SheetReader[ka, ef, a] =
+    pub def readRowAt(ix: Int32, eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef, a] =
         getRowAt(ix)    >>= row -> 
         withRowReader(eval, row)
         
  
 
-    pub def getSheetName(): SheetReader[ka, ef, String] =
+    pub def getSheetName(): SheetReader[ka, r, ef, String] =
         liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(s)))
 
 
-    pub def getFirstRowNum(): SheetReader[ka, ef, Int32] =
+    pub def getFirstRowNum(): SheetReader[ka, r, ef, Int32] =
         liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum(s)) |> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
-    pub def getLastRowNum(): SheetReader[ka, ef, Int32] =
+    pub def getLastRowNum(): SheetReader[ka, r, ef, Int32] =
         liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum(s)) |> Option.toOk("getLastRowNum"))
 
 
-    pub def getPhysicalNumberOfRows(): SheetReader[ka, ef, Int32] =
+    pub def getPhysicalNumberOfRows(): SheetReader[ka, r, ef, Int32] =
         liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows(s)))
 
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
-    pub def rowIterator(rc: Region[r]): SheetReader[ka, ef + r, Iterator[Row, r, r]] = 
-        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
+    pub def rowIterator(): SheetReader[ka, r, ef + r, Iterator[Row, r, r]] = 
+        liftGetterWithRgn((rc, s) -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
 
 
-
-
-
-    // pub def getHeaders(headerIndex: Int32): SheetReader[ka, ef, Vector[String]] =
-    //     getRowAt(headerIndex, SheetIO.RowReader.getRowContents())
-
+    /// TODO - is this cast acceptable?
+    pub def getHeaders(rowIx: Int32): SheetReader[ka, r, ef + r, Vector[String]] =
+        getRowAt(rowIx) >>= row -> 
+        withRowReader(SheetIO.RowReader.getRowContents(), row)
+    
 
 /*
 
