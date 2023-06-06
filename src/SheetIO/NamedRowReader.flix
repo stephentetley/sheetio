@@ -23,8 +23,8 @@ mod SheetIO {
 
 
     /// Includes Map[columName: String => index: Int32]
-    pub type alias NamedRowReader[ka: Type, ef: Eff, a: Type] = 
-        Graded.EnvEvaluator[ka, SheetIO.NamedRowReader.Env, Interop.Apache.Poi.SS.Usermodel.Row, ef, a]
+    pub type alias NamedRowReader[ka: Type, r: Region, ef: Eff, a: Type] = 
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.NamedRowReader.Env, Interop.Apache.Poi.SS.Usermodel.Row, ef, a]
 
 
 }
@@ -36,7 +36,7 @@ mod SheetIO.NamedRowReader {
     use GradedApplicative.{point}
     use GradedMonad.{>>=}
     use GradedError.{throwError, swapError}
-    use Graded.EnvEvaluator.{liftGetter, liftGetterResult, liftGetterResultWithEnv, liftAction}
+    use Graded.RgnEnvEvaluator.{ask, liftGetter, liftGetterResult, liftGetterResultWithEnv, liftActionResult}
     
     use Time.Format.DateTimeFormatter
 
@@ -46,8 +46,7 @@ mod SheetIO.NamedRowReader {
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.Row
 
-    use SheetIO.CellType
-    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
+    use SheetIO.CellReader
 
     pub type alias Env = 
         { columnIndices = Map[String, Int32]
@@ -71,7 +70,8 @@ mod SheetIO.NamedRowReader {
 
 
 
-    pub def runNamedRowEvaluator(ma: NamedRowReader[a, ef, a],
+    pub def runNamedRowEvaluator(ma: NamedRowReader[a, r, ef, a], 
+                                rc: Region[r],
                                 headings: List[String],
                                 df: DataFormatter,
                                 st: Row): Result[String, a] \ ef =
@@ -79,51 +79,37 @@ mod SheetIO.NamedRowReader {
             { columnIndices = makeHeaders(headings)
             , formatter = df
             };
-        Graded.EnvEvaluator.runEnvEvaluator(ma, env, st)
+        Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, env, st)
 
 
-    // // Note - the primitive setX! functions index from 1, we add 1 to calls
-    // // so FactIO's API indexes from 0.
+    pub def withCellReader(eval: CellReader[a, r, ef, a], cell: Cell): NamedRowReader[ka, r, ef, a] =
+        GradedExtras.Utils.liftGetterResultWithAll((rc, env, _) -> SheetIO.CellReader.runCellReader(eval, rc, env.formatter, cell))
+
+
+
     
-    def getIndex(label: String): NamedRowReader[ka, ef, Int32] =
+    def getIndex(label: String): NamedRowReader[ka, r, ef, Int32] =
         liftGetterResultWithEnv((env, _) -> checked_ecast(match Map.get(label, env.columnIndices) {
             case Some(ix) => Ok(ix)
             case None     => Err("getIndex(${label}) no index")
         }))
 
 
-    pub def getCellNamed(label: String): NamedRowReader[ka, ef, Cell] =
+    pub def getCellNamed(label: String): NamedRowReader[ka, r, ef, Cell] =
         getIndex(label) >>= ix -> 
         liftGetterResult(row -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
 
 
-    // def liftCellGetter(label: String, 
-    //                     fn: DataFormatter -> Cell -> a \ ef): NamedRowReader[ka, ef, a] =
-    //     getIndex(label) >>= ix ->
-    //     liftGetterResultWithEnv((env, row) -> 
-    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-    //             case Some(cell) => fn(env.formatter, cell) |> Ok
-    //             case None       => Err("liftCellGetter(${label})")
-    //         }
-            
-    //     )
-
-    // def liftCellGetterResult(label: String, 
-    //                         fn: DataFormatter -> Cell -> Result[err, a] \ ef): NamedRowReader[ka, ef, a] with ToString[err] =
-    //     getIndex(label) >>= ix ->
-    //     liftGetterResultWithEnv((env, row) -> 
-    //         match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
-    //             case Some(cell) => fn(env.formatter, cell) |> Result.mapErr(ToString.toString)
-    //             case None       => Err("liftCellGetterResult(${label})")
-    //         }
-            
-    //     )
+    pub def readCellName(label: String, eval: CellReader[a, r, ef, a]): NamedRowReader[ka, r, ef, a] =
+        getCellNamed(label)    >>= cell -> 
+        withCellReader(eval, cell)
 
 
-    pub def getRowNum(): NamedRowReader[ka, ef, Int32] = 
+
+    pub def getRowNum(): NamedRowReader[ka, r, ef, Int32] = 
         liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
 
-    pub def getSheetName(): NamedRowReader[ka, ef, String] = 
+    pub def getSheetName(): NamedRowReader[ka, r, ef, String] = 
         liftGetter(row -> {
             let sheet = Interop.Apache.Poi.SS.Usermodel.Row.getSheet(row);
             checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
@@ -131,7 +117,7 @@ mod SheetIO.NamedRowReader {
 
 /*
     /// Uses the default DataFormatter
-    pub def getContentNamed(label: String): NamedRowReader[ka, ef, String] =
+    pub def getContentNamed(label: String): NamedRowReader[ka, r, ef, String] =
         liftCellGetter(label, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
 
     /// Uses the default DataFormatter
@@ -294,7 +280,7 @@ mod SheetIO.NamedRowReader {
     
 
 
-    def getIfNotEmpty(label: String, getter: String -> NamedRowReader[r, ka, ef, a]): NamedRowReader[r, ka, ef + r, Option[a]] = 
+    def getIfNotEmpty(label: String, getter: String -> NamedRowReader[r, ka, r, ef, a]): NamedRowReader[r, ka, ef + r, Option[a]] = 
         isNullNamed(label)  >>= nullc  ->
         isBlankNamed(label) >>= blankc ->
         if (nullc or blankc) point(None) else map(Some, getter(label))

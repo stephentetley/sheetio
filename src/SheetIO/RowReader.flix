@@ -39,8 +39,6 @@ mod SheetIO.RowReader {
     
     use SheetIO.RowReader
     use SheetIO.CellReader
-    use SheetIO.CellType
-    use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
 
     
 
@@ -52,15 +50,14 @@ mod SheetIO.RowReader {
         Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, env, st)
         
 
-    pub def withCellReader(eval: CellReader[a, ef, a], cell: Cell): RowReader[ka, r, ef, a] =
-        ask()       >>= df -> 
-        liftActionResult(_ -> SheetIO.CellReader.runCellReader(eval, df, cell))
+    pub def withCellReader(eval: CellReader[a, r, ef, a], cell: Cell): RowReader[ka, r, ef, a] =
+        GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.CellReader.runCellReader(eval, rc, df, cell))
 
 
     pub def getCellAt(ix: Int32): RowReader[ka, r, ef, Cell] = 
         liftGetterResult(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row)) |> Option.toOk("getCellAt(${ix})"))
 
-    pub def readCellAt(ix: Int32, eval: CellReader[a, ef, a]): RowReader[ka, r, ef, a] =
+    pub def readCellAt(ix: Int32, eval: CellReader[a, r, ef, a]): RowReader[ka, r, ef, a] =
         getCellAt(ix)    >>= cell -> 
         withCellReader(eval, cell)
 
@@ -109,20 +106,8 @@ mod SheetIO.RowReader {
         getRowContentsWith(SheetIO.CellReader.getContent())
 
 
-    // /// Ideally we would not need to expose `rc` but due to types within the Iterator
-    // /// it would otherwise leak...
-    // pub def getRowContentsWith(rc: Region[r], eval: CellReader[a, ef, a]): RowReader[ka, r, ef + r, Vector[a]] =
-    //     let step = (acc, cell) -> { 
-    //         withCellReader(eval, cell) >>= a ->
-    //         point(Chain.snoc(acc, a))
-    //     };
-    //     cellIterator(rc) >>= iter -> 
-    //     GradedIterator.foldLeftM(step, Chain.empty(), iter) >>= chain -> 
-    //     point(List.toVector(Chain.toList(chain)))
-
-
-    /// Experiment - lift into a monad with region capabilities...
-    pub def getRowContentsWith(eval: CellReader[a, ef, a]): RowReader[ka, r, ef + r, Vector[a]] =
+    
+    pub def getRowContentsWith(eval: CellReader[a, r, ef, a]): RowReader[ka, r, ef + r, Vector[a]] =
         let step = (acc, cell) -> { 
             withCellReader(eval, cell) >>= a ->
             point(Chain.snoc(acc, a))
@@ -132,14 +117,6 @@ mod SheetIO.RowReader {
         point(List.toVector(Chain.toList(chain)))
 
 
-
-    // def getIteratorCellContents(eval: CellReader[a, ef, a], iter: Iterator[Cell, r, r]): RowReader[ka, r, ef + r, Vector[a]] \ r =
-    //     let step = (acc, cell) -> { 
-    //         withCellReader(eval, cell) >>= a ->
-    //         point(Chain.snoc(acc, a))
-    //     }; 
-    //     GradedExtras.Iterator.foldLeftM(step, Chain.empty(), iter) >>= chain -> 
-    //     point(List.toVector(Chain.toList(chain)))
 
 /*
 
