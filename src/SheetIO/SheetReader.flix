@@ -94,31 +94,31 @@ mod SheetIO.SheetReader {
         withRowReader(SheetIO.RowReader.getRowContents(), row)
     
 
-/*
+
 
     /// This might be expressive enough to write all `RowReader` traversals with...
-    def foldRowsTraversal(range: {start = Int32, end = Int32}, 
+    def foldRowsTraversal(start: {start = Int32},
+                            end: {end = Int32}, 
                             skipErrors: Bool,
-                            f: (b, a, Int32) -> b \ ef, 
+                            f: (b, a, Int32) -> b \ ef1, 
                             s: b, 
-                            eval: RowReader[r, a, a]): SheetReader[r, ka, b] \ { r, ef } = 
-        let* rowIter = getRowIterator();
-        def loop(s1) = match Iterator.next(rowIter) {
+                            eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + ef1 + r, b] = 
+        rowIterator() >>= iter -> 
+        def loop(s1) = match Iterator.next(iter) {
             case None      => point(s1)
             case Some(row) => {
-                let r1 = Scoped.regionOf(row);
                 let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
-                if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO.RowReader.runRowReader(r1, eval, row) {
-                        case Err(_)  => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
-                        case Ok(ans) => loop(f(s1, ans, rownum))
+                if (rownum >= start.start and rownum < end.end) {
+                    GradedError.reifyError(withRowReader(eval, row)) >>= ans ->
+                    match ans {
+                        case Err(_) => if (not skipErrors) throwError("foldRowsTraversal") else loop(s1)
+                        case Ok(a1) => loop(f(s1, a1, rownum))
                     }
-                else 
-                    loop(s1)
+                } else loop(s1)
             }
         };
         loop(s)
-
+/*
 
     /// This might be expressive enough to write all `RowReader` traversals with...
     def foldNamedRowsTraversal(range: {start = Int32, end = Int32}, 
@@ -143,11 +143,14 @@ mod SheetIO.SheetReader {
             }
         };
         loop(s)
+*/
 
-    pub def allRows(eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        let* end = getPhysicalNumberOfRows();
-        foldRowsTraversal({start = 0, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+    pub def allRows(eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        let end = Int32.maxValue(); 
+        foldRowsTraversal(start = 0, end = end, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
 
+/*
 
     /// rows where `eval` fails are discounted...
     pub def someRows(eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
