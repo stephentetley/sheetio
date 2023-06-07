@@ -54,6 +54,9 @@ mod SheetIO.SheetReader {
     pub def withRowReader(eval: RowReader[a, r, ef, a], row: Row): SheetReader[ka, r, ef, a] =
         GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.RowReader.runRowReader(eval, rc, df, row))
 
+        
+    pub def withNamedRowReader(eval: NamedRowReader[a, r, ef, a], headers: Vector[String], row: Row): SheetReader[ka, r, ef, a] =
+        GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.NamedRowReader.runNamedRowReader(eval, rc, headers, df, row))
 
     pub def getRowAt(ix: Int32): SheetReader[ka, r, ef, Row] = 
         liftGetterResult(sheet -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet)))
@@ -118,36 +121,35 @@ mod SheetIO.SheetReader {
             }
         };
         loop(s)
-/*
+
 
     /// This might be expressive enough to write all `RowReader` traversals with...
-    def foldNamedRowsTraversal(range: {start = Int32, end = Int32}, 
+    def foldNamedRowsTraversal(start: {start = Int32}, 
+                                end: {end = Int32}, 
                                 skipErrors: Bool,
-                                headers: List[String],
-                                f: (b, a, Int32) -> b \ ef, 
+                                headers: Vector[String],
+                                f: (b, a, Int32) -> b \ ef1, 
                                 s: b, 
-                                eval: NamedRowReader[r, a, a]): SheetReader[r, ka, b] \ { r, ef } =
-        let* rowIter        = getRowIterator();
-        def loop(s1) = match Iterator.next(rowIter) {
-            case None     => point(s1)
+                                eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + ef1 + r, b] =
+       rowIterator() >>= iter -> 
+        def loop(s1) = match Iterator.next(iter) {
+            case None      => point(s1)
             case Some(row) => {
-                let r1     = Scoped.regionOf(row);
                 let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
-                if (rownum >= range.start and rownum < range.end) 
-                    match SheetIO.NamedRowReader.runNamedRowReader(r1, eval, headers, row) {
-                        case Err(_)  => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
-                        case Ok(ans) => loop(f(s1, ans, rownum))
+                if (rownum >= start.start and rownum < end.end) {
+                    GradedError.reifyError(withNamedRowReader(eval, headers, row)) >>= ans ->
+                    match ans {
+                        case Err(_) => if (not skipErrors) throwError("foldNamedRowsTraversal") else loop(s1)
+                        case Ok(a1) => loop(f(s1, a1, rownum))
                     }
-                else 
-                    loop(s1)
+                } else loop(s1)
             }
         };
         loop(s)
-*/
+
 
     pub def allRows(eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
-        let end = Int32.maxValue(); 
-        foldRowsTraversal(start = 0, end = end, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+        foldRowsTraversal(start = 0, end = Int32.maxValue(), false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
             |> GradedFunctor.map(k -> k(Nil))
 
 /*
@@ -166,14 +168,15 @@ mod SheetIO.SheetReader {
 
     pub def rowsInRange(range: {start = Int32, end = Int32}, eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
         foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
-
+*/
 
     /// Headers at 0, start at 1
-    pub def allNamedRows(eval: NamedRowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        let* headers = getHeaders(0);
-        let* end = getPhysicalNumberOfRows();
-        foldNamedRowsTraversal({start = 1, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+    pub def allNamedRows(eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        getHeaders(0) >>= headers ->
+        foldNamedRowsTraversal(start = 1, end = Int32.maxValue(), false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
 
+/*
     pub def allNamedRowsFrom(pos: {headerIndex = Int32, start = Int32}, eval: NamedRowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
         let* headers = getHeaders(pos.headerIndex);
         let* end = getPhysicalNumberOfRows();

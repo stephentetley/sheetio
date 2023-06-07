@@ -45,9 +45,9 @@ mod SheetIO.RowReader {
 
     pub def runRowReader(ma: RowReader[a, r, ef, a], 
                             rc: Region[r],
-                            env: DataFormatter,
+                            df: DataFormatter,
                             st: Row): Result[String, a] \ ef =
-        Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, env, st)
+        Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, st)
         
 
     pub def withCellReader(eval: CellReader[a, r, ef, a], cell: Cell): RowReader[ka, r, ef, a] =

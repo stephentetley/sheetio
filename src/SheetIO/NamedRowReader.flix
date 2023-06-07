@@ -56,7 +56,7 @@ mod SheetIO.NamedRowReader {
 
     /// Duplicate column names are allowed - subsequent key duplicates are named with a suffixed index:
     /// "name", "name.1", "name.2", , "name.3" ...
-    pub def makeHeaders(names: List[String]): Map[String, Int32] =
+    pub def makeHeaders(names: Vector[String]): Map[String, Int32] =
         let step = (acc, key) -> { 
             let (col, counts, indices) = acc; 
             match Map.get(key, counts) {
@@ -64,15 +64,15 @@ mod SheetIO.NamedRowReader {
                 case Some(i) => (col + 1, Map.insert(key, i + 1, counts), Map.insert("${key}.${i}", col, indices))
             }
         };        
-        let (_, _, ans) = List.foldLeft(step, (0, Map.empty(), Map.empty()), names);
+        let (_, _, ans) = Vector.foldLeft(step, (0, Map.empty(), Map.empty()), names);
         ans
 
 
 
 
-    pub def runNamedRowEvaluator(ma: NamedRowReader[a, r, ef, a], 
+    pub def runNamedRowReader(ma: NamedRowReader[a, r, ef, a], 
                                 rc: Region[r],
-                                headings: List[String],
+                                headings: Vector[String],
                                 df: DataFormatter,
                                 st: Row): Result[String, a] \ ef =
         let env = 
