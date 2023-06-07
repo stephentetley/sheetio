@@ -152,23 +152,21 @@ mod SheetIO.SheetReader {
         foldRowsTraversal(start = 0, end = Int32.maxValue(), false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
             |> GradedFunctor.map(k -> k(Nil))
 
-/*
-
     /// rows where `eval` fails are discounted...
-    pub def someRows(eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        let* end = getPhysicalNumberOfRows();
-        foldRowsTraversal({start = 0, end = end}, true, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+    pub def someRows(eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        foldRowsTraversal(start = 0, end = Int32.maxValue(), true, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
 
     /// WARNING - start will be "miscalculated" if there are blank rows between 0 and start.
     /// We need a more robust implementation than this...
 
-    pub def allRowsFrom(start: Int32, eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        let* end = getPhysicalNumberOfRows();
-        foldRowsTraversal({start = start, end = end}, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
+    pub def allRowsFrom(start: Int32, eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        foldRowsTraversal(start = start, end = Int32.maxValue(), false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
 
-    pub def rowsInRange(range: {start = Int32, end = Int32}, eval: RowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        foldRowsTraversal(range, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
-*/
+    pub def rowsInRange(start: {start = Int32}, end: {end = Int32}, eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        foldRowsTraversal(start, end, false, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
 
     /// Headers at 0, start at 1
     pub def allNamedRows(eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
@@ -176,86 +174,34 @@ mod SheetIO.SheetReader {
         foldNamedRowsTraversal(start = 1, end = Int32.maxValue(), false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
             |> GradedFunctor.map(k -> k(Nil))
 
+    /// rows where `eval` fails are discounted...
+    pub def someNamedRows(eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        getHeaders(0) >>= headers ->
+        foldNamedRowsTraversal(start = 1, end = Int32.maxValue(), true, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
+
+
+    pub def allNamedRowsFrom(headerIndex: {headerIndex = Int32}, 
+                                start: {start = Int32}, 
+                                eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        getHeaders(headerIndex.headerIndex) >>= headers ->
+        foldNamedRowsTraversal(start, end = Int32.maxValue(), false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
+
+
+    pub def namedRowsInRange(headerIndex: {headerIndex = Int32}, 
+                                start: {start = Int32}, 
+                                end: {end = Int32}, 
+                                eval: NamedRowReader[a, r, ef, a]): SheetReader[ka, r, ef + r, List[a]] =
+        getHeaders(headerIndex.headerIndex) >>= headers ->
+        foldNamedRowsTraversal(start, end, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) 
+            |> GradedFunctor.map(k -> k(Nil))
+
+
 /*
-    pub def allNamedRowsFrom(pos: {headerIndex = Int32, start = Int32}, eval: NamedRowReader[r, a, a]): SheetReader[r, ka, List[a]] \ { r } =
-        let* headers = getHeaders(pos.headerIndex);
-        let* end = getPhysicalNumberOfRows();
-        foldNamedRowsTraversal({start = pos.start, end = end}, false, headers, (k, a, _) -> ks -> k(a :: ks), ks -> ks, eval) |> map(k -> k(Nil))
-
-
-    /// Row 0 is read for the headers, some subsequent rows are *data*.
-    // pub def someRows(eval: RowReader[r, Option[a]], sheet: Sheet): SheetReader[r, ka, List[a]] = 
-    //     let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
-    //             case None => fac()
-    //             case Some(x1) => x1 :: fac()
-    //         }, Nil, xs);
-    //     map(postprocess, allRows(eval, sheet))
-
-
-    
-
-    // pub def rowEval(fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-    //                 eval: RowReader[r, a], 
-    //                 x: Row): SheetReader[r, ka, a] =
-    //     let RowReader(f) = eval;
-    //     let Row(x1) = x;
-    //     liftActionResult(_ -> f(fmt, x1) |> Result.mapErr(SheetIO.EvalError.toString))
 
 
 
-    // pub def namedRowsInRange(ixs: Map[String, Int32], b: Int32, e: Int32, eval: NamedRowReader[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] = 
-    //     let NamedRowReader(f) = eval;
-    //     let checker         = row -> {
-    //         let ix = SheetIO.Internal.Row.getRowNum(row);
-    //         if (ix >= b and ix < e) Some(row) else None
-    //     };
-    //     let* fmt            = liftAction(_ -> SheetIO.Internal.DataFormatter.new());
-    //     let* strm           = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox.Deprecated.Cursor.filterMap(checker));
-    //     let* xs             = liftActionResult(_ -> FlixSandbox.Deprecated.Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO.EvalError.toString), strm) |> FlixSandbox.Deprecated.Cursor.toList!);
-    //     point(xs)
-
-    // pub def nameRowEval(indices: Map[String, Int32], 
-    //                     fmt: ##org.apache.poi.ss.usermodel.DataFormatter, 
-    //                     eval: NamedRowReader[r, a], x: Row): SheetReader[r, ka, a] =
-    //     let NamedRowReader(f) = eval;
-    //     let Row(x1) = x;
-    //     liftActionResult(_ -> f(indices, fmt, x1) |> Result.mapErr(SheetIO.EvalError.toString))
-
-
-
-    /// Reader headers from row at `headerIndex` then read data rows from `start`.
-    /// Note - might be wise to change back to flix-sandbox Cursor while stdlib Interator
-    /// is in development.
-    /// `headerIndex` and `start` are zero indexed (as per POI rather than Excel).
-    ///
-    // pub def namedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, eval: NamedRowReader[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] =   
-    //     let NamedRowReader(f)    = eval;
-    //     let checker         = row -> {
-    //         let ix = SheetIO.Internal.Row.getRowNum(row);
-    //         if (ix >= r.start) Some(row) else None
-    //     };
-    //     let* fmt        = liftAction(_ -> SheetIO.Internal.DataFormatter.new());
-    //     let* row0       = getRowAt(sheet, r.headerIndex);
-    //     let* ixs        = region r1 {
-    //         let* hdrs = rowEval(fmt, SheetIO.RowReader.getRowContents(r1), row0);
-    //         point(SheetIO.NamedRowReader.makeHeaders(hdrs))
-    //     };
-    //     let* strm       = liftAction(_ -> getRowCursor(sheet) |> FlixSandbox.Deprecated.Cursor.filterMap(checker));
-    //     let* xs         = liftActionResult(_ -> FlixSandbox.Deprecated.Cursor.mapResult(f(ixs, fmt) >> Result.mapErr(SheetIO.EvalError.toString), strm) |> FlixSandbox.Deprecated.Cursor.toList!);
-    //     point(xs)
-
-
-    /// Row 0 is read for the headers, all subsequent rows are *data*.
-    pub def allNamedRows(eval: NamedRowReader[r, a], sheet: Sheet): SheetReader[r, ka, List[a]] = 
-        namedRowsFrom({headerIndex = 0, start = 1}, eval, sheet)
-
-    /// Row 0 is read for the headers, some subsequent rows are *data*.
-    pub def someNamedRows(eval: NamedRowReader[r, Option[a]], sheet: Sheet): SheetReader[r, ka, List[a]] = 
-        let postprocess = xs -> List.foldRightWithCont((x, fac) -> match x {
-                case None => fac()
-                case Some(x1) => x1 :: fac()
-            }, Nil, xs);
-        map(postprocess, allNamedRows(eval, sheet))
 
 
     pub def foldNamedRowsFrom(r: {headerIndex :: Int32, start :: Int32}, 
