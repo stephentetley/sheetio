@@ -32,12 +32,10 @@ mod SheetIO.Reader {
         }
 
 
-    // pub def allRows(eval: RowReader[a, ef, a], src: XlsxSource): Result[List[a], String] \ {ef, IO} =
-    //     SheetIO.WorkbookReader.runXlsx(allRowsAction(eval, src.sheet), src.path)
+    pub def allRows(rc: Region[r], eval: RowReader[a, r, ef, a], src: XlsxSource): Result[String, List[a]] \ {ef, IO} =
+        let action = () -> SheetIO.WorkbookReader.readSheetNamed(src.sheet, SheetIO.SheetReader.allRows(eval));
+        SheetIO.WorkbookReader.runXlsx(rc, action(), src.path)
 
-    // def allRowsAction(eval: RowReader[ka, ef, a], sheetName: String): WorkbookReader[ka, ef, List[a]] =
-    //     SheetIO.WorkbookReader.getSheetNamed(sheetName) >>= sheet -> 
-    //     SheetIO.SheetReader.allRows(eval, s1)
 
 /*
     // pub def allRowsOfSheets(eval: RowReader[r, a], sheets: List[String], path: FlixSandbox.System.Path): Result[List[a], String] \ IO =

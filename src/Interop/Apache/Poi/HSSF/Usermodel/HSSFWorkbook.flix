@@ -17,23 +17,23 @@
 
 mod Interop.Apache.Poi.HSSF.Usermodel {
 
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
 
-    // instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[HSSFWorkbook] {
-    //     pub def toWorkbook(d: HSSFWorkbook[r]): Workbook[r] = 
-    //         let HSSFWorkbook(d1) = d;
-    //         Workbook(checked_cast(d1))
+    instance Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook[HSSFWorkbook] {
+        pub def toMutWorkbook(d: HSSFWorkbook[r]): MutWorkbook[r] = 
+            let HSSFWorkbook(d1) = d;
+            MutWorkbook(checked_cast(d1))
 
-    //     pub def fromWorkbook(d: Workbook[r]): HSSFWorkbook[r] = 
-    //         let Workbook(d1) = d;
-    //         HSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook))
-    // }
+        pub def fromMutWorkbook(d: MutWorkbook[r]): HSSFWorkbook[r] = 
+            let MutWorkbook(d1) = d;
+            HSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook))
+    }
 
 }
 

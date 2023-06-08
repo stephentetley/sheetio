@@ -51,12 +51,11 @@ mod Interop.Apache.Poi.OOXML.POIXMLDocument {
     ///
     /// Write workbook.
     ///
-    pub def write![r: Region, outs: Region -> Type, wb: Region -> Type]
-                (out: outs[r], wb: wb[r]): Result[String, Unit] \ {IO, r} with SubPOIXMLDocument[wb], SubOutputStream[outs] = 
+    pub def write!(out: OutputStream[r], wb: POIXMLDocument[r]): Result[String, Unit] \ {IO, r} = 
         Result.tryCatch(_ -> {
             import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};
-            let wb1  = Interop.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb) |> getHH;
-            let out1 = Interop.IO.SubOutputStream.toOutputStream(out) |> Interop.IO.OutputStream.getHH;
+            let POIXMLDocument(wb1) = wb;
+            let out1 = Interop.IO.OutputStream.getHH(out);
             write(wb1, out1)
         })
 

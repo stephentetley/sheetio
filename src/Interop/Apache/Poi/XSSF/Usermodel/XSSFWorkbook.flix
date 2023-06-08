@@ -18,8 +18,8 @@ mod Interop.Apache.Poi.XSSF.Usermodel {
 
     use Interop.Apache.Poi.OOXML.POIXMLDocument
     use Interop.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
     use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
     use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
 
@@ -35,15 +35,15 @@ mod Interop.Apache.Poi.XSSF.Usermodel {
             XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
-    // instance Interop.Apache.Poi.SS.Usermodel.SubWorkbook[XSSFWorkbook] {
-    //     pub def toWorkbook(d: XSSFWorkbook[r]): Workbook[r] = 
-    //         let XSSFWorkbook(d1) = d;
-    //         Workbook(checked_cast(d1))
+    instance Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook[XSSFWorkbook] {
+        pub def toMutWorkbook(d: XSSFWorkbook[r]): MutWorkbook[r] = 
+            let XSSFWorkbook(d1) = d;
+            MutWorkbook(checked_cast(d1))
 
-    //     pub def fromWorkbook(d: Workbook[r]): XSSFWorkbook[r] = 
-    //         let Workbook(d1) = d;
-    //         XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
-    // }
+        pub def fromMutWorkbook(d: MutWorkbook[r]): XSSFWorkbook[r] = 
+            let MutWorkbook(d1) = d;
+            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
+    }
 
 }
 
@@ -88,10 +88,10 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     ///
     /// Open for reading.
     ///
-    pub def newWithInputStream[ins: Region -> Type, r: Region](ins: ins[r]): Result[String, XSSFWorkbook[r]] \ IO with SubInputStream[ins] = 
+    pub def newWithInputStream(ins: InputStream[r]): Result[String, XSSFWorkbook[r]] \ IO  = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
-            let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;
+            let ins1 = Interop.IO.InputStream.getHH(ins);
             newXSSFWorkbook(ins1) |> XSSFWorkbook
         })
 

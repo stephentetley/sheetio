@@ -21,6 +21,11 @@ mod Interop.Apache.Poi.SS.Usermodel {
     pub enum MutWorkbook[_: Region](##org.apache.poi.ss.usermodel.Workbook)
 
 
+    pub class SubMutWorkbook[t: Region -> Type] {
+        pub def toMutWorkbook(o: t[r]): MutWorkbook[r]
+        pub def fromMutWorkbook(w: MutWorkbook[r]): t[r]
+    }
+
 }
 
 
