@@ -41,7 +41,8 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
 
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
-    use Interop.IO.SubInputStream
+    use Interop.IO.OutputStream
+    use Interop.IO.InputStream
 
 
     pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
@@ -62,31 +63,24 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     ///
     /// Open for reading.
     ///
-    pub def newWithInputStream[ins: Region -> Type, r: Region](_: Region[r], ins: ins[r]): Result[String, HSSFWorkbook[r]] \ IO with SubInputStream[ins] = 
+    pub def newWithInputStream(_: Region[r], ins: InputStream[r]): Result[String, HSSFWorkbook[r]] \ IO  = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream): ##org.apache.poi.hssf.usermodel.HSSFWorkbook \ IO as newHSSFWorkbook;
-            let ins1 = Interop.IO.SubInputStream.toInputStream(ins) |> Interop.IO.InputStream.getHH;
+            let ins1 = Interop.IO.InputStream.getHH(ins);
             newHSSFWorkbook(ins1) |> HSSFWorkbook
         })
-/*
+
     ///
     /// Write workbook.
     ///
-    pub def writeHSSFWorkbook(wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook, 
-                              path: String): Result[Unit, String] \ IO = 
-        import new java.io.FileOutputStream(String): ##java.io.FileOutputStream \ IO as newFileOutputStream;
-        import java.io.FileOutputStream.close(): Unit \ IO;
-        import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ IO; 
-        try {
-            let fostream = newFileOutputStream(path);
-            let fostream1 = fostream as ##java.io.OutputStream;
-            write(wb, fostream1);
-            close(fostream);
-            Ok()
-        } catch {
-            case _: ##java.lang.Exception => Err("writeHSSFWorkbook")
-        }
-*/
+    pub def write!(out: OutputStream[r], wb: HSSFWorkbook[r]): Result[String, Unit] \ IO = 
+        Result.tryCatch(_ -> {
+            import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ IO; 
+            let HSSFWorkbook(wb1) = wb;
+            let out1 = Interop.IO.OutputStream.getHH(out);
+            write(wb1, out1)
+        })
+
 
     pub def close!(wb: HSSFWorkbook[r]): Result[String, Unit] \ r = 
         Result.tryCatch(_ -> {

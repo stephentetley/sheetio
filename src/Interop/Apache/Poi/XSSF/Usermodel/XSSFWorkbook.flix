@@ -77,9 +77,9 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     ///
     /// Open for reading.
     ///
-    pub def newWithFile(file: File[r]): Result[String, XSSFWorkbook[r]] \ IO = 
+    pub def newWithFile(_: Region[r], file: File[r1]): Result[String, XSSFWorkbook[r]] \ {IO, r, r1} = 
         Result.tryCatch(_ -> {
-            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.File): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
+            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.File): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ {IO, r, r1} as newXSSFWorkbook;
             let file1 = Interop.IO.File.getHH(file);
             newXSSFWorkbook(file1) |> XSSFWorkbook
         })
@@ -88,9 +88,9 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     ///
     /// Open for reading.
     ///
-    pub def newWithInputStream(ins: InputStream[r]): Result[String, XSSFWorkbook[r]] \ IO  = 
+    pub def newWithInputStream(_: Region[r], ins: InputStream[r1]): Result[String, XSSFWorkbook[r]] \ {IO, r, r1}  = 
         Result.tryCatch(_ -> {
-            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ IO as newXSSFWorkbook;
+            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ {IO, r, r1} as newXSSFWorkbook;
             let ins1 = Interop.IO.InputStream.getHH(ins);
             newXSSFWorkbook(ins1) |> XSSFWorkbook
         })

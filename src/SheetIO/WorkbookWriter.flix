@@ -42,12 +42,12 @@ mod SheetIO.WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+    pub def runXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
         runXssf(rc, ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+    pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
         let outpath = ToString.toString(path);
         forM (outf      <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
                 wb      <- Ok(Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
@@ -60,31 +60,31 @@ mod SheetIO.WorkbookWriter {
             yield ans
 
 
-/*
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
-        runAppendXssf(r, ma, path)
+    pub def runAppendXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+        runAppendXssf(rc, ma, path)
     
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "newWithFile" not "new"...
-    pub def runAppendXssf(r: Region[r], ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
-        use Result.{flatMap};
-        let path1   = ToString.toString(path);
-        let file    = Interop.IO.File.newFile(r, path1);
-        let* wb     = Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.newWithFile(file);
-        let wb1     = Interop.Apache.Poi.SS.Usermodel.SubWorkbook.toWorkbook(wb);
-        let* ans    = runWorkbookWriter!(r, ma, wb1);
-        let* outs   = Interop.IO.FileOutputStream.newWithPath(path1);
-        let* _      = Interop.Apache.Poi.OOXML.POIXMLDocument.write!(outs, wb);
-        let* _      = Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb);
-        Ok(ans)
+    pub def runAppendXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+        let outpath = ToString.toString(path);
+        forM (file      <- Ok(Interop.IO.File.new(rc, outpath));
+                wb      <- Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.newWithFile(rc, file);
+                wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
+                ans     <- runWorkbookWriter(ma, wb1);
+                fos     <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
+                outs    <- Ok(Interop.IO.SubOutputStream.toOutputStream(fos));
+                poixml  <- Ok(Interop.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb));
+                _       <- Interop.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml);
+                _       <- Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb))
+            yield ans
 
 
     /// TODO - is call to `writeXSSFWorkbook` the right thing to do?
     // pub def runTemplateXssf(ma: WorkbookWriter[r, a, a], 
     //                         template: Path, 
-    //                         outPath: Path): Result[a, String] \ IO =
+    //                         outPath: Path): Result[String, a] \ IO =
     //     use SheetIO.Internal.Prim.{openXSSFWorkbook, writeXSSFWorkbook, closeXSSFWorkbook};
     //     use Result.{flatMap};
     //     let* _      = File.copy(src = ToString.toString(template), ToString.toString(outPath));
@@ -97,19 +97,20 @@ mod SheetIO.WorkbookWriter {
 
 
     /// Excel 97 binary (.xls) format.
-    // pub def runHssf(ma: WorkbookWriter[r, a, a], path: Path): Result[a, String] \ IO = 
-    //     use SheetIO.Internal.Prim.{newHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};
-    //     use Result.{flatMap};
-    //     let path1   = ToString.toString(path);
-    //     let* wb     = newHSSFWorkbook() as ##org.apache.poi.ss.usermodel.Workbook;
-    //     let* ans    = runWorkbookWriter!(() as Region[r], ma, wb);
-    //     let* _      = writeHSSFWorkbook(wb, path1);
-    //     let* _      = closeHSSFWorkbook(wb);
-    //     Ok(ans)
-
+    pub def runHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+        let outpath = ToString.toString(path);
+        forM (outf      <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
+                wb      <- Ok(Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
+                wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
+                ans     <- runWorkbookWriter(ma, wb1);
+                outs    <- Ok(Interop.IO.SubOutputStream.toOutputStream(outf));
+                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb);
+                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb))
+            yield ans
+/*
     // pub def runTemplateHssf(ma: WorkbookWriter[r, a, a], 
     //                         template: Path, 
-    //                         outPath: Path): Result[a, String] \ IO =
+    //                         outPath: Path): Result[String, a] \ IO =
     //     use Result.{flatMap};
     //     use SheetIO.Internal.Prim.{openHSSFWorkbook, writeHSSFWorkbook, closeHSSFWorkbook};        
     //     let* _          = File.copy(src = ToString.toString(template), ToString.toString(outPath));
