@@ -75,7 +75,6 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
 
 
     ///
-    /// Open for reading.
     ///
     pub def newWithFile(_: Region[r], file: File[r1]): Result[String, XSSFWorkbook[r]] \ {IO, r, r1} = 
         Result.tryCatch(_ -> {
@@ -93,6 +92,15 @@ mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
             import new org.apache.poi.xssf.usermodel.XSSFWorkbook(##java.io.InputStream): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ {IO, r, r1} as newXSSFWorkbook;
             let ins1 = Interop.IO.InputStream.getHH(ins);
             newXSSFWorkbook(ins1) |> XSSFWorkbook
+        })
+
+
+    ///
+    ///
+    pub def newWithPathString(_: Region[r], path: String): Result[String, XSSFWorkbook[r]] \ {IO, r} = 
+        Result.tryCatch(_ -> {
+            import new org.apache.poi.xssf.usermodel.XSSFWorkbook(String): ##org.apache.poi.xssf.usermodel.XSSFWorkbook \ {IO, r} as new1;
+            new1(path) |> XSSFWorkbook
         })
 
 

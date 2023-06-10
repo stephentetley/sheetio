@@ -49,7 +49,7 @@ mod Interop.Apache.Poi.OOXML.POIXMLDocument {
 
 
     ///
-    /// Write workbook.
+    /// Write document.
     ///
     pub def write!(out: OutputStream[r], wb: POIXMLDocument[r]): Result[String, Unit] \ {IO, r} = 
         Result.tryCatch(_ -> {
