@@ -31,6 +31,8 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
 
+    use Interop.IO.OutputStream
+
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
     use Interop.Apache.Poi.SS.Usermodel.CellStyle
@@ -48,7 +50,15 @@ mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
    
     pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): MutWorkbook[r] =
         MutWorkbook(s)
-    
+        
+    pub def write!(out: OutputStream[r1], wb: MutWorkbook[r]): Result[String, Unit] \ r =         
+        Result.tryCatch(_ -> {
+            import org.apache.poi.ss.usermodel.Workbook.write(##java.io.OutputStream): Unit \ r;
+            let MutWorkbook(wb1) = wb;
+            let out1 = Interop.IO.OutputStream.getHH(out);
+            write(wb1, out1)
+        })
+
     pub def close!(wb: MutWorkbook[r]): Result[String, Unit] \ r =         
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.close(): Unit \ r;

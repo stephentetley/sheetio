@@ -14,18 +14,32 @@
  * limitations under the License.
  */
 
+
 mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
 
+    use Interop.IO.InputStream
+
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
     use Interop.Apache.Poi.SS.Usermodel.Workbook
     use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
-    use Basis.IO.InputStream
     
-    pub def createWithInputStream!(ins: InputStream[r]): Result[String, Workbook] \ r =
+
+        
+    /// This automatically identifies HSSF or XSSF from the input.
+    pub def createWithInputStream(ins: InputStream[r]): Result[String, Workbook] \ r =
         Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ r;
             let ins1 = Interop.IO.InputStream.getHH(ins);
             create(ins1) |> Workbook
         })
 
+    /// This automatically identifies HSSF or XSSF from the input.
+    pub def createMutWithInputStream(_: Region[r], ins: InputStream[r1]): Result[String, MutWorkbook[r]] \ {r, r1} =
+        Result.tryCatch(_ -> {
+            import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ {r, r1};
+            let ins1 = Interop.IO.InputStream.getHH(ins);
+            create(ins1) |> MutWorkbook
+        })
 
 }

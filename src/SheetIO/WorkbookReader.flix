@@ -58,8 +58,8 @@ mod SheetIO.WorkbookReader {
 
     def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} =
         forM (file  <- Basis.IO.FileInputStream.newWithPath(rc, path);
-                ins <- Basis.IO.FileInputStream.toInputStream(file) |> Ok;
-                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream!(ins);
+                ins <- Ok(Basis.IO.FileInputStream.toInputStream(file));
+                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins);
                 ans <- runWorkbookReader(ma, rc, wb);
                 _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb))
             yield ans

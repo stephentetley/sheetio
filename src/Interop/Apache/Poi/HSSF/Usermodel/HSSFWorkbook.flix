@@ -73,9 +73,9 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     ///
     /// Write workbook.
     ///
-    pub def write!(out: OutputStream[r], wb: HSSFWorkbook[r]): Result[String, Unit] \ IO = 
+    pub def write!(out: OutputStream[r1], wb: HSSFWorkbook[r]): Result[String, Unit] \ {IO, r, r1} = 
         Result.tryCatch(_ -> {
-            import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ IO; 
+            import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ {IO, r, r1}; 
             let HSSFWorkbook(wb1) = wb;
             let out1 = Interop.IO.OutputStream.getHH(out);
             write(wb1, out1)
