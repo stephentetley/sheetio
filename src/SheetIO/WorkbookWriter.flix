@@ -131,8 +131,8 @@ mod SheetIO.WorkbookWriter {
         Graded.MutStateError.runMutStateError(ma, st)
 
 
-    // pub def withSheetWriter(write: SheetWriter[a, r, ef, a], sheet: MutSheet[r]): WorkbookWriter[ka, r, ef, a] =
-    //     Graded.MutStateError.liftGetterResult(_ -> SheetIO.SheetWriter.runSheetWriter(write, rc, df, sheet))
+    pub def withSheetWriter(write: SheetWriter[a, r, ef, a], sheet: MutSheet[r]): WorkbookWriter[ka, r, ef, a] =
+        Graded.MutStateError.liftGetterResult(_ -> SheetIO.SheetWriter.runSheetWriter(write, None, sheet))
 
 
     pub def createSheet!(name: String): WorkbookWriter[ka, r, r, MutSheet[r]] =
