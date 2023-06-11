@@ -51,18 +51,6 @@ mod SheetIO.RowWriter {
     pub def withCellWriter(write: CellWriter[a, r, ef, a], cell: MutCell[r]): RowWriter[ka, r, ef, a] =
         liftSetterResult!(_ -> SheetIO.CellWriter.runCellWriter(write, cell))
 
-/*
-
-    // pub def liftResult1(makeErrMsg: e -> String, x: Result[a, e]): RowWriter[r, a] = match x { 
-    //     case Ok(x1) => point(x1)
-    //     case Err(e) => throwError(makeErrMsg(e))
-    // }
-
-    // pub def liftValidation(makeErrMsg: List[e] -> String, x: Validation[a, e]): RowWriter[r, a] = match x { 
-    //     case Success(x1) => point(x1)
-    //     case Failure(es) => throwError(makeErrMsg(Nec.toList(es)))
-    // }
-*/
 
     def getCell(ix: Int32): RowWriter[ka, r, r, Option[MutCell[r]]] = 
         liftGetter(Interop.Apache.Poi.SS.Usermodel.MutRow.getCell(ix))

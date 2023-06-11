@@ -29,7 +29,9 @@ mod SheetIO {
 
 mod SheetIO.SheetWriter {
 
-    use Graded.EnvMutStateError.{liftSetter!, liftSetterResult!, liftGetter}
+    use GradedApplicative.{point}
+    use GradedMonad.{>>=}
+    use Graded.EnvMutStateError.{liftSetter!, liftSetterResult!, liftGetter, liftGetterResult}
 
     use SheetIO.SheetWriter
     use SheetIO.RowWriter
@@ -48,6 +50,28 @@ mod SheetIO.SheetWriter {
 
     pub def withRowWriter(write: RowWriter[a, r, ef, a], row: MutRow[r]): SheetWriter[ka, r, ef, a] =
         liftSetterResult!((_, _) -> SheetIO.RowWriter.runRowWriter(write, row))
+
+
+
+    def getRow(ix: Int32): SheetWriter[ka, r, r, Option[MutRow[r]]] = 
+        liftGetterResult((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.getRow(ix, sheet)) 
+            |> GradedError.reifyError
+            |> GradedFunctor.map(Result.toOption)
+
+    def createRow!(ix: Int32): SheetWriter[ka, r, r, MutRow[r]] = 
+        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.createRow!(ix, sheet))
+
+    def getOrCreateRow!(ix: Int32): SheetWriter[ka, r, r, MutRow[r]] = 
+        getRow(ix) >>= ans -> 
+        match ans {
+            case Some(row)  => point(row)
+            case None       => createRow!(ix)
+        }
+
+    // call `getOrCreateRow!` first ...
+    pub def writeAt!(ix: Int32, write: RowWriter[a, r, ef, a]): SheetWriter[ka, r, ef + r, a] =
+        getOrCreateRow!(ix)    >>= row -> 
+        withRowWriter(write, row)
 
 /*
 
