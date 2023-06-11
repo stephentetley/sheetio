@@ -19,14 +19,20 @@
 mod SheetIO {
 
     pub type alias CellWriter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.MutCell[r], ef, a]
+        Graded.MutStateError[ka, Interop.Apache.Poi.SS.Usermodel.MutCell[r], ef, a]
 }
 
 mod SheetIO.CellWriter {
 
-    use Graded.Builder.{liftSetter!, liftSetterResult!}
+    use Graded.MutStateError.{liftSetter!, liftSetterResult!}
 
     use SheetIO.CellWriter
+    use Interop.Apache.Poi.SS.Usermodel.MutCell
+    
+    pub def runCellWriter(ma: CellWriter[a, r, ef, a], 
+                            st: MutCell[r]): Result[String, a] \ ef =
+        Graded.MutStateError.runMutStateError(ma, st)
+
 
     pub def putBlank!(): CellWriter[ka, r, ef + r, Unit] =
         liftSetter!(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.MutCell.setBlank!(cell)))

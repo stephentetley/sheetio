@@ -28,10 +28,13 @@ mod SheetIO {
 
 mod SheetIO.WorkbookWriter {
 
+    use GradedMonad.{>>=}
+    use Graded.MutStateError.{liftSetter!, liftSetterResult!, liftGetter, liftGetterResult}
+
     use Basis.NIO.File.Path
 
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
+    use Interop.Apache.Poi.SS.Usermodel.MutSheet
     use SheetIO.CellStyle
     use SheetIO.CellStyleSetter
     use SheetIO.DataFormat
@@ -127,38 +130,40 @@ mod SheetIO.WorkbookWriter {
                                 st: MutWorkbook[r]): Result[String, a] \ ef =
         Graded.MutStateError.runMutStateError(ma, st)
 
-/*
 
-    pub def createSheet!(name: String): WorkbookWriter[r, ka, Sheet[r]] \ r =
-        liftSetterResult!(Interop.Apache.Poi.SS.Usermodel.Workbook.createSheet!(name))
-
-
-    pub def getSheetNamed(name: String): WorkbookWriter[r, ka, Sheet[r]] \ r =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
+    // pub def withSheetWriter(write: SheetWriter[a, r, ef, a], sheet: MutSheet[r]): WorkbookWriter[ka, r, ef, a] =
+    //     Graded.MutStateError.liftGetterResult(_ -> SheetIO.SheetWriter.runSheetWriter(write, rc, df, sheet))
 
 
-    pub def getSheetNames(): WorkbookWriter[r, ka, List[String]] \ r =
-        let* n  = getNumberOfSheets();
+    pub def createSheet!(name: String): WorkbookWriter[ka, r, r, MutSheet[r]] =
+        liftSetterResult!(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.createSheet!(name))
+
+    pub def getSheetNamed(name: String): WorkbookWriter[ka, r, r, MutSheet[r]] =
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
+
+
+    pub def getSheetNames(): WorkbookWriter[ka, r, r, List[String]] =
+        getNumberOfSheets() >>= n ->
         let ixs = List.range(0, n);
-        Traversable.traverse(getSheetName, ixs)      
+        GradedTraversable.traverse(getSheetName, ixs)      
     
-    pub def getNumberOfSheets(): WorkbookWriter[r, ka, Int32] \ r =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets)
+    pub def getNumberOfSheets(): WorkbookWriter[ka, r, r, Int32] =
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.getNumberOfSheets)
 
-    pub def getSheetName(ix: Int32): WorkbookWriter[r, ka, String] \ r =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix))
+    pub def getSheetName(ix: Int32): WorkbookWriter[ka, r, r, String] =
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetName(ix))
 
  
-    pub def getSheetAt(ix: Int32): WorkbookWriter[r, ka, Sheet[r]] \ r =
-        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix))
+    pub def getSheetAt(ix: Int32): WorkbookWriter[ka, r, r, MutSheet[r]] =
+        liftGetterResult(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetAt(ix))
 
-
-    pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] \ r =
+/*
+    pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] =
         liftAction(_ -> Interop.Apache.Poi.SS.Usermodel.DataFormat.getFormatNamed!(format, df))
 
 
-    pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] \ r =
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.Workbook.createDataFormat!)
+    pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] =
+        liftGetter(Interop.Apache.Poi.SS.Usermodel.MutWorkbook.createDataFormat!)
 
 
     pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ r =
