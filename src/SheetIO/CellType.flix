@@ -101,6 +101,7 @@ mod SheetIO.CellType {
             case x1 if primEquals(x1, getFORMULA())     => TyFormula
             case x1 if primEquals(x1, getNUMERIC())     => TyNumeric
             case x1 if primEquals(x1, getSTRING())      => TyString
+            case _                                      => bug!("fromNative")
         }
 
 

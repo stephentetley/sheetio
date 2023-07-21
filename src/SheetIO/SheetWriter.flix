@@ -73,6 +73,12 @@ mod SheetIO.SheetWriter {
         getOrCreateRow!(ix)    >>= row -> 
         withRowWriter(write, row)
 
+
+    pub def getSheetName(): SheetWriter[ka, r, r, String] =
+        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.getSheetName(sheet))
+
+
+
 /*
 
 
@@ -83,34 +89,6 @@ mod SheetIO.SheetWriter {
 
     pub def askStyle(): SheetWriter[r, ka, Option[CellStyle[r]]] = 
         askEnv()
-
-
-
-
-    // pub def whenTrue(x: Bool, ma: SheetWriter[r, ka, Unit]): SheetWriter[r, ka, Unit] = 
-    //     match x { 
-    //         case true => ma
-    //         case false => point()
-    //     }
-
-    // pub def whenFalse(x: Bool, ma: SheetWriter[r, ka, Unit]): SheetWriter[r, ka, Unit] = 
-    //     match x { 
-    //         case true => point()
-    //         case false => ma
-    //     }
-
-    // pub def whenSome(x: Option[a], f: a -> SheetWriter[r, ka, Unit]): SheetWriter[r, ka, Unit] = 
-    //     match x { 
-    //         case Some(a) => f(a)
-    //         case None => point()
-    //     }
-
-    // pub def whenNone(x: Option[a], ma: SheetWriter[r, ka, Unit]): SheetWriter[r, ka, Unit] = 
-    //     match x { 
-    //         case Some(_) => point()
-    //         case None => ma
-    //     }
-
 
 
     // pub def liftResult1(x: Result[a, e], makeErrMsg: e -> String): SheetWriter[r, ka, a] = match x { 
@@ -153,11 +131,6 @@ mod SheetIO.SheetWriter {
         let DataFormat(x1) = x;
         liftActionResult(_ -> getFormat(x1, format))
 
-
-    def getSheetName(x: Sheet): SheetWriter[r, ka, String] =
-        use SheetIO.Internal.Sheet.{getSheetName};
-        let Sheet(x1) = x;
-        liftActionResult(_ -> getSheetName(x1))
 
     def setCursorHelper(sheetName: String, n: Int32): SheetWriter[r, ka, Unit] = 
         SheetWriter((_, _, s1) -> Ok((Map.insert(sheetName, n, s1), ())) as \ IO)
