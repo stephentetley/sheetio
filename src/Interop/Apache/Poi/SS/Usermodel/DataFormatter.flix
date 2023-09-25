@@ -32,9 +32,10 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
 
-    use Interop.Text.MutDecimalFormat
-    use Interop.Text.MutDecimalFormat.{MutDecimalFormat}
-    use Interop.Util.Locale
+    use Locale.{Locale}
+
+    /// use Interop.Text.MutDecimalFormat
+    /// use Interop.Text.MutDecimalFormat.{MutDecimalFormat}
 
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
@@ -61,7 +62,7 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
     ///
     pub def newWithLocale(_: Region[r], loc: Locale, init: DataFormatterInit[r]): Result[String, DataFormatter] \ r = 
         import new org.apache.poi.ss.usermodel.DataFormatter(##java.util.Locale): ##org.apache.poi.ss.usermodel.DataFormatter \ r as new1;
-        let loc1 = Interop.Util.Locale.getHH(loc);
+        let Locale(loc1) = loc;
         let df1 = new1(loc1);
         MutDataFormatter(df1) |> init |> Result.map(_ -> DataFormatter(df1))
 

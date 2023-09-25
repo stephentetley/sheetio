@@ -28,7 +28,7 @@ mod SheetIO.Reader {
 
     pub type alias XlsxSource = 
         { sheet = String
-        , path = Basis.NIO.File.Path
+        , path = Basis.IO.Path
         }
 
 

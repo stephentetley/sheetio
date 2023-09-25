@@ -38,12 +38,14 @@ mod Interop.Apache.Poi.HSSF.Usermodel {
 }
 
 mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
+    
+    use Basis.IO.InputStream
+    use Basis.IO.InputStream.{InputStream}
+    use Basis.IO.OutputStream
+    use Basis.IO.OutputStream.{OutputStream}
 
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
     use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
-    use Interop.IO.OutputStream
-    use Interop.IO.InputStream
-
 
     pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
         let HSSFWorkbook(wb1) = wb;
@@ -66,7 +68,7 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     pub def newWithInputStream(_: Region[r], ins: InputStream[r]): Result[String, HSSFWorkbook[r]] \ IO  = 
         Result.tryCatch(_ -> {
             import new org.apache.poi.hssf.usermodel.HSSFWorkbook(##java.io.InputStream): ##org.apache.poi.hssf.usermodel.HSSFWorkbook \ IO as newHSSFWorkbook;
-            let ins1 = Interop.IO.InputStream.getHH(ins);
+            let InputStream(ins1) = ins;
             newHSSFWorkbook(ins1) |> HSSFWorkbook
         })
 
@@ -77,7 +79,7 @@ mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
         Result.tryCatch(_ -> {
             import org.apache.poi.hssf.usermodel.HSSFWorkbook.write(##java.io.OutputStream): Unit \ {IO, r, r1}; 
             let HSSFWorkbook(wb1) = wb;
-            let out1 = Interop.IO.OutputStream.getHH(out);
+            let OutputStream(out1) = out;
             write(wb1, out1)
         })
 

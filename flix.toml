@@ -2,15 +2,15 @@
 name        = "sheetio"
 description = "A Flix library built on top of Apache POI to read and write Excel files."
 version     = "0.1.0"
-flix        = "0.37.0"
+flix        = "0.40.0"
 license     = "Apache-2.0"
 authors     = ["Stephen Tetley <stephen.tetley@gmail.com>"]
 
 [dependencies]
-"github:stephentetley/basis-base"                = "0.4.1"
-"github:stephentetley/flix-time"                 = "0.4.0"
-"github:stephentetley/graded-lib"                = "0.6.1"
-"github:stephentetley/interop-base"              = "0.6.0"
+"github:stephentetley/charset-locale"           = "0.1.0"
+"github:stephentetley/platform-basis"           = "0.2.0"
+"github:stephentetley/flix-time"                = "0.7.0"
+"github:stephentetley/graded-lib"               = "0.8.0"
 
 
 [mvn-dependencies]

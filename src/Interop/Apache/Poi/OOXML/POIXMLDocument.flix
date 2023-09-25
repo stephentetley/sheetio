@@ -30,11 +30,13 @@ mod Interop.Apache.Poi.OOXML {
 
 mod Interop.Apache.Poi.OOXML.POIXMLDocument {
 
+    use Basis.IO.OutputStream
+    use Basis.IO.OutputStream.{OutputStream}
+
     use Interop.Apache.Poi.OOXML.POIXMLDocument
     use Interop.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
     use Interop.Apache.Poi.OOXML.SubPOIXMLDocument
-    use Interop.IO.OutputStream
-    use Interop.IO.SubOutputStream
+    
     
 
     // XSSF (OOXML) concretely
@@ -55,7 +57,7 @@ mod Interop.Apache.Poi.OOXML.POIXMLDocument {
         Result.tryCatch(_ -> {
             import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};
             let POIXMLDocument(wb1) = wb;
-            let out1 = Interop.IO.OutputStream.getHH(out);
+            let OutputStream(out1) = out;
             write(wb1, out1)
         })
 

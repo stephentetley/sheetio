@@ -17,7 +17,8 @@
 
 mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
 
-    use Interop.IO.InputStream
+    use Basis.IO.InputStream
+    use Basis.IO.InputStream.{InputStream}
 
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
@@ -30,7 +31,7 @@ mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
     pub def createWithInputStream(ins: InputStream[r]): Result[String, Workbook] \ r =
         Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ r;
-            let ins1 = Interop.IO.InputStream.getHH(ins);
+            let InputStream(ins1) = ins;
             create(ins1) |> Workbook
         })
 
@@ -38,7 +39,7 @@ mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
     pub def createMutWithInputStream(_: Region[r], ins: InputStream[r1]): Result[String, MutWorkbook[r]] \ {r, r1} =
         Result.tryCatch(_ -> {
             import static org.apache.poi.ss.usermodel.WorkbookFactory.create(##java.io.InputStream): ##org.apache.poi.ss.usermodel.Workbook \ {r, r1};
-            let ins1 = Interop.IO.InputStream.getHH(ins);
+            let InputStream(ins1) = ins;
             create(ins1) |> MutWorkbook
         })
 

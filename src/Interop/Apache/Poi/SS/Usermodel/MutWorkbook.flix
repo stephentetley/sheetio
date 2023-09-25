@@ -31,7 +31,7 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
 
-    use Interop.IO.OutputStream
+    use Basis.IO.OutputStream
 
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}

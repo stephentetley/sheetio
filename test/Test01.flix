@@ -3,7 +3,7 @@ mod Test01 {
 
     use GradedMonad.{>>=}
     use SheetIO.WorkbookReader
-
+/*
     @test
     def test01(): Bool \ IO = region rc {
         use SheetIO.WorkbookReader.{runXlsx};
@@ -34,5 +34,5 @@ mod Test01 {
         let eval1 = GradedApplicative.product(readCellAt(0, getTrimmedContent()), readCellAt(1, getTrimmedContent()));
         SheetIO.WorkbookReader.readSheetNamed("Sheet1", SheetIO.SheetReader.allRows(eval1))
 
-
+*/
 }

@@ -28,8 +28,6 @@ mod SheetIO {
 mod SheetIO.DataFormatter {
 
 
-    use Basis.Util.Locale
-
     use SheetIO.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
 

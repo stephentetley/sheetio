@@ -30,7 +30,7 @@ mod SheetIO.WorkbookReader {
     use GradedMonad.{>>=}
     use Graded.RgnEnvEvaluator.{liftGetter, liftGetterResult, liftActionResult}
 
-    use Basis.NIO.File.Path
+    use Basis.IO.Path
 
 
     use Interop.Apache.Poi.SS.Usermodel.Sheet
@@ -44,21 +44,21 @@ mod SheetIO.WorkbookReader {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+    pub def runXlsx(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} = 
         runXssf(rc, ma, path)
     
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+    pub def runXssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} = 
         runOnFile(rc, ma, path) 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} = 
+    pub def runHssf(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} = 
         runOnFile(rc, ma, path)
 
 
-    def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO} =
-        forM (file  <- Basis.IO.FileInputStream.newWithPath(rc, path);
-                ins <- Ok(Basis.IO.FileInputStream.toInputStream(file));
+    def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} =
+        forM (file  <- Basis.IO.FileInputStream.new(path);
+                ins <- Ok(Basis.IO.FileInputStream.asInputStream(file));
                 wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins);
                 ans <- runWorkbookReader(ma, rc, wb);
                 _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb))
@@ -69,7 +69,7 @@ mod SheetIO.WorkbookReader {
 
     pub def runWorkbookReader(ma: WorkbookReader[a, r, ef, a], 
                                 rc: Region[r],
-                                st: Workbook): Result[String, a] \ ef + r =        
+                                st: Workbook): Result[IOError, a] \ ef + r =        
         match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
             case Ok(df) => Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, st)
             case Err(msg) => Err(msg)

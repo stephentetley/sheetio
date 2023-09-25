@@ -31,7 +31,7 @@ mod SheetIO.WorkbookWriter {
     use GradedMonad.{>>=}
     use Graded.MutStateError.{liftSetter!, liftSetterResult!, liftGetter, liftGetterResult}
 
-    use Basis.NIO.File.Path
+    use Basis.IO.Path
 
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
     use Interop.Apache.Poi.SS.Usermodel.MutSheet
@@ -45,18 +45,17 @@ mod SheetIO.WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+    pub def runXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         runXssf(rc, ma, path)
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
-    pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
-        let outpath = ToString.toString(path);
-        forM (fos       <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
+    pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
+        forM (fos       <- Basis.IO.FileOutputStream.new(rc, path);
                 wb      <- Ok(Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
                 wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1);
-                outs    <- Ok(Interop.IO.SubOutputStream.toOutputStream(fos));
+                outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
                 poixml  <- Ok(Interop.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb));
                 _       <- Interop.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml);
                 _       <- Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb))
@@ -64,18 +63,17 @@ mod SheetIO.WorkbookWriter {
 
 
     /// Excel 2007 OOXML (.xlsx) format.
-    pub def runAppendXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+    pub def runAppendXlsx(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         runAppend(rc, ma, path)
     
 
-    pub def runAppend(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
-        let outpath = ToString.toString(path);
-        forM (fis       <- Interop.IO.FileInputStream.newWithPath(rc, outpath);
-                ins     <- Ok(Interop.IO.SubInputStream.toInputStream(fis));
+    pub def runAppend(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
+        forM (fis       <- Basis.IO.FileInputStream.new(path);
+                ins     <- Ok(Basis.IO.FileInputStream.asInputStream(fis));
                 wb      <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createMutWithInputStream(rc, ins);
                 ans     <- runWorkbookWriter(ma, wb);
-                fos     <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
-                outs    <- Ok(Interop.IO.SubOutputStream.toOutputStream(fos));
+                fos     <- Basis.IO.FileOutputStream.new(path);
+                outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
                 _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.write!(outs, wb);
                 _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.close!(wb))
             yield ans
@@ -83,51 +81,50 @@ mod SheetIO.WorkbookWriter {
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "newWithFile" not "new"...
-    pub def runAppendXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+    pub def runAppendXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         runAppend(rc, ma, path)
 
 
     /// TODO - test...
     pub def runTemplateXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], 
                             template: Path, 
-                            outpath: Path): Result[String, a] \ {ef, IO, r} =
+                            outpath: Path): Result[IOError, a] \ {ef, IO, r} =
         let outpath1 = ToString.toString(outpath);
-        forM (_         <- File.copy(src = ToString.toString(template), outpath1);
+        forM (_         <- Files.copy(src = ToString.toString(template), outpath1);
                 ans     <- runAppend(rc, ma, outpath))
             yield ans
 
 
     /// Excel 97 binary (.xls) format.
-    pub def runHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
-        let outpath = ToString.toString(path);
-        forM (fos       <- Interop.IO.FileOutputStream.newWithPath(rc, outpath);
+    pub def runHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
+        forM (fos       <- Basis.IO.FileOutputStream.new(path);
                 wb      <- Ok(Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
                 wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1);
-                outs    <- Ok(Interop.IO.SubOutputStream.toOutputStream(fos));
+                outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
                 _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb);
                 _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb);
-                _       <- Interop.IO.FileOutputStream.close!(fos))
+                _       <- Basis.IO.FileOutputStream.close!(fos))
             yield ans
 
     /// Excel 2007 OOXML (.xlsx) format.
     /// Calls "newWithFile" not "new"...
-    pub def runAppendHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[String, a] \ {ef, IO, r} = 
+    pub def runAppendHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         runAppend(rc, ma, path)
 
 
     pub def runTemplateHssf(rc: Region[r], 
                             ma: WorkbookWriter[a, r, ef, a], 
                             template: Path, 
-                            outpath: Path): Result[String, a] \ {ef, IO, r} =
+                            outpath: Path): Result[IOError, a] \ {ef, IO, r} =
         let outpath1 = ToString.toString(outpath);
-        forM (_         <- File.copy(src = ToString.toString(template), outpath1);
+        forM (_         <- Files.copy(src = ToString.toString(template), outpath1);
                 ans     <- runAppend(rc, ma, outpath))
             yield ans
 
     /// The state param `st` is expected to be mutated...
     pub def runWorkbookWriter(ma: WorkbookWriter[a, r, ef, a],  
-                                st: MutWorkbook[r]): Result[String, a] \ ef =
+                                st: MutWorkbook[r]): Result[IOError, a] \ ef =
         Graded.MutStateError.runMutStateError(ma, st)
 
 
