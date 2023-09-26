@@ -1,5 +1,2 @@
-###
-   Updated `flix-time` dependency
- 
 ### v0.1.0
-   Initial release.
+   First relase using Flix package manager.

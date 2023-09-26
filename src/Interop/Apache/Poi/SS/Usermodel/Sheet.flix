@@ -86,10 +86,9 @@ mod Interop.Apache.Poi.SS.Usermodel.Sheet {
 
     pub def rowIterator(rc: Region[r], sheet: Sheet): Iterator[Row, r, r] \ r = 
         import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
-        let ocast = obj -> Row(unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
         let Sheet(sheet1) = sheet;
-        let iterHH = rowIterator(sheet1);
-        Interop.Util.IteratorZ.wrapHH(rc, iterHH) 
-            |> Interop.Util.IteratorZ.toFlixIterator(rc, ocast)
+        let iter1 = rowIterator(sheet1);
+        Adaptor.fromIterator(rc, Proxy.Proxy: Proxy[##org.apache.poi.ss.usermodel.Row], iter1) 
+            |> Iterator.map(Row)
 
 }

@@ -34,8 +34,8 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
 
     use Locale.{Locale}
 
-    /// use Interop.Text.MutDecimalFormat
-    /// use Interop.Text.MutDecimalFormat.{MutDecimalFormat}
+    use Basis.Text.DecimalFormat
+    use Basis.Text.DecimalFormat.{DecimalFormat}
 
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter
     use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
@@ -82,12 +82,13 @@ mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
         let MutDataFormatter(df1) = df;
         setDefaultNumberFormat(df1, fmt)
 
+    /// TO REMOVE... once `platform-basis` > 0.2.0
+    pub type alias DecimalFormatBuilder = ##java.text.DecimalFormat -> Unit \ IO
 
-    /// Operates on `MutDecimalFormat` ...
-    pub def setExcelStyleRoundingMode!(df: MutDecimalFormat[r]): Unit \ r =
-        import static org.apache.poi.ss.usermodel.DataFormatter.setExcelStyleRoundingMode(##java.text.DecimalFormat): Unit \ r;
-        let MutDecimalFormat(df1) = df;
-        setExcelStyleRoundingMode(df1)
+    /// Operates on a `DecimalFormat` ...
+    pub def setExcelStyleRoundingMode!(): DecimalFormatBuilder = df ->
+        import static org.apache.poi.ss.usermodel.DataFormatter.setExcelStyleRoundingMode(##java.text.DecimalFormat): Unit \ IO;
+        setExcelStyleRoundingMode(df)
 
 }
 

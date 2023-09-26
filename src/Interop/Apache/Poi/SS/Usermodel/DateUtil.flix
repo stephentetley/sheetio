@@ -29,7 +29,7 @@ mod Interop.Apache.Poi.SS.Usermodel.DateUtil {
     /// 
     pub def parseDateTime(s: String): Float64 = 
         import static org.apache.poi.ss.usermodel.DateUtil.parseDateTime(String): ##java.lang.Double \ {};
-        parseDateTime(s) |> Interop.Lang.Double.wrapHH |> Interop.Lang.Double.doubleValue
+        parseDateTime(s) |> Float64.doubleValue
 
 
 }

@@ -32,6 +32,7 @@ mod Interop.Apache.Poi.SS.Usermodel {
 mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
 
     use Basis.IO.OutputStream
+    use Basis.IO.OutputStream.{OutputStream}
 
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
     use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
@@ -55,7 +56,7 @@ mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.write(##java.io.OutputStream): Unit \ r;
             let MutWorkbook(wb1) = wb;
-            let out1 = Interop.IO.OutputStream.getHH(out);
+            let OutputStream(out1) = out;
             write(wb1, out1)
         })
 
