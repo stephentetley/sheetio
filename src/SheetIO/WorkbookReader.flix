@@ -26,6 +26,7 @@ mod SheetIO {
 mod SheetIO.WorkbookReader {
 
     use ToString.toString
+    use IOError.{Generic}
 
     use GradedMonad.{>>=}
     use Graded.RgnEnvEvaluator.{liftGetter, liftGetterResult, liftActionResult}
@@ -59,9 +60,9 @@ mod SheetIO.WorkbookReader {
     def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} =
         forM (file  <- Basis.IO.FileInputStream.new(path);
                 ins <- Ok(Basis.IO.FileInputStream.asInputStream(file));
-                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins);
-                ans <- runWorkbookReader(ma, rc, wb);
-                _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb))
+                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins) |> Result.mapErr(Generic);
+                ans <- runWorkbookReader(ma, rc, wb) |> Result.mapErr(Generic);
+                _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -69,11 +70,11 @@ mod SheetIO.WorkbookReader {
 
     pub def runWorkbookReader(ma: WorkbookReader[a, r, ef, a], 
                                 rc: Region[r],
-                                st: Workbook): Result[IOError, a] \ ef + r =        
+                                st: Workbook): Result[String, a] \ ef + r =        
         match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
             case Ok(df) => Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, st)
             case Err(msg) => Err(msg)
-        }
+        } 
 
     pub def withSheetReader(eval: SheetReader[a, r, ef, a], sheet: Sheet): WorkbookReader[ka, r, ef, a] =
         GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.SheetReader.runSheetReader(eval, rc, df, sheet))

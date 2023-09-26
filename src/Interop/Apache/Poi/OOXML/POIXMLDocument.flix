@@ -53,9 +53,9 @@ mod Interop.Apache.Poi.OOXML.POIXMLDocument {
     ///
     /// Write document.
     ///
-    pub def write!(out: OutputStream[r], wb: POIXMLDocument[r]): Result[String, Unit] \ {IO, r} = 
+    pub def write!(out: OutputStream[r], wb: POIXMLDocument[r1]): Result[String, Unit] \ {r, r1} = 
         Result.tryCatch(_ -> {
-            import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {IO, r};
+            import org.apache.poi.ooxml.POIXMLDocument.write(##java.io.OutputStream): Unit \ {r, r1};
             let POIXMLDocument(wb1) = wb;
             let OutputStream(out1) = out;
             write(wb1, out1)

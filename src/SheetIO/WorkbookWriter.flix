@@ -28,6 +28,7 @@ mod SheetIO {
 
 mod SheetIO.WorkbookWriter {
 
+    use IOError.{Generic}
     use GradedMonad.{>>=}
     use Graded.MutStateError.{liftSetter!, liftSetterResult!, liftGetter, liftGetterResult}
 
@@ -51,14 +52,14 @@ mod SheetIO.WorkbookWriter {
     /// Excel 2007 OOXML (.xlsx) format.
     /// Path is for a *new* file...
     pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
-        forM (fos       <- Basis.IO.FileOutputStream.new(rc, path);
+        forM (fos       <- Basis.IO.FileOutputStream.new(path);
                 wb      <- Ok(Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
                 wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
-                ans     <- runWorkbookWriter(ma, wb1);
+                ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
                 poixml  <- Ok(Interop.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb));
-                _       <- Interop.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml);
-                _       <- Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb))
+                _       <- Interop.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml) |> Result.mapErr(Generic);
+                _       <- Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -70,12 +71,12 @@ mod SheetIO.WorkbookWriter {
     pub def runAppend(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fis       <- Basis.IO.FileInputStream.new(path);
                 ins     <- Ok(Basis.IO.FileInputStream.asInputStream(fis));
-                wb      <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createMutWithInputStream(rc, ins);
-                ans     <- runWorkbookWriter(ma, wb);
+                wb      <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createMutWithInputStream(rc, ins) |> Result.mapErr(Generic);
+                ans     <- runWorkbookWriter(ma, wb) |> Result.mapErr(Generic);
                 fos     <- Basis.IO.FileOutputStream.new(path);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.write!(outs, wb);
-                _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.close!(wb))
+                _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
+                _       <- Interop.Apache.Poi.SS.Usermodel.MutWorkbook.close!(wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -90,7 +91,7 @@ mod SheetIO.WorkbookWriter {
                             template: Path, 
                             outpath: Path): Result[IOError, a] \ {ef, IO, r} =
         let outpath1 = ToString.toString(outpath);
-        forM (_         <- Files.copy(src = ToString.toString(template), outpath1);
+        forM (_         <- Files.copy(src = ToString.toString(template), outpath1) |> Result.mapErr(Generic);
                 ans     <- runAppend(rc, ma, outpath))
             yield ans
 
@@ -100,10 +101,10 @@ mod SheetIO.WorkbookWriter {
         forM (fos       <- Basis.IO.FileOutputStream.new(path);
                 wb      <- Ok(Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
                 wb1     <- Ok(Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
-                ans     <- runWorkbookWriter(ma, wb1);
+                ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb);
-                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb);
+                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
+                _       <- Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb) |> Result.mapErr(Generic);
                 _       <- Basis.IO.FileOutputStream.close!(fos))
             yield ans
 
@@ -118,14 +119,14 @@ mod SheetIO.WorkbookWriter {
                             template: Path, 
                             outpath: Path): Result[IOError, a] \ {ef, IO, r} =
         let outpath1 = ToString.toString(outpath);
-        forM (_         <- Files.copy(src = ToString.toString(template), outpath1);
+        forM (_         <- Files.copy(src = ToString.toString(template), outpath1) |> Result.mapErr(Generic);
                 ans     <- runAppend(rc, ma, outpath))
             yield ans
 
     /// The state param `st` is expected to be mutated...
     pub def runWorkbookWriter(ma: WorkbookWriter[a, r, ef, a],  
-                                st: MutWorkbook[r]): Result[IOError, a] \ ef =
-        Graded.MutStateError.runMutStateError(ma, st)
+                                st: MutWorkbook[r]): Result[String, a] \ ef =
+        Graded.MutStateError.runMutStateError(ma, st) 
 
 
     pub def withSheetWriter(write: SheetWriter[a, r, ef, a], sheet: MutSheet[r]): WorkbookWriter[ka, r, ef, a] =

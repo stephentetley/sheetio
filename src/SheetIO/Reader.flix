@@ -32,7 +32,7 @@ mod SheetIO.Reader {
         }
 
 
-    pub def allRows(rc: Region[r], eval: RowReader[a, r, ef, a], src: XlsxSource): Result[String, List[a]] \ {ef, IO} =
+    pub def allRows(rc: Region[r], eval: RowReader[a, r, ef, a], src: XlsxSource): Result[IOError, List[a]] \ {ef, IO} =
         let action = () -> SheetIO.WorkbookReader.readSheetNamed(src.sheet, SheetIO.SheetReader.allRows(eval));
         SheetIO.WorkbookReader.runXlsx(rc, action(), src.path)
 
