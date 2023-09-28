@@ -47,10 +47,6 @@ mod Internal.Apache.Poi.SS.Usermodel.DataFormatter {
     
 
 
-    pub def getHH(df: DataFormatter): ##org.apache.poi.ss.usermodel.DataFormatter =
-        let DataFormatter(df1) = df;
-        df1
-
     pub def new(_: Region[r], init: DataFormatterInit[r]): Result[String, DataFormatter] \ r = 
         import new org.apache.poi.ss.usermodel.DataFormatter(): ##org.apache.poi.ss.usermodel.DataFormatter \ {} as new1;
         let df1 = new1();

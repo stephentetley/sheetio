@@ -32,13 +32,6 @@ mod Internal.Apache.Poi.SS.Usermodel.Cell {
     use Internal.Apache.Poi.SS.Usermodel.CellType
     use Internal.Apache.Poi.SS.Usermodel.CellType.{CellType}
 
-    pub def getHH(cell: Cell): ##org.apache.poi.ss.usermodel.Cell =
-        let Cell(cell1) = cell;
-        cell1
-
-
-    pub def wrapHH(prim:  ##org.apache.poi.ss.usermodel.Cell): Cell =
-        Cell(prim)
 
 
     pub def getCellType(cell: Cell): CellType = 

@@ -54,10 +54,10 @@ mod SheetIO.WorkbookWriter {
     pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fos       <- Basis.IO.FileOutputStream.new(path);
                 wb      <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
-                wb1     <- Ok(Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
+                wb1     <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                poixml  <- Ok(Internal.Apache.Poi.OOXML.SubPOIXMLDocument.toPOIXMLDocument(wb));
+                poixml  <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asPOIXMLDocument(wb));
                 _       <- Internal.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml) |> Result.mapErr(Generic);
                 _       <- Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb) |> Result.mapErr(Generic))
             yield ans
@@ -100,7 +100,7 @@ mod SheetIO.WorkbookWriter {
     pub def runHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fos       <- Basis.IO.FileOutputStream.new(path);
                 wb      <- Ok(Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
-                wb1     <- Ok(Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook.toMutWorkbook(wb));
+                wb1     <- Ok(Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.asMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
                 _       <- Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb) |> Result.mapErr(Generic);

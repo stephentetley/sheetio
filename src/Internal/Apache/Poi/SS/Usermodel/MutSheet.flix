@@ -32,12 +32,6 @@ mod Internal.Apache.Poi.SS.Usermodel.MutSheet {
     use Internal.Apache.Poi.SS.Usermodel.Workbook
     use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
-    pub def getHH(sheet: MutSheet[r]): ##org.apache.poi.ss.usermodel.Sheet =
-        let MutSheet(s1) = sheet;
-        s1
-   
-    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): MutSheet[r] =
-        MutSheet(s)
 
 
     pub def getSheetName(sheet: MutSheet[r]): String \ r = 

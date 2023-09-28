@@ -93,14 +93,15 @@ mod SheetIO.CellType {
         import static get org.apache.poi.ss.usermodel.CellType.FORMULA: ##org.apache.poi.ss.usermodel.CellType \ {} as getFORMULA;
         import static get org.apache.poi.ss.usermodel.CellType.NUMERIC: ##org.apache.poi.ss.usermodel.CellType \ {} as getNUMERIC;
         import static get org.apache.poi.ss.usermodel.CellType.STRING: ##org.apache.poi.ss.usermodel.CellType \ {} as getSTRING;
-        match Internal.Apache.Poi.SS.Usermodel.CellType.getHH(x) {
-            case x1 if primEquals(x1, get_NONE())       => TyNone
-            case x1 if primEquals(x1, getBLANK())       => TyBlank
-            case x1 if primEquals(x1, getBOOLEAN())     => TyBoolean
-            case x1 if primEquals(x1, getERROR())       => TyError
-            case x1 if primEquals(x1, getFORMULA())     => TyFormula
-            case x1 if primEquals(x1, getNUMERIC())     => TyNumeric
-            case x1 if primEquals(x1, getSTRING())      => TyString
+        let Internal.Apache.Poi.SS.Usermodel.CellType.CellType(x1) = x;
+        match x1 {
+            case x2 if primEquals(x2, get_NONE())       => TyNone
+            case x2 if primEquals(x2, getBLANK())       => TyBlank
+            case x2 if primEquals(x2, getBOOLEAN())     => TyBoolean
+            case x2 if primEquals(x2, getERROR())       => TyError
+            case x2 if primEquals(x2, getFORMULA())     => TyFormula
+            case x2 if primEquals(x2, getNUMERIC())     => TyNumeric
+            case x2 if primEquals(x2, getSTRING())      => TyString
             case _                                      => bug!("fromNative")
         }
 

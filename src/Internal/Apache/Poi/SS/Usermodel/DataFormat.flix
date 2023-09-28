@@ -31,9 +31,6 @@ mod Internal.Apache.Poi.SS.Usermodel.DataFormat {
     use Internal.Apache.Poi.SS.Usermodel.DataFormat
     use Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
 
-    pub def getHH(df: DataFormat[r]): ##org.apache.poi.ss.usermodel.DataFormat =
-        let DataFormat(df1) = df;
-        df1
 
 
     pub def getFormatAt(ix: Int16, df: DataFormat[r]): Option[String] \ r = 

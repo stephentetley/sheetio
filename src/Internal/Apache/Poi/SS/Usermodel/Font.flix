@@ -28,12 +28,6 @@ mod Internal.Apache.Poi.SS.Usermodel.Font {
     use Internal.Apache.Poi.SS.Usermodel.Font
     use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
-    pub def getHH(font: Font[r]): ##org.apache.poi.ss.usermodel.Font =
-        let Font(font1) = font;
-        font1
-
-    pub def wrapHH(_: Region[r], font: ##org.apache.poi.ss.usermodel.Font): Font[r] =
-        Font(font)
 
     pub def setFontName!(name: String, font: Font[r]): Unit \ r = 
         import org.apache.poi.ss.usermodel.Font.setFontName(String): Unit \ r;

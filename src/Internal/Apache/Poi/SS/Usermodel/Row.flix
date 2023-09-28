@@ -32,13 +32,6 @@ mod Internal.Apache.Poi.SS.Usermodel.Row {
     use Internal.Apache.Poi.SS.Usermodel.Sheet
     use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
-    pub def getHH(row: Row): ##org.apache.poi.ss.usermodel.Row =
-        let Row(row1) = row;
-        row1
-
-    
-    pub def wrapHH(prim:  ##org.apache.poi.ss.usermodel.Row): Row =
-        Row(prim)
 
     pub def getRowNum(row: Row): Int32 = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ {}; 

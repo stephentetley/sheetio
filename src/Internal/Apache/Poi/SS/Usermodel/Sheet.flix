@@ -31,12 +31,6 @@ mod Internal.Apache.Poi.SS.Usermodel.Sheet {
     use Internal.Apache.Poi.SS.Usermodel.Workbook
     use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
-    pub def getHH(sheet: Sheet): ##org.apache.poi.ss.usermodel.Sheet =
-        let Sheet(sheet1) = sheet;
-        sheet1
-   
-    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Sheet): Sheet =
-        Sheet(s)
 
 
     pub def getSheetName(sheet: Sheet): String = 

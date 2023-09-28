@@ -32,13 +32,6 @@ mod Internal.Apache.Poi.SS.Usermodel.MutCell {
     use Internal.Apache.Poi.SS.Usermodel.CellType
     use Internal.Apache.Poi.SS.Usermodel.CellType.{CellType}
 
-    pub def getHH(cell: MutCell[r]): ##org.apache.poi.ss.usermodel.Cell =
-        let MutCell(cell1) = cell;
-        cell1
-
-
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Cell): MutCell[r] =
-        MutCell(prim)
 
 
 

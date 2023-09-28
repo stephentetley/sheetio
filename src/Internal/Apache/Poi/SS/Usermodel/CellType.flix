@@ -30,9 +30,6 @@ mod Internal.Apache.Poi.SS.Usermodel.CellType {
     use Internal.Apache.Poi.SS.Usermodel.Font
     use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
-    pub def getHH(x: CellType): ##org.apache.poi.ss.usermodel.CellType = 
-        let CellType(x1) = x;
-        x1
 
     pub def ty_none(): CellType = 
         import static get org.apache.poi.ss.usermodel.CellType._NONE: ##org.apache.poi.ss.usermodel.CellType \ {} as get_NONE;

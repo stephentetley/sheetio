@@ -31,13 +31,6 @@ mod Internal.Apache.Poi.SS.Usermodel.CellStyle {
     use Internal.Apache.Poi.SS.Usermodel.Font
     use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
-    pub def getHH(cs: CellStyle[r]): ##org.apache.poi.ss.usermodel.CellStyle =
-        let CellStyle(cs1) = cs;
-        cs1
-
-   
-    pub def wrapHH(_: Region[r], cs: ##org.apache.poi.ss.usermodel.CellStyle): CellStyle[r] =
-        CellStyle(cs)
 
     /// Blank / fresh CellStyles created from the workbook
 

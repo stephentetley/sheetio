@@ -21,11 +21,6 @@ mod Internal.Apache.Poi.SS.Usermodel {
     pub enum MutWorkbook[_: Region](##org.apache.poi.ss.usermodel.Workbook)
 
 
-    pub class SubMutWorkbook[t: Region -> Type] {
-        pub def toMutWorkbook(o: t[r]): MutWorkbook[r]
-        pub def fromMutWorkbook(w: MutWorkbook[r]): t[r]
-    }
-
 }
 
 
@@ -45,13 +40,7 @@ mod Internal.Apache.Poi.SS.Usermodel.MutWorkbook {
     use Internal.Apache.Poi.SS.Usermodel.MutSheet
     use Internal.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
 
-    pub def getHH(wb: MutWorkbook[r]): ##org.apache.poi.ss.usermodel.Workbook =
-        let MutWorkbook(wb1) = wb;
-        wb1
-   
-    pub def wrapHH(_: Region[r], s: ##org.apache.poi.ss.usermodel.Workbook): MutWorkbook[r] =
-        MutWorkbook(s)
-        
+
     pub def write!(out: OutputStream[r1], wb: MutWorkbook[r]): Result[String, Unit] \ r =         
         Result.tryCatch(_ -> {
             import org.apache.poi.ss.usermodel.Workbook.write(##java.io.OutputStream): Unit \ r;

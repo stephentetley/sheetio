@@ -35,12 +35,6 @@ mod Internal.Apache.Poi.SS.Usermodel.Workbook {
     use Internal.Apache.Poi.SS.Usermodel.Sheet
     use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
-    pub def getHH(wb: Workbook): ##org.apache.poi.ss.usermodel.Workbook =
-        let Workbook(wb1) = wb;
-        wb1
-   
-    pub def wrapHH(wb: ##org.apache.poi.ss.usermodel.Workbook): Workbook =
-        Workbook(wb)
     
 
     /// Note - imperative operation, use a phantom region...

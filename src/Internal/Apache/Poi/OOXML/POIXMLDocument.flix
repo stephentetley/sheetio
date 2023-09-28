@@ -19,13 +19,6 @@ mod Internal.Apache.Poi.OOXML {
 
     pub enum POIXMLDocument[_: Region](##org.apache.poi.ooxml.POIXMLDocument)
 
-
-    pub class SubPOIXMLDocument[t: Region -> Type] {
-        pub def toPOIXMLDocument[r: Region](s: t[r]): POIXMLDocument[r]
-        pub def fromPOIXMLDocument[r: Region](s: POIXMLDocument[r]): t[r]
-    }
-
-
 }
 
 mod Internal.Apache.Poi.OOXML.POIXMLDocument {
@@ -35,20 +28,10 @@ mod Internal.Apache.Poi.OOXML.POIXMLDocument {
 
     use Internal.Apache.Poi.OOXML.POIXMLDocument
     use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
-    use Internal.Apache.Poi.OOXML.SubPOIXMLDocument
     
     
 
     // XSSF (OOXML) concretely
-
-    pub def getHH(wb: POIXMLDocument[r]): ##org.apache.poi.ooxml.POIXMLDocument =
-        let POIXMLDocument(wb1) = wb;
-        wb1
-
-    pub def wrapHH(_: Region[r], wb: ##org.apache.poi.ooxml.POIXMLDocument): POIXMLDocument[r] =
-        POIXMLDocument(wb)
-
-
 
     ///
     /// Write document.

@@ -17,23 +17,8 @@
 
 mod Internal.Apache.Poi.HSSF.Usermodel {
 
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
-    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
-
-
-    instance Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook[HSSFWorkbook] {
-        pub def toMutWorkbook(d: HSSFWorkbook[r]): MutWorkbook[r] = 
-            let HSSFWorkbook(d1) = d;
-            MutWorkbook(checked_cast(d1))
-
-        pub def fromMutWorkbook(d: MutWorkbook[r]): HSSFWorkbook[r] = 
-            let MutWorkbook(d1) = d;
-            HSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.hssf.usermodel.HSSFWorkbook))
-    }
 
 }
 
@@ -46,13 +31,8 @@ mod Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
 
     use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
     use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
-
-    pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
-        let HSSFWorkbook(wb1) = wb;
-        wb1
-
-    pub def wrapHH(_: Region[r], wb: ##org.apache.poi.hssf.usermodel.HSSFWorkbook): HSSFWorkbook[r] =
-        HSSFWorkbook(wb)
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
 
 
     ///
@@ -72,6 +52,10 @@ mod Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
             newHSSFWorkbook(ins1) |> HSSFWorkbook
         })
 
+    pub def asMutWorkbook(d: HSSFWorkbook[r]): MutWorkbook[r] = 
+        let HSSFWorkbook(d1) = d;
+        MutWorkbook(checked_cast(d1))
+        
     ///
     /// Write workbook.
     ///

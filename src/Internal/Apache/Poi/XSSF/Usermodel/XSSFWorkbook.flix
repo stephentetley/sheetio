@@ -16,34 +16,8 @@
 
 mod Internal.Apache.Poi.XSSF.Usermodel {
 
-    use Internal.Apache.Poi.OOXML.POIXMLDocument
-    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
-    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
-
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
-    instance Internal.Apache.Poi.OOXML.SubPOIXMLDocument[XSSFWorkbook] {
-        pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
-            let XSSFWorkbook(d1) = d;
-            POIXMLDocument(checked_cast(d1))
-
-        pub def fromPOIXMLDocument(d: POIXMLDocument[r]): XSSFWorkbook[r] = 
-            let POIXMLDocument(d1) = d;
-            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
-    }
-
-    instance Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook[XSSFWorkbook] {
-        pub def toMutWorkbook(d: XSSFWorkbook[r]): MutWorkbook[r] = 
-            let XSSFWorkbook(d1) = d;
-            MutWorkbook(checked_cast(d1))
-
-        pub def fromMutWorkbook(d: MutWorkbook[r]): XSSFWorkbook[r] = 
-            let MutWorkbook(d1) = d;
-            XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
-    }
 
 }
 
@@ -56,16 +30,14 @@ mod Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
 
     use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
     use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
-    
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use Internal.Apache.Poi.OOXML.POIXMLDocument
+    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+
 
     // XSSF (OOXML) concretely
 
-    pub def getHH(wb: XSSFWorkbook[r]): ##org.apache.poi.xssf.usermodel.XSSFWorkbook =
-        let XSSFWorkbook(wb1) = wb;
-        wb1
-
-    pub def wrapHH(_: Region[r], wb: ##org.apache.poi.xssf.usermodel.XSSFWorkbook): XSSFWorkbook[r] =
-        XSSFWorkbook(wb)
 
     ///
     /// Create new for writing.
@@ -74,6 +46,13 @@ mod Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
         import new org.apache.poi.xssf.usermodel.XSSFWorkbook():##org.apache.poi.xssf.usermodel.XSSFWorkbook \ r as newXSSFWorkbook;
         newXSSFWorkbook() |> XSSFWorkbook
 
+    pub def asMutWorkbook(d: XSSFWorkbook[r]): MutWorkbook[r] = 
+        let XSSFWorkbook(d1) = d;
+        MutWorkbook(checked_cast(d1))
+
+    pub def asPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
+        let XSSFWorkbook(d1) = d;
+        POIXMLDocument(checked_cast(d1))
 
     ///
     ///

@@ -33,13 +33,6 @@ mod Internal.Apache.Poi.SS.Usermodel.MutRow {
     use Internal.Apache.Poi.SS.Usermodel.Sheet
     use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
-    pub def getHH(row: MutRow[r]): ##org.apache.poi.ss.usermodel.Row =
-        let MutRow(row1) = row;
-        row1
-
-    
-    pub def wrapHH(_: Region[r], prim:  ##org.apache.poi.ss.usermodel.Row): MutRow[r] =
-        MutRow(prim)
 
     pub def getRowNum(row: MutRow[r]): Int32 \ r = 
         import org.apache.poi.ss.usermodel.Row.getRowNum(): Int32 \ r; 
