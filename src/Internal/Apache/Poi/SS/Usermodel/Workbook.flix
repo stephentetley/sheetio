@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
 
     pub enum Workbook(##org.apache.poi.ss.usermodel.Workbook)
@@ -22,18 +22,18 @@ mod Interop.Apache.Poi.SS.Usermodel {
 }
 
 
-mod Interop.Apache.Poi.SS.Usermodel.Workbook {
+mod Internal.Apache.Poi.SS.Usermodel.Workbook {
 
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
-    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
+    use Internal.Apache.Poi.SS.Usermodel.Workbook
+    use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.Sheet
+    use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
     pub def getHH(wb: Workbook): ##org.apache.poi.ss.usermodel.Workbook =
         let Workbook(wb1) = wb;

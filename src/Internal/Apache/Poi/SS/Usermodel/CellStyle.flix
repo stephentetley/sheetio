@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable
     /// Interface
@@ -24,12 +24,12 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.SS.Usermodel.CellStyle {
+mod Internal.Apache.Poi.SS.Usermodel.CellStyle {
 
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
     pub def getHH(cs: CellStyle[r]): ##org.apache.poi.ss.usermodel.CellStyle =
         let CellStyle(cs1) = cs;

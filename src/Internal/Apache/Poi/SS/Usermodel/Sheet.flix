@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
 
     pub enum Sheet(##org.apache.poi.ss.usermodel.Sheet)
@@ -22,14 +22,14 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.SS.Usermodel.Sheet {
+mod Internal.Apache.Poi.SS.Usermodel.Sheet {
 
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
-    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
-    use Interop.Apache.Poi.SS.Usermodel.Row
-    use Interop.Apache.Poi.SS.Usermodel.Row.{Row}
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Internal.Apache.Poi.SS.Usermodel.Sheet
+    use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
+    use Internal.Apache.Poi.SS.Usermodel.Row
+    use Internal.Apache.Poi.SS.Usermodel.Row.{Row}
+    use Internal.Apache.Poi.SS.Usermodel.Workbook
+    use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     pub def getHH(sheet: Sheet): ##org.apache.poi.ss.usermodel.Sheet =
         let Sheet(sheet1) = sheet;

@@ -15,7 +15,7 @@
  */
 
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// "Immutable with Setter"
 
@@ -30,20 +30,20 @@ mod Interop.Apache.Poi.SS.Usermodel {
 }
 
 
-mod Interop.Apache.Poi.SS.Usermodel.DataFormatter {
+mod Internal.Apache.Poi.SS.Usermodel.DataFormatter {
 
     use Locale.{Locale}
 
     use Basis.Text.DecimalFormat
     use Basis.Text.DecimalFormat.{DecimalFormat}
 
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatter
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
-    use Interop.Apache.Poi.SS.Usermodel.MutDataFormatter
-    use Interop.Apache.Poi.SS.Usermodel.MutDataFormatter.{MutDataFormatter}
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatterInit
-    use Interop.Apache.Poi.SS.Usermodel.Cell
-    use Interop.Apache.Poi.SS.Usermodel.Cell.{Cell}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatter
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
+    use Internal.Apache.Poi.SS.Usermodel.MutDataFormatter
+    use Internal.Apache.Poi.SS.Usermodel.MutDataFormatter.{MutDataFormatter}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatterInit
+    use Internal.Apache.Poi.SS.Usermodel.Cell
+    use Internal.Apache.Poi.SS.Usermodel.Cell.{Cell}
     
 
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable
 
@@ -23,10 +23,10 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.SS.Usermodel.Font {
+mod Internal.Apache.Poi.SS.Usermodel.Font {
 
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
     pub def getHH(font: Font[r]): ##org.apache.poi.ss.usermodel.Font =
         let Font(font1) = font;

@@ -15,15 +15,15 @@
  */
 
 
-mod Interop.Apache.Poi.SS.Usermodel.WorkbookFactory {
+mod Internal.Apache.Poi.SS.Usermodel.WorkbookFactory {
 
     use Basis.IO.InputStream
     use Basis.IO.InputStream.{InputStream}
 
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use Internal.Apache.Poi.SS.Usermodel.Workbook
+    use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
     
 
         

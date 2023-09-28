@@ -14,18 +14,18 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.XSSF.Usermodel {
+mod Internal.Apache.Poi.XSSF.Usermodel {
 
-    use Interop.Apache.Poi.OOXML.POIXMLDocument
-    use Interop.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
-    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
+    use Internal.Apache.Poi.OOXML.POIXMLDocument
+    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
+    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
-    instance Interop.Apache.Poi.OOXML.SubPOIXMLDocument[XSSFWorkbook] {
+    instance Internal.Apache.Poi.OOXML.SubPOIXMLDocument[XSSFWorkbook] {
         pub def toPOIXMLDocument(d: XSSFWorkbook[r]): POIXMLDocument[r] = 
             let XSSFWorkbook(d1) = d;
             POIXMLDocument(checked_cast(d1))
@@ -35,7 +35,7 @@ mod Interop.Apache.Poi.XSSF.Usermodel {
             XSSFWorkbook(unchecked_cast(d1 as ##org.apache.poi.xssf.usermodel.XSSFWorkbook))
     }
 
-    instance Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook[XSSFWorkbook] {
+    instance Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook[XSSFWorkbook] {
         pub def toMutWorkbook(d: XSSFWorkbook[r]): MutWorkbook[r] = 
             let XSSFWorkbook(d1) = d;
             MutWorkbook(checked_cast(d1))
@@ -47,15 +47,15 @@ mod Interop.Apache.Poi.XSSF.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
+mod Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     
     use Basis.IO.File
     use Basis.IO.File.{File}
     use Basis.IO.InputStream
     use Basis.IO.InputStream.{InputStream}
 
-    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
-    use Interop.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
+    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
+    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
     
 
     // XSSF (OOXML) concretely

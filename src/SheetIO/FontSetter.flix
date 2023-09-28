@@ -18,7 +18,7 @@
 mod SheetIO {
 
     pub type alias FontSetter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.Font[r], ef, a]
+        Graded.Builder[ka, Internal.Apache.Poi.SS.Usermodel.Font[r], ef, a]
 
 }
 
@@ -26,8 +26,8 @@ mod SheetIO.FontSetter {
 
     use Graded.Builder.{liftSetter!, liftSetterResult!}
 
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
     use SheetIO.FontSetter
 
 
@@ -39,25 +39,25 @@ mod SheetIO.FontSetter {
 
 
     pub def setFontName!(name: String): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setFontName!(name))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setFontName!(name))
 
     pub def setFontHeight!(height: Int16): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setFontHeight!(height))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setFontHeight!(height))
 
     pub def setFontHeightInPoints!(height: Int16): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setFontHeightInPoints!(height))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setFontHeightInPoints!(height))
 
     pub def setBold!(bold: Bool): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setBold!(bold))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setBold!(bold))
 
     pub def setItalic!(italic: Bool): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setItalic!(italic))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setItalic!(italic))
 
     pub def setStrikeout!(strikeout: Bool): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setStrikeout!(strikeout))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setStrikeout!(strikeout))
     
     pub def setColor!(color: Int16): FontSetter[ka, r, r, Unit] = 
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.Font.setColor!(color))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.Font.setColor!(color))
 
 
     /// TODO others need enums...

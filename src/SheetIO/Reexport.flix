@@ -18,18 +18,18 @@
 
 mod SheetIO {
 
-    pub type alias Cell = Interop.Apache.Poi.SS.Usermodel.Cell
+    pub type alias Cell = Internal.Apache.Poi.SS.Usermodel.Cell
 
-    pub type alias CellStyle[r: Region] = Interop.Apache.Poi.SS.Usermodel.CellStyle[r]
+    pub type alias CellStyle[r: Region] = Internal.Apache.Poi.SS.Usermodel.CellStyle[r]
 
-    pub type alias DataFormat[r: Region] = Interop.Apache.Poi.SS.Usermodel.DataFormat[r]
+    pub type alias DataFormat[r: Region] = Internal.Apache.Poi.SS.Usermodel.DataFormat[r]
 
-    pub type alias Font[r: Region] = Interop.Apache.Poi.SS.Usermodel.Font[r]
+    pub type alias Font[r: Region] = Internal.Apache.Poi.SS.Usermodel.Font[r]
 
-    pub type alias Row = Interop.Apache.Poi.SS.Usermodel.Row
+    pub type alias Row = Internal.Apache.Poi.SS.Usermodel.Row
     
-    pub type alias Sheet = Interop.Apache.Poi.SS.Usermodel.Sheet
+    pub type alias Sheet = Internal.Apache.Poi.SS.Usermodel.Sheet
 
-    pub type alias Workbook = Interop.Apache.Poi.SS.Usermodel.Workbook
+    pub type alias Workbook = Internal.Apache.Poi.SS.Usermodel.Workbook
 
 }

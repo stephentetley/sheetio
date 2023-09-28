@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable / Interface
 
@@ -23,15 +23,15 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.SS.Usermodel.MutRow {
+mod Internal.Apache.Poi.SS.Usermodel.MutRow {
 
 
-    use Interop.Apache.Poi.SS.Usermodel.MutRow
-    use Interop.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
-    use Interop.Apache.Poi.SS.Usermodel.MutCell
-    use Interop.Apache.Poi.SS.Usermodel.MutCell.{MutCell}
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
-    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
+    use Internal.Apache.Poi.SS.Usermodel.MutRow
+    use Internal.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
+    use Internal.Apache.Poi.SS.Usermodel.MutCell
+    use Internal.Apache.Poi.SS.Usermodel.MutCell.{MutCell}
+    use Internal.Apache.Poi.SS.Usermodel.Sheet
+    use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
 
     pub def getHH(row: MutRow[r]): ##org.apache.poi.ss.usermodel.Row =
         let MutRow(row1) = row;

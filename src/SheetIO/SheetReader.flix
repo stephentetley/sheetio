@@ -19,7 +19,7 @@ mod SheetIO {
 
 
     pub type alias SheetReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Sheet, ef, a]
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Internal.Apache.Poi.SS.Usermodel.Sheet, ef, a]
 
 
 }
@@ -34,9 +34,9 @@ mod SheetIO.SheetReader {
 
     use SheetIO.SheetReader
 
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.Row
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.Row
+    use Internal.Apache.Poi.SS.Usermodel.Sheet
 
     use SheetIO.RowReader
     use SheetIO.NamedRowReader
@@ -59,7 +59,7 @@ mod SheetIO.SheetReader {
         GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.NamedRowReader.runNamedRowReader(eval, rc, headers, df, row))
 
     pub def getRowAt(ix: Int32): SheetReader[ka, r, ef, Row] = 
-        liftGetterResult(sheet -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet)))
+        liftGetterResult(sheet -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getRow(ix, sheet)))
     
     pub def readRowAt(ix: Int32, eval: RowReader[a, r, ef, a]): SheetReader[ka, r, ef, a] =
         getRowAt(ix)    >>= row -> 
@@ -68,27 +68,27 @@ mod SheetIO.SheetReader {
  
 
     pub def getSheetName(): SheetReader[ka, r, ef, String] =
-        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(s)))
+        liftGetter(s -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getSheetName(s)))
 
 
     pub def getFirstRowNum(): SheetReader[ka, r, ef, Int32] =
-        liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum(s)) |> Option.toOk("getFirstRowNum"))
+        liftGetterResult(s -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getFirstRowNum(s)) |> Option.toOk("getFirstRowNum"))
 
     /// This may be higher than expected if rows at the end of the sheet have previously had content 
     /// which has been beleted.
     pub def getLastRowNum(): SheetReader[ka, r, ef, Int32] =
-        liftGetterResult(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum(s)) |> Option.toOk("getLastRowNum"))
+        liftGetterResult(s -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getLastRowNum(s)) |> Option.toOk("getLastRowNum"))
 
 
     pub def getPhysicalNumberOfRows(): SheetReader[ka, r, ef, Int32] =
-        liftGetter(s -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows(s)))
+        liftGetter(s -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getPhysicalNumberOfRows(s)))
 
     ///
     /// Working with Iterator<Row> - wrapped here as a Stream - seems safer from errors 
     /// than trying to use `getLastRowNum` to find the end.
     ///
     pub def rowIterator(): SheetReader[ka, r, ef + r, Iterator[Row, r, r]] = 
-        liftGetterWithRgn((rc, s) -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
+        liftGetterWithRgn((rc, s) -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.rowIterator(rc, s)))
 
 
 
@@ -110,7 +110,7 @@ mod SheetIO.SheetReader {
         def loop(s1) = match Iterator.next(iter) {
             case None      => point(s1)
             case Some(row) => {
-                let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
+                let rownum = Internal.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
                 if (rownum >= start.start and rownum < end.end) {
                     GradedError.reifyError(withRowReader(eval, row)) >>= ans ->
                     match ans {
@@ -135,7 +135,7 @@ mod SheetIO.SheetReader {
         def loop(s1) = match Iterator.next(iter) {
             case None      => point(s1)
             case Some(row) => {
-                let rownum = Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
+                let rownum = Internal.Apache.Poi.SS.Usermodel.Row.getRowNum(row);
                 if (rownum >= start.start and rownum < end.end) {
                     GradedError.reifyError(withNamedRowReader(eval, headers, row)) >>= ans ->
                     match ans {

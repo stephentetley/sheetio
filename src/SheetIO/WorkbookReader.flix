@@ -19,7 +19,7 @@ mod SheetIO {
 
 
     pub type alias WorkbookReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Workbook, ef, a]
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Internal.Apache.Poi.SS.Usermodel.Workbook, ef, a]
 
 }
 
@@ -34,10 +34,10 @@ mod SheetIO.WorkbookReader {
     use Basis.IO.Path
 
 
-    use Interop.Apache.Poi.SS.Usermodel.Sheet
-    use Interop.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Internal.Apache.Poi.SS.Usermodel.Sheet
+    use Internal.Apache.Poi.SS.Usermodel.Sheet.{Sheet}
+    use Internal.Apache.Poi.SS.Usermodel.Workbook
+    use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     use SheetIO.WorkbookReader
 
@@ -60,9 +60,9 @@ mod SheetIO.WorkbookReader {
     def runOnFile(rc: Region[r], ma: WorkbookReader[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO} =
         forM (file  <- Basis.IO.FileInputStream.new(path);
                 ins <- Ok(Basis.IO.FileInputStream.asInputStream(file));
-                wb  <- Interop.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins) |> Result.mapErr(Generic);
+                wb  <- Internal.Apache.Poi.SS.Usermodel.WorkbookFactory.createWithInputStream(ins) |> Result.mapErr(Generic);
                 ans <- runWorkbookReader(ma, rc, wb) |> Result.mapErr(Generic);
-                _   <- Interop.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb) |> Result.mapErr(Generic))
+                _   <- Internal.Apache.Poi.SS.Usermodel.Workbook.close!(rc, wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -71,7 +71,7 @@ mod SheetIO.WorkbookReader {
     pub def runWorkbookReader(ma: WorkbookReader[a, r, ef, a], 
                                 rc: Region[r],
                                 st: Workbook): Result[String, a] \ ef + r =        
-        match Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
+        match Internal.Apache.Poi.SS.Usermodel.DataFormatter.new(rc, _ -> checked_ecast(Ok())){
             case Ok(df) => Graded.RgnEnvEvaluator.runRgnEnvEvaluator(ma, rc, df, st)
             case Err(msg) => Err(msg)
         } 
@@ -80,7 +80,7 @@ mod SheetIO.WorkbookReader {
         GradedExtras.Utils.liftGetterResultWithAll((rc, df, _) -> SheetIO.SheetReader.runSheetReader(eval, rc, df, sheet))
 
     pub def getSheetNamed(name: String): WorkbookReader[ka, r, ef, Sheet] =
-        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
+        liftGetterResult(wb -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Workbook.getSheet(name, wb)) |> Option.toOk("getSheetNamed")) 
 
     
     pub def readSheetNamed(name: String, eval: SheetReader[a, r, ef, a]): WorkbookReader[ka, r, ef, a] =
@@ -89,7 +89,7 @@ mod SheetIO.WorkbookReader {
 
 
     pub def getSheetAt(ix: Int32): WorkbookReader[ka, r, ef, Sheet] =
-        liftGetterResult(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
+        liftGetterResult(wb -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Workbook.getSheetAt(ix, wb)))
     
     pub def readSheetAt(ix: Int32, eval: SheetReader[a, r, ef, a]): WorkbookReader[ka, r, ef, a] =
         getSheetAt(ix)    >>= sheet -> 
@@ -98,7 +98,7 @@ mod SheetIO.WorkbookReader {
     // WorkbookReader
 
     pub def getNumberOfSheets(): WorkbookReader[ka, r, ef, Int32] =
-        liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets(wb)))
+        liftGetter(wb -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Workbook.getNumberOfSheets(wb)))
 
 
     pub def getSheetNames(): WorkbookReader[ka, r, ef, List[String]] =
@@ -109,7 +109,7 @@ mod SheetIO.WorkbookReader {
 
 
     pub def getSheetName(ix: Int32): WorkbookReader[ka, r, ef, String] =
-        liftGetter(wb -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
+        liftGetter(wb -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Workbook.getSheetName(ix, wb)))
 
 
 

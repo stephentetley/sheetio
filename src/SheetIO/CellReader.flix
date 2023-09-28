@@ -19,7 +19,7 @@
 mod SheetIO {
 
     pub type alias CellReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Interop.Apache.Poi.SS.Usermodel.Cell, ef, a]
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Internal.Apache.Poi.SS.Usermodel.Cell, ef, a]
 
 
 }
@@ -38,7 +38,7 @@ mod SheetIO.CellReader {
     use SheetIO.Cell
     use SheetIO.CellType
     use SheetIO.CellType.{TyNone, TyBlank, TyBoolean, TyError, TyFormula, TyNumeric, TyString}
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatter
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatter
 
     pub def runCellReader(ma: CellReader[a, r, ef, a], 
                             rc: Region[r],
@@ -49,7 +49,7 @@ mod SheetIO.CellReader {
 
     /// Uses the default DataFormatter
     pub def getContent(): CellReader[ka, r, ef, String] =
-        liftGetterWithEnv((fmt, cell) -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt)))
+        liftGetterWithEnv((fmt, cell) -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt)))
 
     /// Uses the default DataFormatter
     pub def getTrimmedContent(): CellReader[ka, r, ef, String] =
@@ -60,7 +60,7 @@ mod SheetIO.CellReader {
 
     pub def getCellType(): CellReader[ka, r, ef, CellType] =
         liftGetter(cell -> 
-            checked_ecast(Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell))
+            checked_ecast(Internal.Apache.Poi.SS.Usermodel.Cell.getCellType(cell))
                 |> SheetIO.CellType.fromNative
         )
 
@@ -77,7 +77,7 @@ mod SheetIO.CellReader {
 
     /// Error if the cell type is numeric.
     pub def getString(): CellReader[ka, r, ef, String] =
-        liftGetterResult(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(cell)))
+        liftGetterResult(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(cell)))
 
 
     /// TODO - wrong name or should return Bool...
@@ -100,16 +100,16 @@ mod SheetIO.CellReader {
 
 
     pub def getStringWithDataFormatter(df: DataFormatter): CellReader[ka, r, ef, String] =
-        liftGetter(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, df)))
+        liftGetter(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, df)))
 
 
     pub def getBool(): CellReader[ka, r, ef, Bool] =
-        liftGetterResult(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell)))
+        liftGetterResult(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell)))
 
     /// Error if the cell type is String or cell value is not a readable double.
     /// Returns 0 for blank cells.
     pub def getNumeric(): CellReader[ka, r, ef, Float64] =
-        liftGetterResult(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell)))
+        liftGetterResult(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell)))
 
 
     def getNum(conv: Float64 -> Option[a]): CellReader[ka, r, ef, a] =
@@ -146,7 +146,7 @@ mod SheetIO.CellReader {
 
 
     def isDateFormatted(): CellReader[ka, r, ef, Bool] = 
-        liftGetter(cell -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell)))
+        liftGetter(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell)))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com.questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
@@ -157,7 +157,7 @@ mod SheetIO.CellReader {
         if (ctype == TyNumeric) {
             isDateFormatted()       >>= dtCell ->
             if (dtCell) {
-                liftGetterResult(cell -> Interop.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
+                liftGetterResult(cell -> Internal.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
                 if (Object.isNull(dt))
                     throwError("getLocalDateTime - null")
                 else

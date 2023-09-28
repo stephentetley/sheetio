@@ -15,17 +15,17 @@
  */
 
 
-mod Interop.Apache.Poi.HSSF.Usermodel {
+mod Internal.Apache.Poi.HSSF.Usermodel {
 
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
-    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
+    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
 
-    instance Interop.Apache.Poi.SS.Usermodel.SubMutWorkbook[HSSFWorkbook] {
+    instance Internal.Apache.Poi.SS.Usermodel.SubMutWorkbook[HSSFWorkbook] {
         pub def toMutWorkbook(d: HSSFWorkbook[r]): MutWorkbook[r] = 
             let HSSFWorkbook(d1) = d;
             MutWorkbook(checked_cast(d1))
@@ -37,15 +37,15 @@ mod Interop.Apache.Poi.HSSF.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
+mod Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     
     use Basis.IO.InputStream
     use Basis.IO.InputStream.{InputStream}
     use Basis.IO.OutputStream
     use Basis.IO.OutputStream.{OutputStream}
 
-    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
-    use Interop.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
+    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
+    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
 
     pub def getHH(wb: HSSFWorkbook[r]): ##org.apache.poi.hssf.usermodel.HSSFWorkbook =
         let HSSFWorkbook(wb1) = wb;

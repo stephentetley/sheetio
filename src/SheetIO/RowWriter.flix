@@ -21,7 +21,7 @@ mod SheetIO {
 
 
     pub type alias RowWriter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.MutStateError[ka, Interop.Apache.Poi.SS.Usermodel.MutRow[r], ef, a]
+        Graded.MutStateError[ka, Internal.Apache.Poi.SS.Usermodel.MutRow[r], ef, a]
 
 }
 
@@ -35,11 +35,11 @@ mod SheetIO.RowWriter {
     use SheetIO.RowWriter
     use SheetIO.CellWriter
 
-    use Interop.Apache.Poi.SS.Usermodel.MutCell
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.MutRow
-    use Interop.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
+    use Internal.Apache.Poi.SS.Usermodel.MutCell
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Internal.Apache.Poi.SS.Usermodel.MutRow
+    use Internal.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
 
 
     /// The state param `st` is expected to be mutated...
@@ -53,10 +53,10 @@ mod SheetIO.RowWriter {
 
 
     def getCell(ix: Int32): RowWriter[ka, r, r, Option[MutCell[r]]] = 
-        liftGetter(Interop.Apache.Poi.SS.Usermodel.MutRow.getCell(ix))
+        liftGetter(Internal.Apache.Poi.SS.Usermodel.MutRow.getCell(ix))
 
     def createCell!(ix: Int32): RowWriter[ka, r, r, MutCell[r]] = 
-        liftSetterResult!(Interop.Apache.Poi.SS.Usermodel.MutRow.createCell!(ix))
+        liftSetterResult!(Internal.Apache.Poi.SS.Usermodel.MutRow.createCell!(ix))
 
     def getOrCreateCell!(ix: Int32): RowWriter[ka, r, r, MutCell[r]] = 
         getCell(ix) >>= ans -> 
@@ -78,14 +78,14 @@ mod SheetIO.RowWriter {
     /// This also sets the CellStyle...
     // def createOrGetCell(ix: Int32): RowWriter[r, ka, Cell[r]] \ r) = 
     //     use Result.{flatMap};
-    //     use Interop.Apache.Poi.SS.Usermodel.Row.{createCell!};
+    //     use Internal.Apache.Poi.SS.Usermodel.Row.{createCell!};
     //     let body = (style, row) -> {
-    //         let* cell   = match Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
+    //         let* cell   = match Internal.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) {
     //                         case Some(ans)  => if (not Object.isNull(ans)) Ok(ans) else createCell!(ix, row)
     //                         case None       => createCell!(ix, row)
     //                     };
     //         let _       = match style { 
-    //                         case Some(sty1) => Interop.Apache.Poi.SS.Usermodel.Cell.setCellStyle!(sty1, cell)
+    //                         case Some(sty1) => Internal.Apache.Poi.SS.Usermodel.Cell.setCellStyle!(sty1, cell)
     //                         case None       => unsafe_cast () as _ \ r
     //                     };
     //         Ok(cell)

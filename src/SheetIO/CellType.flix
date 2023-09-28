@@ -85,7 +85,7 @@ mod SheetIO.CellType {
         let y1 = checked_cast(y);
         equals(x1, y1)
 
-    pub def fromNative(x: Interop.Apache.Poi.SS.Usermodel.CellType): CellType = 
+    pub def fromNative(x: Internal.Apache.Poi.SS.Usermodel.CellType): CellType = 
         import static get org.apache.poi.ss.usermodel.CellType._NONE: ##org.apache.poi.ss.usermodel.CellType \ {} as get_NONE;
         import static get org.apache.poi.ss.usermodel.CellType.BLANK: ##org.apache.poi.ss.usermodel.CellType \ {} as getBLANK;
         import static get org.apache.poi.ss.usermodel.CellType.BOOLEAN: ##org.apache.poi.ss.usermodel.CellType \ {} as getBOOLEAN;
@@ -93,7 +93,7 @@ mod SheetIO.CellType {
         import static get org.apache.poi.ss.usermodel.CellType.FORMULA: ##org.apache.poi.ss.usermodel.CellType \ {} as getFORMULA;
         import static get org.apache.poi.ss.usermodel.CellType.NUMERIC: ##org.apache.poi.ss.usermodel.CellType \ {} as getNUMERIC;
         import static get org.apache.poi.ss.usermodel.CellType.STRING: ##org.apache.poi.ss.usermodel.CellType \ {} as getSTRING;
-        match Interop.Apache.Poi.SS.Usermodel.CellType.getHH(x) {
+        match Internal.Apache.Poi.SS.Usermodel.CellType.getHH(x) {
             case x1 if primEquals(x1, get_NONE())       => TyNone
             case x1 if primEquals(x1, getBLANK())       => TyBlank
             case x1 if primEquals(x1, getBOOLEAN())     => TyBoolean

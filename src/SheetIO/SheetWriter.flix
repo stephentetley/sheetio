@@ -22,7 +22,7 @@ mod SheetIO {
     /// Imperative writing uses mutable state
 
     pub type alias SheetWriter[ka: Type, r: Region, ef: Eff, a: Type] =
-        Graded.EnvMutStateError[ka, Option[Interop.Apache.Poi.SS.Usermodel.CellStyle[r]], Interop.Apache.Poi.SS.Usermodel.MutSheet[r], ef, a]
+        Graded.EnvMutStateError[ka, Option[Internal.Apache.Poi.SS.Usermodel.CellStyle[r]], Internal.Apache.Poi.SS.Usermodel.MutSheet[r], ef, a]
     
 
 }
@@ -36,9 +36,9 @@ mod SheetIO.SheetWriter {
     use SheetIO.SheetWriter
     use SheetIO.RowWriter
     
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.MutRow
-    use Interop.Apache.Poi.SS.Usermodel.MutSheet
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.MutRow
+    use Internal.Apache.Poi.SS.Usermodel.MutSheet
 
 
 
@@ -54,12 +54,12 @@ mod SheetIO.SheetWriter {
 
 
     def getRow(ix: Int32): SheetWriter[ka, r, r, Option[MutRow[r]]] = 
-        liftGetterResult((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.getRow(ix, sheet)) 
+        liftGetterResult((_, sheet) -> Internal.Apache.Poi.SS.Usermodel.MutSheet.getRow(ix, sheet)) 
             |> GradedError.reifyError
             |> GradedFunctor.map(Result.toOption)
 
     def createRow!(ix: Int32): SheetWriter[ka, r, r, MutRow[r]] = 
-        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.createRow!(ix, sheet))
+        liftSetter!((_, sheet) -> Internal.Apache.Poi.SS.Usermodel.MutSheet.createRow!(ix, sheet))
 
     def getOrCreateRow!(ix: Int32): SheetWriter[ka, r, r, MutRow[r]] = 
         getRow(ix) >>= ans -> 
@@ -75,7 +75,7 @@ mod SheetIO.SheetWriter {
 
 
     pub def getSheetName(): SheetWriter[ka, r, r, String] =
-        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.MutSheet.getSheetName(sheet))
+        liftSetter!((_, sheet) -> Internal.Apache.Poi.SS.Usermodel.MutSheet.getSheetName(sheet))
 
 
 
@@ -139,7 +139,7 @@ mod SheetIO.SheetWriter {
 
     // createRow
     def createRow!(ix: Int32): SheetWriter[r, ka, Row[r]] \ r =
-        liftSetter!((_, sheet) -> Interop.Apache.Poi.SS.Usermodel.Sheet.createRow!(ix, sheet))
+        liftSetter!((_, sheet) -> Internal.Apache.Poi.SS.Usermodel.Sheet.createRow!(ix, sheet))
 
 
     pub def setRow!(ix: Int32, ma: RowWriter[r, a, a]): SheetWriter[r, ka, a] \ r =

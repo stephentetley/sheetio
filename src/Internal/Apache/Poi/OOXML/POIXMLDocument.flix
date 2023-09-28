@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.OOXML {
+mod Internal.Apache.Poi.OOXML {
 
 
     pub enum POIXMLDocument[_: Region](##org.apache.poi.ooxml.POIXMLDocument)
@@ -28,14 +28,14 @@ mod Interop.Apache.Poi.OOXML {
 
 }
 
-mod Interop.Apache.Poi.OOXML.POIXMLDocument {
+mod Internal.Apache.Poi.OOXML.POIXMLDocument {
 
     use Basis.IO.OutputStream
     use Basis.IO.OutputStream.{OutputStream}
 
-    use Interop.Apache.Poi.OOXML.POIXMLDocument
-    use Interop.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
-    use Interop.Apache.Poi.OOXML.SubPOIXMLDocument
+    use Internal.Apache.Poi.OOXML.POIXMLDocument
+    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+    use Internal.Apache.Poi.OOXML.SubPOIXMLDocument
     
     
 

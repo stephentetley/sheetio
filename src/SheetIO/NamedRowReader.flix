@@ -24,7 +24,7 @@ mod SheetIO {
 
     /// Includes Map[columName: String => index: Int32]
     pub type alias NamedRowReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.RgnEnvEvaluator[ka, r, SheetIO.NamedRowReader.Env, Interop.Apache.Poi.SS.Usermodel.Row, ef, a]
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.NamedRowReader.Env, Internal.Apache.Poi.SS.Usermodel.Row, ef, a]
 
 
 }
@@ -42,15 +42,15 @@ mod SheetIO.NamedRowReader {
 
     use SheetIO.NamedRowReader
 
-    use Interop.Apache.Poi.SS.Usermodel.Cell
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatter
-    use Interop.Apache.Poi.SS.Usermodel.Row
+    use Internal.Apache.Poi.SS.Usermodel.Cell
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatter
+    use Internal.Apache.Poi.SS.Usermodel.Row
 
     use SheetIO.CellReader
 
     pub type alias Env = 
         { columnIndices = Map[String, Int32]
-        , formatter = Interop.Apache.Poi.SS.Usermodel.DataFormatter
+        , formatter = Internal.Apache.Poi.SS.Usermodel.DataFormatter
         }
 
 
@@ -97,7 +97,7 @@ mod SheetIO.NamedRowReader {
 
     pub def getCellNamed(label: String): NamedRowReader[ka, r, ef, Cell] =
         getIndex(label) >>= ix -> 
-        liftGetterResult(row -> Interop.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
+        liftGetterResult(row -> Internal.Apache.Poi.SS.Usermodel.Row.getCell(ix, row) |> Option.toOk("getCellNamed(${label})"))
 
 
     pub def readCellName(label: String, eval: CellReader[a, r, ef, a]): NamedRowReader[ka, r, ef, a] =
@@ -107,18 +107,18 @@ mod SheetIO.NamedRowReader {
 
 
     pub def getRowNum(): NamedRowReader[ka, r, ef, Int32] = 
-        liftGetter(row -> checked_ecast(Interop.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
+        liftGetter(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
 
     pub def getSheetName(): NamedRowReader[ka, r, ef, String] = 
         liftGetter(row -> {
-            let sheet = Interop.Apache.Poi.SS.Usermodel.Row.getSheet(row);
-            checked_ecast(Interop.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
+            let sheet = Internal.Apache.Poi.SS.Usermodel.Row.getSheet(row);
+            checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
         })
 
 /*
     /// Uses the default DataFormatter
     pub def getContentNamed(label: String): NamedRowReader[ka, r, ef, String] =
-        liftCellGetter(label, (fmt, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
+        liftCellGetter(label, (fmt, cell) -> Internal.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, fmt))
 
     /// Uses the default DataFormatter
     pub def getTrimmedContentNamed(label: String): NamedRowReader[r, ka, r, String] =
@@ -136,7 +136,7 @@ mod SheetIO.NamedRowReader {
 
     pub def getCellTypeNamed(label: String): NamedRowReader[r, ka, r, CellType] =
         liftCellGetter(label, (_, cell) -> {
-            Interop.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
+            Internal.Apache.Poi.SS.Usermodel.Cell.getCellType(cell) 
                 |> SheetIO.CellType.fromNative
         })
 
@@ -158,7 +158,7 @@ mod SheetIO.NamedRowReader {
 
 
     pub def getStringNamed(label: String): NamedRowReader[r, ka, r, String] =
-        liftCellGetterResult(label, (_, row) -> Interop.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(row))
+        liftCellGetterResult(label, (_, row) -> Internal.Apache.Poi.SS.Usermodel.Cell.getStringCellValue(row))
             
 
     pub def getSatifiesNamed(label: String, test: String -> Bool): NamedRowReader[r, ka, r, String] =
@@ -181,14 +181,14 @@ mod SheetIO.NamedRowReader {
 
 
     pub def getStringNamedWithDataFormatter(label: String, dfmt: DataFormatter): NamedRowReader[r, ka, r, String] =
-        liftCellGetter(label, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, dfmt))
+        liftCellGetter(label, (_, cell) -> Internal.Apache.Poi.SS.Usermodel.DataFormatter.formatCellValue(cell, dfmt))
 
     pub def getBoolNamed(label: String): NamedRowReader[r, ka, r, Bool] =
-        liftCellGetterResult(label, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell))
+        liftCellGetterResult(label, (_, cell) -> Internal.Apache.Poi.SS.Usermodel.Cell.getBooleanCellValue(cell))
     
 
     pub def getNumericNamed(label: String): NamedRowReader[r, ka, r, Float64] =
-        liftCellGetterResult(label, (_, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell))
+        liftCellGetterResult(label, (_, cell) -> Internal.Apache.Poi.SS.Usermodel.Cell.getNumericCellValue(cell))
 
     def getNumNamed(label: String, conv: Float64 -> Option[a]): NamedRowReader[r, ka, r, a] =
         getNumericNamed(label) >>= n ->
@@ -225,7 +225,7 @@ mod SheetIO.NamedRowReader {
 
 
     def isDateFormattedNamed(label: String): NamedRowReader[r, ka, r, Bool] =
-        liftCellGetter(label, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell))
+        liftCellGetter(label, ( _, cell) -> Internal.Apache.Poi.SS.Usermodel.DateUtil.isCellDateFormatted(cell))
 
     /// This tests for cellType = NUMERIC and `isCellDateFormatted` before reading
     /// See https://stackoverflow.com/questions/3148535/how-to-read-excel-cell-having-date-with-apache-poi
@@ -236,7 +236,7 @@ mod SheetIO.NamedRowReader {
         if (ctype == TyNumeric) {
             isDateFormattedNamed(label) >>= dtCell ->
             if (dtCell) {
-                liftCellGetterResult(label, ( _, cell) -> Interop.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
+                liftCellGetterResult(label, ( _, cell) -> Internal.Apache.Poi.SS.Usermodel.Cell.getLocalDateTimeCellValue(cell)) >>= dt ->
                 if (Object.isNull(dt))
                     throwError("getLocalDateTimeNamed - null")
                 else

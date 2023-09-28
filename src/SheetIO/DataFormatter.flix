@@ -21,7 +21,7 @@ mod SheetIO {
     /// DataFormatter
     ///
     ///
-    pub type alias DataFormatter = Interop.Apache.Poi.SS.Usermodel.DataFormatter
+    pub type alias DataFormatter = Internal.Apache.Poi.SS.Usermodel.DataFormatter
 
 }
 
@@ -29,19 +29,19 @@ mod SheetIO.DataFormatter {
 
 
     use SheetIO.DataFormatter
-    use Interop.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
 
 /*
     ///
     /// Returns a new mutable DataFormatter.
     ///
     pub def new(rc: Region[r]): DataFormatter[r] \ r =
-        Interop.Apache.Poi.SS.Usermodel.DataFormatter.new(rc)
+        Internal.Apache.Poi.SS.Usermodel.DataFormatter.new(rc)
 
     ///
     /// Returns a new mutable DataFormatter.
     ///
     pub def newWithLocale(rc: Region[r], loc: Locale): DataFormatter[r] \ r =
-        Interop.Apache.Poi.SS.Usermodel.DataFormatter.newWithLocale(rc, loc)
+        Internal.Apache.Poi.SS.Usermodel.DataFormatter.newWithLocale(rc, loc)
 */      
 }

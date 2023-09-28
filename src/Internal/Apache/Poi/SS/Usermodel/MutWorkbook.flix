@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable / Interface
 
@@ -29,21 +29,21 @@ mod Interop.Apache.Poi.SS.Usermodel {
 }
 
 
-mod Interop.Apache.Poi.SS.Usermodel.MutWorkbook {
+mod Internal.Apache.Poi.SS.Usermodel.MutWorkbook {
 
     use Basis.IO.OutputStream
     use Basis.IO.OutputStream.{OutputStream}
 
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Interop.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
-    use Interop.Apache.Poi.SS.Usermodel.MutSheet
-    use Interop.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.MutSheet
+    use Internal.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
 
     pub def getHH(wb: MutWorkbook[r]): ##org.apache.poi.ss.usermodel.Workbook =
         let MutWorkbook(wb1) = wb;

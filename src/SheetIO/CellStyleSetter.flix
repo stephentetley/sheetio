@@ -19,7 +19,7 @@ mod SheetIO {
 
 
     pub type alias CellStyleSetter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.Builder[ka, Interop.Apache.Poi.SS.Usermodel.CellStyle[r], ef, a]
+        Graded.Builder[ka, Internal.Apache.Poi.SS.Usermodel.CellStyle[r], ef, a]
 
 
 
@@ -31,10 +31,10 @@ mod SheetIO.CellStyleSetter {
 
     use SheetIO.CellStyleSetter
 
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle
-    use Interop.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Interop.Apache.Poi.SS.Usermodel.Font
-    use Interop.Apache.Poi.SS.Usermodel.Font.{Font}
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use Internal.Apache.Poi.SS.Usermodel.Font
+    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
 
     /// The state param `st` is expected to be mutated...
@@ -45,28 +45,28 @@ mod SheetIO.CellStyleSetter {
         Graded.Builder.runBuilder(ma, st)
 
     pub def setFont!(font: Font[r]): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setFont!(font))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setFont!(font))
 
     
     pub def setWrapText!(wrapped: Bool): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setWrapText!(wrapped))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setWrapText!(wrapped))
 
 
     pub def setIndention!(indent: Int16): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setIndention!(indent))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setIndention!(indent))
 
     pub def setFillForegroundColor!(color: Int16): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setFillForegroundColor!(color))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setFillForegroundColor!(color))
   
     pub def setFillBackgroundColor!(color: Int16): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setFillBackgroundColor!(color))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setFillBackgroundColor!(color))
 
 
     pub def setShrinkToFit!(shrink: Bool): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setShrinkToFit!(shrink))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setShrinkToFit!(shrink))
 
     pub def setDataFormat!(value: Int16): CellStyleSetter[ka, r, r, Unit] =
-        liftSetter!(Interop.Apache.Poi.SS.Usermodel.CellStyle.setDataFormat!(value))
+        liftSetter!(Internal.Apache.Poi.SS.Usermodel.CellStyle.setDataFormat!(value))
 
 
     // pub def cloneStyleFrom!(x: CellStyle[r]): CellStyleSetter[ka, r, Unit] \ r =

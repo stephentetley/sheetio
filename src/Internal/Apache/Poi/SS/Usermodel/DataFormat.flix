@@ -15,7 +15,7 @@
  */
 
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable*  / Interface
     ///
@@ -26,10 +26,10 @@ mod Interop.Apache.Poi.SS.Usermodel {
 }
 
 
-mod Interop.Apache.Poi.SS.Usermodel.DataFormat {
+mod Internal.Apache.Poi.SS.Usermodel.DataFormat {
 
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat
-    use Interop.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat
+    use Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
 
     pub def getHH(df: DataFormat[r]): ##org.apache.poi.ss.usermodel.DataFormat =
         let DataFormat(df1) = df;

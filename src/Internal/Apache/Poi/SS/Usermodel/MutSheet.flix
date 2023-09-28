@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Interop.Apache.Poi.SS.Usermodel {
+mod Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable / Interface
 
@@ -23,14 +23,14 @@ mod Interop.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Interop.Apache.Poi.SS.Usermodel.MutSheet {
+mod Internal.Apache.Poi.SS.Usermodel.MutSheet {
 
-    use Interop.Apache.Poi.SS.Usermodel.MutSheet
-    use Interop.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
-    use Interop.Apache.Poi.SS.Usermodel.MutRow
-    use Interop.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
-    use Interop.Apache.Poi.SS.Usermodel.Workbook
-    use Interop.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
+    use Internal.Apache.Poi.SS.Usermodel.MutSheet
+    use Internal.Apache.Poi.SS.Usermodel.MutSheet.{MutSheet}
+    use Internal.Apache.Poi.SS.Usermodel.MutRow
+    use Internal.Apache.Poi.SS.Usermodel.MutRow.{MutRow}
+    use Internal.Apache.Poi.SS.Usermodel.Workbook
+    use Internal.Apache.Poi.SS.Usermodel.Workbook.{Workbook}
 
     pub def getHH(sheet: MutSheet[r]): ##org.apache.poi.ss.usermodel.Sheet =
         let MutSheet(s1) = sheet;
@@ -92,10 +92,10 @@ mod Interop.Apache.Poi.SS.Usermodel.MutSheet {
 
     // pub def rowIterator(rc: Region[r1], sheet: MutSheet[r]): Iterator[Row[r1], r + r1, r1] \ r = 
     //     import org.apache.poi.ss.usermodel.Sheet.rowIterator(): ##java.util.Iterator \ r;
-    //     let ocast = obj -> Interop.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
+    //     let ocast = obj -> Internal.Apache.Poi.SS.Usermodel.Row.wrapHH(rc, unchecked_cast(obj as ##org.apache.poi.ss.usermodel.Row));
     //     let MutSheet(sheet1) = sheet;
     //     let iterHH = rowIterator(sheet1);
-    //     Interop.Util.IteratorZ.wrapHH(rc, iterHH) 
-    //         |> Interop.Util.IteratorZ.toFlixIterator(rc, ocast)
+    //     Internal.Util.IteratorZ.wrapHH(rc, iterHH) 
+    //         |> Internal.Util.IteratorZ.toFlixIterator(rc, ocast)
 
 }
