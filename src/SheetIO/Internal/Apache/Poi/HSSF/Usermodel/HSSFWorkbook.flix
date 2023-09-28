@@ -15,24 +15,24 @@
  */
 
 
-mod Internal.Apache.Poi.HSSF.Usermodel {
+mod SheetIO.Internal.Apache.Poi.HSSF.Usermodel {
 
 
     pub enum HSSFWorkbook[_: Region](##org.apache.poi.hssf.usermodel.HSSFWorkbook)
 
 }
 
-mod Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
+mod SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook {
     
     use Basis.IO.InputStream
     use Basis.IO.InputStream.{InputStream}
     use Basis.IO.OutputStream
     use Basis.IO.OutputStream.{OutputStream}
 
-    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
-    use Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook
+    use SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.{HSSFWorkbook}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
 
 
     ///

@@ -19,7 +19,7 @@
 mod SheetIO {
 
     pub type alias CellWriter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.MutStateError[ka, Internal.Apache.Poi.SS.Usermodel.MutCell[r], ef, a]
+        Graded.MutStateError[ka, SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell[r], ef, a]
 }
 
 mod SheetIO.CellWriter {
@@ -27,7 +27,7 @@ mod SheetIO.CellWriter {
     use Graded.MutStateError.{liftSetter!, liftSetterResult!}
 
     use SheetIO.CellWriter
-    use Internal.Apache.Poi.SS.Usermodel.MutCell
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell
     
     pub def runCellWriter(ma: CellWriter[a, r, ef, a], 
                             st: MutCell[r]): Result[String, a] \ ef =
@@ -35,18 +35,18 @@ mod SheetIO.CellWriter {
 
 
     pub def putBlank!(): CellWriter[ka, r, ef + r, Unit] =
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setBlank!(cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setBlank!(cell)))
 
 
     pub def putString!(value: String): CellWriter[ka, r, ef + r, Unit] =
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueString!(value, cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueString!(value, cell)))
 
     pub def putBool!(value: Bool): CellWriter[ka, r, ef + r, Unit] =
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueBoolean!(value, cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueBoolean!(value, cell)))
 
 
     def putNumeric!(value: Float64): CellWriter[ka, r, ef + r, Unit] =
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueDouble!(value, cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueDouble!(value, cell)))
 
     pub def putInt8!(n: Int8): CellWriter[ka, r, ef + r, Unit] =
         putNumeric!(Int8.toFloat64(n))
@@ -69,14 +69,14 @@ mod SheetIO.CellWriter {
     pub def putLocalDateTime!(dt: Time.LocalDateTime): CellWriter[ka, r, ef + r, Unit] =
         use Time.LocalDateTime.{LocalDateTime};
         let  LocalDateTime(dt1) = dt;
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueLocalDateTime!(dt1, cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueLocalDateTime!(dt1, cell)))
 
 
 
     pub def putLocalDate!(dt: Time.LocalDate): CellWriter[ka, r, ef + r, Unit] =
         use Time.LocalDate.{LocalDate};
         let  LocalDate(dt1) = dt;
-        liftSetter!(cell -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueLocalDate!(dt1, cell)))
+        liftSetter!(cell -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutCell.setCellValueLocalDate!(dt1, cell)))
  
 
     pub def putOptionString!(x: Option[String]): CellWriter[ka, r, ef + r, Unit] = match x {

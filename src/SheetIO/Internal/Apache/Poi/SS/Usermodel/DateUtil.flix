@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.SS.Usermodel.DateUtil {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel.DateUtil {
 
 
-    use Internal.Apache.Poi.SS.Usermodel.Cell
-    use Internal.Apache.Poi.SS.Usermodel.Cell.{Cell}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Cell
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Cell.{Cell}
 
     /// Caller should test we have a NUMERIC cell first...
     pub def isCellDateFormatted(cell: Cell): Bool = 

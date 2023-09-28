@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.SS.Usermodel {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable
 
@@ -23,10 +23,10 @@ mod Internal.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Internal.Apache.Poi.SS.Usermodel.Font {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel.Font {
 
-    use Internal.Apache.Poi.SS.Usermodel.Font
-    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Font
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
 
     pub def setFontName!(name: String, font: Font[r]): Unit \ r = 

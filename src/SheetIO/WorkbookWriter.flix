@@ -17,12 +17,8 @@
 
 mod SheetIO {
 
-
-
     pub type alias WorkbookWriter[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.MutStateError[ka, Internal.Apache.Poi.SS.Usermodel.MutWorkbook[r], ef, a]
-
-
+        Graded.MutStateError[ka, SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook[r], ef, a]
 
 }
 
@@ -34,8 +30,8 @@ mod SheetIO.WorkbookWriter {
 
     use Basis.IO.Path
 
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Internal.Apache.Poi.SS.Usermodel.MutSheet
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutSheet
     use SheetIO.CellStyle
     use SheetIO.CellStyleSetter
     use SheetIO.DataFormat
@@ -53,13 +49,13 @@ mod SheetIO.WorkbookWriter {
     /// Path is for a *new* file...
     pub def runXssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fos       <- Basis.IO.FileOutputStream.new(path);
-                wb      <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
-                wb1     <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asMutWorkbook(wb));
+                wb      <- Ok(SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.new(rc));
+                wb1     <- Ok(SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                poixml  <- Ok(Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asPOIXMLDocument(wb));
-                _       <- Internal.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml) |> Result.mapErr(Generic);
-                _       <- Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb) |> Result.mapErr(Generic))
+                poixml  <- Ok(SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.asPOIXMLDocument(wb));
+                _       <- SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument.write!(outs, poixml) |> Result.mapErr(Generic);
+                _       <- SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.close!(wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -71,12 +67,12 @@ mod SheetIO.WorkbookWriter {
     pub def runAppend(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fis       <- Basis.IO.FileInputStream.new(path);
                 ins     <- Ok(Basis.IO.FileInputStream.asInputStream(fis));
-                wb      <- Internal.Apache.Poi.SS.Usermodel.WorkbookFactory.createMutWithInputStream(rc, ins) |> Result.mapErr(Generic);
+                wb      <- SheetIO.Internal.Apache.Poi.SS.Usermodel.WorkbookFactory.createMutWithInputStream(rc, ins) |> Result.mapErr(Generic);
                 ans     <- runWorkbookWriter(ma, wb) |> Result.mapErr(Generic);
                 fos     <- Basis.IO.FileOutputStream.new(path);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                _       <- Internal.Apache.Poi.SS.Usermodel.MutWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
-                _       <- Internal.Apache.Poi.SS.Usermodel.MutWorkbook.close!(wb) |> Result.mapErr(Generic))
+                _       <- SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
+                _       <- SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.close!(wb) |> Result.mapErr(Generic))
             yield ans
 
 
@@ -99,12 +95,12 @@ mod SheetIO.WorkbookWriter {
     /// Excel 97 binary (.xls) format.
     pub def runHssf(rc: Region[r], ma: WorkbookWriter[a, r, ef, a], path: Path): Result[IOError, a] \ {ef, IO, r} = 
         forM (fos       <- Basis.IO.FileOutputStream.new(path);
-                wb      <- Ok(Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
-                wb1     <- Ok(Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.asMutWorkbook(wb));
+                wb      <- Ok(SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.new(rc));
+                wb1     <- Ok(SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.asMutWorkbook(wb));
                 ans     <- runWorkbookWriter(ma, wb1) |> Result.mapErr(Generic);
                 outs    <- Ok(Basis.IO.FileOutputStream.asOutputStream(fos));
-                _       <- Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
-                _       <- Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb) |> Result.mapErr(Generic);
+                _       <- SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.write!(outs, wb) |> Result.mapErr(Generic);
+                _       <- SheetIO.Internal.Apache.Poi.HSSF.Usermodel.HSSFWorkbook.close!(wb) |> Result.mapErr(Generic);
                 _       <- Basis.IO.FileOutputStream.close!(fos))
             yield ans
 
@@ -134,10 +130,10 @@ mod SheetIO.WorkbookWriter {
 
 
     pub def createSheet!(name: String): WorkbookWriter[ka, r, r, MutSheet[r]] =
-        liftSetterResult!(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.createSheet!(name))
+        liftSetterResult!(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.createSheet!(name))
 
     pub def getSheetNamed(name: String): WorkbookWriter[ka, r, r, MutSheet[r]] =
-        liftGetterResult(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
+        liftGetterResult(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheet(name) >> Option.toOk("getSheetNamed")) 
 
 
     pub def getSheetNames(): WorkbookWriter[ka, r, r, List[String]] =
@@ -146,26 +142,26 @@ mod SheetIO.WorkbookWriter {
         GradedTraversable.traverse(getSheetName, ixs)      
     
     pub def getNumberOfSheets(): WorkbookWriter[ka, r, r, Int32] =
-        liftGetter(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getNumberOfSheets)
+        liftGetter(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getNumberOfSheets)
 
     pub def getSheetName(ix: Int32): WorkbookWriter[ka, r, r, String] =
-        liftGetter(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetName(ix))
+        liftGetter(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetName(ix))
 
  
     pub def getSheetAt(ix: Int32): WorkbookWriter[ka, r, r, MutSheet[r]] =
-        liftGetterResult(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetAt(ix))
+        liftGetterResult(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.getSheetAt(ix))
 
 /*
     pub def getFormat!(format: String, df: DataFormat[r]): WorkbookWriter[r, ka, Int16] =
-        liftAction(_ -> Internal.Apache.Poi.SS.Usermodel.DataFormat.getFormatNamed!(format, df))
+        liftAction(_ -> SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormat.getFormatNamed!(format, df))
 
 
     pub def createDataFormat!(): WorkbookWriter[r, ka, DataFormat[r]] =
-        liftGetter(Internal.Apache.Poi.SS.Usermodel.MutWorkbook.createDataFormat!)
+        liftGetter(SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.createDataFormat!)
 
 
     pub def createFont!(mx: FontSetter[r, a, a]): WorkbookWriter[r, ka, Font[r]] \ r =
-        let* font   = liftGetter(Internal.Apache.Poi.SS.Usermodel.Workbook.createFont!);
+        let* font   = liftGetter(SheetIO.Internal.Apache.Poi.SS.Usermodel.Workbook.createFont!);
         let r1      = Scoped.regionOf(font);
         let* _      = liftActionResult(_ -> SheetIO.FontSetter.runFontSetter!(r1, mx, font));
         point(font)
@@ -173,7 +169,7 @@ mod SheetIO.WorkbookWriter {
 
 
     pub def createCellStyle!(rc: Region[r], mx: CellStyleSetter[r, a, a]): WorkbookWriter[r, ka, CellStyle[r]] \ r =
-        let* style  = liftGetterResult(Internal.Apache.Poi.SS.Usermodel.Workbook.createCellStyle!);
+        let* style  = liftGetterResult(SheetIO.Internal.Apache.Poi.SS.Usermodel.Workbook.createCellStyle!);
         let* _      = liftActionResult(_ -> SheetIO.CellStyleSetter.runCellStyleSetter!(rc, mx, style));
         point(style)
 

@@ -14,26 +14,26 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.XSSF.Usermodel {
+mod SheetIO.Internal.Apache.Poi.XSSF.Usermodel {
 
     pub enum XSSFWorkbook[_: Region](##org.apache.poi.xssf.usermodel.XSSFWorkbook)
 
 
 }
 
-mod Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
+mod SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook {
     
     use Basis.IO.File
     use Basis.IO.File.{File}
     use Basis.IO.InputStream
     use Basis.IO.InputStream.{InputStream}
 
-    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
-    use Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook
-    use Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
-    use Internal.Apache.Poi.OOXML.POIXMLDocument
-    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+    use SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook
+    use SheetIO.Internal.Apache.Poi.XSSF.Usermodel.XSSFWorkbook.{XSSFWorkbook}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.MutWorkbook.{MutWorkbook}
+    use SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument
+    use SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
 
 
     // XSSF (OOXML) concretely

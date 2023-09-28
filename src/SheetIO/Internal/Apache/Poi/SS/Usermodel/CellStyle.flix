@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.SS.Usermodel {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable
     /// Interface
@@ -24,12 +24,12 @@ mod Internal.Apache.Poi.SS.Usermodel {
 
 }
 
-mod Internal.Apache.Poi.SS.Usermodel.CellStyle {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel.CellStyle {
 
-    use Internal.Apache.Poi.SS.Usermodel.CellStyle
-    use Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
-    use Internal.Apache.Poi.SS.Usermodel.Font
-    use Internal.Apache.Poi.SS.Usermodel.Font.{Font}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.CellStyle
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.CellStyle.{CellStyle}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Font
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Font.{Font}
 
 
     /// Blank / fresh CellStyles created from the workbook

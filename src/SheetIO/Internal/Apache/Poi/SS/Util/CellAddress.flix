@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.SS.Util {
+mod SheetIO.Internal.Apache.Poi.SS.Util {
 
     /// Immutable
 
@@ -23,10 +23,10 @@ mod Internal.Apache.Poi.SS.Util {
 
 }
 
-mod Internal.Apache.Poi.SS.Util.CellAddress {
+mod SheetIO.Internal.Apache.Poi.SS.Util.CellAddress {
 
-    use Internal.Apache.Poi.SS.Util.CellAddress
-    use Internal.Apache.Poi.SS.Util.CellAddress.{CellAddress}
+    use SheetIO.Internal.Apache.Poi.SS.Util.CellAddress
+    use SheetIO.Internal.Apache.Poi.SS.Util.CellAddress.{CellAddress}
 
     pub def cellAddress(row: {row = Int32}, column: {column = Int32}): CellAddress = 
         import new org.apache.poi.ss.util.CellAddress(Int32, Int32): ##org.apache.poi.ss.util.CellAddress \ {} as newCellAddress; 

@@ -18,7 +18,7 @@
 mod SheetIO {
 
     pub type alias RowReader[ka: Type, r: Region, ef: Eff, a: Type] = 
-        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, Internal.Apache.Poi.SS.Usermodel.Row, ef, a]
+        Graded.RgnEnvEvaluator[ka, r, SheetIO.DataFormatter, SheetIO.Internal.Apache.Poi.SS.Usermodel.Row, ef, a]
 
 }
 
@@ -33,9 +33,9 @@ mod SheetIO.RowReader {
     use Time.Format.DateTimeFormatter
     
 
-    use Internal.Apache.Poi.SS.Usermodel.Cell
-    use Internal.Apache.Poi.SS.Usermodel.DataFormatter
-    use Internal.Apache.Poi.SS.Usermodel.Row
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Cell
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormatter
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.Row
     
     use SheetIO.RowReader
     use SheetIO.CellReader
@@ -55,20 +55,20 @@ mod SheetIO.RowReader {
 
 
     pub def getCellAt(ix: Int32): RowReader[ka, r, ef, Cell] = 
-        liftGetterResult(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.getCell(ix, row)) |> Option.toOk("getCellAt(${ix})"))
+        liftGetterResult(row -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.getCell(ix, row)) |> Option.toOk("getCellAt(${ix})"))
 
     pub def readCellAt(ix: Int32, eval: CellReader[a, r, ef, a]): RowReader[ka, r, ef, a] =
         getCellAt(ix)    >>= cell -> 
         withCellReader(eval, cell)
 
     pub def getRowNum(): RowReader[ka, r, ef, Int32] = 
-        liftGetter(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
+        liftGetter(row -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.getRowNum(row)))
 
 
     pub def getSheetName(): RowReader[ka, r, ef, String] = 
         liftGetter(row -> {
-            let sheet = Internal.Apache.Poi.SS.Usermodel.Row.getSheet(row);
-            checked_ecast(Internal.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
+            let sheet = SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.getSheet(row);
+            checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Sheet.getSheetName(sheet))
         })
             
 
@@ -76,27 +76,27 @@ mod SheetIO.RowReader {
     /// Effect not sufficiently polymorphic...
     pub def getColumnIndex(s: String): RowReader[ka, r, ef, Int32] = 
         liftAction(_ -> 
-            let addr = Internal.Apache.Poi.SS.Util.CellAddress.cellAddressWithAddress(s + "1");
-            checked_ecast(Internal.Apache.Poi.SS.Util.CellAddress.getColumn(addr))
+            let addr = SheetIO.Internal.Apache.Poi.SS.Util.CellAddress.cellAddressWithAddress(s + "1");
+            checked_ecast(SheetIO.Internal.Apache.Poi.SS.Util.CellAddress.getColumn(addr))
         )
 
 
     pub def getFirstCellNum(): RowReader[ka, r, ef, Int32] =
-        liftGetter(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row)) |> Int16.toInt32)
+        liftGetter(row -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.getFirstCellNum(row)) |> Int16.toInt32)
 
     pub def getLastCellNum(): RowReader[ka, r, ef, Int32] =
-        liftGetter(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row)) |> Int16.toInt32)
+        liftGetter(row -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.getLastCellNum(row)) |> Int16.toInt32)
             |> map(n -> if (n > 0) n - 1 else n)
 
 
 
     // pub def cellIterator(rc: Region[r]): RowReader[ka, r, ef + r, Iterator[Cell, r, r]] = 
-    //     liftGetter(row -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.cellIterator(rc, row)))
+    //     liftGetter(row -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.cellIterator(rc, row)))
 
     
 
     pub def cellIterator(): RowReader[ka, r, ef + r, Iterator[Cell, r, r]] = 
-        Graded.RgnEnvEvaluator.liftGetterWithRgn((rc, row) -> checked_ecast(Internal.Apache.Poi.SS.Usermodel.Row.cellIterator(rc, row)))
+        Graded.RgnEnvEvaluator.liftGetterWithRgn((rc, row) -> checked_ecast(SheetIO.Internal.Apache.Poi.SS.Usermodel.Row.cellIterator(rc, row)))
 
 
     

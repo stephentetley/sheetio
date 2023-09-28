@@ -14,20 +14,20 @@
  * limitations under the License.
  */
 
-mod Internal.Apache.Poi.OOXML {
+mod SheetIO.Internal.Apache.Poi.OOXML {
 
 
     pub enum POIXMLDocument[_: Region](##org.apache.poi.ooxml.POIXMLDocument)
 
 }
 
-mod Internal.Apache.Poi.OOXML.POIXMLDocument {
+mod SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument {
 
     use Basis.IO.OutputStream
     use Basis.IO.OutputStream.{OutputStream}
 
-    use Internal.Apache.Poi.OOXML.POIXMLDocument
-    use Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
+    use SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument
+    use SheetIO.Internal.Apache.Poi.OOXML.POIXMLDocument.{POIXMLDocument}
     
     
 

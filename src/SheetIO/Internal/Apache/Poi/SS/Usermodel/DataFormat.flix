@@ -15,7 +15,7 @@
  */
 
 
-mod Internal.Apache.Poi.SS.Usermodel {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel {
 
     /// Mutable*  / Interface
     ///
@@ -26,10 +26,10 @@ mod Internal.Apache.Poi.SS.Usermodel {
 }
 
 
-mod Internal.Apache.Poi.SS.Usermodel.DataFormat {
+mod SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormat {
 
-    use Internal.Apache.Poi.SS.Usermodel.DataFormat
-    use Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormat
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormat.{DataFormat}
 
 
 

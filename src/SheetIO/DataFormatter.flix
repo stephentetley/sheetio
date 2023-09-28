@@ -29,7 +29,7 @@ mod SheetIO.DataFormatter {
 
 
     use SheetIO.DataFormatter
-    use Internal.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
+    use SheetIO.Internal.Apache.Poi.SS.Usermodel.DataFormatter.{DataFormatter}
 
 /*
     ///
