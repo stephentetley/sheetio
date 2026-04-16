@@ -15,26 +15,38 @@
  */
 
 
-pub mod SheetIO.Workbook {
+pub mod SheetIO.XSSF.Workbook {
 
     use IoError.ErrorKind
     use IoError.IoError
 
+    use SheetIO.XSSF.Sheet.SheetHandle
+
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
     import java.lang.{Exception => JException}
+    import java.io.{FileInputStream => JFileInputStream}
+    import java.io.{File => JFile}
 
-    // pub enum WorkbookHandle(JXSSFWorkbook)
+    pub enum XSSFWorkbook(JXSSFWorkbook)
 
     pub eff Workbook {
-        def getNumberOfSheets() : Int32
+        def createSheet(): SheetHandle
+        def getNumberOfSheets(): Int32
+
     }
 
-    pub def handle(path: String, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Workbook = x -> {
-        let jworkbook = new JXSSFWorkbook(path);
-        let ans = run {
+
+    pub def handle(wb: XSSFWorkbook, 
+                    f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Workbook = x -> {
+        let XSSFWorkbook.XSSFWorkbook(jworkbook) = wb;
+        run {
             Ok(f(x))
         } with handler Workbook {
+            
+            def createSheet(k) = {
+                let ans = jworkbook.createSheet();
+                k(SheetHandle.SheetHandle(ans))
+            }
             
             def getNumberOfSheets(k) = try {
                 let ans = jworkbook.getNumberOfSheets();
@@ -42,12 +54,28 @@ pub mod SheetIO.Workbook {
             } catch {
                 case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
             }
-        };
-        jworkbook.close();
-        ans
+        }
     }
 
-    pub def runWithIO(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = 
-        handle(path, f)()
+    pub def runReadOnly(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = try {
+        let jfile = new JFile(path);
+        let jfis = new JFileInputStream(jfile);        
+        let jworkbook = new JXSSFWorkbook(jfis);
+        let ans = handle(XSSFWorkbook.XSSFWorkbook(jworkbook), f)();
+        jworkbook.close();
+        jfis.close();
+        ans
+    } catch {
+        case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+    }
+
+    pub def runReadWrite(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = try {
+        let jworkbook = new JXSSFWorkbook(path);
+        let ans = handle(XSSFWorkbook.XSSFWorkbook(jworkbook), f)();
+        jworkbook.close();
+        ans
+    } catch {
+        case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+    }
 
 }
