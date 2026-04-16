@@ -15,29 +15,29 @@
  */
 
 
-pub mod SheetIO.XSSF.Sheet {
+pub mod SheetIO.XSSF.Row {
 
     use IoError.ErrorKind
     use IoError.IoError
 
-    import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
+    import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
     import java.lang.{Exception => JException}
 
-    pub enum XssfSheet(JXSSFSheet)
+    pub enum XssfRow(JXSSFRow)
 
-    pub eff Sheet {
-        def getSheetName() : String
+    pub eff Row {
+        def getRowNum() : Int32
     }
 
-    pub def handle(sheet: XssfSheet, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Sheet = x -> {
-        let XssfSheet.XssfSheet(jsheet) = sheet;
+    pub def handle(row: XssfRow, 
+                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Row = x -> {
+        let XssfRow.XssfRow(jrow) = row;
         run {
             Ok(f(x))
-        } with handler Sheet {
+        } with handler Row {
             
-            def getSheetName(k) = try {
-                let ans = jsheet.getSheetName();
+            def getRowNum(k) = try {
+                let ans = jrow.getRowNum();
                 k(ans)
             } catch {
                 case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
@@ -45,7 +45,7 @@ pub mod SheetIO.XSSF.Sheet {
         }
     }
 
-    pub def runWithIO(sheet: XssfSheet, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Sheet = 
-        handle(sheet, f)()
+    pub def runWithIO(row: XssfRow, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Row = 
+        handle(row, f)()
 
 }

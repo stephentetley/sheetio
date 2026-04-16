@@ -20,40 +20,68 @@ pub mod SheetIO.XSSF.Workbook {
     use IoError.ErrorKind
     use IoError.IoError
 
-    use SheetIO.XSSF.Sheet.SheetHandle
+    use SheetIO.XSSF.Sheet.XssfSheet
 
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
     import java.lang.{Exception => JException}
     import java.io.{FileInputStream => JFileInputStream}
     import java.io.{File => JFile}
 
-    pub enum XSSFWorkbook(JXSSFWorkbook)
+    pub enum XssfWorkbook(JXSSFWorkbook)
 
     pub eff Workbook {
-        def createSheet(): SheetHandle
+        def createSheet(): XssfSheet
+        def createSheetWithName(s: String): XssfSheet
         def getNumberOfSheets(): Int32
+        def getSheetAt(i: Int32): XssfSheet
+        def getSheetIndex(s: String): Option[Int32]
+        def getSheetIndexOfSheet(s: XssfSheet): Option[Int32]
 
     }
 
 
-    pub def handle(wb: XSSFWorkbook, 
+    pub def handle(wb: XssfWorkbook, 
                     f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Workbook = x -> {
-        let XSSFWorkbook.XSSFWorkbook(jworkbook) = wb;
+        let XssfWorkbook.XssfWorkbook(jworkbook) = wb;
         run {
             Ok(f(x))
         } with handler Workbook {
             
             def createSheet(k) = {
                 let ans = jworkbook.createSheet();
-                k(SheetHandle.SheetHandle(ans))
+                k(XssfSheet.XssfSheet(ans))
             }
-            
+           
+            def createSheetWithName(s, k) = {
+                let ans = jworkbook.createSheet(s);
+                k(XssfSheet.XssfSheet(ans))
+            }
+
             def getNumberOfSheets(k) = try {
                 let ans = jworkbook.getNumberOfSheets();
                 k(ans)
             } catch {
                 case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
             }
+
+            def getSheetAt(i, k) = try {
+                let ans = jworkbook.getSheetAt(i);
+                k(XssfSheet.XssfSheet(ans))
+            } catch {
+                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+            }
+
+            def getSheetIndex(s, k) = {
+                let ans = jworkbook.getSheetIndex(s);
+                if (ans < 0) k(None) else k(Some(ans))
+            }
+
+            def getSheetIndexOfSheet(s, k) = {
+                let XssfSheet.XssfSheet(jsheet) = s;
+                let ans = jworkbook.getSheetIndex(jsheet);
+                if (ans < 0) k(None) else k(Some(ans))
+            }
+
         }
     }
 
@@ -61,7 +89,7 @@ pub mod SheetIO.XSSF.Workbook {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);        
         let jworkbook = new JXSSFWorkbook(jfis);
-        let ans = handle(XSSFWorkbook.XSSFWorkbook(jworkbook), f)();
+        let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
         jworkbook.close();
         jfis.close();
         ans
@@ -71,7 +99,7 @@ pub mod SheetIO.XSSF.Workbook {
 
     pub def runReadWrite(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = try {
         let jworkbook = new JXSSFWorkbook(path);
-        let ans = handle(XSSFWorkbook.XSSFWorkbook(jworkbook), f)();
+        let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
         jworkbook.close();
         ans
     } catch {
