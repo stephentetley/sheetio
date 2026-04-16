@@ -15,43 +15,37 @@
  */
 
 
-pub mod SheetIO.XSSF.Row {
+pub mod SheetIO.XSSF.Cell {
 
     use IoError.ErrorKind
     use IoError.IoError
 
-    use SheetIO.XSSF.Cell.XssfCell
-
-    import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
+    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
     import java.lang.{Exception => JException}
 
-    pub enum XssfRow(JXSSFRow)
+    pub enum XssfCell(JXSSFCell)
 
-    pub eff Row {
-        def getCell(i: Int32): XssfCell
-        def getRowNum() : Int32
+    pub eff Cell {
+        def getColumnIndex() : Int32
     }
 
-    pub def handle(row: XssfRow, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Row = x -> {
-        let XssfRow.XssfRow(jrow) = row;
+    pub def handle(cell: XssfCell, 
+                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Cell = x -> {
+        let XssfCell.XssfCell(jcell) = cell;
         run {
             Ok(f(x))
-        } with handler Row {
+        } with handler Cell {
             
-            def getCell(i, k) = {
-                let ans = jrow.getCell(i);
-                k(XssfCell.XssfCell(ans))
-            }
-
-            def getRowNum(k) = {
-                let ans = jrow.getRowNum();
+            def getColumnIndex(k) = try {
+                let ans = jcell.getColumnIndex();
                 k(ans)
-            } 
+            } catch {
+                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+            }
         }
     }
 
-    pub def runWithIO(row: XssfRow, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Row = 
-        handle(row, f)()
+    pub def runWithIO(cell: XssfCell, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Cell = 
+        handle(cell, f)()
 
 }
