@@ -2,7 +2,7 @@
 pub mod Test01 {
 
     use Assert.{assertTrue}
-    use SheetIO.Workbook.Workbook
+    use SheetIO.XSSF.Workbook.Workbook
 
     @Test
     pub def test01(): Unit \ { Assert, IO } = 
@@ -11,7 +11,7 @@ pub mod Test01 {
             let n = Workbook.getNumberOfSheets();
             println("number of sheets: ${n}");
             ()
-        } with SheetIO.Workbook.runWithIO(path);     
+        } with SheetIO.XSSF.Workbook.runWithIO(path);     
         assertTrue(true)
 
 
