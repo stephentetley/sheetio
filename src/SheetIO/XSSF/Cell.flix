@@ -30,22 +30,28 @@ pub mod SheetIO.XSSF.Cell {
     }
 
     pub def handle(cell: XssfCell, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Cell = x -> {
+                    f: a -> b \ ef): a -> Result[String, b] \ (ef - Cell) = x -> region rc {
+        handleHelper(rc, cell, f, x)
+    }
+
+    def handleHelper(_: Region[r],
+                        cell: XssfCell, 
+                        f: a -> b \ ef): a -> Result[String, b] \ (ef - Cell) + r = x -> {
         let XssfCell.XssfCell(jcell) = cell;
         run {
             Ok(f(x))
         } with handler Cell {
             
             def getColumnIndex(k) = try {
-                let ans = jcell.getColumnIndex();
+                let ans = unchecked_cast(jcell.getColumnIndex() as _ \ r);
                 k(ans)
             } catch {
-                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+                case ex: JException => Err(ex.getMessage())
             }
         }
     }
 
-    pub def runWithIO(cell: XssfCell, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Cell = 
+    pub def runCell(cell: XssfCell, f: Unit -> a \ ef): Result[String, a] \ (ef - Cell) = 
         handle(cell, f)()
 
 }

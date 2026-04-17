@@ -30,22 +30,29 @@ pub mod SheetIO.XSSF.Sheet {
     }
 
     pub def handle(sheet: XssfSheet, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Sheet = x -> {
+                f: a -> b \ ef): a -> Result[String, b] \ (ef - Sheet) = x -> region rc {
+        handleHelper(rc, sheet, f, x)
+    }
+
+
+    def handleHelper(_: Region[r], 
+                        sheet: XssfSheet, 
+                        f: a -> b \ ef): a -> Result[String, b] \ (ef - Sheet) + r = x -> {
         let XssfSheet.XssfSheet(jsheet) = sheet;
         run {
             Ok(f(x))
         } with handler Sheet {
             
             def getSheetName(k) = try {
-                let ans = jsheet.getSheetName();
+                let ans = unchecked_cast(jsheet.getSheetName() as _ \ r);
                 k(ans)
             } catch {
-                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+                case ex: JException => Err(ex.getMessage())
             }
         }
     }
 
-    pub def runWithIO(sheet: XssfSheet, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Sheet = 
+    pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Sheet) = 
         handle(sheet, f)()
 
 }

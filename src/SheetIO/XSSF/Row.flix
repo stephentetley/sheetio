@@ -29,29 +29,53 @@ pub mod SheetIO.XSSF.Row {
 
     pub eff Row {
         def getCell(i: Int32): XssfCell
+        def getFirstCellNum(): Option[Int32]
+        def getLastCellNum(): Option[Int32]
         def getRowNum() : Int32
     }
 
     pub def handle(row: XssfRow, 
-                f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Row = x -> {
+                    f: a -> b \ ef): a -> Result[String, b] \ ef - Row = x -> region rc {
+        handleHelper(rc, row, f, x)
+    }
+
+    def handleHelper(_: Region[r],
+                        row: XssfRow, 
+                        f: a -> b \ ef): a -> Result[String, b] \ (ef - Row) + r  = x -> {
         let XssfRow.XssfRow(jrow) = row;
         run {
             Ok(f(x))
         } with handler Row {
             
             def getCell(i, k) = {
-                let ans = jrow.getCell(i);
+                let ans = unchecked_cast(jrow.getCell(i) as _ \ r);
                 k(XssfCell.XssfCell(ans))
             }
 
+            def getFirstCellNum(k) = {
+                let ans = unchecked_cast(jrow.getFirstCellNum() as _ \ r);
+                if (ans < 0i16) 
+                    k(None)
+                else
+                    k(Some(Int16.toInt32(ans)))
+            }
+
+            def getLastCellNum(k) = {
+                let ans = unchecked_cast(jrow.getLastCellNum() as _ \ r);
+                if (ans < 0i16) 
+                    k(None)
+                else
+                    k(Some(Int16.toInt32(ans)))
+            }
+
             def getRowNum(k) = {
-                let ans = jrow.getRowNum();
+                let ans = unchecked_cast(jrow.getRowNum() as _ \ r);
                 k(ans)
             } 
         }
     }
 
-    pub def runWithIO(row: XssfRow, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Row = 
+    pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
         handle(row, f)()
 
 }
