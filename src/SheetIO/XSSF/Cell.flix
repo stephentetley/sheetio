@@ -47,13 +47,13 @@ pub mod SheetIO.XSSF.Cell {
         } with handler Cell {
             
             def getColumnIndex(k) = {
-                let ans = unchecked_cast(jcell.getColumnIndex() as _ \ r);
+                let ans = unsafe IO as r { jcell.getColumnIndex() };
                 k(ans)
             } 
 
 
             def getRawValue(k) = {
-                let ans = unchecked_cast(jcell.getRawValue() as _ \ r);
+                let ans = unsafe IO as r { jcell.getRawValue() };
                 if (Object.isNull(ans)) 
                     k(None)
                 else 
@@ -61,17 +61,17 @@ pub mod SheetIO.XSSF.Cell {
             } 
 
             def getReference(k) = {
-                let ans = unchecked_cast(jcell.getReference() as _ \ r);
+                let ans = unsafe IO as r { jcell.getReference() };
                 k(ans)
             } 
 
             def getRowIndex(k) = {
-                let ans = unchecked_cast(jcell.getRowIndex() as _ \ r);
+                let ans = unsafe IO as r { jcell.getRowIndex() };
                 k(ans)
             } 
 
             def toString(k) = {
-                let ans = unchecked_cast(jcell.toString() as _ \ r);
+                let ans = unsafe IO as r { jcell.toString() };
                 k(ans)
             } 
         }

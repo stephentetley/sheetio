@@ -48,12 +48,12 @@ pub mod SheetIO.XSSF.Row {
         } with handler Row {
             
             def getCell(i, k) = {
-                let ans = unchecked_cast(jrow.getCell(i) as _ \ r);
+                let ans = unsafe IO as r { jrow.getCell(i) };
                 k(XssfCell.XssfCell(ans))
             }
 
             def getFirstCellNum(k) = {
-                let ans = unchecked_cast(jrow.getFirstCellNum() as _ \ r);
+                let ans = unsafe IO as r { jrow.getFirstCellNum() };
                 if (ans < 0i16) 
                     k(None)
                 else
@@ -61,7 +61,7 @@ pub mod SheetIO.XSSF.Row {
             }
 
             def getLastCellNum(k) = {
-                let ans = unchecked_cast(jrow.getLastCellNum() as _ \ r);
+                let ans = unsafe IO as r { jrow.getLastCellNum() };
                 if (ans < 0i16) 
                     k(None)
                 else
@@ -69,7 +69,7 @@ pub mod SheetIO.XSSF.Row {
             }
 
             def getRowNum(k) = {
-                let ans = unchecked_cast(jrow.getRowNum() as _ \ r);
+                let ans = unsafe IO as r { jrow.getRowNum() };
                 k(ans)
             } 
         }

@@ -44,7 +44,7 @@ pub mod SheetIO.XSSF.Sheet {
         } with handler Sheet {
             
             def getSheetName(k) = try {
-                let ans = unchecked_cast(jsheet.getSheetName() as _ \ r);
+                let ans = unsafe IO as r { jsheet.getSheetName() };
                 k(ans)
             } catch {
                 case ex: JException => Err(ex.getMessage())
