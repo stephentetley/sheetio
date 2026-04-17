@@ -17,8 +17,7 @@
 
 pub mod SheetIO.XSSF.Cell {
 
-    use IoError.ErrorKind
-    use IoError.IoError
+    use SheetIO.XSSF.Comment.XssfComment
 
     import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
     import java.lang.{Exception => JException}
@@ -26,8 +25,13 @@ pub mod SheetIO.XSSF.Cell {
     pub enum XssfCell(JXSSFCell)
 
     pub eff Cell {
-        def getColumnIndex(): Int32
         def getRawValue(): Option[String]
+        def getBoolCellValue(): Bool
+        def getFloat64CellValue(): Float64
+        def getStringCellValue(): String
+        def getCellFormula(): String
+        def getCellComment(): Option[XssfComment]
+        def getColumnIndex(): Int32        
         def getReference(): String
         def getRowIndex(): Int32
         def toString(): String
@@ -45,12 +49,6 @@ pub mod SheetIO.XSSF.Cell {
         run {
             Ok(f(x))
         } with handler Cell {
-            
-            def getColumnIndex(k) = {
-                let ans = unsafe IO as r { jcell.getColumnIndex() };
-                k(ans)
-            } 
-
 
             def getRawValue(k) = {
                 let ans = unsafe IO as r { jcell.getRawValue() };
@@ -59,6 +57,48 @@ pub mod SheetIO.XSSF.Cell {
                 else 
                     k(Some(ans))
             } 
+
+            def getBoolCellValue(k) = try {
+                let ans = unsafe IO as r { jcell.getBooleanCellValue() };
+                k(ans)
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
+
+            def getFloat64CellValue(k) = try {
+                let ans = unsafe IO as r { jcell.getNumericCellValue() };
+                k(ans)
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
+
+            def getStringCellValue(k) = try {
+                let ans = unsafe IO as r { jcell.getStringCellValue() };
+                k(ans)
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
+
+            def getCellFormula(k) = try {
+                let ans = unsafe IO as r { jcell.getCellFormula() };
+                k(ans)
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
+
+            def getCellComment(k) = {
+                let ans = unsafe IO as r { jcell.getCellComment() };
+                if (Object.isNull(ans)) 
+                    k(None)
+                else 
+                    k(Some(XssfComment.XssfComment(ans)))
+            } 
+
+            def getColumnIndex(k) = {
+                let ans = unsafe IO as r { jcell.getColumnIndex() };
+                k(ans)
+            } 
+
 
             def getReference(k) = {
                 let ans = unsafe IO as r { jcell.getReference() };

@@ -17,9 +17,6 @@
 
 pub mod SheetIO.XSSF.Row {
 
-    use IoError.ErrorKind
-    use IoError.IoError
-
     use SheetIO.XSSF.Cell.XssfCell
 
     import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}

@@ -23,16 +23,31 @@ pub mod SheetIO.Common.CellAddress {
 
     pub enum CellAddress(JCellAddress)
 
+    instance Eq[CellAddress] {
+        pub def eq(x: CellAddress, y: CellAddress): Bool = 
+            let CellAddress.CellAddress(x1) = x;
+            let CellAddress.CellAddress(y1) = y;
+            unsafe IO { x1.equals(y1) }
+    }
+
     instance ToString[CellAddress] {
         pub def toString(x: CellAddress): String = 
             let CellAddress.CellAddress(x1) = x;
             unsafe IO { x1.toString() }
     }
 
+
+    instance Hash[CellAddress] {
+        pub def hash(x: CellAddress): Int32 = 
+            let CellAddress.CellAddress(x1) = x;
+            unsafe IO { x1.hashCode() }
+    }
+
+
     pub def create(rownum: Int32, colnum: Int32): CellAddress = 
         CellAddress.CellAddress(unsafe IO { new JCellAddress(rownum, colnum) })
 
-    pub def createFRomString(addr: String): CellAddress = 
+    pub def createFromString(addr: String): CellAddress = 
         CellAddress.CellAddress(unsafe IO { new JCellAddress(addr) })
 
     pub def getColumn(x: CellAddress): Int32 = 
@@ -43,5 +58,8 @@ pub mod SheetIO.Common.CellAddress {
         let CellAddress.CellAddress(x1) = x;
         unsafe IO { x1.getRow() }
 
+    pub def formatAsString(x: CellAddress): String = 
+        let CellAddress.CellAddress(x1) = x;
+        unsafe IO { x1.formatAsString() }
 
 }

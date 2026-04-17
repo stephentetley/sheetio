@@ -17,8 +17,6 @@
 
 pub mod SheetIO.XSSF.Workbook {
 
-    use IoError.ErrorKind
-    use IoError.IoError
 
     use SheetIO.XSSF.Sheet.XssfSheet
 

@@ -16,9 +16,9 @@
 
 
 pub mod SheetIO.XSSF.Sheet {
+    
+    use SheetIO.XSSF.Row.{XssfRow}
 
-    use IoError.ErrorKind
-    use IoError.IoError
 
     import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
     import java.lang.{Exception => JException}
@@ -27,6 +27,8 @@ pub mod SheetIO.XSSF.Sheet {
 
     pub eff Sheet {
         def getSheetName() : String
+        def getRow(i: Int32): Option[XssfRow]
+        def getFirstRowNum(): Int32
     }
 
     pub def handle(sheet: XssfSheet, 
@@ -49,6 +51,21 @@ pub mod SheetIO.XSSF.Sheet {
             } catch {
                 case ex: JException => Err(ex.getMessage())
             }
+
+            def getRow(i, k) = {
+                let ans = unsafe IO as r { jsheet.getRow(i) };
+                if (Object.isNull(ans)) 
+                    k(None)
+                else 
+                    k(Some(XssfRow.XssfRow(ans)))
+            } 
+
+            def getFirstRowNum(k) = {
+                let ans = unsafe IO as r { jsheet.getFirstRowNum() };
+                k(ans)
+            } 
+
+
         }
     }
 
