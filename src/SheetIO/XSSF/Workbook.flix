@@ -33,15 +33,18 @@ pub mod SheetIO.XSSF.Workbook {
         def createSheet(): XssfSheet
         def createSheetWithName(s: String): XssfSheet
         def getNumberOfSheets(): Int32
+        def getSheet(s: String): Option[XssfSheet]
         def getSheetAt(i: Int32): XssfSheet
         def getSheetIndex(s: String): Option[Int32]
         def getSheetIndexOfSheet(s: XssfSheet): Option[Int32]
-
+        def getSheetName(i: Int32): String
+        def isMacroEnabled(): Bool
+        def setSheetName(i: Int32, s: String): Unit
     }
 
 
     pub def handle(wb: XssfWorkbook, 
-                    f: a -> b \ ef): a -> Result[IoError, b] \ {IO + ef} - Workbook = x -> {
+                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - Workbook = x -> {
         let XssfWorkbook.XssfWorkbook(jworkbook) = wb;
         run {
             Ok(f(x))
@@ -61,14 +64,25 @@ pub mod SheetIO.XSSF.Workbook {
                 let ans = jworkbook.getNumberOfSheets();
                 k(ans)
             } catch {
-                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+                case ex: JException => Err(ex.getMessage())
             }
+
+            def getSheet(s, k) = try {
+                let ans = jworkbook.getSheet(s);
+                if (Object.isNull(ans)) 
+                    k(None)
+                else 
+                    k(Some(XssfSheet.XssfSheet(ans)))                
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
+
 
             def getSheetAt(i, k) = try {
                 let ans = jworkbook.getSheetAt(i);
                 k(XssfSheet.XssfSheet(ans))
             } catch {
-                case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+                case ex: JException => Err(ex.getMessage())
             }
 
             def getSheetIndex(s, k) = {
@@ -82,10 +96,27 @@ pub mod SheetIO.XSSF.Workbook {
                 if (ans < 0) k(None) else k(Some(ans))
             }
 
+            // TODO check failure mode...
+            def getSheetName(i, k) = {
+                let ans = jworkbook.getSheetName(i);
+                k(ans)
+            }
+
+            def isMacroEnabled(k) = {
+                    let ans = jworkbook.isMacroEnabled();
+                    k(ans)
+            }
+
+            def setSheetName(i, s, k) = try {
+                jworkbook.setSheetName(i, s);
+                k()
+            } catch {
+                case ex: JException => Err(ex.getMessage())
+            }
         }
     }
 
-    pub def runReadOnly(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = try {
+    pub def runReadOnly(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);        
         let jworkbook = new JXSSFWorkbook(jfis);
@@ -94,16 +125,28 @@ pub mod SheetIO.XSSF.Workbook {
         jfis.close();
         ans
     } catch {
-        case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+        case ex: JException => Err(ex.getMessage())
     }
 
-    pub def runReadWrite(path: String, f: Unit -> a \ ef): Result[IoError, a] \ {IO + ef} - Workbook = try {
+    pub def runReadWrite(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
         let jworkbook = new JXSSFWorkbook(path);
         let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
         jworkbook.close();
         ans
     } catch {
-        case ex: JException => Err(IoError(ErrorKind.Other, ex.getMessage()))
+        case ex: JException => Err(ex.getMessage())
     }
+
+
+    pub def getSheetNames(): List[String] \ Workbook = {
+        let count = Workbook.getNumberOfSheets();
+        List.unfold(i -> {
+            if (i < count) {
+                let name = Workbook.getSheetName(i);
+                Some((name, i + 1))
+            } else None
+            }, 0)
+    }
+
 
 }

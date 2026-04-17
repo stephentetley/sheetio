@@ -26,7 +26,11 @@ pub mod SheetIO.XSSF.Cell {
     pub enum XssfCell(JXSSFCell)
 
     pub eff Cell {
-        def getColumnIndex() : Int32
+        def getColumnIndex(): Int32
+        def getRawValue(): Option[String]
+        def getReference(): String
+        def getRowIndex(): Int32
+        def toString(): String
     }
 
     pub def handle(cell: XssfCell, 
@@ -42,12 +46,34 @@ pub mod SheetIO.XSSF.Cell {
             Ok(f(x))
         } with handler Cell {
             
-            def getColumnIndex(k) = try {
+            def getColumnIndex(k) = {
                 let ans = unchecked_cast(jcell.getColumnIndex() as _ \ r);
                 k(ans)
-            } catch {
-                case ex: JException => Err(ex.getMessage())
-            }
+            } 
+
+
+            def getRawValue(k) = {
+                let ans = unchecked_cast(jcell.getRawValue() as _ \ r);
+                if (Object.isNull(ans)) 
+                    k(None)
+                else 
+                    k(Some(ans))
+            } 
+
+            def getReference(k) = {
+                let ans = unchecked_cast(jcell.getReference() as _ \ r);
+                k(ans)
+            } 
+
+            def getRowIndex(k) = {
+                let ans = unchecked_cast(jcell.getRowIndex() as _ \ r);
+                k(ans)
+            } 
+
+            def toString(k) = {
+                let ans = unchecked_cast(jcell.toString() as _ \ r);
+                k(ans)
+            } 
         }
     }
 
