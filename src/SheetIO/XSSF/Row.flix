@@ -89,13 +89,10 @@ pub mod SheetIO.XSSF.Row {
     pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
         handle(row, f)()
 
-    pub def runCell(row: XssfRow, sel: Unit -> Option[XssfCell] \ Row, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) - Cell = 
-        def f1() = {
-            match sel() {
-                case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
-                case None => Err("No Cell")
-            }
-        };
-        runRow(row, f1) |> Result.flatten
+    pub def withCell(ix: Int32,f: Unit -> a \ ef): Result[String, a] \ (ef + Row) - Cell = 
+        match Row.getCell(ix) {
+            case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
+            case None       => Err("No Cell")
+        }
 
 }

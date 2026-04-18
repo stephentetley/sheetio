@@ -16,6 +16,7 @@
 
 
 pub mod SheetIO.XSSF.Sheet {
+    use SheetIO.XSSF.Row.withCell
     
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.XSSF.Cell.Cell
@@ -98,23 +99,29 @@ pub mod SheetIO.XSSF.Sheet {
 
     pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Sheet) = 
         handle(sheet, f)()
+    
+    
+    pub def withRow(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Row = 
+        match Sheet.getRow(ix) {
+            case Some(row) => SheetIO.XSSF.Row.runRow(row, f)
+            case None      => Err("No Row")
+        }
 
-    // TODO rewrite in a more natural style
+   
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ ((ef + Sheet) - Row) - Cell= 
+        let rx = SheetIO.Common.CellAddress.getRow(addr);
+        let cx = SheetIO.Common.CellAddress.getColumn(addr);
+        { withRow(rx, _ ->
+            SheetIO.XSSF.Row.withCell(cx, _ -> f()) ) } 
+            |> Result.flatten
+        
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet = 
-        let rix = SheetIO.Common.CellAddress.getRow(addr);
-        let cix = SheetIO.Common.CellAddress.getColumn(addr);
-        Option.flatMap(
-            row -> ({
-                    SheetIO.XSSF.Row.runRow(row, _ ->
-                         Option.flatMap(
-                            cell -> { 
-                                SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue()) |> Result.toOption 
-                                },
-                            Row.getCell(cix)
-                    ))
-                } |> Result.toOption |> Option.flatten |> Option.flatten),
-            Sheet.getRow(rix)
-        )
+        let rx = SheetIO.Common.CellAddress.getRow(addr);
+        let cx = SheetIO.Common.CellAddress.getColumn(addr);
+        { withRow(rx, _ ->
+            SheetIO.XSSF.Row.withCell(cx, _ -> Cell.getRawValue()) ) } 
+             |> Result.flatten |> Result.toOption |> Option.flatten
+
 
 
 }
