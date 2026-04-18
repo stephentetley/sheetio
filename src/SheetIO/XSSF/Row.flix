@@ -17,7 +17,10 @@
 
 pub mod SheetIO.XSSF.Row {
 
+    use SheetIO.XSSF.Sheet.XssfSheet
+    use SheetIO.XSSF.Sheet.Sheet
     use SheetIO.XSSF.Cell.XssfCell
+
 
     import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
     import java.lang.{Exception => JException}
@@ -25,10 +28,11 @@ pub mod SheetIO.XSSF.Row {
     pub enum XssfRow(JXSSFRow)
 
     pub eff Row {
-        def getCell(i: Int32): XssfCell
+        def getCell(i: Int32): Option[XssfCell]
         def getFirstCellNum(): Option[Int32]
         def getLastCellNum(): Option[Int32]
-        def getRowNum() : Int32
+        def getRowNum(): Int32
+        def getSheet(): XssfSheet
     }
 
     pub def handle(row: XssfRow, 
@@ -46,7 +50,10 @@ pub mod SheetIO.XSSF.Row {
             
             def getCell(i, k) = {
                 let ans = unsafe IO as r { jrow.getCell(i) };
-                k(XssfCell.XssfCell(ans))
+                if (Object.isNull(ans)) 
+                    k(None)
+                else 
+                    k(Some(XssfCell.XssfCell(ans)))
             }
 
             def getFirstCellNum(k) = {
@@ -69,10 +76,18 @@ pub mod SheetIO.XSSF.Row {
                 let ans = unsafe IO as r { jrow.getRowNum() };
                 k(ans)
             } 
+
+            def getSheet(k) = {
+                let ans = unsafe IO as r { jrow.getSheet() };
+                k(XssfSheet.XssfSheet(ans))
+            } 
+
         }
     }
 
     pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
         handle(row, f)()
+
+
 
 }

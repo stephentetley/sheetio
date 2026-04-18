@@ -17,7 +17,12 @@
 
 pub mod SheetIO.XSSF.Sheet {
     
-    use SheetIO.XSSF.Row.{XssfRow}
+    use SheetIO.Common.CellAddress.CellAddress
+    use SheetIO.XSSF.Cell.Cell
+    use SheetIO.XSSF.Row.Row
+    
+    use SheetIO.XSSF.Row.XssfRow
+    use SheetIO.XSSF.Workbook.XssfWorkbook
 
 
     import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
@@ -25,10 +30,19 @@ pub mod SheetIO.XSSF.Sheet {
 
     pub enum XssfSheet(JXSSFSheet)
 
+    pub enum CellMissingPolicy with Eq, Order, ToString {
+        case CREATE_NULL_AS_BLANK 
+        case RETURN_BLANK_AS_NULL 
+        case RETURN_NULL_AND_BLANK 
+    }
+
     pub eff Sheet {
         def getSheetName() : String
         def getRow(i: Int32): Option[XssfRow]
         def getFirstRowNum(): Int32
+        def getLastRowNum(): Int32
+        def getProtect(): Bool
+        def getWorkbook(): XssfWorkbook
     }
 
     pub def handle(sheet: XssfSheet, 
@@ -65,11 +79,42 @@ pub mod SheetIO.XSSF.Sheet {
                 k(ans)
             } 
 
+            def getLastRowNum(k) = {
+                let ans = unsafe IO as r { jsheet.getLastRowNum() };
+                k(ans)
+            } 
+            
+            def getProtect(k) = {
+                let ans = unsafe IO as r { jsheet.getProtect() };
+                k(ans)
+            }
 
+            def getWorkbook(k) = {
+                let ans = unsafe IO as r { jsheet.getWorkbook() };
+                k(XssfWorkbook.XssfWorkbook(ans))
+            } 
         }
     }
 
     pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Sheet) = 
         handle(sheet, f)()
 
+    // TODO rewrite in a more natural style
+    pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet = 
+        let rix = SheetIO.Common.CellAddress.getRow(addr);
+        let cix = SheetIO.Common.CellAddress.getColumn(addr);
+        match Sheet.getRow(rix) {
+            case None      => None
+            case Some(row) => {
+                SheetIO.XSSF.Row.runRow(row, _ -> {
+                    match Row.getCell(cix) {
+                        case None => Err("missing")
+                        case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue())
+                    }
+                }) |> Result.flatten |> Result.toOption |> Option.flatten
+            }
+        }
+
+
 }
+
