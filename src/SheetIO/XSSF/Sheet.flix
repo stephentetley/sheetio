@@ -16,7 +16,7 @@
 
 
 pub mod SheetIO.XSSF.Sheet {
-    use SheetIO.XSSF.Row.withCell
+
     
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.XSSF.Cell.Cell
@@ -108,19 +108,15 @@ pub mod SheetIO.XSSF.Sheet {
         }
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ ((ef + Sheet) - Row) - Cell= 
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ ((ef + Sheet) - Row) - Cell = 
         let rx = SheetIO.Common.CellAddress.getRow(addr);
         let cx = SheetIO.Common.CellAddress.getColumn(addr);
         { withRow(rx, _ ->
             SheetIO.XSSF.Row.withCell(cx, _ -> f()) ) } 
             |> Result.flatten
         
-    pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet = 
-        let rx = SheetIO.Common.CellAddress.getRow(addr);
-        let cx = SheetIO.Common.CellAddress.getColumn(addr);
-        { withRow(rx, _ ->
-            SheetIO.XSSF.Row.withCell(cx, _ -> Cell.getRawValue()) ) } 
-             |> Result.flatten |> Result.toOption |> Option.flatten
+    pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
+        withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption |> Option.flatten
 
 
 
