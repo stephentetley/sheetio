@@ -20,6 +20,7 @@ pub mod SheetIO.XSSF.Row {
     use SheetIO.XSSF.Sheet.XssfSheet
     use SheetIO.XSSF.Sheet.Sheet
     use SheetIO.XSSF.Cell.XssfCell
+    use SheetIO.XSSF.Cell.Cell
 
 
     import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
@@ -88,6 +89,13 @@ pub mod SheetIO.XSSF.Row {
     pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
         handle(row, f)()
 
-
+    pub def runCell(row: XssfRow, sel: Unit -> Option[XssfCell] \ Row, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) - Cell = 
+        def f1() = {
+            match sel() {
+                case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
+                case None => Err("No Cell")
+            }
+        };
+        runRow(row, f1) |> Result.flatten
 
 }

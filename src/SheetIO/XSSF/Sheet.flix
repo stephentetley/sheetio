@@ -105,10 +105,13 @@ pub mod SheetIO.XSSF.Sheet {
         let cix = SheetIO.Common.CellAddress.getColumn(addr);
         Option.flatMap(
             row -> ({
-                SheetIO.XSSF.Row.runRow(row, _ -> match Row.getCell(cix) {
-                        case None => None
-                        case Some(cell) => { SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue()) |> Result.toOption }
-                    })
+                    SheetIO.XSSF.Row.runRow(row, _ ->
+                         Option.flatMap(
+                            cell -> { 
+                                SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue()) |> Result.toOption 
+                                },
+                            Row.getCell(cix)
+                    ))
                 } |> Result.toOption |> Option.flatten |> Option.flatten),
             Sheet.getRow(rix)
         )
