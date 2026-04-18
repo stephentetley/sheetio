@@ -16,19 +16,22 @@
 
 
 pub mod SheetIO.XSSF.Sheet {
-
+    
     
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.XSSF.Cell.Cell
-    use SheetIO.XSSF.Row.Row
-    
+    use SheetIO.XSSF.Cell.XssfCell
+    use SheetIO.XSSF.Row.Row    
     use SheetIO.XSSF.Row.XssfRow
     use SheetIO.XSSF.Workbook.XssfWorkbook
 
 
     import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
     import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
+    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
     import org.apache.poi.ss.usermodel.{Row => JRow} // superclass
+    import org.apache.poi.ss.util.{SheetUtil => JSheetUtil}
+    import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import java.lang.{Exception => JException}
     import java.util.{Iterator => JIterator}
 
@@ -46,6 +49,7 @@ pub mod SheetIO.XSSF.Sheet {
         def askSheetHandle(): XssfSheet
         def getSheetName() : String
         def getRow(i: Int32): Option[XssfRow]
+        def getCell(addr: CellAddress): Option[XssfCell]
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
         def getProtect(): Bool
@@ -75,6 +79,7 @@ pub mod SheetIO.XSSF.Sheet {
                 case ex: JException => Err(ex.getMessage())
             }
 
+
             def getRow(i, k) = {
                 let ans = unsafe IO as r { jsheet.getRow(i) };
                 if (Object.isNull(ans)) 
@@ -82,6 +87,20 @@ pub mod SheetIO.XSSF.Sheet {
                 else 
                     k(Some(XssfRow.XssfRow(ans)))
             } 
+
+
+            def getCell(addr, k) = {
+                let rx = SheetIO.Common.CellAddress.getRow(addr);
+                let cx = SheetIO.Common.CellAddress.getColumn(addr);
+                let jsheet1: JSheet = checked_cast(jsheet);
+                let ans = unsafe IO as r { JSheetUtil.getCell(jsheet1, rx, cx) };
+                if (Object.isNull(ans)) 
+                    k(None)
+                else {
+                    let jxssfcell: JXSSFCell = unchecked_cast(ans as JXSSFCell);
+                    k(Some(XssfCell.XssfCell(jxssfcell)))
+                }
+            }
 
             def getFirstRowNum(k) = {
                 let ans = unsafe IO as r { jsheet.getFirstRowNum() };
@@ -116,18 +135,25 @@ pub mod SheetIO.XSSF.Sheet {
         }
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ ((ef + Sheet) - Row) - Cell = 
-        let rx = SheetIO.Common.CellAddress.getRow(addr);
-        let cx = SheetIO.Common.CellAddress.getColumn(addr);
-        { withRow(rx, _ ->
-            SheetIO.XSSF.Row.withCell(cx, _ -> f()) ) } 
-            |> Result.flatten
-        
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell = 
+        match Sheet.getCell(addr) {
+            case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
+            case None       => Err("No Cell")
+        }
+
+    pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
+        withCell(addr, _ -> Cell.toString()) |> Result.toOption 
+
+
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption |> Option.flatten
 
     pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption |> Option.flatten
+
+    pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ Sheet  = 
+        withCell(addr, _ -> Cell.getFloat64CellValue()) |> Result.toOption |> Option.flatten
+
 
     pub def rowIterator(rc: Region[r]): Iterator[XssfRow, r, r] \ Sheet + r = 
         let XssfSheet.XssfSheet(jsheet) = Sheet.askSheetHandle();
