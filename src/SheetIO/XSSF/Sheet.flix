@@ -103,17 +103,15 @@ pub mod SheetIO.XSSF.Sheet {
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet = 
         let rix = SheetIO.Common.CellAddress.getRow(addr);
         let cix = SheetIO.Common.CellAddress.getColumn(addr);
-        match Sheet.getRow(rix) {
-            case None      => None
-            case Some(row) => {
-                SheetIO.XSSF.Row.runRow(row, _ -> {
-                    match Row.getCell(cix) {
-                        case None => Err("missing")
-                        case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue())
-                    }
-                }) |> Result.flatten |> Result.toOption |> Option.flatten
-            }
-        }
+        Option.flatMap(
+            row -> ({
+                SheetIO.XSSF.Row.runRow(row, _ -> match Row.getCell(cix) {
+                        case None => None
+                        case Some(cell) => { SheetIO.XSSF.Cell.runCell(cell, _ -> Cell.getRawValue()) |> Result.toOption }
+                    })
+                } |> Result.toOption |> Option.flatten |> Option.flatten),
+            Sheet.getRow(rix)
+        )
 
 
 }
