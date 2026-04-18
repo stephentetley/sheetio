@@ -31,9 +31,9 @@ pub mod SheetIO.XSSF.Workbook {
     pub enum XssfWorkbook(JXSSFWorkbook)
 
     pub eff Workbook {
-        // `askXssfWorkbookHandle` should not be used in user code
+        // `askWorkbookHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askXssfWorkbookHandle(): XssfWorkbook
+        def askWorkbookHandle(): XssfWorkbook
         def createSheet(): XssfSheet
         def createSheetWithName(s: String): XssfSheet
         def getNumberOfSheets(): Int32
@@ -54,7 +54,7 @@ pub mod SheetIO.XSSF.Workbook {
             Ok(f(x))
         } with handler Workbook {
             
-            def askXssfWorkbookHandle(k) = { k(wb) }
+            def askWorkbookHandle(k) = { k(wb) }
 
             def createSheet(k) = {
                 let ans = jworkbook.createSheet();
@@ -167,7 +167,7 @@ pub mod SheetIO.XSSF.Workbook {
         }
 
     pub def sheetIterator(rc: Region[r]): Iterator[XssfSheet, r, r] \ Workbook + r = 
-        let XssfWorkbook.XssfWorkbook(jworkbook) = Workbook.askXssfWorkbookHandle();
+        let XssfWorkbook.XssfWorkbook(jworkbook) = Workbook.askWorkbookHandle();
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
         def wrap(jsheet) = { 
             let jxssfsheet = unchecked_cast(jsheet as JXSSFSheet);
@@ -175,10 +175,6 @@ pub mod SheetIO.XSSF.Workbook {
         };
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
             |> Iterator.map(wrap)
-
-    pub def forEachSheet(f: XssfSheet -> Unit \ ef): Unit \ Workbook + ef = region rc {
-        Iterator.forEach(f, sheetIterator(rc))
-    }
     
     pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet = region rc {
         Iterator.forEach(s -> discard SheetIO.XSSF.Sheet.runSheet(s, f),  sheetIterator(rc))

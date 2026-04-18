@@ -24,11 +24,17 @@ pub mod SheetIO.XSSF.Row {
 
 
     import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
+    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
+    import org.apache.poi.ss.usermodel.{Cell => JCell} // superclass
     import java.lang.{Exception => JException}
+    import java.util.{Iterator => JIterator}
 
     pub enum XssfRow(JXSSFRow)
 
     pub eff Row {
+        // `askRowHandle` should not be used in user code
+        // It is a hack until we can run local effects polymorphically
+        def askRowHandle(): XssfRow       
         def getCell(i: Int32): Option[XssfCell]
         def getFirstCellNum(): Option[Int32]
         def getLastCellNum(): Option[Int32]
@@ -49,6 +55,8 @@ pub mod SheetIO.XSSF.Row {
             Ok(f(x))
         } with handler Row {
             
+            def askRowHandle(k) = k(row)
+
             def getCell(i, k) = {
                 let ans = unsafe IO as r { jrow.getCell(i) };
                 if (Object.isNull(ans)) 
@@ -94,5 +102,20 @@ pub mod SheetIO.XSSF.Row {
             case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
             case None       => Err("No Cell")
         }
+    
+    pub def cellIterator(rc: Region[r]): Iterator[XssfCell, r, r] \ Row + r = 
+        let XssfRow.XssfRow(jrow) = Row.askRowHandle();
+        let javaIter: JIterator[JCell] = unsafe IO as r { jrow.cellIterator() };
+        def wrap(jcell) = { 
+            let jxssfcell = unchecked_cast(jcell as JXSSFCell);
+            XssfCell.XssfCell(jxssfcell)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
+            |> Iterator.map(wrap)
+    
+    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - Cell = region rc {
+        Iterator.forEach(cell -> discard SheetIO.XSSF.Cell.runCell(cell, f),  cellIterator(rc))
+    }
 
 }
+

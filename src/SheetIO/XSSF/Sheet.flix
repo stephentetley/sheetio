@@ -27,7 +27,10 @@ pub mod SheetIO.XSSF.Sheet {
 
 
     import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
+    import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
+    import org.apache.poi.ss.usermodel.{Row => JRow} // superclass
     import java.lang.{Exception => JException}
+    import java.util.{Iterator => JIterator}
 
     pub enum XssfSheet(JXSSFSheet)
 
@@ -38,6 +41,9 @@ pub mod SheetIO.XSSF.Sheet {
     }
 
     pub eff Sheet {
+        // `askSheetHandle` should not be used in user code
+        // It is a hack until we can run local effects polymorphically
+        def askSheetHandle(): XssfSheet
         def getSheetName() : String
         def getRow(i: Int32): Option[XssfRow]
         def getFirstRowNum(): Int32
@@ -60,6 +66,8 @@ pub mod SheetIO.XSSF.Sheet {
             Ok(f(x))
         } with handler Sheet {
             
+            def askSheetHandle(k) = { k(sheet) }
+
             def getSheetName(k) = try {
                 let ans = unsafe IO as r { jsheet.getSheetName() };
                 k(ans)
@@ -118,6 +126,20 @@ pub mod SheetIO.XSSF.Sheet {
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption |> Option.flatten
 
+
+    pub def rowIterator(rc: Region[r]): Iterator[XssfRow, r, r] \ Sheet + r = 
+        let XssfSheet.XssfSheet(jsheet) = Sheet.askSheetHandle();
+        let javaIter: JIterator[JRow] = unsafe IO as r { jsheet.rowIterator() };
+        def wrap(jrow) = { 
+            let jxssfrow = unchecked_cast(jrow as JXSSFRow);
+            XssfRow.XssfRow(jxssfrow)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
+            |> Iterator.map(wrap)
+    
+    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Row = region rc {
+        Iterator.forEach(row -> discard SheetIO.XSSF.Row.runRow(row, f),  rowIterator(rc))
+    }
 
 
 }
