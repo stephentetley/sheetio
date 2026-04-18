@@ -24,12 +24,14 @@ pub mod SheetIO.XSSF.Cell {
 
     pub enum XssfCell(JXSSFCell)
 
+    // Make the "read" functions return Option[_] so we can do an alternative
+
     pub eff Cell {
         def getRawValue(): Option[String]
-        def getBoolCellValue(): Bool
-        def getFloat64CellValue(): Float64
-        def getStringCellValue(): String
-        def getCellFormula(): String
+        def getBoolCellValue(): Option[Bool]
+        def getFloat64CellValue(): Option[Float64]
+        def getStringCellValue(): Option[String]
+        def getCellFormula(): Option[String]
         def getCellComment(): Option[XssfComment]
         def getColumnIndex(): Int32        
         def getReference(): String
@@ -60,30 +62,30 @@ pub mod SheetIO.XSSF.Cell {
 
             def getBoolCellValue(k) = try {
                 let ans = unsafe IO as r { jcell.getBooleanCellValue() };
-                k(ans)
+                k(Some(ans))
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case _: JException => k(None)
             }
 
             def getFloat64CellValue(k) = try {
                 let ans = unsafe IO as r { jcell.getNumericCellValue() };
-                k(ans)
+                k(Some(ans))
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case _: JException => k(None)
             }
 
             def getStringCellValue(k) = try {
                 let ans = unsafe IO as r { jcell.getStringCellValue() };
-                k(ans)
+                k(Some(ans))
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case _: JException => k(None)
             }
 
             def getCellFormula(k) = try {
                 let ans = unsafe IO as r { jcell.getCellFormula() };
-                k(ans)
+                k(Some(ans))
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case _: JException => k(None)
             }
 
             def getCellComment(k) = {

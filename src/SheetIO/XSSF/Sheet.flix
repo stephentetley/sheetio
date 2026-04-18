@@ -126,6 +126,8 @@ pub mod SheetIO.XSSF.Sheet {
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption |> Option.flatten
 
+    pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
+        withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption |> Option.flatten
 
     pub def rowIterator(rc: Region[r]): Iterator[XssfRow, r, r] \ Sheet + r = 
         let XssfSheet.XssfSheet(jsheet) = Sheet.askSheetHandle();
@@ -139,6 +141,33 @@ pub mod SheetIO.XSSF.Sheet {
     
     pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Row = region rc {
         Iterator.forEach(row -> discard SheetIO.XSSF.Row.runRow(row, f),  rowIterator(rc))
+    }
+
+    pub def foldRows(f: st -> st \ ef, state: st): Result[String, st] \ Sheet + ef - Row = region rc {
+        let iter = rowIterator(rc);
+        @Tailrec
+        def loop(st) = match Iterator.next(iter) {
+            case None => Ok(st)
+            case Some(row) => match SheetIO.XSSF.Row.runRow(row, _ -> f(st)) {
+                case Err(msg) => Err(msg)
+                case Ok(st1)  => loop(st1)
+            }
+        };
+        loop(state)
+    }
+
+    pub def filterMapRows(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Sheet + ef - Row = region rc {
+        let iter = rowIterator(rc);
+        @Tailrec
+        def loop(k) = match Iterator.next(iter) {
+            case None => Ok(k(Nil))
+            case Some(row) => match SheetIO.XSSF.Row.runRow(row, _ -> f()) {
+                case Err(msg) => Err(msg)
+                case Ok(None)  => loop(k)
+                case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
+            }
+        };
+        loop(xs -> xs)
     }
 
 

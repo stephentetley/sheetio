@@ -176,8 +176,38 @@ pub mod SheetIO.XSSF.Workbook {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
             |> Iterator.map(wrap)
     
+
+    /// TODO ignores failure...
     pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet = region rc {
         Iterator.forEach(s -> discard SheetIO.XSSF.Sheet.runSheet(s, f),  sheetIterator(rc))
+    }
+
+
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet = region rc {
+        let iter = sheetIterator(rc);
+        @Tailrec
+        def loop(st) = match Iterator.next(iter) {
+            case None => Ok(st)
+            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheet(sheet, _ -> f(st)) {
+                case Err(msg) => Err(msg)
+                case Ok(st1)  => loop(st1)
+            }
+        };
+        loop(state)
+    }
+
+    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - Sheet = region rc {
+        let iter = sheetIterator(rc);
+        @Tailrec
+        def loop(k) = match Iterator.next(iter) {
+            case None => Ok(k(Nil))
+            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheet(sheet, _ -> f()) {
+                case Err(msg) => Err(msg)
+                case Ok(None)  => loop(k)
+                case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
+            }
+        };
+        loop(xs -> xs)
     }
 
 }

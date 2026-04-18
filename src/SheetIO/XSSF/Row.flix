@@ -117,5 +117,33 @@ pub mod SheetIO.XSSF.Row {
         Iterator.forEach(cell -> discard SheetIO.XSSF.Cell.runCell(cell, f),  cellIterator(rc))
     }
 
+    pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ Row + ef - Cell = region rc {
+        let iter = cellIterator(rc);
+        @Tailrec
+        def loop(st) = match Iterator.next(iter) {
+            case None => Ok(st)
+            case Some(cell) => match SheetIO.XSSF.Cell.runCell(cell, _ -> f(st)) {
+                case Err(msg) => Err(msg)
+                case Ok(st1)  => loop(st1)
+            }
+        };
+        loop(state)
+    }
+
+    pub def filterMapCells(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Row + ef - Cell = region rc {
+        let iter = cellIterator(rc);
+        @Tailrec
+        def loop(k) = match Iterator.next(iter) {
+            case None => Ok(k(Nil))
+            case Some(cell) => match SheetIO.XSSF.Cell.runCell(cell, _ -> f()) {
+                case Err(msg) => Err(msg)
+                case Ok(None)  => loop(k)
+                case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
+            }
+        };
+        loop(xs -> xs)
+    }
+
+
 }
 
