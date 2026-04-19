@@ -23,6 +23,7 @@ pub mod SheetIO.XSSF.Workbook {
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
     import org.apache.poi.ss.usermodel.{Sheet => JSheet} // superclass
+    import org.apache.poi.openxml4j.util.{ZipSecureFile => JZipSecureFile}
     import java.lang.{Exception => JException}
     import java.io.{FileInputStream => JFileInputStream}
     import java.io.{File => JFile}
@@ -122,9 +123,13 @@ pub mod SheetIO.XSSF.Workbook {
         }
     }
 
-    pub def runReadOnly(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
+    pub def runReadOnly(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
         let jfile = new JFile(path);
-        let jfis = new JFileInputStream(jfile);        
+        let jfis = new JFileInputStream(jfile);
+        match min_inflate_ratio {
+            case Some(d) =>  JZipSecureFile.setMinInflateRatio(d) 
+            case None    => ()
+        };
         let jworkbook = new JXSSFWorkbook(jfis);
         let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
         jworkbook.close();

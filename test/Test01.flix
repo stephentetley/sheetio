@@ -11,7 +11,7 @@ pub mod Test01 {
             let n = Workbook.getNumberOfSheets();
             println("number of sheets: ${n}");
             ()
-        } with SheetIO.XSSF.Workbook.runReadOnly(path);     
+        } with SheetIO.XSSF.Workbook.runReadOnly(path, None);     
         assertTrue(true)
 
 
