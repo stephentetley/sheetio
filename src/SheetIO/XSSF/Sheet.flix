@@ -17,7 +17,8 @@
 
 pub mod SheetIO.XSSF.Sheet {
     
-    
+    use EffectExtras.Alt.Alt
+
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.XSSF.Cell.Cell
     use SheetIO.XSSF.Cell.XssfCell
@@ -135,9 +136,9 @@ pub mod SheetIO.XSSF.Sheet {
         }
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell = 
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell - Alt = 
         match Sheet.getCell(addr) {
-            case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
+            case Some(cell) => SheetIO.XSSF.Cell.runCellWithResult(cell, f)
             case None       => Err("No Cell")
         }
 
@@ -146,13 +147,13 @@ pub mod SheetIO.XSSF.Sheet {
 
 
     pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption |> Option.flatten
+        withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption 
 
     pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption |> Option.flatten
+        withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption 
 
     pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ Sheet  = 
-        withCell(addr, _ -> Cell.getFloat64CellValue()) |> Result.toOption |> Option.flatten
+        withCell(addr, _ -> Cell.getFloat64CellValue()) |> Result.toOption
 
 
     pub def rowIterator(rc: Region[r]): Iterator[XssfRow, r, r] \ Sheet + r = 

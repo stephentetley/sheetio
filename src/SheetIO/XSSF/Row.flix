@@ -17,6 +17,8 @@
 
 pub mod SheetIO.XSSF.Row {
 
+    use EffectExtras.Alt.Alt
+
     use SheetIO.XSSF.Sheet.XssfSheet
     use SheetIO.XSSF.Sheet.Sheet
     use SheetIO.XSSF.Cell.XssfCell
@@ -97,9 +99,9 @@ pub mod SheetIO.XSSF.Row {
     pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
         handle(row, f)()
 
-    pub def withCell(ix: Int32,f: Unit -> a \ ef): Result[String, a] \ (ef + Row) - Cell = 
+    pub def withCell(ix: Int32,f: Unit -> a \ ef): Result[String, a] \ (ef + Row) - Cell - Alt = 
         match Row.getCell(ix) {
-            case Some(cell) => SheetIO.XSSF.Cell.runCell(cell, f)
+            case Some(cell) => SheetIO.XSSF.Cell.runCellWithResult(cell, f)
             case None       => Err("No Cell")
         }
     
@@ -113,8 +115,8 @@ pub mod SheetIO.XSSF.Row {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - Cell = region rc {
-        Iterator.forEach(cell -> discard SheetIO.XSSF.Cell.runCell(cell, f),  cellIterator(rc))
+    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - Cell - Alt = region rc {
+        Iterator.forEach(cell -> discard SheetIO.XSSF.Cell.runCellWithResult(cell, f),  cellIterator(rc))
     }
 
     pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ Row + ef - Cell = region rc {
@@ -122,7 +124,7 @@ pub mod SheetIO.XSSF.Row {
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(cell) => match SheetIO.XSSF.Cell.runCell(cell, _ -> f(st)) {
+            case Some(cell) => match SheetIO.XSSF.Cell.runCellWithResult(cell, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -135,7 +137,7 @@ pub mod SheetIO.XSSF.Row {
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(cell) => match SheetIO.XSSF.Cell.runCell(cell, _ -> f()) {
+            case Some(cell) => match SheetIO.XSSF.Cell.runCellWithResult(cell, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
