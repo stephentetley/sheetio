@@ -37,73 +37,69 @@ pub mod SheetIO.XSSF.Row {
         // `askRowHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
         def askRowHandle(): XssfRow       
-        def getCell(i: Int32): Option[XssfCell]
-        def getFirstCellNum(): Option[Int32]
-        def getLastCellNum(): Option[Int32]
+        def getCell(i: Int32): XssfCell
+        def getFirstCellNum(): Int32
+        def getLastCellNum(): Int32
         def getRowNum(): Int32
         def getSheet(): XssfSheet
     }
 
     pub def handle(row: XssfRow, 
-                    f: a -> b \ ef): a -> Result[String, b] \ ef - Row = x -> region rc {
-        handleHelper(rc, row, f, x)
-    }
-
-    def handleHelper(_: Region[r],
-                        row: XssfRow, 
-                        f: a -> b \ ef): a -> Result[String, b] \ (ef - Row) + r  = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Alt - Row) + r  = x -> {
         let XssfRow.XssfRow(jrow) = row;
         run {
-            Ok(f(x))
+            f(x)
         } with handler Row {
             
             def askRowHandle(k) = k(row)
 
             def getCell(i, k) = {
-                let ans = unsafe IO as r { jrow.getCell(i) };
-                if (Object.isNull(ans)) 
-                    k(None)
+                let ans = unsafe IO as {ef + Alt - Row} { jrow.getCell(i) };
+                if (not Object.isNull(ans)) 
+                    k(XssfCell.XssfCell(ans))
                 else 
-                    k(Some(XssfCell.XssfCell(ans)))
+                    Alt.failure("getCell")
             }
 
             def getFirstCellNum(k) = {
-                let ans = unsafe IO as r { jrow.getFirstCellNum() };
-                if (ans < 0i16) 
-                    k(None)
+                let ans = unsafe IO as {ef + Alt - Row} { jrow.getFirstCellNum() };
+                if (ans >= 0i16) 
+                    k(Int16.toInt32(ans))
                 else
-                    k(Some(Int16.toInt32(ans)))
+                    Alt.failure("getFirstCellNum")
             }
 
             def getLastCellNum(k) = {
-                let ans = unsafe IO as r { jrow.getLastCellNum() };
-                if (ans < 0i16) 
-                    k(None)
+                let ans = unsafe IO as {ef + Alt - Row} { jrow.getLastCellNum() };
+                if (ans >= 0i16) 
+                    k(Int16.toInt32(ans))
                 else
-                    k(Some(Int16.toInt32(ans)))
+                    Alt.failure("getLastCellNum")
             }
 
             def getRowNum(k) = {
-                let ans = unsafe IO as r { jrow.getRowNum() };
+                let ans = unsafe IO as {ef + Alt - Row} { jrow.getRowNum() };
                 k(ans)
             } 
 
             def getSheet(k) = {
-                let ans = unsafe IO as r { jrow.getSheet() };
+                let ans = unsafe IO as {ef + Alt - Row} { jrow.getSheet() };
                 k(XssfSheet.XssfSheet(ans))
             } 
 
         }
     }
 
-    pub def runRow(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Row) = 
+    pub def runRow(row: XssfRow, f: Unit -> a \ ef): a \ (ef + Alt - Row) = 
         handle(row, f)()
 
-    pub def withCell(ix: Int32,f: Unit -> a \ ef): Result[String, a] \ (ef + Row) - Cell - Alt = 
-        match Row.getCell(ix) {
-            case Some(cell) => SheetIO.XSSF.Cell.runCellWithResult(cell, f)
-            case None       => Err("No Cell")
-        }
+    pub def runRowWithResult(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Row) = 
+        run { handle(row, f)() } with EffectExtras.Alt.runWithResult
+
+
+    pub def withCell(ix: Int32,f: Unit -> a \ ef): a \ (ef + Alt + Row) - Cell = 
+        let cell =  Row.getCell(ix);
+        SheetIO.XSSF.Cell.runCell(cell, f)
     
     pub def cellIterator(rc: Region[r]): Iterator[XssfCell, r, r] \ Row + r = 
         let XssfRow.XssfRow(jrow) = Row.askRowHandle();

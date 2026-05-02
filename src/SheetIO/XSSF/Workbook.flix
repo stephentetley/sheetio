@@ -17,6 +17,8 @@
 
 pub mod SheetIO.XSSF.Workbook {
     
+    use EffectExtras.Alt.Alt
+
     use SheetIO.XSSF.Sheet.Sheet
     use SheetIO.XSSF.Sheet.XssfSheet
 
@@ -159,15 +161,15 @@ pub mod SheetIO.XSSF.Workbook {
             }, 0)
     }
 
-    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet = 
+    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
         match Workbook.getSheet(name) {
-            case Some(s) => SheetIO.XSSF.Sheet.runSheet(s, f)
+            case Some(s) => SheetIO.XSSF.Sheet.runSheetWithResult(s, f)
             case None    => Err("No Sheet")
         }
 
-    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet = 
+    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
         match Workbook.getSheetAt(ix) {
-            case Some(s) => SheetIO.XSSF.Sheet.runSheet(s, f)
+            case Some(s) => SheetIO.XSSF.Sheet.runSheetWithResult(s, f)
             case None    => Err("No Sheet")
         }
 
@@ -183,17 +185,17 @@ pub mod SheetIO.XSSF.Workbook {
     
 
     /// TODO ignores failure...
-    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet = region rc {
-        Iterator.forEach(s -> discard SheetIO.XSSF.Sheet.runSheet(s, f),  sheetIterator(rc))
+    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet - Alt = region rc {
+        Iterator.forEach(s -> discard SheetIO.XSSF.Sheet.runSheetWithResult(s, f),  sheetIterator(rc))
     }
 
 
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet = region rc {
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet - Alt= region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheet(sheet, _ -> f(st)) {
+            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheetWithResult(sheet, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -201,12 +203,12 @@ pub mod SheetIO.XSSF.Workbook {
         loop(state)
     }
 
-    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - Sheet = region rc {
+    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - Sheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheet(sheet, _ -> f()) {
+            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheetWithResult(sheet, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))

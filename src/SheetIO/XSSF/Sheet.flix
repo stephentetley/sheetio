@@ -49,8 +49,8 @@ pub mod SheetIO.XSSF.Sheet {
         // It is a hack until we can run local effects polymorphically
         def askSheetHandle(): XssfSheet
         def getSheetName() : String
-        def getRow(i: Int32): Option[XssfRow]
-        def getCell(addr: CellAddress): Option[XssfCell]
+        def getRow(i: Int32): XssfRow
+        def getCell(addr: CellAddress): XssfCell
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
         def getProtect(): Bool
@@ -58,35 +58,28 @@ pub mod SheetIO.XSSF.Sheet {
     }
 
     pub def handle(sheet: XssfSheet, 
-                f: a -> b \ ef): a -> Result[String, b] \ (ef - Sheet) = x -> region rc {
-        handleHelper(rc, sheet, f, x)
-    }
-
-
-    def handleHelper(_: Region[r], 
-                        sheet: XssfSheet, 
-                        f: a -> b \ ef): a -> Result[String, b] \ (ef - Sheet) + r = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Alt - Sheet) + r = x -> {
         let XssfSheet.XssfSheet(jsheet) = sheet;
         run {
-            Ok(f(x))
+            f(x)
         } with handler Sheet {
             
             def askSheetHandle(k) = { k(sheet) }
 
             def getSheetName(k) = try {
-                let ans = unsafe IO as r { jsheet.getSheetName() };
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getSheetName() };
                 k(ans)
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case ex: JException => Alt.failure(ex.getMessage())
             }
 
 
             def getRow(i, k) = {
-                let ans = unsafe IO as r { jsheet.getRow(i) };
-                if (Object.isNull(ans)) 
-                    k(None)
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getRow(i) };
+                if (not Object.isNull(ans)) 
+                    k(XssfRow.XssfRow(ans))
                 else 
-                    k(Some(XssfRow.XssfRow(ans)))
+                    Alt.failure("getRow")
             } 
 
 
@@ -94,53 +87,51 @@ pub mod SheetIO.XSSF.Sheet {
                 let rx = SheetIO.Common.CellAddress.getRow(addr);
                 let cx = SheetIO.Common.CellAddress.getColumn(addr);
                 let jsheet1: JSheet = checked_cast(jsheet);
-                let ans = unsafe IO as r { JSheetUtil.getCell(jsheet1, rx, cx) };
-                if (Object.isNull(ans)) 
-                    k(None)
-                else {
+                let ans = unsafe IO as {ef + Alt - Sheet} { JSheetUtil.getCell(jsheet1, rx, cx) };
+                if (not Object.isNull(ans)) {
                     let jxssfcell: JXSSFCell = unchecked_cast(ans as JXSSFCell);
-                    k(Some(XssfCell.XssfCell(jxssfcell)))
+                    k(XssfCell.XssfCell(jxssfcell))
+                } else {
+                    Alt.failure("getCell")
                 }
             }
 
             def getFirstRowNum(k) = {
-                let ans = unsafe IO as r { jsheet.getFirstRowNum() };
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getFirstRowNum() };
                 k(ans)
             } 
 
             def getLastRowNum(k) = {
-                let ans = unsafe IO as r { jsheet.getLastRowNum() };
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getLastRowNum() };
                 k(ans)
             } 
             
             def getProtect(k) = {
-                let ans = unsafe IO as r { jsheet.getProtect() };
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getProtect() };
                 k(ans)
             }
 
             def getWorkbook(k) = {
-                let ans = unsafe IO as r { jsheet.getWorkbook() };
+                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getWorkbook() };
                 k(XssfWorkbook.XssfWorkbook(ans))
             } 
         }
     }
 
-    pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Sheet) = 
+    pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): a \ (ef + Alt - Sheet) = 
         handle(sheet, f)()
     
+    pub def runSheetWithResult(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Sheet) = 
+        run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
     
-    pub def withRow(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Row = 
-        match Sheet.getRow(ix) {
-            case Some(row) => SheetIO.XSSF.Row.runRow(row, f)
-            case None      => Err("No Row")
-        }
+    pub def withRow(ix: Int32, f: Unit -> a \ ef): a \ (ef + Alt + Sheet) - Row = 
+        let row = Sheet.getRow(ix);
+        SheetIO.XSSF.Row.runRow(row, f)
 
    
     pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell - Alt = 
-        match Sheet.getCell(addr) {
-            case Some(cell) => SheetIO.XSSF.Cell.runCellWithResult(cell, f)
-            case None       => Err("No Cell")
-        }
+        let cell = Sheet.getCell(addr);
+        SheetIO.XSSF.Cell.runCellWithResult(cell, f)
 
     pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.toString()) |> Result.toOption 
@@ -166,8 +157,8 @@ pub mod SheetIO.XSSF.Sheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Row = region rc {
-        Iterator.forEach(row -> discard SheetIO.XSSF.Row.runRow(row, f),  rowIterator(rc))
+    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Alt - Row = region rc {
+        Iterator.forEach(row -> discard SheetIO.XSSF.Row.runRowWithResult(row, f),  rowIterator(rc))
     }
 
     pub def foldRows(f: st -> st \ ef, state: st): Result[String, st] \ Sheet + ef - Row = region rc {
@@ -175,7 +166,7 @@ pub mod SheetIO.XSSF.Sheet {
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(row) => match SheetIO.XSSF.Row.runRow(row, _ -> f(st)) {
+            case Some(row) => match SheetIO.XSSF.Row.runRowWithResult(row, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -188,7 +179,7 @@ pub mod SheetIO.XSSF.Sheet {
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(row) => match SheetIO.XSSF.Row.runRow(row, _ -> f()) {
+            case Some(row) => match SheetIO.XSSF.Row.runRowWithResult(row, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
