@@ -31,8 +31,6 @@ pub mod SheetIO.XSSF.Row {
     import java.lang.{Exception => JException}
     import java.util.{Iterator => JIterator}
 
-    pub enum XssfRow(JXSSFRow)
-
     pub eff Row {
         // `askRowHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
@@ -44,6 +42,8 @@ pub mod SheetIO.XSSF.Row {
         def getSheet(): XssfSheet
     }
 
+    pub enum XssfRow(JXSSFRow)
+    
     pub def handle(row: XssfRow, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Row) + r  = x -> {
         let XssfRow.XssfRow(jrow) = row;

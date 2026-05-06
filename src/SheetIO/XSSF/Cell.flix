@@ -23,9 +23,6 @@ pub mod SheetIO.XSSF.Cell {
     import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
     import java.lang.{Exception => JException}
 
-    pub enum XssfCell(JXSSFCell)
-
-    // Make the "read" functions return Option[_] so we can do an alternative
 
     pub eff Cell {
         def getRawValue(): String
@@ -39,6 +36,8 @@ pub mod SheetIO.XSSF.Cell {
         def getRowIndex(): Int32
         def toString(): String
     }
+
+    pub enum XssfCell(JXSSFCell)
 
     pub def handle(cell: XssfCell, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Cell) = x -> 

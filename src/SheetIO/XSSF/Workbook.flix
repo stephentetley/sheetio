@@ -31,7 +31,6 @@ pub mod SheetIO.XSSF.Workbook {
     import java.io.{File => JFile}
     import java.util.{Iterator => JIterator}
 
-    pub enum XssfWorkbook(JXSSFWorkbook)
 
     pub eff Workbook {
         // `askWorkbookHandle` should not be used in user code
@@ -50,6 +49,8 @@ pub mod SheetIO.XSSF.Workbook {
     }
 
 
+    pub enum XssfWorkbook(JXSSFWorkbook)
+    
     pub def handle(wb: XssfWorkbook, 
                     f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - Workbook = x -> {
         let XssfWorkbook.XssfWorkbook(jworkbook) = wb;

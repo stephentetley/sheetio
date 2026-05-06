@@ -22,11 +22,12 @@ pub mod SheetIO.XSSF.Comment {
     import org.apache.poi.xssf.usermodel.{XSSFComment => JXSSFComment}
     import java.lang.{Exception => JException}
 
-    pub enum XssfComment(JXSSFComment)
-
     pub eff Comment {
         def getAuthor(): String
     }
+
+    pub enum XssfComment(JXSSFComment)
+
 
     pub def handle(comment: XssfComment, 
                     f: a -> b \ ef): a -> Result[String, b] \ ef - Comment = x -> region rc {

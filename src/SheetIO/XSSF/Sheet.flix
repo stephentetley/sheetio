@@ -36,13 +36,6 @@ pub mod SheetIO.XSSF.Sheet {
     import java.lang.{Exception => JException}
     import java.util.{Iterator => JIterator}
 
-    pub enum XssfSheet(JXSSFSheet)
-
-    pub enum CellMissingPolicy with Eq, Order, ToString {
-        case CREATE_NULL_AS_BLANK 
-        case RETURN_BLANK_AS_NULL 
-        case RETURN_NULL_AND_BLANK 
-    }
 
     pub eff Sheet {
         // `askSheetHandle` should not be used in user code
@@ -57,6 +50,14 @@ pub mod SheetIO.XSSF.Sheet {
         def getWorkbook(): XssfWorkbook
     }
 
+    pub enum XssfSheet(JXSSFSheet)
+
+    pub enum CellMissingPolicy with Eq, Order, ToString {
+        case CREATE_NULL_AS_BLANK 
+        case RETURN_BLANK_AS_NULL 
+        case RETURN_NULL_AND_BLANK 
+    }
+    
     pub def handle(sheet: XssfSheet, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Sheet) + r = x -> {
         let XssfSheet.XssfSheet(jsheet) = sheet;
