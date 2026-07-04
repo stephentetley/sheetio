@@ -44,6 +44,22 @@ pub mod SheetIO.Common.CellAddress {
     }
 
 
+    instance ToJava[CellAddress] {
+        type Out = JCellAddress
+        pub def toJava(x: CellAddress): JCellAddress = 
+            let CellAddress.CellAddress(x1) = x;
+            x1
+    }
+
+    instance ToFlix[CellAddress] {
+        type In = JCellAddress
+        pub def toFlix(x: JCellAddress): CellAddress = CellAddress.CellAddress(x)
+    }
+
+
+    pub def a1(): CellAddress = 
+        CellAddress.CellAddress(unsafe IO { JCellAddress.A1 })
+
     pub def create(rownum: Int32, colnum: Int32): CellAddress = 
         CellAddress.CellAddress(unsafe IO { new JCellAddress(rownum, colnum) })
 

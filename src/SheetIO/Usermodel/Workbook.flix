@@ -15,15 +15,16 @@
  */
 
 
-pub mod SheetIO.XSSF.Workbook {
+pub mod SheetIO.Usermodel.Workbook {
     
     use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
 
-    use SheetIO.XSSF.Sheet.Sheet
-    use SheetIO.XSSF.Sheet.XssfSheet
+    use SheetIO.Usermodel.Sheet.Sheet
+    use SheetIO.Usermodel.Sheet.SSSheet
 
+    import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
-    import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
     import org.apache.poi.ss.usermodel.{Sheet => JSheet} // superclass
     import org.apache.poi.openxml4j.util.{ZipSecureFile => JZipSecureFile}
     import java.lang.{Exception => JException}
@@ -35,25 +36,35 @@ pub mod SheetIO.XSSF.Workbook {
     pub eff Workbook {
         // `askWorkbookHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askWorkbookHandle(): XssfWorkbook
-        def createSheet(): XssfSheet
-        def createSheetWithName(s: String): XssfSheet
+        def askWorkbookHandle(): SSWorkbook
+        def createSheet(): SSSheet
+        def createSheetWithName(s: String): SSSheet
         def getNumberOfSheets(): Int32
-        def getSheet(s: String): Option[XssfSheet]
-        def getSheetAt(i: Int32): Option[XssfSheet]
+        def getSheet(s: String): SSSheet
+        def getSheetAt(i: Int32): SSSheet
         def getSheetIndex(s: String): Option[Int32]
-        def getSheetIndexOfSheet(s: XssfSheet): Option[Int32]
+        def getSheetIndexOfSheet(s: SSSheet): Option[Int32]
         def getSheetName(i: Int32): String
-        def isMacroEnabled(): Bool
-        def setSheetName(i: Int32, s: String): Unit
     }
 
 
-    pub enum XssfWorkbook(JXSSFWorkbook)
-    
-    pub def handle(wb: XssfWorkbook, 
-                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - Workbook = x -> {
-        let XssfWorkbook.XssfWorkbook(jworkbook) = wb;
+    pub enum SSWorkbook(JWorkbook)
+
+    instance ToJava[SSWorkbook] {
+        type Out = JWorkbook
+        pub def toJava(x: SSWorkbook): JWorkbook = 
+            let SSWorkbook.SSWorkbook(x1) = x;
+            x1
+    }
+
+    instance ToFlix[SSWorkbook] {
+        type In = JWorkbook
+        pub def toFlix(x: JWorkbook): SSWorkbook = SSWorkbook.SSWorkbook(x)
+    }
+
+    pub def handle(wb: SSWorkbook, 
+                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - Workbook - Fail = x -> {
+        let SSWorkbook.SSWorkbook(jworkbook) = wb;
         run {
             Ok(f(x))
         } with handler Workbook {
@@ -62,37 +73,37 @@ pub mod SheetIO.XSSF.Workbook {
 
             def createSheet(k) = {
                 let ans = jworkbook.createSheet();
-                k(XssfSheet.XssfSheet(ans))
+                k(ToFlix.toFlix(ans))
             }
            
             def createSheetWithName(s, k) = {
                 let ans = jworkbook.createSheet(s);
-                k(XssfSheet.XssfSheet(ans))
+                k(ToFlix.toFlix(ans))
             }
 
             def getNumberOfSheets(k) = try {
                 let ans = jworkbook.getNumberOfSheets();
                 k(ans)
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case ex: JException => Fail.report(ex.getMessage())
             }
 
             def getSheet(s, k) = try {
                 let ans = jworkbook.getSheet(s);
                 if (Object.isNull(ans)) 
-                    k(None)
+                    Fail.report("getSheet(_) - sheet is null")
                 else 
-                    k(Some(XssfSheet.XssfSheet(ans)))                
+                    k(ToFlix.toFlix(ans))
             } catch {
-                case ex: JException => Err(ex.getMessage())
+                case ex: JException => Fail.report(ex.getMessage())
             }
 
 
             def getSheetAt(i, k) = try {
                 let ans = jworkbook.getSheetAt(i);
-                k(Some(XssfSheet.XssfSheet(ans)))
+                k(ToFlix.toFlix(ans))
             } catch {
-                case _: JException => k(None)
+                case ex: JException => Fail.report(ex.getMessage())
             }
 
             def getSheetIndex(s, k) = {
@@ -101,7 +112,7 @@ pub mod SheetIO.XSSF.Workbook {
             }
 
             def getSheetIndexOfSheet(s, k) = {
-                let XssfSheet.XssfSheet(jsheet) = s;
+                let jsheet = ToJava.toJava(s);
                 let ans = jworkbook.getSheetIndex(jsheet);
                 if (ans < 0) k(None) else k(Some(ans))
             }
@@ -112,21 +123,12 @@ pub mod SheetIO.XSSF.Workbook {
                 k(ans)
             }
 
-            def isMacroEnabled(k) = {
-                    let ans = jworkbook.isMacroEnabled();
-                    k(ans)
-            }
-
-            def setSheetName(i, s, k) = try {
-                jworkbook.setSheetName(i, s);
-                k()
-            } catch {
-                case ex: JException => Err(ex.getMessage())
-            }
+        } with handler Fail {
+            def report(s, _) = Err(s)
         }
     }
 
-    pub def runReadOnly(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
+    pub def runReadOnlyXssf(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook - Fail = try {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);
         match min_inflate_ratio {
@@ -134,7 +136,8 @@ pub mod SheetIO.XSSF.Workbook {
             case None    => ()
         };
         let jworkbook = new JXSSFWorkbook(jfis);
-        let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
+        let jworkbook1: JWorkbook = checked_cast(jworkbook);
+        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
         jworkbook.close();
         jfis.close();
         ans
@@ -142,9 +145,13 @@ pub mod SheetIO.XSSF.Workbook {
         case ex: JException => Err(ex.getMessage())
     }
 
-    pub def runReadWrite(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook = try {
+
+    // with EffectExtras.Fail.runWithResultOfIoError
+
+    pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook - Fail = try {
         let jworkbook = new JXSSFWorkbook(path);
-        let ans = handle(XssfWorkbook.XssfWorkbook(jworkbook), f)();
+        let jworkbook1: JWorkbook = checked_cast(jworkbook);
+        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
         jworkbook.close();
         ans
     } catch {
@@ -163,23 +170,18 @@ pub mod SheetIO.XSSF.Workbook {
     }
 
     pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
-        match Workbook.getSheet(name) {
-            case Some(s) => SheetIO.XSSF.Sheet.runSheetWithResult(s, f)
-            case None    => Err("No Sheet")
-        }
+        let s = Workbook.getSheet(name);
+        SheetIO.Usermodel.Sheet.runSheetWithResult(s, f)
 
     pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
-        match Workbook.getSheetAt(ix) {
-            case Some(s) => SheetIO.XSSF.Sheet.runSheetWithResult(s, f)
-            case None    => Err("No Sheet")
-        }
+        let s = Workbook.getSheetAt(ix);
+        SheetIO.Usermodel.Sheet.runSheetWithResult(s, f)
 
-    pub def sheetIterator(rc: Region[r]): Iterator[XssfSheet, r, r] \ Workbook + r = 
-        let XssfWorkbook.XssfWorkbook(jworkbook) = Workbook.askWorkbookHandle();
+    pub def sheetIterator(rc: Region[r]): Iterator[SSSheet, r, r] \ Workbook + r = 
+        let jworkbook = Workbook.askWorkbookHandle() |> ToJava.toJava;
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
         def wrap(jsheet) = { 
-            let jxssfsheet = unchecked_cast(jsheet as JXSSFSheet);
-            XssfSheet.XssfSheet(jxssfsheet)
+            ToFlix.toFlix(jsheet)
         };
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
             |> Iterator.map(wrap)
@@ -187,7 +189,7 @@ pub mod SheetIO.XSSF.Workbook {
 
     /// TODO ignores failure...
     pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet - Alt = region rc {
-        Iterator.forEach(s -> discard SheetIO.XSSF.Sheet.runSheetWithResult(s, f),  sheetIterator(rc))
+        Iterator.forEach(s -> discard SheetIO.Usermodel.Sheet.runSheetWithResult(s, f),  sheetIterator(rc))
     }
 
 
@@ -196,7 +198,7 @@ pub mod SheetIO.XSSF.Workbook {
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheetWithResult(sheet, _ -> f(st)) {
+            case Some(sheet) => match SheetIO.Usermodel.Sheet.runSheetWithResult(sheet, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -209,7 +211,7 @@ pub mod SheetIO.XSSF.Workbook {
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(sheet) => match SheetIO.XSSF.Sheet.runSheetWithResult(sheet, _ -> f()) {
+            case Some(sheet) => match SheetIO.Usermodel.Sheet.runSheetWithResult(sheet, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))

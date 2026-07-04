@@ -15,44 +15,67 @@
  */
 
 
-pub mod SheetIO.XSSF.Cell {
-
+pub mod SheetIO.Usermodel.Cell {
+    
+    
     use EffectExtras.Alt.Alt
-    use SheetIO.XSSF.Comment.XssfComment
+    use SheetIO.Common.CellAddress
+    use SheetIO.Common.CellType
+    use SheetIO.Usermodel.Comment.SSComment
 
-    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
+    import org.apache.poi.ss.usermodel.{Cell => JCell}
     import java.lang.{Exception => JException}
 
 
     pub eff Cell {
-        def getRawValue(): String
+        def getAddress(): CellAddress
+        def getCellType(): CellType
         def getBoolCellValue(): Bool
         def getFloat64CellValue(): Float64
         def getStringCellValue(): String
         def getCellFormula(): String
-        def getCellComment(): XssfComment
+        def getCellComment(): SSComment
         def getColumnIndex(): Int32        
-        def getReference(): String
         def getRowIndex(): Int32
         def toString(): String
     }
 
-    pub enum XssfCell(JXSSFCell)
+    pub enum SSCell(JCell)
 
-    pub def handle(cell: XssfCell, 
+    instance ToJava[SSCell] {
+        type Out = JCell
+        pub def toJava(x: SSCell): JCell = 
+            let SSCell.SSCell(x1) = x;
+            x1
+    }
+
+    instance ToFlix[SSCell] {
+        type In = JCell
+        pub def toFlix(x: JCell): SSCell = SSCell.SSCell(x)
+    }
+
+    pub def handle(cell: SSCell, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Cell) = x -> 
-        let XssfCell.XssfCell(jcell) = cell;
+        let jcell = ToJava.toJava(cell);
         run {
             f(x)
         } with handler Cell {
 
-            def getRawValue(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getRawValue() };
+            def getAddress(k) = {
+                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getAddress() };
                 if (not Object.isNull(ans)) 
-                    k(ans)
+                    k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("getRawValue")
-            } 
+                    Alt.failure("getCellAddress")
+            }
+
+            def getCellType(k) = {
+                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getCellType() };
+                if (not Object.isNull(ans)) 
+                    k(ToFlix.toFlix(ans))
+                else 
+                    Alt.failure("getCellType")
+            }
 
             def getBoolCellValue(k) = try {
                 let ans = unsafe IO as {ef + Alt - Cell} { jcell.getBooleanCellValue() };
@@ -85,20 +108,13 @@ pub mod SheetIO.XSSF.Cell {
             def getCellComment(k) = {
                 let ans = unsafe IO as {ef + Alt - Cell} { jcell.getCellComment() };
                 if (not Object.isNull(ans)) 
-                    k(XssfComment.XssfComment(ans))
+                    k(ToFlix.toFlix(ans))
                 else 
-                     Alt.failure("getCellComment")
-                    
-            } 
+                    Alt.failure("getCellComment")
+            }
 
             def getColumnIndex(k) = {
                 let ans = unsafe IO as {ef + Alt - Cell} { jcell.getColumnIndex() };
-                k(ans)
-            } 
-
-
-            def getReference(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getReference() };
                 k(ans)
             } 
 
@@ -111,13 +127,14 @@ pub mod SheetIO.XSSF.Cell {
                 let ans = unsafe IO as {ef + Alt - Cell} { jcell.toString() };
                 k(ans)
             } 
+
         }
 
 
-    pub def runCell(cell: XssfCell, f: Unit -> a \ ef): a \ (ef + Alt - Cell) = 
+    pub def runCell(cell: SSCell, f: Unit -> a \ ef): a \ (ef + Alt - Cell) = 
         handle(cell, f)()
 
-    pub def runCellWithResult(cell: XssfCell, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Cell) = 
+    pub def runCellWithResult(cell: SSCell, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Cell) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runWithResult
 
 }

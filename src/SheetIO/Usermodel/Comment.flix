@@ -15,29 +15,41 @@
  */
 
 
-pub mod SheetIO.XSSF.Comment {
+pub mod SheetIO.Usermodel.Comment {
 
 
 
-    import org.apache.poi.xssf.usermodel.{XSSFComment => JXSSFComment}
+    import org.apache.poi.ss.usermodel.{Comment => JComment}
     import java.lang.{Exception => JException}
 
     pub eff Comment {
         def getAuthor(): String
     }
 
-    pub enum XssfComment(JXSSFComment)
+    pub enum SSComment(JComment)
 
+    instance ToJava[SSComment] {
+        type Out = JComment
+        pub def toJava(x: SSComment): JComment = 
+            let SSComment.SSComment(x1) = x;
+            x1
+    }
 
-    pub def handle(comment: XssfComment, 
+    instance ToFlix[SSComment] {
+        type In = JComment
+        pub def toFlix(x: JComment): SSComment = SSComment.SSComment(x)
+    }
+    
+
+    pub def handle(comment: SSComment, 
                     f: a -> b \ ef): a -> Result[String, b] \ ef - Comment = x -> region rc {
         handleHelper(rc, comment, f, x)
     }
 
     def handleHelper(_: Region[r],
-                        comment: XssfComment, 
+                        comment: SSComment, 
                         f: a -> b \ ef): a -> Result[String, b] \ (ef - Comment) + r  = x -> {
-        let XssfComment.XssfComment(jcomment) = comment;
+        let SSComment.SSComment(jcomment) = comment;
         run {
             Ok(f(x))
         } with handler Comment {
@@ -49,7 +61,7 @@ pub mod SheetIO.XSSF.Comment {
         }
     }
 
-    pub def runComment(comment: XssfComment, f: Unit -> a \ ef): Result[String, a] \ (ef - Comment) = 
+    pub def runComment(comment: SSComment, f: Unit -> a \ ef): Result[String, a] \ (ef - Comment) = 
         handle(comment, f)()
 
 }

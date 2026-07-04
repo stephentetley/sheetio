@@ -15,18 +15,16 @@
  */
 
 
-pub mod SheetIO.XSSF.Row {
+pub mod SheetIO.Usermodel.Row {
 
     use EffectExtras.Alt.Alt
 
-    use SheetIO.XSSF.Sheet.XssfSheet
-    use SheetIO.XSSF.Sheet.Sheet
-    use SheetIO.XSSF.Cell.XssfCell
-    use SheetIO.XSSF.Cell.Cell
+    use SheetIO.Usermodel.Sheet.SSSheet
+    use SheetIO.Usermodel.Cell.SSCell
+    use SheetIO.Usermodel.Cell.Cell
 
 
-    import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
-    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
+    import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell} // superclass
     import java.lang.{Exception => JException}
     import java.util.{Iterator => JIterator}
@@ -34,19 +32,31 @@ pub mod SheetIO.XSSF.Row {
     pub eff Row {
         // `askRowHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askRowHandle(): XssfRow       
-        def getCell(i: Int32): XssfCell
+        def askRowHandle(): SSRow       
+        def getCell(i: Int32): SSCell
         def getFirstCellNum(): Int32
         def getLastCellNum(): Int32
         def getRowNum(): Int32
-        def getSheet(): XssfSheet
+        def getSheet(): SSSheet
     }
 
-    pub enum XssfRow(JXSSFRow)
+    pub enum SSRow(JRow)
     
-    pub def handle(row: XssfRow, 
+    instance ToJava[SSRow] {
+        type Out = JRow
+        pub def toJava(x: SSRow): JRow = 
+            let SSRow.SSRow(x1) = x;
+            x1
+    }
+
+    instance ToFlix[SSRow] {
+        type In = JRow
+        pub def toFlix(x: JRow): SSRow = SSRow.SSRow(x)
+    }
+        
+    pub def handle(row: SSRow, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Row) + r  = x -> {
-        let XssfRow.XssfRow(jrow) = row;
+        let SSRow.SSRow(jrow) = row;
         run {
             f(x)
         } with handler Row {
@@ -56,7 +66,7 @@ pub mod SheetIO.XSSF.Row {
             def getCell(i, k) = {
                 let ans = unsafe IO as {ef + Alt - Row} { jrow.getCell(i) };
                 if (not Object.isNull(ans)) 
-                    k(XssfCell.XssfCell(ans))
+                    k(ToFlix.toFlix(ans))
                 else 
                     Alt.failure("getCell")
             }
@@ -84,35 +94,34 @@ pub mod SheetIO.XSSF.Row {
 
             def getSheet(k) = {
                 let ans = unsafe IO as {ef + Alt - Row} { jrow.getSheet() };
-                k(XssfSheet.XssfSheet(ans))
+                k(SSSheet.SSSheet(ans))
             } 
 
         }
     }
 
-    pub def runRow(row: XssfRow, f: Unit -> a \ ef): a \ (ef + Alt - Row) = 
+    pub def runRow(row: SSRow, f: Unit -> a \ ef): a \ (ef + Alt - Row) = 
         handle(row, f)()
 
-    pub def runRowWithResult(row: XssfRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Row) = 
+    pub def runRowWithResult(row: SSRow, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Row) = 
         run { handle(row, f)() } with EffectExtras.Alt.runWithResult
 
 
     pub def withCell(ix: Int32,f: Unit -> a \ ef): a \ (ef + Alt + Row) - Cell = 
         let cell =  Row.getCell(ix);
-        SheetIO.XSSF.Cell.runCell(cell, f)
+        SheetIO.Usermodel.Cell.runCell(cell, f)
     
-    pub def cellIterator(rc: Region[r]): Iterator[XssfCell, r, r] \ Row + r = 
-        let XssfRow.XssfRow(jrow) = Row.askRowHandle();
+    pub def cellIterator(rc: Region[r]): Iterator[SSCell, r, r] \ Row + r = 
+        let jrow = Row.askRowHandle() |> ToJava.toJava;
         let javaIter: JIterator[JCell] = unsafe IO as r { jrow.cellIterator() };
         def wrap(jcell) = { 
-            let jxssfcell = unchecked_cast(jcell as JXSSFCell);
-            XssfCell.XssfCell(jxssfcell)
+            ToFlix.toFlix(jcell)
         };
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
             |> Iterator.map(wrap)
     
     pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - Cell - Alt = region rc {
-        Iterator.forEach(cell -> discard SheetIO.XSSF.Cell.runCellWithResult(cell, f),  cellIterator(rc))
+        Iterator.forEach(cell -> discard SheetIO.Usermodel.Cell.runCellWithResult(cell, f),  cellIterator(rc))
     }
 
     pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ Row + ef - Cell = region rc {
@@ -120,7 +129,7 @@ pub mod SheetIO.XSSF.Row {
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(cell) => match SheetIO.XSSF.Cell.runCellWithResult(cell, _ -> f(st)) {
+            case Some(cell) => match SheetIO.Usermodel.Cell.runCellWithResult(cell, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -133,7 +142,7 @@ pub mod SheetIO.XSSF.Row {
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(cell) => match SheetIO.XSSF.Cell.runCellWithResult(cell, _ -> f()) {
+            case Some(cell) => match SheetIO.Usermodel.Cell.runCellWithResult(cell, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))

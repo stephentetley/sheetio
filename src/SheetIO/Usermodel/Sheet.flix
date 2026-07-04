@@ -15,22 +15,22 @@
  */
 
 
-pub mod SheetIO.XSSF.Sheet {
+pub mod SheetIO.Usermodel.Sheet {
+    use ToJava.toJava
     
     use EffectExtras.Alt.Alt
 
     use SheetIO.Common.CellAddress.CellAddress
-    use SheetIO.XSSF.Cell.Cell
-    use SheetIO.XSSF.Cell.XssfCell
-    use SheetIO.XSSF.Row.Row    
-    use SheetIO.XSSF.Row.XssfRow
-    use SheetIO.XSSF.Workbook.XssfWorkbook
+    use SheetIO.Usermodel.Cell.Cell
+    use SheetIO.Usermodel.Cell.SSCell
+    use SheetIO.Usermodel.Row.Row    
+    use SheetIO.Usermodel.Row.SSRow
+    use SheetIO.Usermodel.Workbook.SSWorkbook
 
 
-    import org.apache.poi.xssf.usermodel.{XSSFSheet => JXSSFSheet}
-    import org.apache.poi.xssf.usermodel.{XSSFRow => JXSSFRow}
-    import org.apache.poi.xssf.usermodel.{XSSFCell => JXSSFCell}
-    import org.apache.poi.ss.usermodel.{Row => JRow} // superclass
+    import org.apache.poi.ss.usermodel.{Sheet => JSheet}
+    import org.apache.poi.ss.usermodel.{Row => JRow}
+    import org.apache.poi.ss.usermodel.{Cell => JCell}
     import org.apache.poi.ss.util.{SheetUtil => JSheetUtil}
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import java.lang.{Exception => JException}
@@ -40,17 +40,29 @@ pub mod SheetIO.XSSF.Sheet {
     pub eff Sheet {
         // `askSheetHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askSheetHandle(): XssfSheet
+        def askSheetHandle(): SSSheet
         def getSheetName() : String
-        def getRow(i: Int32): XssfRow
-        def getCell(addr: CellAddress): XssfCell
+        def getRow(i: Int32): SSRow
+        def getCell(addr: CellAddress): SSCell
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
         def getProtect(): Bool
-        def getWorkbook(): XssfWorkbook
+        def getWorkbook(): SSWorkbook
     }
 
-    pub enum XssfSheet(JXSSFSheet)
+    pub enum SSSheet(JSheet)
+
+    instance ToJava[SSSheet] {
+        type Out = JSheet
+        pub def toJava(x: SSSheet): JSheet = 
+            let SSSheet.SSSheet(x1) = x;
+            x1
+    }
+
+    instance ToFlix[SSSheet] {
+        type In = JSheet
+        pub def toFlix(x: JSheet): SSSheet = SSSheet.SSSheet(x)
+    }
 
     pub enum CellMissingPolicy with Eq, Order, ToString {
         case CREATE_NULL_AS_BLANK 
@@ -58,9 +70,9 @@ pub mod SheetIO.XSSF.Sheet {
         case RETURN_NULL_AND_BLANK 
     }
     
-    pub def handle(sheet: XssfSheet, 
+    pub def handle(sheet: SSSheet, 
                     f: a -> b \ ef): a -> b \ (ef + Alt - Sheet) + r = x -> {
-        let XssfSheet.XssfSheet(jsheet) = sheet;
+        let SSSheet.SSSheet(jsheet) = sheet;
         run {
             f(x)
         } with handler Sheet {
@@ -78,7 +90,7 @@ pub mod SheetIO.XSSF.Sheet {
             def getRow(i, k) = {
                 let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getRow(i) };
                 if (not Object.isNull(ans)) 
-                    k(XssfRow.XssfRow(ans))
+                    k(ToFlix.toFlix(ans))
                 else 
                     Alt.failure("getRow")
             } 
@@ -87,11 +99,9 @@ pub mod SheetIO.XSSF.Sheet {
             def getCell(addr, k) = {
                 let rx = SheetIO.Common.CellAddress.getRow(addr);
                 let cx = SheetIO.Common.CellAddress.getColumn(addr);
-                let jsheet1: JSheet = checked_cast(jsheet);
-                let ans = unsafe IO as {ef + Alt - Sheet} { JSheetUtil.getCell(jsheet1, rx, cx) };
+                let ans = unsafe IO as {ef + Alt - Sheet} { JSheetUtil.getCell(jsheet, rx, cx) };
                 if (not Object.isNull(ans)) {
-                    let jxssfcell: JXSSFCell = unchecked_cast(ans as JXSSFCell);
-                    k(XssfCell.XssfCell(jxssfcell))
+                    k(ToFlix.toFlix(ans))
                 } else {
                     Alt.failure("getCell")
                 }
@@ -114,32 +124,29 @@ pub mod SheetIO.XSSF.Sheet {
 
             def getWorkbook(k) = {
                 let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getWorkbook() };
-                k(XssfWorkbook.XssfWorkbook(ans))
+                k(ToFlix.toFlix(ans))
             } 
         }
     }
 
-    pub def runSheet(sheet: XssfSheet, f: Unit -> a \ ef): a \ (ef + Alt - Sheet) = 
+    pub def runSheet(sheet: SSSheet, f: Unit -> a \ ef): a \ (ef + Alt - Sheet) = 
         handle(sheet, f)()
     
-    pub def runSheetWithResult(sheet: XssfSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Sheet) = 
+    pub def runSheetWithResult(sheet: SSSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Sheet) = 
         run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
     
     pub def withRow(ix: Int32, f: Unit -> a \ ef): a \ (ef + Alt + Sheet) - Row = 
         let row = Sheet.getRow(ix);
-        SheetIO.XSSF.Row.runRow(row, f)
+        SheetIO.Usermodel.Row.runRow(row, f)
 
    
     pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell - Alt = 
         let cell = Sheet.getCell(addr);
-        SheetIO.XSSF.Cell.runCellWithResult(cell, f)
+        SheetIO.Usermodel.Cell.runCellWithResult(cell, f)
 
     pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.toString()) |> Result.toOption 
 
-
-    pub def getCellRawValue(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> Cell.getRawValue()) |> Result.toOption 
 
     pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
         withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption 
@@ -148,18 +155,17 @@ pub mod SheetIO.XSSF.Sheet {
         withCell(addr, _ -> Cell.getFloat64CellValue()) |> Result.toOption
 
 
-    pub def rowIterator(rc: Region[r]): Iterator[XssfRow, r, r] \ Sheet + r = 
-        let XssfSheet.XssfSheet(jsheet) = Sheet.askSheetHandle();
+    pub def rowIterator(rc: Region[r]): Iterator[SSRow, r, r] \ Sheet + r = 
+        let jsheet = Sheet.askSheetHandle() |> ToJava.toJava;
         let javaIter: JIterator[JRow] = unsafe IO as r { jsheet.rowIterator() };
         def wrap(jrow) = { 
-            let jxssfrow = unchecked_cast(jrow as JXSSFRow);
-            XssfRow.XssfRow(jxssfrow)
+            ToFlix.toFlix(jrow)
         };
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
     pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Alt - Row = region rc {
-        Iterator.forEach(row -> discard SheetIO.XSSF.Row.runRowWithResult(row, f),  rowIterator(rc))
+        Iterator.forEach(row -> discard SheetIO.Usermodel.Row.runRowWithResult(row, f),  rowIterator(rc))
     }
 
     pub def foldRows(f: st -> st \ ef, state: st): Result[String, st] \ Sheet + ef - Row = region rc {
@@ -167,7 +173,7 @@ pub mod SheetIO.XSSF.Sheet {
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(row) => match SheetIO.XSSF.Row.runRowWithResult(row, _ -> f(st)) {
+            case Some(row) => match SheetIO.Usermodel.Row.runRowWithResult(row, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -180,7 +186,7 @@ pub mod SheetIO.XSSF.Sheet {
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(row) => match SheetIO.XSSF.Row.runRowWithResult(row, _ -> f()) {
+            case Some(row) => match SheetIO.Usermodel.Row.runRowWithResult(row, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
