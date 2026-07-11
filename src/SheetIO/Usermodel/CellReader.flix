@@ -15,7 +15,7 @@
  */
 
 
-pub mod SheetIO.Usermodel.Cell {
+pub mod SheetIO.Usermodel.CellReader {
     
     
     use EffectExtras.Alt.Alt
@@ -27,7 +27,7 @@ pub mod SheetIO.Usermodel.Cell {
     import java.lang.{Exception => JException}
 
 
-    pub eff Cell {
+    pub eff CellReader {
         def getAddress(): CellAddress
         def getCellType(): CellType
         def getBoolCellValue(): Bool
@@ -55,14 +55,14 @@ pub mod SheetIO.Usermodel.Cell {
     }
 
     pub def handle(cell: SSCell, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - Cell) = x -> 
+                    f: a -> b \ ef): a -> b \ (ef + Alt - CellReader) = x -> 
         let jcell = ToJava.toJava(cell);
         run {
             f(x)
-        } with handler Cell {
+        } with handler CellReader {
 
             def getAddress(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getAddress() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getAddress() };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
@@ -70,7 +70,7 @@ pub mod SheetIO.Usermodel.Cell {
             }
 
             def getCellType(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getCellType() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getCellType() };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
@@ -78,35 +78,35 @@ pub mod SheetIO.Usermodel.Cell {
             }
 
             def getBoolCellValue(k) = try {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getBooleanCellValue() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getBooleanCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getBoolCellValue")
             }
 
             def getFloat64CellValue(k) = try {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getNumericCellValue() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getNumericCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getFloat64CellValue")
             }
 
             def getStringCellValue(k) = try {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getStringCellValue() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getStringCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getStringCellValue")
             }
 
             def getCellFormula(k) = try {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getCellFormula() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getCellFormula() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getCellFormula")
             }
 
             def getCellComment(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getCellComment() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getCellComment() };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
@@ -114,27 +114,27 @@ pub mod SheetIO.Usermodel.Cell {
             }
 
             def getColumnIndex(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getColumnIndex() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getColumnIndex() };
                 k(ans)
             } 
 
             def getRowIndex(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.getRowIndex() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.getRowIndex() };
                 k(ans)
             } 
 
             def toString(k) = {
-                let ans = unsafe IO as {ef + Alt - Cell} { jcell.toString() };
+                let ans = unsafe IO as {ef + Alt - CellReader} { jcell.toString() };
                 k(ans)
             } 
 
         }
 
 
-    pub def runCell(cell: SSCell, f: Unit -> a \ ef): a \ (ef + Alt - Cell) = 
+    pub def runCellReader(cell: SSCell, f: Unit -> a \ ef): a \ (ef + Alt - CellReader) = 
         handle(cell, f)()
 
-    pub def runCellWithResult(cell: SSCell, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Cell) = 
+    pub def runCellReaderWithResult(cell: SSCell, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - CellReader) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runWithResult
 
 }

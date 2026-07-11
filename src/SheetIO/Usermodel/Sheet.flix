@@ -21,8 +21,8 @@ pub mod SheetIO.Usermodel.Sheet {
     use EffectExtras.Alt.Alt
 
     use SheetIO.Common.CellAddress.CellAddress
-    use SheetIO.Usermodel.Cell.Cell
-    use SheetIO.Usermodel.Cell.SSCell
+    use SheetIO.Usermodel.CellReader.CellReader
+    use SheetIO.Usermodel.CellReader.SSCell
     use SheetIO.Usermodel.Row.Row    
     use SheetIO.Usermodel.Row.SSRow
     use SheetIO.Usermodel.Workbook.SSWorkbook
@@ -140,19 +140,19 @@ pub mod SheetIO.Usermodel.Sheet {
         SheetIO.Usermodel.Row.runRow(row, f)
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - Cell - Alt = 
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - CellReader - Alt = 
         let cell = Sheet.getCell(addr);
-        SheetIO.Usermodel.Cell.runCellWithResult(cell, f)
+        SheetIO.Usermodel.CellReader.runCellReaderWithResult(cell, f)
 
     pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> Cell.toString()) |> Result.toOption 
+        withCell(addr, _ -> CellReader.toString()) |> Result.toOption 
 
 
     pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> Cell.getStringCellValue()) |> Result.toOption 
+        withCell(addr, _ -> CellReader.getStringCellValue()) |> Result.toOption 
 
     pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ Sheet  = 
-        withCell(addr, _ -> Cell.getFloat64CellValue()) |> Result.toOption
+        withCell(addr, _ -> CellReader.getFloat64CellValue()) |> Result.toOption
 
 
     pub def rowIterator(rc: Region[r]): Iterator[SSRow, r, r] \ Sheet + r = 

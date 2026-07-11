@@ -20,8 +20,8 @@ pub mod SheetIO.Usermodel.Row {
     use EffectExtras.Alt.Alt
 
     use SheetIO.Usermodel.Sheet.SSSheet
-    use SheetIO.Usermodel.Cell.SSCell
-    use SheetIO.Usermodel.Cell.Cell
+    use SheetIO.Usermodel.CellReader.SSCell
+    use SheetIO.Usermodel.CellReader.CellReader
 
 
     import org.apache.poi.ss.usermodel.{Row => JRow}
@@ -107,9 +107,9 @@ pub mod SheetIO.Usermodel.Row {
         run { handle(row, f)() } with EffectExtras.Alt.runWithResult
 
 
-    pub def withCell(ix: Int32,f: Unit -> a \ ef): a \ (ef + Alt + Row) - Cell = 
+    pub def withCell(ix: Int32,f: Unit -> a \ ef): a \ (ef + Alt + Row) - CellReader = 
         let cell =  Row.getCell(ix);
-        SheetIO.Usermodel.Cell.runCell(cell, f)
+        SheetIO.Usermodel.CellReader.runCellReader(cell, f)
     
     pub def cellIterator(rc: Region[r]): Iterator[SSCell, r, r] \ Row + r = 
         let jrow = Row.askRowHandle() |> ToJava.toJava;
@@ -120,16 +120,17 @@ pub mod SheetIO.Usermodel.Row {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - Cell - Alt = region rc {
-        Iterator.forEach(cell -> discard SheetIO.Usermodel.Cell.runCellWithResult(cell, f),  cellIterator(rc))
+    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ Row + ef - CellReader - Alt = region rc {
+        Iterator.forEach(cell -> 
+            discard SheetIO.Usermodel.CellReader.runCellReaderWithResult(cell, f),  cellIterator(rc))
     }
 
-    pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ Row + ef - Cell = region rc {
+    pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ Row + ef - CellReader = region rc {
         let iter = cellIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(cell) => match SheetIO.Usermodel.Cell.runCellWithResult(cell, _ -> f(st)) {
+            case Some(cell) => match SheetIO.Usermodel.CellReader.runCellReaderWithResult(cell, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -137,12 +138,12 @@ pub mod SheetIO.Usermodel.Row {
         loop(state)
     }
 
-    pub def filterMapCells(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Row + ef - Cell = region rc {
+    pub def filterMapCells(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Row + ef - CellReader = region rc {
         let iter = cellIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(cell) => match SheetIO.Usermodel.Cell.runCellWithResult(cell, _ -> f()) {
+            case Some(cell) => match SheetIO.Usermodel.CellReader.runCellReaderWithResult(cell, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
