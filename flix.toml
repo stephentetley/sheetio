@@ -1,7 +1,7 @@
 [package]
 name        = "sheetio"
 description = "A Flix library built on top of Apache POI to read and write Excel files."
-version     = "0.1.0"
+version     = "0.1.1"
 flix        = "0.75.1"
 license     = "Apache-2.0"
 authors     = ["Stephen Tetley <stephen.tetley@gmail.com>"]
