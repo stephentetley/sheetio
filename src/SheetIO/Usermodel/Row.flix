@@ -68,7 +68,7 @@ pub mod SheetIO.Usermodel.Row {
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("getCell")
+                    Alt.failure("getCell ${i}")
             }
 
             def getFirstCellNum(k) = {

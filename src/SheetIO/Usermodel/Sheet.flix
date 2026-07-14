@@ -103,7 +103,7 @@ pub mod SheetIO.Usermodel.Sheet {
                 if (not Object.isNull(ans)) {
                     k(ToFlix.toFlix(ans))
                 } else {
-                    Alt.failure("getCell")
+                    Alt.failure("getCell ${addr}")
                 }
             }
 

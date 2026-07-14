@@ -90,10 +90,10 @@ pub mod SheetIO.Usermodel.Workbook {
 
             def getSheet(s, k) = try {
                 let ans = jworkbook.getSheet(s);
-                if (Object.isNull(ans)) 
-                    Fail.report("getSheet(_) - sheet is null")
-                else 
+                if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
+                else 
+                    Fail.report("getSheet ${s} - sheet is null")
             } catch {
                 case ex: JException => Fail.report(ex.getMessage())
             }
@@ -101,7 +101,10 @@ pub mod SheetIO.Usermodel.Workbook {
 
             def getSheetAt(i, k) = try {
                 let ans = jworkbook.getSheetAt(i);
-                k(ToFlix.toFlix(ans))
+                if (not Object.isNull(ans)) 
+                    k(ToFlix.toFlix(ans))
+                else 
+                    Fail.report("getSheetAt ${i} - sheet is null")
             } catch {
                 case ex: JException => Fail.report(ex.getMessage())
             }
@@ -193,7 +196,7 @@ pub mod SheetIO.Usermodel.Workbook {
     }
 
 
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet - Alt= region rc {
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {

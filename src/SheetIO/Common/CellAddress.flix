@@ -56,6 +56,7 @@ pub mod SheetIO.Common.CellAddress {
         pub def toFlix(x: JCellAddress): CellAddress = CellAddress.CellAddress(x)
     }
 
+    
 
     pub def a1(): CellAddress = 
         CellAddress.CellAddress(unsafe IO { JCellAddress.A1 })
