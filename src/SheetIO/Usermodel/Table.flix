@@ -22,14 +22,14 @@ pub mod SheetIO.Usermodel.Table {
     use EffectExtras.Alt.Alt
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
-    use SheetIO.Usermodel.CellReader.SSCell
+    use SheetIO.Usermodel.{Cell}
 
     import org.apache.poi.ss.usermodel.{Table => JTable}
     import java.lang.{Exception => JException}
 
 
     pub eff Table {
-        def contains(cell: SSCell): Bool
+        def contains(cell: Cell): Bool
         def getName(): String
         def getSheetName(): String
         def toString(): String

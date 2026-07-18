@@ -21,12 +21,11 @@ pub mod SheetIO.Usermodel.Sheet {
     use EffectExtras.Alt.Alt
 
     use SheetIO.Common.CellAddress.CellAddress
-    use SheetIO.Usermodel.CellReader.CellReader
-    use SheetIO.Usermodel.CellReader.SSCell
+    use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.Row.Row    
     use SheetIO.Usermodel.Row.SSRow
     use SheetIO.Usermodel.Workbook.SSWorkbook
-
+    use SheetIO.Usermodel.{Cell}
 
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
@@ -43,7 +42,7 @@ pub mod SheetIO.Usermodel.Sheet {
         def askSheetHandle(): SSSheet
         def getSheetName() : String
         def getRow(i: Int32): SSRow
-        def getCell(addr: CellAddress): SSCell
+        def getCell(addr: CellAddress): Cell
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
         def getProtect(): Bool
@@ -140,19 +139,19 @@ pub mod SheetIO.Usermodel.Sheet {
         SheetIO.Usermodel.Row.runRow(row, f)
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - CellReader - Alt = 
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - ReadCell - Alt = 
         let cell = Sheet.getCell(addr);
-        SheetIO.Usermodel.CellReader.runCellReaderWithResult(cell, f)
+        SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, f)
 
     pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> CellReader.toString()) |> Result.toOption 
+        withCell(addr, _ -> ReadCell.toString()) |> Result.toOption 
 
 
     pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
-        withCell(addr, _ -> CellReader.getStringCellValue()) |> Result.toOption 
+        withCell(addr, _ -> ReadCell.getStringCellValue()) |> Result.toOption 
 
     pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ Sheet  = 
-        withCell(addr, _ -> CellReader.getFloat64CellValue()) |> Result.toOption
+        withCell(addr, _ -> ReadCell.getFloat64CellValue()) |> Result.toOption
 
 
     pub def rowIterator(rc: Region[r]): Iterator[SSRow, r, r] \ Sheet + r = 
