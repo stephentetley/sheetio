@@ -23,8 +23,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.Usermodel.ReadRow.ReadRow
     use SheetIO.Usermodel.ReadCell.ReadCell
-    use SheetIO.Usermodel.Workbook.SSWorkbook
-    use SheetIO.Usermodel.{Sheet, Row, Cell}
+    use SheetIO.Usermodel.{Workbook, Sheet, Row, Cell}
 
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
@@ -45,7 +44,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
         def getProtect(): Bool
-        def getWorkbook(): SSWorkbook
+        def getWorkbook(): Workbook
     }
 
 

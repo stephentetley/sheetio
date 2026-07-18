@@ -15,13 +15,13 @@
  */
 
 
-pub mod SheetIO.Usermodel.Workbook {
+pub mod SheetIO.Usermodel.ReadWorkbook {
     
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
 
     use SheetIO.Usermodel.ReadSheet.ReadSheet
-    use SheetIO.Usermodel.{Sheet}
+    use SheetIO.Usermodel.{Workbook, Sheet}
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -33,10 +33,10 @@ pub mod SheetIO.Usermodel.Workbook {
     import java.util.{Iterator => JIterator}
 
 
-    pub eff Workbook {
+    pub eff ReadWorkbook {
         // `askWorkbookHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askWorkbookHandle(): SSWorkbook
+        def askWorkbookHandle(): Workbook
         def createSheet(): Sheet
         def createSheetWithName(s: String): Sheet
         def getNumberOfSheets(): Int32
@@ -48,26 +48,13 @@ pub mod SheetIO.Usermodel.Workbook {
     }
 
 
-    pub enum SSWorkbook(JWorkbook)
 
-    instance ToJava[SSWorkbook] {
-        type Out = JWorkbook
-        pub def toJava(x: SSWorkbook): JWorkbook = 
-            let SSWorkbook.SSWorkbook(x1) = x;
-            x1
-    }
-
-    instance ToFlix[SSWorkbook] {
-        type In = JWorkbook
-        pub def toFlix(x: JWorkbook): SSWorkbook = SSWorkbook.SSWorkbook(x)
-    }
-
-    pub def handle(wb: SSWorkbook, 
-                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - Workbook - Fail = x -> {
-        let SSWorkbook.SSWorkbook(jworkbook) = wb;
+    pub def handle(wb: Workbook,
+                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - ReadWorkbook - Fail = x -> {
+        let jworkbook = ToJava.toJava(wb);
         run {
             Ok(f(x))
-        } with handler Workbook {
+        } with handler ReadWorkbook {
             
             def askWorkbookHandle(k) = { k(wb) }
 
@@ -131,7 +118,7 @@ pub mod SheetIO.Usermodel.Workbook {
         }
     }
 
-    pub def runReadOnlyXssf(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook - Fail = try {
+    pub def runReadWorkbookXssf(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);
         match min_inflate_ratio {
@@ -151,7 +138,7 @@ pub mod SheetIO.Usermodel.Workbook {
 
     // with EffectExtras.Fail.runWithResultOfIoError
 
-    pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - Workbook - Fail = try {
+    pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
         let jworkbook = new JXSSFWorkbook(path);
         let jworkbook1: JWorkbook = checked_cast(jworkbook);
         let ans = handle(ToFlix.toFlix(jworkbook1), f)();
@@ -162,26 +149,26 @@ pub mod SheetIO.Usermodel.Workbook {
     }
 
 
-    pub def getSheetNames(): List[String] \ Workbook = {
-        let count = Workbook.getNumberOfSheets();
+    pub def getSheetNames(): List[String] \ ReadWorkbook = {
+        let count = ReadWorkbook.getNumberOfSheets();
         List.unfold(i -> {
             if (i < count) {
-                let name = Workbook.getSheetName(i);
+                let name = ReadWorkbook.getSheetName(i);
                 Some((name, i + 1))
             } else None
             }, 0)
     }
 
-    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - ReadSheet - Alt =
-        let s = Workbook.getSheet(name);
+    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadWorkbook) - ReadSheet - Alt =
+        let s = ReadWorkbook.getSheet(name);
         SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
 
-    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - ReadSheet - Alt =
-        let s = Workbook.getSheetAt(ix);
+    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadWorkbook) - ReadSheet - Alt =
+        let s = ReadWorkbook.getSheetAt(ix);
         SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
 
-    pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ Workbook + r =
-        let jworkbook = Workbook.askWorkbookHandle() |> ToJava.toJava;
+    pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ ReadWorkbook + r =
+        let jworkbook = ReadWorkbook.askWorkbookHandle() |> ToJava.toJava;
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
         def wrap(jsheet) = { 
             ToFlix.toFlix(jsheet)
@@ -191,12 +178,12 @@ pub mod SheetIO.Usermodel.Workbook {
     
 
     /// TODO ignores failure...
-    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - ReadSheet - Alt = region rc {
+    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
         Iterator.forEach(s -> discard SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f),  sheetIterator(rc))
     }
 
 
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - ReadSheet - Alt = region rc {
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
@@ -209,7 +196,7 @@ pub mod SheetIO.Usermodel.Workbook {
         loop(state)
     }
 
-    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - ReadSheet - Alt = region rc {
+    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {

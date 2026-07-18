@@ -17,10 +17,25 @@
 
 pub mod SheetIO.Usermodel {
 
+    import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell}
 
+
+    pub enum Workbook(JWorkbook)
+
+    instance ToJava[Workbook] {
+        type Out = JWorkbook
+        pub def toJava(x: Workbook): JWorkbook =
+            let Workbook.Workbook(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Workbook] {
+        type In = JWorkbook
+        pub def toFlix(x: JWorkbook): Workbook = Workbook.Workbook(x)
+    }
 
     pub enum Sheet(JSheet)
 
