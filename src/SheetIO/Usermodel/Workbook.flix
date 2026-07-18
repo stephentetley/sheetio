@@ -20,8 +20,8 @@ pub mod SheetIO.Usermodel.Workbook {
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
 
-    use SheetIO.Usermodel.Sheet.Sheet
-    use SheetIO.Usermodel.Sheet.SSSheet
+    use SheetIO.Usermodel.ReadSheet.ReadSheet
+    use SheetIO.Usermodel.{Sheet}
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -37,13 +37,13 @@ pub mod SheetIO.Usermodel.Workbook {
         // `askWorkbookHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
         def askWorkbookHandle(): SSWorkbook
-        def createSheet(): SSSheet
-        def createSheetWithName(s: String): SSSheet
+        def createSheet(): Sheet
+        def createSheetWithName(s: String): Sheet
         def getNumberOfSheets(): Int32
-        def getSheet(s: String): SSSheet
-        def getSheetAt(i: Int32): SSSheet
+        def getSheet(s: String): Sheet
+        def getSheetAt(i: Int32): Sheet
         def getSheetIndex(s: String): Option[Int32]
-        def getSheetIndexOfSheet(s: SSSheet): Option[Int32]
+        def getSheetIndexOfSheet(s: Sheet): Option[Int32]
         def getSheetName(i: Int32): String
     }
 
@@ -172,15 +172,15 @@ pub mod SheetIO.Usermodel.Workbook {
             }, 0)
     }
 
-    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
+    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - ReadSheet - Alt =
         let s = Workbook.getSheet(name);
-        SheetIO.Usermodel.Sheet.runSheetWithResult(s, f)
+        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
 
-    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - Sheet - Alt = 
+    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + Workbook) - ReadSheet - Alt =
         let s = Workbook.getSheetAt(ix);
-        SheetIO.Usermodel.Sheet.runSheetWithResult(s, f)
+        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
 
-    pub def sheetIterator(rc: Region[r]): Iterator[SSSheet, r, r] \ Workbook + r = 
+    pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ Workbook + r =
         let jworkbook = Workbook.askWorkbookHandle() |> ToJava.toJava;
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
         def wrap(jsheet) = { 
@@ -191,17 +191,17 @@ pub mod SheetIO.Usermodel.Workbook {
     
 
     /// TODO ignores failure...
-    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - Sheet - Alt = region rc {
-        Iterator.forEach(s -> discard SheetIO.Usermodel.Sheet.runSheetWithResult(s, f),  sheetIterator(rc))
+    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ Workbook + ef - ReadSheet - Alt = region rc {
+        Iterator.forEach(s -> discard SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f),  sheetIterator(rc))
     }
 
 
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - Sheet - Alt = region rc {
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ Workbook + ef - ReadSheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(sheet) => match SheetIO.Usermodel.Sheet.runSheetWithResult(sheet, _ -> f(st)) {
+            case Some(sheet) => match SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -209,12 +209,12 @@ pub mod SheetIO.Usermodel.Workbook {
         loop(state)
     }
 
-    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - Sheet - Alt = region rc {
+    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Workbook + ef - ReadSheet - Alt = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(sheet) => match SheetIO.Usermodel.Sheet.runSheetWithResult(sheet, _ -> f()) {
+            case Some(sheet) => match SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))

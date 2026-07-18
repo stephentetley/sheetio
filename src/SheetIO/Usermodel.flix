@@ -17,7 +17,39 @@
 
 pub mod SheetIO.Usermodel {
 
+    import org.apache.poi.ss.usermodel.{Sheet => JSheet}
+    import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell}
+
+
+    pub enum Sheet(JSheet)
+
+    instance ToJava[Sheet] {
+        type Out = JSheet
+        pub def toJava(x: Sheet): JSheet =
+            let Sheet.Sheet(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Sheet] {
+        type In = JSheet
+        pub def toFlix(x: JSheet): Sheet = Sheet.Sheet(x)
+    }
+
+    pub enum Row(JRow)
+    
+    instance ToJava[Row] {
+        type Out = JRow
+        pub def toJava(x: Row): JRow = 
+            let Row.Row(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Row] {
+        type In = JRow
+        pub def toFlix(x: JRow): Row = Row.Row(x)
+    }
+
 
     pub enum Cell(JCell)
 

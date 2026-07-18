@@ -15,17 +15,16 @@
  */
 
 
-pub mod SheetIO.Usermodel.Sheet {
-    use ToJava.toJava
+pub mod SheetIO.Usermodel.ReadSheet {
+
     
     use EffectExtras.Alt.Alt
 
     use SheetIO.Common.CellAddress.CellAddress
+    use SheetIO.Usermodel.ReadRow.ReadRow
     use SheetIO.Usermodel.ReadCell.ReadCell
-    use SheetIO.Usermodel.Row.Row    
-    use SheetIO.Usermodel.Row.SSRow
     use SheetIO.Usermodel.Workbook.SSWorkbook
-    use SheetIO.Usermodel.{Cell}
+    use SheetIO.Usermodel.{Sheet, Row, Cell}
 
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
@@ -36,12 +35,12 @@ pub mod SheetIO.Usermodel.Sheet {
     import java.util.{Iterator => JIterator}
 
 
-    pub eff Sheet {
+    pub eff ReadSheet {
         // `askSheetHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
-        def askSheetHandle(): SSSheet
+        def askSheetHandle(): Sheet
         def getSheetName() : String
-        def getRow(i: Int32): SSRow
+        def getRow(i: Int32): Row
         def getCell(addr: CellAddress): Cell
         def getFirstRowNum(): Int32
         def getLastRowNum(): Int32
@@ -49,19 +48,6 @@ pub mod SheetIO.Usermodel.Sheet {
         def getWorkbook(): SSWorkbook
     }
 
-    pub enum SSSheet(JSheet)
-
-    instance ToJava[SSSheet] {
-        type Out = JSheet
-        pub def toJava(x: SSSheet): JSheet = 
-            let SSSheet.SSSheet(x1) = x;
-            x1
-    }
-
-    instance ToFlix[SSSheet] {
-        type In = JSheet
-        pub def toFlix(x: JSheet): SSSheet = SSSheet.SSSheet(x)
-    }
 
     pub enum CellMissingPolicy with Eq, Order, ToString {
         case CREATE_NULL_AS_BLANK 
@@ -69,17 +55,17 @@ pub mod SheetIO.Usermodel.Sheet {
         case RETURN_NULL_AND_BLANK 
     }
     
-    pub def handle(sheet: SSSheet, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - Sheet) + r = x -> {
-        let SSSheet.SSSheet(jsheet) = sheet;
+    pub def handle(sheet: Sheet,
+                    f: a -> b \ ef): a -> b \ (ef + Alt - ReadSheet) + r = x -> {
+        let jsheet = ToJava.toJava(sheet);
         run {
             f(x)
-        } with handler Sheet {
+        } with handler ReadSheet {
             
             def askSheetHandle(k) = { k(sheet) }
 
             def getSheetName(k) = try {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getSheetName() };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getSheetName() };
                 k(ans)
             } catch {
                 case ex: JException => Alt.failure(ex.getMessage())
@@ -87,7 +73,7 @@ pub mod SheetIO.Usermodel.Sheet {
 
 
             def getRow(i, k) = {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getRow(i) };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getRow(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
@@ -98,7 +84,7 @@ pub mod SheetIO.Usermodel.Sheet {
             def getCell(addr, k) = {
                 let rx = SheetIO.Common.CellAddress.getRow(addr);
                 let cx = SheetIO.Common.CellAddress.getColumn(addr);
-                let ans = unsafe IO as {ef + Alt - Sheet} { JSheetUtil.getCell(jsheet, rx, cx) };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { JSheetUtil.getCell(jsheet, rx, cx) };
                 if (not Object.isNull(ans)) {
                     k(ToFlix.toFlix(ans))
                 } else {
@@ -107,55 +93,55 @@ pub mod SheetIO.Usermodel.Sheet {
             }
 
             def getFirstRowNum(k) = {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getFirstRowNum() };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getFirstRowNum() };
                 k(ans)
             } 
 
             def getLastRowNum(k) = {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getLastRowNum() };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getLastRowNum() };
                 k(ans)
             } 
             
             def getProtect(k) = {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getProtect() };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getProtect() };
                 k(ans)
             }
 
             def getWorkbook(k) = {
-                let ans = unsafe IO as {ef + Alt - Sheet} { jsheet.getWorkbook() };
+                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getWorkbook() };
                 k(ToFlix.toFlix(ans))
             } 
         }
     }
 
-    pub def runSheet(sheet: SSSheet, f: Unit -> a \ ef): a \ (ef + Alt - Sheet) = 
+    pub def runReadSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Alt - ReadSheet) =
         handle(sheet, f)()
     
-    pub def runSheetWithResult(sheet: SSSheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Sheet) = 
+    pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadSheet) =
         run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
     
-    pub def withRow(ix: Int32, f: Unit -> a \ ef): a \ (ef + Alt + Sheet) - Row = 
-        let row = Sheet.getRow(ix);
-        SheetIO.Usermodel.Row.runRow(row, f)
+    pub def withRow(ix: Int32, f: Unit -> a \ ef): a \ (ef + Alt + ReadSheet) - ReadRow =
+        let row = ReadSheet.getRow(ix);
+        SheetIO.Usermodel.ReadRow.runReadRow(row, f)
 
    
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + Sheet) - ReadCell - Alt = 
-        let cell = Sheet.getCell(addr);
+    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadSheet) - ReadCell - Alt =
+        let cell = ReadSheet.getCell(addr);
         SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, f)
 
-    pub def getCellToString(addr: CellAddress): Option[String] \ Sheet  = 
+    pub def getCellToString(addr: CellAddress): Option[String] \ ReadSheet  =
         withCell(addr, _ -> ReadCell.toString()) |> Result.toOption 
 
 
-    pub def getStringCellValue(addr: CellAddress): Option[String] \ Sheet  = 
+    pub def getStringCellValue(addr: CellAddress): Option[String] \ ReadSheet  =
         withCell(addr, _ -> ReadCell.getStringCellValue()) |> Result.toOption 
 
-    pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ Sheet  = 
+    pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ ReadSheet  =
         withCell(addr, _ -> ReadCell.getFloat64CellValue()) |> Result.toOption
 
 
-    pub def rowIterator(rc: Region[r]): Iterator[SSRow, r, r] \ Sheet + r = 
-        let jsheet = Sheet.askSheetHandle() |> ToJava.toJava;
+    pub def rowIterator(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet + r =
+        let jsheet = ReadSheet.askSheetHandle() |> ToJava.toJava;
         let javaIter: JIterator[JRow] = unsafe IO as r { jsheet.rowIterator() };
         def wrap(jrow) = { 
             ToFlix.toFlix(jrow)
@@ -163,16 +149,16 @@ pub mod SheetIO.Usermodel.Sheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ Sheet + ef - Alt - Row = region rc {
-        Iterator.forEach(row -> discard SheetIO.Usermodel.Row.runRowWithResult(row, f),  rowIterator(rc))
+    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ ReadSheet + ef - Alt - ReadRow = region rc {
+        Iterator.forEach(row -> discard SheetIO.Usermodel.ReadRow.runReadRowWithResult(row, f),  rowIterator(rc))
     }
 
-    pub def foldRows(f: st -> st \ ef, state: st): Result[String, st] \ Sheet + ef - Row = region rc {
+    pub def foldRows(f: st -> st \ ef, state: st): Result[String, st] \ ReadSheet + ef - ReadRow = region rc {
         let iter = rowIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
             case None => Ok(st)
-            case Some(row) => match SheetIO.Usermodel.Row.runRowWithResult(row, _ -> f(st)) {
+            case Some(row) => match SheetIO.Usermodel.ReadRow.runReadRowWithResult(row, _ -> f(st)) {
                 case Err(msg) => Err(msg)
                 case Ok(st1)  => loop(st1)
             }
@@ -180,12 +166,12 @@ pub mod SheetIO.Usermodel.Sheet {
         loop(state)
     }
 
-    pub def filterMapRows(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ Sheet + ef - Row = region rc {
+    pub def filterMapRows(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ef + ReadSheet - ReadRow = region rc {
         let iter = rowIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
             case None => Ok(k(Nil))
-            case Some(row) => match SheetIO.Usermodel.Row.runRowWithResult(row, _ -> f()) {
+            case Some(row) => match SheetIO.Usermodel.ReadRow.runReadRowWithResult(row, _ -> f()) {
                 case Err(msg) => Err(msg)
                 case Ok(None)  => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
