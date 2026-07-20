@@ -27,6 +27,7 @@ pub mod SheetIO.Usermodel.ReadTable {
     import org.apache.poi.ss.usermodel.{Table => JTable}
     import java.lang.{Exception => JException}
 
+    // Note table is only available to Xssf files (*.xlsx)
 
     pub eff ReadTable {
         def contains(cell: Cell): Bool

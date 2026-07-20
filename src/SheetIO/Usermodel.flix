@@ -23,6 +23,7 @@ pub mod SheetIO.Usermodel {
     import org.apache.poi.ss.usermodel.{Cell => JCell}
     import org.apache.poi.ss.usermodel.{Comment => JComment}
     import org.apache.poi.ss.usermodel.{Table => JTable}
+    import org.apache.poi.ss.usermodel.{Row$MissingCellPolicy => JRowMissingCellPolicy}
 
     pub enum Workbook(JWorkbook)
 
@@ -110,4 +111,35 @@ pub mod SheetIO.Usermodel {
     }    
 
 
+
+    // TODO - maybe we don't want to support this as we don't want 
+    // to be introducing nulls
+    pub enum RowMissingCellPolicy with Eq, ToString {
+        case CREATE_NULL_AS_BLANK 
+        case RETURN_BLANK_AS_NULL 
+        case RETURN_NULL_AND_BLANK 
+    }
+
+
+    
+    instance ToJava[RowMissingCellPolicy] {
+        type Out = JRowMissingCellPolicy
+        pub def toJava(x: RowMissingCellPolicy): JRowMissingCellPolicy = match x {
+            case RowMissingCellPolicy.CREATE_NULL_AS_BLANK      => unsafe IO { JRowMissingCellPolicy.CREATE_NULL_AS_BLANK }
+            case RowMissingCellPolicy.RETURN_BLANK_AS_NULL      => unsafe IO { JRowMissingCellPolicy.RETURN_BLANK_AS_NULL }
+            case RowMissingCellPolicy.RETURN_NULL_AND_BLANK     => unsafe IO { JRowMissingCellPolicy.RETURN_NULL_AND_BLANK }
+        }
+    }
+
+    instance ToFlix[RowMissingCellPolicy] {
+        type In = JRowMissingCellPolicy
+        pub def toFlix(x: JRowMissingCellPolicy): RowMissingCellPolicy = unsafe IO {
+            if (x.equals(JRowMissingCellPolicy.CREATE_NULL_AS_BLANK))           RowMissingCellPolicy.CREATE_NULL_AS_BLANK
+            else if (x.equals(JRowMissingCellPolicy.RETURN_BLANK_AS_NULL))      RowMissingCellPolicy.RETURN_BLANK_AS_NULL
+            else if (x.equals(JRowMissingCellPolicy.RETURN_NULL_AND_BLANK))     RowMissingCellPolicy.RETURN_NULL_AND_BLANK
+            else bug!("toFlix[RowMissingCellPolicy]")
+        }
+    }
+
 }
+

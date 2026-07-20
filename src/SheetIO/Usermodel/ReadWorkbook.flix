@@ -37,8 +37,6 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         // `askWorkbookHandle` should not be used in user code
         // It is a hack until we can run local effects polymorphically
         def askWorkbookHandle(): Workbook
-        def createSheet(): Sheet
-        def createSheetWithName(s: String): Sheet
         def getNumberOfSheets(): Int32
         def getSheet(s: String): Sheet
         def getSheetAt(i: Int32): Sheet
@@ -58,15 +56,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
             
             def askWorkbookHandle(k) = { k(wb) }
 
-            def createSheet(k) = {
-                let ans = jworkbook.createSheet();
-                k(ToFlix.toFlix(ans))
-            }
-           
-            def createSheetWithName(s, k) = {
-                let ans = jworkbook.createSheet(s);
-                k(ToFlix.toFlix(ans))
-            }
+
 
             def getNumberOfSheets(k) = try {
                 let ans = jworkbook.getNumberOfSheets();
@@ -135,18 +125,6 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         case ex: JException => Err(ex.getMessage())
     }
 
-
-    // with EffectExtras.Fail.runWithResultOfIoError
-
-    pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
-        let jworkbook = new JXSSFWorkbook(path);
-        let jworkbook1: JWorkbook = checked_cast(jworkbook);
-        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
-        jworkbook.close();
-        ans
-    } catch {
-        case ex: JException => Err(ex.getMessage())
-    }
 
 
     pub def getSheetNames(): List[String] \ ReadWorkbook = {
