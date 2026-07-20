@@ -21,8 +21,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     use EffectExtras.Alt.Alt
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
-    use SheetIO.Usermodel.Comment.SSComment
-    use SheetIO.Usermodel.{Cell}
+    use SheetIO.Usermodel.{Cell, Comment}
 
     import org.apache.poi.ss.usermodel.{Cell => JCell}
     import java.lang.{Exception => JException}
@@ -35,7 +34,7 @@ pub mod SheetIO.Usermodel.ReadCell {
         def getFloat64CellValue(): Float64
         def getStringCellValue(): String
         def getCellFormula(): String
-        def getCellComment(): SSComment
+        def getCellComment(): Comment
         def getColumnIndex(): Int32        
         def getRowIndex(): Int32
         def toString(): String

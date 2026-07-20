@@ -21,6 +21,7 @@ pub mod SheetIO.Usermodel {
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell}
+    import org.apache.poi.ss.usermodel.{Comment => JComment}
 
 
     pub enum Workbook(JWorkbook)
@@ -80,6 +81,20 @@ pub mod SheetIO.Usermodel {
         pub def toFlix(x: JCell): Cell = Cell.Cell(x)
     }
 
+    pub enum Comment(JComment)
+
+    instance ToJava[Comment] {
+        type Out = JComment
+        pub def toJava(x: Comment): JComment = 
+            let Comment.Comment(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Comment] {
+        type In = JComment
+        pub def toFlix(x: JComment): Comment = Comment.Comment(x)
+    }
+    
 
 
 }
