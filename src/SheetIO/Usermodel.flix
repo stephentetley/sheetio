@@ -22,7 +22,7 @@ pub mod SheetIO.Usermodel {
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell}
     import org.apache.poi.ss.usermodel.{Comment => JComment}
-
+    import org.apache.poi.ss.usermodel.{Table => JTable}
 
     pub enum Workbook(JWorkbook)
 
@@ -95,6 +95,19 @@ pub mod SheetIO.Usermodel {
         pub def toFlix(x: JComment): Comment = Comment.Comment(x)
     }
     
+    pub enum Table(JTable)
+
+    instance ToJava[Table] {
+        type Out = JTable
+        pub def toJava(x: Table): JTable = 
+            let Table.Table(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Table] {
+        type In = JTable
+        pub def toFlix(x: JTable): Table = Table.Table(x)
+    }    
 
 
 }

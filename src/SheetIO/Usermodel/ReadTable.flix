@@ -15,76 +15,66 @@
  */
 
 
-pub mod SheetIO.Usermodel.Table {
+pub mod SheetIO.Usermodel.ReadTable {
     
     
     
     use EffectExtras.Alt.Alt
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
-    use SheetIO.Usermodel.{Cell}
+    use SheetIO.Usermodel.{Table, Cell}
 
     import org.apache.poi.ss.usermodel.{Table => JTable}
     import java.lang.{Exception => JException}
 
 
-    pub eff Table {
+    pub eff ReadTable {
         def contains(cell: Cell): Bool
         def getName(): String
         def getSheetName(): String
         def toString(): String
     }
 
-    pub enum SSTable(JTable)
 
-    instance ToJava[SSTable] {
-        type Out = JTable
-        pub def toJava(x: SSTable): JTable = 
-            let SSTable.SSTable(x1) = x;
-            x1
-    }
 
-    instance ToFlix[SSTable] {
-        type In = JTable
-        pub def toFlix(x: JTable): SSTable = SSTable.SSTable(x)
-    }
-
-    pub def handle(table: SSTable, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - Table) = x -> 
+    pub def handle(table: Table, 
+                    f: a -> b \ ef): a -> b \ (ef + Alt - ReadTable) = x -> 
         let jtable = ToJava.toJava(table);
         run {
             f(x)
-        } with handler Table {
+        } with handler ReadTable {
 
             def contains(cell, k) = {
                 let cell1 = ToJava.toJava(cell);
-                let ans = unsafe IO as {ef + Alt - Table} { jtable.contains(cell1) };
+                let ans = unsafe IO as {ef + Alt - ReadTable} { jtable.contains(cell1) };
                 k(ans)
             } 
 
 
             def getName(k) = {
-                let ans = unsafe IO as {ef + Alt - Table} { jtable.getName() };
+                let ans = unsafe IO as {ef + Alt - ReadTable} { jtable.getName() };
                 k(ans)
             } 
 
             def getSheetName(k) = {
-                let ans = unsafe IO as {ef + Alt - Table} { jtable.getSheetName() };
+                let ans = unsafe IO as {ef + Alt - ReadTable} { jtable.getSheetName() };
                 k(ans)
             } 
 
             def toString(k) = {
-                let ans = unsafe IO as {ef + Alt - Table} { jtable.toString() };
+                let ans = unsafe IO as {ef + Alt - ReadTable} { jtable.toString() };
                 k(ans)
             } 
 
         }
 
 
-    pub def runCellReader(table: SSTable, f: Unit -> a \ ef): a \ (ef + Alt - Table) = 
+    pub def runCellReader(table: Table, 
+                            f: Unit -> a \ ef): a \ (ef + Alt - ReadTable) = 
         handle(table, f)()
 
-    pub def runCellReaderWithResult(table: SSTable, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - Table) = 
+    pub def runCellReaderWithResult(table: Table, 
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadTable) = 
         run { handle(table, f)() } with EffectExtras.Alt.runWithResult
 
 }

@@ -23,6 +23,9 @@ pub mod SheetIO.Usermodel.ReadComment {
     import org.apache.poi.ss.usermodel.{Comment => JComment}
     import java.lang.{Exception => JException}
 
+    // TODO what about the actual string? RichTestString might 
+    // not be work an effect...
+
     pub eff ReadComment {
         def getAuthor(): String
         def isVisible(): Bool
