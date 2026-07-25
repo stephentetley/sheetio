@@ -20,7 +20,7 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
 
-    use SheetIO.Usermodel.{Workbook, Sheet}
+    use SheetIO.Usermodel.{Workbook, Sheet, CellStyle}
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -38,7 +38,9 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
         def askWorkbookHandle(): Workbook
         def createSheet(): Sheet
         def createSheetWithName(s: String): Sheet
-
+        def cloneSheet(num: Int32): Sheet
+        def removeSheetAt(i: Int32): Unit
+        def createCellStyle(): CellStyle
     }
 
 
@@ -62,27 +64,30 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
                 k(ToFlix.toFlix(ans))
             }
 
+            def cloneSheet(i, k) = {
+                let ans = jworkbook.cloneSheet(i);
+                k(ToFlix.toFlix(ans))
+            }
+
+            def removeSheetAt(i, k) = try {
+                jworkbook.removeSheetAt(i);
+                k()
+            } catch {
+                case ex: JException => Fail.report(ex.getMessage())
+            }
+
+            def createCellStyle(k) = try {
+                let jcs = jworkbook.createCellStyle();
+                k(ToFlix.toFlix(jcs))
+            } catch {
+                case ex: JException => Fail.report(ex.getMessage())
+            }
+
         } with handler Fail {
             def report(s, _) = Err(s)
         }
     }
 
-    pub def runReadWorkbookXssf(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
-        let jfile = new JFile(path);
-        let jfis = new JFileInputStream(jfile);
-        match min_inflate_ratio {
-            case Some(d) =>  JZipSecureFile.setMinInflateRatio(d) 
-            case None    => ()
-        };
-        let jworkbook = new JXSSFWorkbook(jfis);
-        let jworkbook1: JWorkbook = checked_cast(jworkbook);
-        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
-        jworkbook.close();
-        jfis.close();
-        ans
-    } catch {
-        case ex: JException => Err(ex.getMessage())
-    }
 
 
     // with EffectExtras.Fail.runWithResultOfIoError

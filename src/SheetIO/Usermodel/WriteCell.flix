@@ -29,6 +29,7 @@ pub mod SheetIO.Usermodel.WriteCell {
 
 
     pub eff WriteCell {
+        def removeCellComment(): Unit
         def setCellStyle(s: CellStyle): Unit
         def setComment(c: Comment): Unit
         def setBlank(): Unit
@@ -43,6 +44,11 @@ pub mod SheetIO.Usermodel.WriteCell {
         run {
             f(x)
         } with handler WriteCell {
+
+            def removeCellComment(k) = {
+                unsafe IO as {ef + Alt - WriteCell} { jcell.removeCellComment() };
+                k()
+            }
 
             def setCellStyle(style, k) = {
                 let style1 = ToJava.toJava(style);

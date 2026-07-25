@@ -17,8 +17,6 @@
 
 pub mod SheetIO.Usermodel.Comment {
 
-
-    use SheetIO.Usermodel.{Comment}
     use SheetIO.Usermodel.RichTextString
 
     import org.apache.poi.ss.usermodel.{Comment => JComment}

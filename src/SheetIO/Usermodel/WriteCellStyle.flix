@@ -19,7 +19,7 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
     
     
     use EffectExtras.Alt.Alt
-    use SheetIO.Usermodel.{Cell, CellStyle, FillPatternType}
+    use SheetIO.Usermodel.{CellStyle, FillPatternType}
 
     import org.apache.poi.ss.usermodel.{CellStyle => JCellStyle}
     import java.lang.{Exception => JException}

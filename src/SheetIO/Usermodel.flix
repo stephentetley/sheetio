@@ -25,6 +25,7 @@ pub mod SheetIO.Usermodel {
     import org.apache.poi.ss.usermodel.{Row$MissingCellPolicy => JRowMissingCellPolicy}
     import org.apache.poi.ss.usermodel.{CellStyle => JCellStyle}
     import org.apache.poi.ss.usermodel.{FillPatternType => JFillPatternType}
+    import org.apache.poi.ss.usermodel.{Font => JFont}
 
     pub enum Workbook(JWorkbook)
 
@@ -217,6 +218,22 @@ pub mod SheetIO.Usermodel {
             else bug!("toFlix[FillPatternType]")
         }
     }
+
+
+    pub enum Font(JFont)
+
+    instance ToJava[Font] {
+        type Out = JFont
+        pub def toJava(x: Font): JFont =
+            let Font.Font(x1) = x;
+            x1
+    }
+
+    instance ToFlix[Font] {
+        type In = JFont
+        pub def toFlix(x: JFont): Font = Font.Font(x)
+    }
+
 
 }
 
