@@ -24,6 +24,7 @@ pub mod SheetIO.Usermodel {
     import org.apache.poi.ss.usermodel.{Table => JTable}
     import org.apache.poi.ss.usermodel.{Row$MissingCellPolicy => JRowMissingCellPolicy}
     import org.apache.poi.ss.usermodel.{CellStyle => JCellStyle}
+    import org.apache.poi.ss.usermodel.{FillPatternType => JFillPatternType}
 
     pub enum Workbook(JWorkbook)
 
@@ -143,6 +144,79 @@ pub mod SheetIO.Usermodel {
         pub def toFlix(x: JCellStyle): CellStyle = CellStyle.CellStyle(x)
     }
 
+    pub enum FillPatternType with Eq, ToString {
+        case ALT_BARS
+        case BIG_SPOTS
+        case BRICKS
+        case DIAMONDS
+        case FINE_DOTS
+        case LEAST_DOTS
+        case LESS_DOTS
+        case NO_FILL
+        case SOLID_FOREGROUND
+        case SPARSE_DOTS
+        case SQUARES
+        case THICK_BACKWARD_DIAG
+        case THICK_FORWARD_DIAG
+        case THICK_HORZ_BANDS
+        case THICK_VERT_BANDS
+        case THIN_BACKWARD_DIAG
+        case THIN_FORWARD_DIAG
+        case THIN_HORZ_BANDS
+        case THIN_VERT_BANDS
+    }
+
+    instance ToJava[FillPatternType] {
+        type Out = JFillPatternType
+        pub def toJava(x: FillPatternType): JFillPatternType = match x {
+            case FillPatternType.ALT_BARS               => unsafe IO { JFillPatternType.ALT_BARS }
+            case FillPatternType.BIG_SPOTS              => unsafe IO { JFillPatternType.BIG_SPOTS }
+            case FillPatternType.BRICKS                 => unsafe IO { JFillPatternType.BRICKS }
+            case FillPatternType.DIAMONDS               => unsafe IO { JFillPatternType.DIAMONDS }
+            case FillPatternType.FINE_DOTS              => unsafe IO { JFillPatternType.FINE_DOTS }
+            case FillPatternType.LEAST_DOTS             => unsafe IO { JFillPatternType.LEAST_DOTS }
+            case FillPatternType.LESS_DOTS              => unsafe IO { JFillPatternType.LESS_DOTS }
+            case FillPatternType.NO_FILL                => unsafe IO { JFillPatternType.NO_FILL }
+            case FillPatternType.SOLID_FOREGROUND       => unsafe IO { JFillPatternType.SOLID_FOREGROUND }
+            case FillPatternType.SPARSE_DOTS            => unsafe IO { JFillPatternType.SPARSE_DOTS }
+            case FillPatternType.SQUARES                => unsafe IO { JFillPatternType.SQUARES }
+            case FillPatternType.THICK_BACKWARD_DIAG    => unsafe IO { JFillPatternType.THICK_BACKWARD_DIAG }
+            case FillPatternType.THICK_FORWARD_DIAG     => unsafe IO { JFillPatternType.THICK_FORWARD_DIAG }
+            case FillPatternType.THICK_HORZ_BANDS       => unsafe IO { JFillPatternType.THICK_HORZ_BANDS }
+            case FillPatternType.THICK_VERT_BANDS       => unsafe IO { JFillPatternType.THICK_VERT_BANDS }
+            case FillPatternType.THIN_BACKWARD_DIAG     => unsafe IO { JFillPatternType.THIN_BACKWARD_DIAG }
+            case FillPatternType.THIN_FORWARD_DIAG      => unsafe IO { JFillPatternType.THIN_FORWARD_DIAG }
+            case FillPatternType.THIN_HORZ_BANDS        => unsafe IO { JFillPatternType.THIN_HORZ_BANDS }
+            case FillPatternType.THIN_VERT_BANDS        => unsafe IO { JFillPatternType.THIN_VERT_BANDS }
+        }
+    }
+
+
+    instance ToFlix[FillPatternType] {
+        type In = JFillPatternType
+        pub def toFlix(x: JFillPatternType): FillPatternType = unsafe IO {
+            if (x.equals(JFillPatternType.ALT_BARS))                    FillPatternType.ALT_BARS
+            else if (x.equals(JFillPatternType.BIG_SPOTS))              FillPatternType.BIG_SPOTS
+            else if (x.equals(JFillPatternType.BRICKS))                 FillPatternType.BRICKS
+            else if (x.equals(JFillPatternType.DIAMONDS))               FillPatternType.DIAMONDS
+            else if (x.equals(JFillPatternType.FINE_DOTS))              FillPatternType.FINE_DOTS
+            else if (x.equals(JFillPatternType.LEAST_DOTS))             FillPatternType.LEAST_DOTS
+            else if (x.equals(JFillPatternType.LESS_DOTS))              FillPatternType.LESS_DOTS
+            else if (x.equals(JFillPatternType.NO_FILL))                FillPatternType.NO_FILL
+            else if (x.equals(JFillPatternType.SOLID_FOREGROUND))       FillPatternType.SOLID_FOREGROUND
+            else if (x.equals(JFillPatternType.SPARSE_DOTS))            FillPatternType.SPARSE_DOTS
+            else if (x.equals(JFillPatternType.SQUARES))                FillPatternType.SQUARES
+            else if (x.equals(JFillPatternType.THICK_BACKWARD_DIAG))    FillPatternType.THICK_BACKWARD_DIAG
+            else if (x.equals(JFillPatternType.THICK_FORWARD_DIAG))     FillPatternType.THICK_FORWARD_DIAG
+            else if (x.equals(JFillPatternType.THICK_HORZ_BANDS))       FillPatternType.THICK_HORZ_BANDS
+            else if (x.equals(JFillPatternType.THICK_VERT_BANDS))       FillPatternType.THICK_VERT_BANDS
+            else if (x.equals(JFillPatternType.THIN_BACKWARD_DIAG))     FillPatternType.THIN_BACKWARD_DIAG
+            else if (x.equals(JFillPatternType.THIN_FORWARD_DIAG))      FillPatternType.THIN_FORWARD_DIAG
+            else if (x.equals(JFillPatternType.THIN_HORZ_BANDS))        FillPatternType.THIN_HORZ_BANDS
+            else if (x.equals(JFillPatternType.THIN_VERT_BANDS))        FillPatternType.THIN_VERT_BANDS
+            else bug!("toFlix[FillPatternType]")
+        }
+    }
 
 }
 

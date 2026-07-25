@@ -19,7 +19,7 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
     
     
     use EffectExtras.Alt.Alt
-    use SheetIO.Usermodel.{Cell, CellStyle}
+    use SheetIO.Usermodel.{Cell, CellStyle, FillPatternType}
 
     import org.apache.poi.ss.usermodel.{CellStyle => JCellStyle}
     import java.lang.{Exception => JException}
@@ -28,6 +28,7 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
     pub eff WriteCellStyle {
         def setFillBackgroundColor(s: Int16): Unit
         def setFillForegroundColor(s: Int16): Unit
+        def setFillPattern(fpt: FillPatternType): Unit
     }
 
     pub def handle(cellstyle: CellStyle, 
@@ -47,6 +48,11 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
                 k()
             }
 
+            def setFillPattern(fpt, k) = {
+                let fpt1 = ToJava.toJava(fpt);
+                unsafe IO as {ef + Alt - WriteCellStyle} { jcellstyle.setFillPattern(fpt1) };
+                k()
+            }
 
             
         }
