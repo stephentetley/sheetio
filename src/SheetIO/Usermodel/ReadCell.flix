@@ -35,7 +35,7 @@ pub mod SheetIO.Usermodel.ReadCell {
         def getStringCellValue(): String
         def getCellFormula(): String
         def getCellComment(): Comment
-        def getColumnIndex(): Int32        
+        def getColumnIndex(): Int32
         def getRowIndex(): Int32
         def toString(): String
     }

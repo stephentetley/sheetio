@@ -21,14 +21,20 @@ pub mod SheetIO.Usermodel.WriteCell {
     use EffectExtras.Alt.Alt
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
-    use SheetIO.Usermodel.{Cell, Comment}
+    use SheetIO.Usermodel.Comment.{Comment}
+    use SheetIO.Usermodel.{Cell, CellStyle}
 
     import org.apache.poi.ss.usermodel.{Cell => JCell}
     import java.lang.{Exception => JException}
 
 
     pub eff WriteCell {
+        def setCellStyle(s: CellStyle): Unit
+        def setComment(c: Comment): Unit
         def setBlank(): Unit
+        def setBoolCellValue(x: Bool): Unit
+        def getFloat64CellValue(d: Float64): Unit
+        def getStringCellValue(s: String): Unit
     }
 
     pub def handle(cell: Cell, 
@@ -38,11 +44,40 @@ pub mod SheetIO.Usermodel.WriteCell {
             f(x)
         } with handler WriteCell {
 
+            def setCellStyle(style, k) = {
+                let style1 = ToJava.toJava(style);
+                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellStyle(style1) };
+                k()
+            }
+
+            def setComment(comment, k) = {
+                let comment1 = ToJava.toJava(comment);
+                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellComment(comment1) };
+                k()
+            }
+
             def setBlank(k) = {
                 unsafe IO as {ef + Alt - WriteCell} { jcell.setBlank() };
                 k()
             }
 
+            def setBoolCellValue(b, k) = {
+                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(b) };
+                k()
+            }
+
+            def getFloat64CellValue(d, k) = {
+                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(d) };
+                k()
+            }
+
+            def getStringCellValue(s, k) = {
+                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(s) };
+                k()
+            }
+
+
+            
         }
 
 
