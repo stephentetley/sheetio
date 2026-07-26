@@ -27,8 +27,7 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
     import org.apache.poi.ss.usermodel.{Sheet => JSheet} // superclass
     import org.apache.poi.openxml4j.util.{ZipSecureFile => JZipSecureFile}
     import java.lang.{Exception => JException}
-    import java.io.{FileInputStream => JFileInputStream}
-    import java.io.{File => JFile}
+    import java.io.{FileOutputStream => JFileOutputStream}
     import java.util.{Iterator => JIterator}
 
 
@@ -89,19 +88,35 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
     }
 
 
+    // pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + WriteWorkbook) - WriteSheet - Alt =
+    //     let s = ReadWorkbook.getSheet(name);
+    //     SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
+
 
     // with EffectExtras.Fail.runWithResultOfIoError
 
-    pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
-        let jworkbook = new JXSSFWorkbook(path);
+    // pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
+    //     let jworkbook = new JXSSFWorkbook(path);
+    //     let jworkbook1: JWorkbook = checked_cast(jworkbook);
+    //     let ans = handle(ToFlix.toFlix(jworkbook1), f)();
+    //     jworkbook.close();
+    //     ans
+    // } catch {
+    //     case ex: JException => Err(ex.getMessage())
+    // }
+
+    pub def runWriteXssf(path: String, 
+                        f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
+        let outs = new JFileOutputStream(path);
+        let jworkbook = new JXSSFWorkbook();
         let jworkbook1: JWorkbook = checked_cast(jworkbook);
         let ans = handle(ToFlix.toFlix(jworkbook1), f)();
+        jworkbook.write(outs);
         jworkbook.close();
         ans
     } catch {
         case ex: JException => Err(ex.getMessage())
     }
-
 
 
 }

@@ -108,7 +108,9 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         }
     }
 
-    pub def runReadWorkbookXssf(path: String, min_inflate_ratio: Option[Float64],  f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
+    pub def runReadWorkbookXssf(path: String, 
+                                min_inflate_ratio: Option[Float64],  
+                                f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);
         match min_inflate_ratio {

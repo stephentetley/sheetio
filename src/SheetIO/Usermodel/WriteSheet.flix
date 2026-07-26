@@ -19,6 +19,7 @@ pub mod SheetIO.Usermodel.WriteSheet {
 
     
     use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
 
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.Usermodel.ReadRow.ReadRow
@@ -66,6 +67,9 @@ pub mod SheetIO.Usermodel.WriteSheet {
     pub def runWriteSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Alt - WriteSheet) =
         handle(sheet, f)()
     
+    pub def runWriteSheetFail(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - WriteSheet - Alt) =
+        run { handle(sheet, f)() } with EffectExtras.Alt.runWithFail
+
     pub def runWriteSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteSheet) =
         run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
     
