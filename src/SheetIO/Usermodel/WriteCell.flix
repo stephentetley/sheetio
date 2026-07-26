@@ -33,9 +33,9 @@ pub mod SheetIO.Usermodel.WriteCell {
         def setCellStyle(s: CellStyle): Unit
         def setComment(c: Comment): Unit
         def setBlank(): Unit
-        def setBoolCellValue(x: Bool): Unit
-        def getFloat64CellValue(d: Float64): Unit
-        def getStringCellValue(s: String): Unit
+        def setCellValueBool(x: Bool): Unit
+        def setCellValueFloat64(d: Float64): Unit
+        def setCellValueString(s: String): Unit
     }
 
     pub def handle(cell: Cell, 
@@ -67,17 +67,17 @@ pub mod SheetIO.Usermodel.WriteCell {
                 k()
             }
 
-            def setBoolCellValue(b, k) = {
+            def setCellValueBool(b, k) = {
                 unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(b) };
                 k()
             }
 
-            def getFloat64CellValue(d, k) = {
+            def setCellValueFloat64(d, k) = {
                 unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(d) };
                 k()
             }
 
-            def getStringCellValue(s, k) = {
+            def setCellValueString(s, k) = {
                 unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(s) };
                 k()
             }

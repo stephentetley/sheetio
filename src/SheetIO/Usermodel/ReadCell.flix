@@ -30,9 +30,9 @@ pub mod SheetIO.Usermodel.ReadCell {
     pub eff ReadCell {
         def getAddress(): CellAddress
         def getCellType(): CellType
-        def getBoolCellValue(): Bool
-        def getFloat64CellValue(): Float64
-        def getStringCellValue(): String
+        def getCellValueBool(): Bool
+        def getCellValueFloat64(): Float64
+        def getCellValueString(): String
         def getCellFormula(): String
         def getCellComment(): Comment
         def getColumnIndex(): Int32
@@ -63,21 +63,21 @@ pub mod SheetIO.Usermodel.ReadCell {
                     Alt.failure("getCellType")
             }
 
-            def getBoolCellValue(k) = try {
+            def getCellValueBool(k) = try {
                 let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getBooleanCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getBoolCellValue")
             }
 
-            def getFloat64CellValue(k) = try {
+            def getCellValueFloat64(k) = try {
                 let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getNumericCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Alt.failure("getFloat64CellValue")
             }
 
-            def getStringCellValue(k) = try {
+            def getCellValueString(k) = try {
                 let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getStringCellValue() };
                 k(ans)
             } catch {

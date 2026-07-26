@@ -118,25 +118,6 @@ pub mod SheetIO.Usermodel.ReadSheet {
     
     pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadSheet) =
         run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
-    
-    pub def withRow(ix: Int32, f: Unit -> a \ ef): a \ (ef + Alt + ReadSheet) - ReadRow =
-        let row = ReadSheet.getRow(ix);
-        SheetIO.Usermodel.ReadRow.runReadRow(row, f)
-
-   
-    pub def withCell(addr: CellAddress, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadSheet) - ReadCell - Alt =
-        let cell = ReadSheet.getCell(addr);
-        SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, f)
-
-    pub def getCellToString(addr: CellAddress): Option[String] \ ReadSheet  =
-        withCell(addr, _ -> ReadCell.toString()) |> Result.toOption 
-
-
-    pub def getStringCellValue(addr: CellAddress): Option[String] \ ReadSheet  =
-        withCell(addr, _ -> ReadCell.getStringCellValue()) |> Result.toOption 
-
-    pub def getFloat64CellValue(addr: CellAddress): Option[Float64] \ ReadSheet  =
-        withCell(addr, _ -> ReadCell.getFloat64CellValue()) |> Result.toOption
 
 
     pub def rowIterator(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet + r =

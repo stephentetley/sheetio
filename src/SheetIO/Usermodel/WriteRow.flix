@@ -20,7 +20,7 @@ pub mod SheetIO.Usermodel.WriteRow {
     use EffectExtras.Alt.Alt
 
 
-    use SheetIO.Usermodel.{Sheet, Row, Cell}
+    use SheetIO.Usermodel.{Sheet, Row, Cell, CellStyle}
 
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell} // superclass
@@ -32,6 +32,8 @@ pub mod SheetIO.Usermodel.WriteRow {
         // It is a hack until we can run local effects polymorphically
         def askRowHandle(): Row
         def createCell(i: Int32): Cell
+        def removeCell(c: Cell): Unit
+        def setRowStyle(style: CellStyle): Unit
     }
 
         
@@ -50,6 +52,18 @@ pub mod SheetIO.Usermodel.WriteRow {
                     k(ToFlix.toFlix(ans))
                 else 
                     Alt.failure("createCell ${i}")
+            }
+            
+            def removeCell(cell, k) = {
+                let cell1 = ToJava.toJava(cell);
+                unsafe IO as {ef + Alt - WriteRow} { jrow.removeCell(cell1) };
+                k()
+            }
+            
+            def setRowStyle(style, k) = {
+                let style1 = ToJava.toJava(style);
+                unsafe IO as {ef + Alt - WriteRow} { jrow.setRowStyle(style1) };
+                k()
             }
 
         }

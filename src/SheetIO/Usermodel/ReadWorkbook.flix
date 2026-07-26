@@ -139,14 +139,6 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
             }, 0)
     }
 
-    pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadWorkbook) - ReadSheet - Alt =
-        let s = ReadWorkbook.getSheet(name);
-        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
-
-    pub def withSheetAt(ix: Int32, f: Unit -> a \ ef): Result[String, a] \ (ef + ReadWorkbook) - ReadSheet - Alt =
-        let s = ReadWorkbook.getSheetAt(ix);
-        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
-
     pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ ReadWorkbook + r =
         let jworkbook = ReadWorkbook.askWorkbookHandle() |> ToJava.toJava;
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
