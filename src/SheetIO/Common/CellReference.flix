@@ -17,8 +17,10 @@
 
 pub mod SheetIO.Common.CellReference {
 
+    use SheetIO.Common.CellAddress
 
     import org.apache.poi.ss.util.{CellReference => JCellReference}
+    import org.apache.poi.ss.util.{CellAddress => JCellAddress}
     import java.lang.{Exception => JException}
 
     pub enum CellReference(JCellReference)
@@ -56,6 +58,33 @@ pub mod SheetIO.Common.CellReference {
         pub def toFlix(x: JCellReference): CellReference = CellReference.CellReference(x)
     }
 
+
+    ///
+    /// A trait for types that can be converted to CellReferences.
+    ///
+    pub trait ToCellReference[a] {
+        ///
+        /// Returns a CellReference from the given x.
+        ///
+        pub def toCellReference(x: a): Option[CellReference]
+    }
+
+    instance ToCellReference[String] {
+        pub def toCellReference(x: String): Option[CellReference] = 
+            try {
+                let ans = unsafe IO { new JCellReference(x) };
+                Some(CellReference.CellReference(ans))
+            } catch {
+                case _: JException => None
+            }
+    }
+
+    instance ToCellReference[CellReference] {
+        pub def toCellReference(x: CellReference): Option[CellReference] = 
+            Some(x)
+    }
+
+
     // Probably should be Result[err, CellReference]...
     pub def createFromString(addr: String): CellReference = 
         CellReference.CellReference(unsafe IO { new JCellReference(addr) })
@@ -89,5 +118,11 @@ pub mod SheetIO.Common.CellReference {
 
     pub def convertNumToColString(i: Int32): String = 
         unsafe IO { JCellReference.convertNumToColString(i) }
+
+    pub def toCellAddress(cr: CellReference): CellAddress = 
+        let cr1 = ToJava.toJava(cr);
+        let ans = unsafe IO { new JCellAddress(cr1) };
+        ToFlix.toFlix(ans)
+
 
 }

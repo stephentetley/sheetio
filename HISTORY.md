@@ -1,3 +1,6 @@
+### v0.3.0
+   API changes.
+   Work making cell reading a one-liner.
 
 ### v0.2.0
    Renamed effects with "Read" prefix.

@@ -57,6 +57,30 @@ pub mod SheetIO.Common.CellAddress {
     }
 
     
+    ///
+    /// A trait for types that can be converted to CellAddresses.
+    ///
+    pub trait ToCellAddress[a] {
+        ///
+        /// Returns a CellAddress from the given x.
+        ///
+        pub def toCellAddress(x: a): Option[CellAddress]
+    }
+
+    instance ToCellAddress[String] {
+        pub def toCellAddress(x: String): Option[CellAddress] = 
+            try {
+                let ans = unsafe IO { new JCellAddress(x) };
+                Some(CellAddress.CellAddress(ans))
+            } catch {
+                case _: JException => None
+            }
+    }
+
+    instance ToCellAddress[CellAddress] {
+        pub def toCellAddress(x: CellAddress): Option[CellAddress] = 
+            Some(x)
+    }
 
     pub def a1(): CellAddress = 
         CellAddress.CellAddress(unsafe IO { JCellAddress.A1 })

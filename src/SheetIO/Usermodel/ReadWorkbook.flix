@@ -20,8 +20,10 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
 
+    use SheetIO.Common.CellReference
+    use SheetIO.Common.CellReference.ToCellReference
     use SheetIO.Usermodel.ReadSheet.ReadSheet
-    use SheetIO.Usermodel.{Workbook, Sheet}
+    use SheetIO.Usermodel.{Workbook, Sheet, Cell}
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -128,6 +130,31 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     }
 
 
+    pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Alt with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+        let sheet = ReadWorkbook.getSheet(sname);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+            SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
+        })
+
+    pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Alt with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+        let sheet = ReadWorkbook.getSheet(sname);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+            SheetIO.Usermodel.ReadSheet.getCellValueFloat64(CellReference.toCellAddress(ref1))
+        })
+
+    pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Alt with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+        let sheet = ReadWorkbook.getSheet(sname);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+            SheetIO.Usermodel.ReadSheet.getCellValueString(CellReference.toCellAddress(ref1))
+        })
+
+
 
     pub def getSheetNames(): List[String] \ ReadWorkbook = {
         let count = ReadWorkbook.getNumberOfSheets();
@@ -182,4 +209,15 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         loop(xs -> xs)
     }
 
+
+    pub def getCellByReference(cr: CellReference): Cell \ ReadWorkbook + Alt = 
+        let sheetname = CellReference.getSheetName(cr) |> Alt.fromOption;
+        let sheet = ReadWorkbook.getSheet(sheetname);
+        let celladdr = CellReference.toCellAddress(cr);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+            ReadSheet.getCell(celladdr)
+        })
+
+
 }
+

@@ -17,10 +17,14 @@
 
 pub mod SheetIO.Usermodel.ReadSheet {
 
+
     
     use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
 
     use SheetIO.Common.CellAddress.CellAddress
+    use SheetIO.Common.CellAddress.ToCellAddress
+
     use SheetIO.Usermodel.ReadRow.ReadRow
     use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Workbook, Sheet, Row, Cell}
@@ -116,8 +120,27 @@ pub mod SheetIO.Usermodel.ReadSheet {
     pub def runReadSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Alt - ReadSheet) =
         handle(sheet, f)()
     
+    pub def runReadSheetFail(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - ReadSheet - Alt ) =
+        run { handle(sheet, f)() } with EffectExtras.Alt.runWithFail
+
     pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadSheet) =
         run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
+
+
+    pub def getCellValueBool(cellAddr: addr): Bool \ ReadSheet + Alt with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+        let cell = ReadSheet.getCell(addr1);
+        SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueBool)
+
+    pub def getCellValueFloat64(cellAddr: addr): Float64 \ ReadSheet + Alt with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+        let cell = ReadSheet.getCell(addr1);
+        SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueFloat64)
+    
+    pub def getCellValueString(cellAddr: addr): String \ ReadSheet + Alt with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+        let cell = ReadSheet.getCell(addr1);
+        SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueString)
 
 
     pub def rowIterator(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet + r =
@@ -129,7 +152,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachRow(f: Unit -> Unit \ ef): Unit \ ReadSheet + ef - Alt - ReadRow = region rc {
+    pub def forEachRow(f: Unit -> Unit \ ef): Unit \ ReadSheet + ef - Alt - ReadRow = region rc {
         Iterator.forEach(row -> discard SheetIO.Usermodel.ReadRow.runReadRowWithResult(row, f),  rowIterator(rc))
     }
 
