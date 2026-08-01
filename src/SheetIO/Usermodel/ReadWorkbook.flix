@@ -134,25 +134,25 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
         let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
-        })
+        }) |> Alt.fromResult
 
     pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Alt with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
         let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueFloat64(CellReference.toCellAddress(ref1))
-        })
+        }) |> Alt.fromResult
 
     pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Alt with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
         let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueString(CellReference.toCellAddress(ref1))
-        })
+        }) |> Alt.fromResult
 
 
 
@@ -177,12 +177,12 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     
 
     /// TODO ignores failure...
-    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
+    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
         Iterator.forEach(s -> discard SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f),  sheetIterator(rc))
     }
 
 
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
+    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
@@ -195,7 +195,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         loop(state)
     }
 
-    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ReadWorkbook + ef - ReadSheet - Alt = region rc {
+    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
         let iter = sheetIterator(rc);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
@@ -210,8 +210,8 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     }
 
 
-    pub def getCellByReference(cr: CellReference): Cell \ ReadWorkbook + Alt = 
-        let sheetname = CellReference.getSheetName(cr) |> Alt.fromOption;
+    pub def getCellByReference(cr: CellReference): Cell \ ReadWorkbook + Fail = 
+        let sheetname = CellReference.getSheetName(cr) |> Fail.fromOption;
         let sheet = ReadWorkbook.getSheet(sheetname);
         let celladdr = CellReference.toCellAddress(cr);
         SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {

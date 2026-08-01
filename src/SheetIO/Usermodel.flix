@@ -55,6 +55,16 @@ pub mod SheetIO.Usermodel {
         pub def toFlix(x: JSheet): Sheet = Sheet.Sheet(x)
     }
 
+    instance Iterable[Sheet] {
+
+        type Elm = Row
+    
+        pub def iterator(rc: Region[r], t: Sheet): Iterator[Row, r, r] \ r = 
+           SheetIO.Usermodel.ReadSheet.rowIteratorX(rc, t)
+    
+    }
+
+
     pub enum Row(JRow)
     
     instance ToJava[Row] {
@@ -68,6 +78,16 @@ pub mod SheetIO.Usermodel {
         type In = JRow
         pub def toFlix(x: JRow): Row = Row.Row(x)
     }
+
+    instance Iterable[Row] {
+
+        type Elm = Cell
+    
+        pub def iterator(rc: Region[r], t: Row): Iterator[Cell, r, r] \ r = 
+           SheetIO.Usermodel.ReadRow.cellIteratorX(rc, t)
+    
+    }
+    
 
 
     pub enum Cell(JCell)

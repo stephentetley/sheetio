@@ -116,7 +116,8 @@ pub mod SheetIO.Usermodel.ReadCell {
 
         }
 
-
+    // `runReadCell` uses the `Alt` rather than `Fail` because we expect 
+    // a user may want to retry reading with the `Alt` combinators
     pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Alt - ReadCell) = 
         handle(cell, f)()
 

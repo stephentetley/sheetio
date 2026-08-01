@@ -59,7 +59,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
     }
     
     pub def handle(sheet: Sheet,
-                    f: a -> b \ ef): a -> b \ (ef + Alt - ReadSheet) + r = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadSheet) + r = x -> {
         let jsheet = ToJava.toJava(sheet);
         run {
             f(x)
@@ -68,63 +68,61 @@ pub mod SheetIO.Usermodel.ReadSheet {
             def askSheetHandle(k) = { k(sheet) }
 
             def getSheetName(k) = try {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getSheetName() };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getSheetName() };
                 k(ans)
             } catch {
-                case ex: JException => Alt.failure(ex.getMessage())
+                case ex: JException => Fail.report(ex.getMessage())
             }
 
 
             def getRow(i, k) = {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getRow(i) };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getRow(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("getRow ${i}")
+                    Fail.report("getRow ${i}")
             } 
 
 
             def getCell(addr, k) = {
                 let rx = SheetIO.Common.CellAddress.getRow(addr);
                 let cx = SheetIO.Common.CellAddress.getColumn(addr);
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { JSheetUtil.getCell(jsheet, rx, cx) };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { JSheetUtil.getCell(jsheet, rx, cx) };
                 if (not Object.isNull(ans)) {
                     k(ToFlix.toFlix(ans))
                 } else {
-                    Alt.failure("getCell ${addr}")
+                    Fail.report("getCell ${addr}")
                 }
             }
 
             def getFirstRowNum(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getFirstRowNum() };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getFirstRowNum() };
                 k(ans)
             } 
 
             def getLastRowNum(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getLastRowNum() };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getLastRowNum() };
                 k(ans)
             } 
             
             def getProtect(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getProtect() };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getProtect() };
                 k(ans)
             }
 
             def getWorkbook(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadSheet} { jsheet.getWorkbook() };
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getWorkbook() };
                 k(ToFlix.toFlix(ans))
             } 
         }
     }
 
-    pub def runReadSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Alt - ReadSheet) =
+    pub def runReadSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - ReadSheet) =
         handle(sheet, f)()
     
-    pub def runReadSheetFail(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - ReadSheet - Alt ) =
-        run { handle(sheet, f)() } with EffectExtras.Alt.runWithFail
 
-    pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadSheet) =
-        run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
+    pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadSheet) =
+        run { handle(sheet, f)() } with EffectExtras.Fail.runWithResult
 
 
     pub def getCellValueBool(cellAddr: addr): Bool \ ReadSheet + Alt with ToCellAddress[addr] = 
@@ -143,6 +141,15 @@ pub mod SheetIO.Usermodel.ReadSheet {
         SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueString)
 
 
+    pub def rowIteratorX(rc: Region[r], sheet: Sheet): Iterator[Row, r, r] \ r =
+        let jsheet = ToJava.toJava(sheet);
+        let javaIter: JIterator[JRow] = unsafe IO as r { jsheet.rowIterator() };
+        def wrap(jrow) = { 
+            ToFlix.toFlix(jrow)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
+            |> Iterator.map(wrap)
+
     pub def rowIterator(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet + r =
         let jsheet = ReadSheet.askSheetHandle() |> ToJava.toJava;
         let javaIter: JIterator[JRow] = unsafe IO as r { jsheet.rowIterator() };
@@ -152,7 +159,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def forEachRow(f: Unit -> Unit \ ef): Unit \ ReadSheet + ef - Alt - ReadRow = region rc {
+    pub def forEachRow(f: Unit -> Unit \ ef): Unit \ ReadSheet + ef - Fail - ReadRow = region rc {
         Iterator.forEach(row -> discard SheetIO.Usermodel.ReadRow.runReadRowWithResult(row, f),  rowIterator(rc))
     }
 

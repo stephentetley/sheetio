@@ -41,7 +41,7 @@ pub mod SheetIO.Usermodel.ReadRow {
 
         
     pub def handle(row: Row, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - ReadRow) + r  = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadRow) + r  = x -> {
         let jrow = ToJava.toJava(row);
         run {
             f(x)
@@ -50,52 +50,60 @@ pub mod SheetIO.Usermodel.ReadRow {
             def askRowHandle(k) = k(row)
 
             def getCell(i, k) = {
-                let ans = unsafe IO as {ef + Alt - ReadRow} { jrow.getCell(i) };
+                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getCell(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("getCell ${i}")
+                    Fail.report("getCell ${i}")
             }
 
             def getFirstCellNum(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadRow} { jrow.getFirstCellNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getFirstCellNum() };
                 if (ans >= 0i16) 
                     k(Int16.toInt32(ans))
                 else
-                    Alt.failure("getFirstCellNum")
+                    Fail.report("getFirstCellNum")
             }
 
             def getLastCellNum(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadRow} { jrow.getLastCellNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getLastCellNum() };
                 if (ans >= 0i16) 
                     k(Int16.toInt32(ans))
                 else
-                    Alt.failure("getLastCellNum")
+                    Fail.report("getLastCellNum")
             }
 
             def getRowNum(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadRow} { jrow.getRowNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getRowNum() };
                 k(ans)
             } 
 
             def getSheet(k) = {
-                let ans = unsafe IO as {ef + Alt - ReadRow} { jrow.getSheet() };
+                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getSheet() };
                 k(ToFlix.toFlix(ans))
             } 
 
         }
     }
 
-    pub def runReadRow(row: Row, f: Unit -> a \ ef): a \ (ef + Alt - ReadRow) = 
+    pub def runReadRow(row: Row, f: Unit -> a \ ef): a \ (ef + Fail - ReadRow) = 
         handle(row, f)()
     
-    pub def runReadRowFail(row: Row, f: Unit -> a \ ef): a \ (ef + Fail - ReadRow - Alt ) =
-        run { handle(row, f)() } with EffectExtras.Alt.runWithFail
 
     pub def runReadRowWithResult(row: Row, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadRow) = 
-        run { handle(row, f)() } with EffectExtras.Alt.runWithResult
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadRow) = 
+        run { handle(row, f)() } with EffectExtras.Fail.runWithResult
 
+
+    pub def cellIteratorX(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
+        let jrow = ToJava.toJava(row);
+        let javaIter: JIterator[JCell] = unsafe IO as r { jrow.cellIterator() };
+        def wrap(jcell) = { 
+            ToFlix.toFlix(jcell)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
+            |> Iterator.map(wrap)
+    
     
     pub def cellIterator(rc: Region[r]): Iterator[Cell, r, r] \ ReadRow + r = 
         let jrow = ReadRow.askRowHandle() |> ToJava.toJava;
@@ -106,9 +114,9 @@ pub mod SheetIO.Usermodel.ReadRow {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def withEachCell(f: Unit -> Unit \ ef): Unit \ ef + ReadRow - ReadCell - Alt = region rc {
-        Iterator.forEach(cell -> 
-            discard SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, f),  cellIterator(rc))
+    // TODO can we make Row an instance of `Iterable`?
+    pub def forEach(f: Cell -> Unit \ ef): Unit \ ef + ReadRow = region rc {
+        Iterator.forEach(f,  cellIterator(rc))
     }
 
     pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ ef + ReadRow - ReadCell = region rc {
