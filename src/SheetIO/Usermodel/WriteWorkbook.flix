@@ -32,9 +32,6 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
 
 
     pub eff WriteWorkbook {
-        // `askWorkbookHandle` should not be used in user code
-        // It is a hack until we can run local effects polymorphically
-        def askWorkbookHandle(): Workbook
         def createSheet(): Sheet
         def createSheetWithName(s: String): Sheet
         def cloneSheet(num: Int32): Sheet
@@ -50,8 +47,6 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
         run {
             Ok(f(x))
         } with handler WriteWorkbook {
-            
-            def askWorkbookHandle(k) = { k(wb) }
 
             def createSheet(k) = {
                 let ans = jworkbook.createSheet();

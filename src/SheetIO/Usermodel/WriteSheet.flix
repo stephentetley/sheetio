@@ -36,9 +36,6 @@ pub mod SheetIO.Usermodel.WriteSheet {
 
 
     pub eff WriteSheet {
-        // `askSheetHandle` should not be used in user code
-        // It is a hack until we can run local effects polymorphically
-        def askSheetHandle(): Sheet
         def createRow(i: Int32) : Row
     }
 
@@ -50,9 +47,6 @@ pub mod SheetIO.Usermodel.WriteSheet {
         run {
             f(x)
         } with handler WriteSheet {
-            
-            def askSheetHandle(k) = { k(sheet) }
-
             def createRow(i, k) = {
                 let ans = unsafe IO as {ef + Alt - WriteSheet} { jsheet.createRow(i) };
                 if (not Object.isNull(ans)) 

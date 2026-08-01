@@ -28,9 +28,6 @@ pub mod SheetIO.Usermodel.WriteRow {
     import java.util.{Iterator => JIterator}
 
     pub eff WriteRow {
-        // `askRowHandle` should not be used in user code
-        // It is a hack until we can run local effects polymorphically
-        def askRowHandle(): Row
         def createCell(i: Int32): Cell
         def removeCell(c: Cell): Unit
         def setRowStyle(style: CellStyle): Unit
@@ -43,8 +40,6 @@ pub mod SheetIO.Usermodel.WriteRow {
         run {
             f(x)
         } with handler WriteRow {
-            
-            def askRowHandle(k) = k(row)
 
             def createCell(i, k) = {
                 let ans = unsafe IO as {ef + Alt - WriteRow} { jrow.createCell(i) };
