@@ -3,6 +3,7 @@ pub mod TestRead01 {
 
     use Assert.{assertTrue}
     use EffectExtras.Fail
+    use EffectExtras.Alt
     use SheetIO.Usermodel.ReadWorkbook
     use SheetIO.Usermodel.ReadRow
     use SheetIO.Usermodel.ReadCell
@@ -27,8 +28,10 @@ pub mod TestRead01 {
                 SheetIO.Usermodel.ReadRow.runReadRow(row, _ -> {
                     let i = ReadRow.getRowNum();
                     let c1 = ReadRow.getCell(0);
-                    let name = SheetIO.Usermodel.ReadCell.runReadCellWithResult(c1, ReadCell.getCellValueString) |> Fail.fromResult;
-                    println("${i}: ${name}")
+                    let c2 = ReadRow.getCell(1);
+                    let name = SheetIO.Usermodel.ReadCell.runReadCell(c1, ReadCell.getCellValueString);
+                    let typesys = SheetIO.Usermodel.ReadCell.runReadCell(c2, ReadCell.getCellValueString);
+                    println("${i}: ${name} ${typesys}")
                 })
             })
         });

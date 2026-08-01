@@ -125,18 +125,18 @@ pub mod SheetIO.Usermodel.ReadSheet {
         run { handle(sheet, f)() } with EffectExtras.Fail.runWithResult
 
 
-    pub def getCellValueBool(cellAddr: addr): Bool \ ReadSheet + Alt with ToCellAddress[addr] = 
-        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+    pub def getCellValueBool(cellAddr: addr): Bool \ ReadSheet + Fail with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Fail.fromOption;
         let cell = ReadSheet.getCell(addr1);
         SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueBool)
 
-    pub def getCellValueFloat64(cellAddr: addr): Float64 \ ReadSheet + Alt with ToCellAddress[addr] = 
-        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+    pub def getCellValueFloat64(cellAddr: addr): Float64 \ ReadSheet + Fail with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Fail.fromOption;
         let cell = ReadSheet.getCell(addr1);
         SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueFloat64)
     
-    pub def getCellValueString(cellAddr: addr): String \ ReadSheet + Alt with ToCellAddress[addr] = 
-        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Alt.fromOption;
+    pub def getCellValueString(cellAddr: addr): String \ ReadSheet + Fail with ToCellAddress[addr] = 
+        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Fail.fromOption;
         let cell = ReadSheet.getCell(addr1);
         SheetIO.Usermodel.ReadCell.runReadCell(cell, ReadCell.getCellValueString)
 
