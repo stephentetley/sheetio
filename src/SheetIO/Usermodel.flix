@@ -70,12 +70,9 @@ pub mod SheetIO.Usermodel {
     }
 
     instance Iterable[Sheet] {
-
         type Elm = Row
-    
         pub def iterator(rc: Region[r], t: Sheet): Iterator[Row, r, r] \ r = 
-           SheetIO.Usermodel.ReadSheet.rowIteratorX(rc, t)
-    
+           SheetIO.Usermodel.ReadSheet.rowIterator(rc, t)
     }
 
 
