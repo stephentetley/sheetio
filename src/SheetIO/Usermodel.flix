@@ -41,6 +41,20 @@ pub mod SheetIO.Usermodel {
         pub def toFlix(x: JWorkbook): Workbook = Workbook.Workbook(x)
     }
 
+    instance Iterable[Workbook] {
+        type Elm = Sheet
+        pub def iterator(rc: Region[r], t: Workbook): Iterator[Sheet, r, r] \ r = 
+           SheetIO.Usermodel.ReadWorkbook.sheetIteratorX(rc, t)
+    }
+    
+
+    instance ForEach[Workbook] {
+        type Elm = Sheet
+        pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = 
+           SheetIO.Usermodel.ReadWorkbook.forEach(f, t)
+    }
+
+
     pub enum Sheet(JSheet)
 
     instance ToJava[Sheet] {
@@ -80,14 +94,17 @@ pub mod SheetIO.Usermodel {
     }
 
     instance Iterable[Row] {
-
         type Elm = Cell
-    
         pub def iterator(rc: Region[r], t: Row): Iterator[Cell, r, r] \ r = 
-           SheetIO.Usermodel.ReadRow.cellIteratorX(rc, t)
-    
+           SheetIO.Usermodel.ReadRow.cellIterator(rc, t)
     }
     
+
+    instance ForEach[Row] {
+        type Elm = Cell
+        pub def forEach(f: Cell -> Unit \ ef, t: Row): Unit \ ef = 
+           SheetIO.Usermodel.ReadRow.forEachCell(f, t)
+    }
 
 
     pub enum Cell(JCell)

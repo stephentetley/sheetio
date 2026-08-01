@@ -166,6 +166,19 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
             }, 0)
     }
 
+    pub def sheetIteratorX(rc: Region[r], workbook: Workbook): Iterator[Sheet, r, r] \ r =
+        let jworkbook = ToJava.toJava(workbook);
+        let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
+        def wrap(jsheet) = { 
+            ToFlix.toFlix(jsheet)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
+            |> Iterator.map(wrap)
+    
+    pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = region rc {
+        Iterator.forEach(f, sheetIteratorX(rc, t))
+    }
+    
     pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ ReadWorkbook + r =
         let jworkbook = ReadWorkbook.askWorkbookHandle() |> ToJava.toJava;
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };

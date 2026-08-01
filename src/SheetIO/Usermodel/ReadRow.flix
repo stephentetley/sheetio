@@ -29,9 +29,6 @@ pub mod SheetIO.Usermodel.ReadRow {
     import java.util.{Iterator => JIterator}
 
     pub eff ReadRow {
-        // `askRowHandle` should not be used in user code
-        // It is a hack until we can run local effects polymorphically
-        def askRowHandle(): Row
         def getCell(i: Int32): Cell
         def getFirstCellNum(): Int32
         def getLastCellNum(): Int32
@@ -47,8 +44,6 @@ pub mod SheetIO.Usermodel.ReadRow {
             f(x)
         } with handler ReadRow {
             
-            def askRowHandle(k) = k(row)
-
             def getCell(i, k) = {
                 let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getCell(i) };
                 if (not Object.isNull(ans)) 
@@ -95,7 +90,7 @@ pub mod SheetIO.Usermodel.ReadRow {
         run { handle(row, f)() } with EffectExtras.Fail.runWithResult
 
 
-    pub def cellIteratorX(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
+    pub def cellIterator(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
         let jrow = ToJava.toJava(row);
         let javaIter: JIterator[JCell] = unsafe IO as r { jrow.cellIterator() };
         def wrap(jcell) = { 
@@ -105,41 +100,32 @@ pub mod SheetIO.Usermodel.ReadRow {
             |> Iterator.map(wrap)
     
     
-    pub def cellIterator(rc: Region[r]): Iterator[Cell, r, r] \ ReadRow + r = 
-        let jrow = ReadRow.askRowHandle() |> ToJava.toJava;
-        let javaIter: JIterator[JCell] = unsafe IO as r { jrow.cellIterator() };
-        def wrap(jcell) = { 
-            ToFlix.toFlix(jcell)
-        };
-        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JCell]), javaIter)
-            |> Iterator.map(wrap)
-    
-    // TODO can we make Row an instance of `Iterable`?
-    pub def forEach(f: Cell -> Unit \ ef): Unit \ ef + ReadRow = region rc {
-        Iterator.forEach(f,  cellIterator(rc))
+    pub def forEachCell(f: Cell -> Unit \ ef, t: Row): Unit \ ef = region rc {
+        Iterator.forEach(f, cellIterator(rc, t))
     }
 
-    pub def foldCells(f: st -> st \ ef, state: st): Result[String, st] \ ef + ReadRow - ReadCell = region rc {
-        let iter = cellIterator(rc);
-        @Tailrec
+
+    pub def foldCells(f: Cell -> st -> st \ ef, state: st, row: Row): st \ ef + Fail = region rc {
+        let iter = cellIterator(rc, row);
+        // @Tailrec
         def loop(st) = match Iterator.next(iter) {
-            case None => Ok(st)
-            case Some(cell) => match SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, _ -> f(st)) {
-                case Err(msg) => Err(msg)
-                case Ok(st1)  => loop(st1)
+            case None       => st
+            case Some(cell) => match EffectExtras.Fail.runWithResult(_ -> f(cell, st)) {
+                case Err(msg)   => Fail.report(msg)
+                case Ok(st1)    => loop(st1)
             }
         };
         loop(state)
     }
 
-    pub def filterMapCells(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ReadRow + ef - ReadCell = region rc {
-        let iter = cellIterator(rc);
+    pub def filterMapCells(f: Cell -> Option[a] \ ef, row: Row): List[a] \ ef + Fail = region rc {
+        let iter = cellIterator(rc, row);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
-            case None => Ok(k(Nil))
-            case Some(cell) => match SheetIO.Usermodel.ReadCell.runReadCellWithResult(cell, _ -> f()) {
-                case Err(msg) => Err(msg)
-                case Ok(None)  => loop(k)
+            case None       => k(Nil)
+            case Some(cell) => match EffectExtras.Fail.runWithResult(_ -> f(cell)) {
+                case Err(msg)       => Fail.report(msg)
+                case Ok(None)       => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
             }
         };

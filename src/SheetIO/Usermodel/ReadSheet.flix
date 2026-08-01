@@ -149,6 +149,10 @@ pub mod SheetIO.Usermodel.ReadSheet {
         };
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
+    
+    pub def forEach(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = region rc {
+        Iterator.forEach(f, rowIteratorX(rc, t))
+    }
 
     pub def rowIterator(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet + r =
         let jsheet = ReadSheet.askSheetHandle() |> ToJava.toJava;
