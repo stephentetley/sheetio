@@ -36,9 +36,6 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
 
 
     pub eff ReadWorkbook {
-        // `askWorkbookHandle` should not be used in user code
-        // It is a hack until we can run local effects polymorphically
-        def askWorkbookHandle(): Workbook
         def getNumberOfSheets(): Int32
         def getSheet(s: String): Sheet
         def getSheetAt(i: Int32): Sheet
@@ -56,10 +53,6 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
             Ok(f(x))
         } with handler ReadWorkbook {
             
-            def askWorkbookHandle(k) = { k(wb) }
-
-
-
             def getNumberOfSheets(k) = try {
                 let ans = jworkbook.getNumberOfSheets();
                 k(ans)
@@ -166,7 +159,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
             }, 0)
     }
 
-    pub def sheetIteratorX(rc: Region[r], workbook: Workbook): Iterator[Sheet, r, r] \ r =
+    pub def sheetIterator(rc: Region[r], workbook: Workbook): Iterator[Sheet, r, r] \ r =
         let jworkbook = ToJava.toJava(workbook);
         let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
         def wrap(jsheet) = { 
@@ -175,47 +168,32 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = region rc {
-        Iterator.forEach(f, sheetIteratorX(rc, t))
+    pub def forEachSheet(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = region rc {
+        Iterator.forEach(f, sheetIterator(rc, t))
     }
     
-    pub def sheetIterator(rc: Region[r]): Iterator[Sheet, r, r] \ ReadWorkbook + r =
-        let jworkbook = ReadWorkbook.askWorkbookHandle() |> ToJava.toJava;
-        let javaIter: JIterator[JSheet] = unsafe IO as r { jworkbook.sheetIterator() };
-        def wrap(jsheet) = { 
-            ToFlix.toFlix(jsheet)
-        };
-        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
-            |> Iterator.map(wrap)
-    
 
-    /// TODO ignores failure...
-    pub def withEachSheet(f: Unit -> Unit \ ef): Unit \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
-        Iterator.forEach(s -> discard SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f),  sheetIterator(rc))
-    }
-
-
-    pub def foldSheets(f: st -> st \ ef, state: st): Result[String, st] \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
-        let iter = sheetIterator(rc);
+    pub def foldSheets(f: Sheet -> st -> st \ ef, state: st, workbook: Workbook): st \ ef + Fail = region rc {
+        let iter = sheetIterator(rc, workbook);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
-            case None => Ok(st)
-            case Some(sheet) => match SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> f(st)) {
-                case Err(msg) => Err(msg)
-                case Ok(st1)  => loop(st1)
+            case None       => st
+            case Some(sheet) => match EffectExtras.Fail.runWithResult(_ -> f(sheet, st)) {
+                case Err(msg)   => Fail.report(msg)
+                case Ok(st1)    => loop(st1)
             }
         };
         loop(state)
     }
 
-    pub def filterMapSheets(f: Unit -> Option[a] \ ef): Result[String, List[a]] \ ReadWorkbook + ef - ReadSheet - Fail = region rc {
-        let iter = sheetIterator(rc);
+    pub def filterMapSheets(f: Sheet -> Option[a] \ ef, workbook: Workbook): List[a] \ ef + Fail = region rc {
+        let iter = sheetIterator(rc, workbook);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {
-            case None => Ok(k(Nil))
-            case Some(sheet) => match SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> f()) {
-                case Err(msg) => Err(msg)
-                case Ok(None)  => loop(k)
+            case None       => k(Nil)
+            case Some(sheet) => match EffectExtras.Fail.runWithResult(_ -> f(sheet)) {
+                case Err(msg)       => Fail.report(msg)
+                case Ok(None)       => loop(k)
                 case Ok(Some(ans))  => loop(ks -> k(ans :: ks))
             }
         };

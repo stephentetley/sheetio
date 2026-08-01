@@ -44,14 +44,14 @@ pub mod SheetIO.Usermodel {
     instance Iterable[Workbook] {
         type Elm = Sheet
         pub def iterator(rc: Region[r], t: Workbook): Iterator[Sheet, r, r] \ r = 
-           SheetIO.Usermodel.ReadWorkbook.sheetIteratorX(rc, t)
+           SheetIO.Usermodel.ReadWorkbook.sheetIterator(rc, t)
     }
     
 
     instance ForEach[Workbook] {
         type Elm = Sheet
         pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = 
-           SheetIO.Usermodel.ReadWorkbook.forEach(f, t)
+           SheetIO.Usermodel.ReadWorkbook.forEachSheet(f, t)
     }
 
 
