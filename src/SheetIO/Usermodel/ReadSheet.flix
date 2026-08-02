@@ -25,6 +25,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
     use SheetIO.Common.CellAddress.CellAddress
     use SheetIO.Common.CellAddress.ToCellAddress
 
+    use SheetIO.Usermodel.ReadWorkbook.ReadWorkbook
     use SheetIO.Usermodel.ReadRow.ReadRow
     use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Workbook, Sheet, Row, Cell}
@@ -39,6 +40,8 @@ pub mod SheetIO.Usermodel.ReadSheet {
 
 
     pub eff ReadSheet {
+        //  `getJIterator` considered a hack until Flix's effects support polymorphic functions
+        def getJIterator(): JIterator[JRow]
         def getSheetName() : String
         def getRow(i: Int32): Row
         def getCell(addr: CellAddress): Cell
@@ -62,6 +65,11 @@ pub mod SheetIO.Usermodel.ReadSheet {
             f(x)
         } with handler ReadSheet {
             
+            def getJIterator(k) = { 
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.rowIterator() };
+                k(ans)
+            }
+
             def getSheetName(k) = try {
                 let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getSheetName() };
                 k(ans)
@@ -109,12 +117,23 @@ pub mod SheetIO.Usermodel.ReadSheet {
                 let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getWorkbook() };
                 k(ToFlix.toFlix(ans))
             } 
+
         }
     }
 
     pub def runReadSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - ReadSheet) =
         handle(sheet, f)()
     
+    pub def runReadSheetNamed(name: String, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet =
+        let sheet = ReadWorkbook.getSheet(name);
+        let ans = handle(sheet, f)();
+        ans
+
+    pub def runReadSheetAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet =
+        let sheet = ReadWorkbook.getSheetAt(ix);
+        let ans = handle(sheet, f)();
+        ans
+
 
     pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadSheet) =
         run { handle(sheet, f)() } with EffectExtras.Fail.runWithResult
@@ -145,6 +164,14 @@ pub mod SheetIO.Usermodel.ReadSheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
     
+    pub def rowIterator1(rc: Region[r]): Iterator[Row, r, r] \ ReadSheet =
+        let javaIter: JIterator[JRow] = ReadSheet.getJIterator();
+        def wrap(jrow) = { 
+            ToFlix.toFlix(jrow)
+        };
+        Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
+            |> Iterator.map(wrap)
+
     pub def forEachRow(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = region rc {
         Iterator.forEach(f, rowIterator(rc, t))
     }

@@ -22,19 +22,19 @@ pub mod TestRead01 {
     @Test
     pub def readRows01(): Unit \ { Assert, IO } = region rc { 
         let path = "./data/functional_langs.xlsx";
-        discard SheetIO.Usermodel.ReadWorkbook.runReadWorkbookXssf(path, None, _ -> { 
-            let sheet = ReadWorkbook.getSheet("Sheet1");
-            Iterable.iterator(rc, sheet) |> Iterator.forEach(row -> {
-                SheetIO.Usermodel.ReadRow.runReadRow(row, _ -> {
+        discard run { 
+            SheetIO.Usermodel.ReadSheet.rowIterator1(rc) |> Iterator.forEach(row -> 
+                run {
                     let i = ReadRow.getRowNum();
                     let c1 = ReadRow.getCell(0);
                     let c2 = ReadRow.getCell(1);
                     let name = SheetIO.Usermodel.ReadCell.runReadCell(c1, ReadCell.getCellValueString);
                     let typesys = SheetIO.Usermodel.ReadCell.runReadCell(c2, ReadCell.getCellValueString);
                     println("${i}: ${name} ${typesys}")
-                })
-            })
-        });
+                } with SheetIO.Usermodel.ReadRow.runReadRow(row)
+            )
+        } with SheetIO.Usermodel.ReadSheet.runReadSheetNamed("Sheet1")
+          with SheetIO.Usermodel.ReadWorkbook.runReadWorkbookXssf(path, None);
         assertTrue(true)
     }
 

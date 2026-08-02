@@ -117,8 +117,11 @@ pub mod SheetIO.Usermodel.ReadCell {
 
         }
 
-    // `runReadCell` uses the `Alt` rather than `Fail` because we expect 
-    // a user may want to retry reading with the `Alt` combinators
+    // The `ReadCell` effect uses the `Alt` rather than `Fail` effect because 
+    // we expect a user may want to retry reading with the `Alt` combinators.
+    // However when it is run failure is dispatched to the `Fail` effect so it
+    // can be nested within other parts of the "Read" API which use Fail as the 
+    // failure effect.
     pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - Alt) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runWithFail
 
