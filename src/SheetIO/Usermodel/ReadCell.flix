@@ -23,6 +23,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
     use SheetIO.Usermodel.{Cell, Comment}
+    use SheetIO.Usermodel.ReadRow
 
     import org.apache.poi.ss.usermodel.{Cell => JCell}
     import java.lang.{Exception => JException}
@@ -125,7 +126,9 @@ pub mod SheetIO.Usermodel.ReadCell {
     pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - Alt) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runWithFail
 
-    pub def runReadCellWithResult(cell: Cell, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadCell) = 
-        run { handle(cell, f)() } with EffectExtras.Alt.runWithResult
+    pub def runReadCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - Alt =
+        let cell = ReadRow.getCell(ix);
+        let ans = run { handle(cell, f)() } with EffectExtras.Alt.runWithFail;
+        ans
 
 }

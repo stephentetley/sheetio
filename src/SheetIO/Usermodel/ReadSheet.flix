@@ -135,6 +135,15 @@ pub mod SheetIO.Usermodel.ReadSheet {
         ans
 
 
+    // pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Alt with ToCellReference[cellref] = 
+    //     let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
+    //     let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+    //     let sheet = ReadWorkbook.getSheet(sname);
+    //     SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
+    //         SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
+    //     }) |> Alt.fromResult
+
+
     pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadSheet) =
         run { handle(sheet, f)() } with EffectExtras.Fail.runWithResult
 

@@ -26,10 +26,8 @@ pub mod TestRead01 {
             SheetIO.Usermodel.ReadSheet.rowIterator1(rc) |> Iterator.forEach(row -> 
                 run {
                     let i = ReadRow.getRowNum();
-                    let c1 = ReadRow.getCell(0);
-                    let c2 = ReadRow.getCell(1);
-                    let name = SheetIO.Usermodel.ReadCell.runReadCell(c1, ReadCell.getCellValueString);
-                    let typesys = SheetIO.Usermodel.ReadCell.runReadCell(c2, ReadCell.getCellValueString);
+                    let name = SheetIO.Usermodel.ReadCell.runReadCellAt(0, ReadCell.getCellValueString);
+                    let typesys = SheetIO.Usermodel.ReadCell.runReadCellAt(1, ReadCell.getCellValueString);
                     println("${i}: ${name} ${typesys}")
                 } with SheetIO.Usermodel.ReadRow.runReadRow(row)
             )

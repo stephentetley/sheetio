@@ -16,6 +16,7 @@
 
 
 pub mod SheetIO.Usermodel.ReadRow {
+    use SheetIO.Usermodel.ReadSheet
 
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
@@ -84,10 +85,10 @@ pub mod SheetIO.Usermodel.ReadRow {
     pub def runReadRow(row: Row, f: Unit -> a \ ef): a \ (ef + Fail - ReadRow) = 
         handle(row, f)()
     
-
-    pub def runReadRowWithResult(row: Row, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadRow) = 
-        run { handle(row, f)() } with EffectExtras.Fail.runWithResult
+    pub def runReadRowAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadSheet - ReadRow =
+        let row = ReadSheet.getRow(ix);
+        let ans = handle(row, f)();
+        ans
 
 
     pub def cellIterator(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
