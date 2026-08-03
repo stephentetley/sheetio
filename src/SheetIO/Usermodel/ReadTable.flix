@@ -74,8 +74,6 @@ pub mod SheetIO.Usermodel.ReadTable {
                             f: Unit -> a \ ef): a \ (ef + Alt - ReadTable) = 
         handle(table, f)()
 
-    pub def runCellReaderWithResult(table: Table, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - ReadTable) = 
-        run { handle(table, f)() } with EffectExtras.Alt.runWithResult
+
 
 }

@@ -49,6 +49,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
         def getLastRowNum(): Int32
         def getProtect(): Bool
         def getWorkbook(): Workbook
+        def isColumnHidden(ix: Int32): Bool
     }
 
 
@@ -118,6 +119,10 @@ pub mod SheetIO.Usermodel.ReadSheet {
                 k(ToFlix.toFlix(ans))
             } 
 
+            def isColumnHidden(ix, k) = {
+                let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.isColumnHidden(ix) };
+                k(ans)
+            }
         }
     }
 
@@ -134,14 +139,6 @@ pub mod SheetIO.Usermodel.ReadSheet {
         let ans = handle(sheet, f)();
         ans
 
-
-    // pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Alt with ToCellReference[cellref] = 
-    //     let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
-    //     let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
-    //     let sheet = ReadWorkbook.getSheet(sname);
-    //     SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
-    //         SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
-    //     }) |> Alt.fromResult
 
 
     pub def runReadSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - ReadSheet) =
