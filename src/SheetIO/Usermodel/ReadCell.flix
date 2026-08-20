@@ -16,11 +16,12 @@
 
 
 pub mod SheetIO.Usermodel.ReadCell {
-    use SheetIO.Usermodel.ReadCell.runReadCellAddr
     
     
     use EffectExtras.Alt.Alt
     use EffectExtras.Fail.Fail
+    use InteropTime.LocalDateTime
+
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellAddress.ToCellAddress
     use SheetIO.Common.CellReference
@@ -41,6 +42,7 @@ pub mod SheetIO.Usermodel.ReadCell {
         def getCellValueBool(): Bool
         def getCellValueFloat64(): Float64
         def getCellValueString(): String
+        def getCellValueLocalDateTime(): LocalDateTime
         def getCellFormula(): String
         def getCellComment(): Comment
         def getColumnIndex(): Int32
@@ -89,8 +91,16 @@ pub mod SheetIO.Usermodel.ReadCell {
                 let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getStringCellValue() };
                 k(ans)
             } catch {
-                case _: JException => Alt.failure("getStringCellValue")
+                case _: JException => Alt.failure("getCellValueString")
             }
+
+            def getCellValueLocalDateTime(k) = try {
+                let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getLocalDateTimeCellValue() };
+                k(ToFlix.toFlix(ans))
+            } catch {
+                case _: JException => Alt.failure("getCellValueLocalDateTime")
+            }
+
 
             def getCellFormula(k) = try {
                 let ans = unsafe IO as {ef + Alt - ReadCell} { jcell.getCellFormula() };
