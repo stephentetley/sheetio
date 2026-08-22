@@ -17,6 +17,8 @@
 
 pub mod SheetIO.Common.CellReference {
 
+    use JavaInterop.AdaptorExtras
+
     use SheetIO.Common.CellAddress
 
     import org.apache.poi.ss.util.{CellReference => JCellReference}
@@ -89,40 +91,31 @@ pub mod SheetIO.Common.CellReference {
     pub def createFromString(addr: String): CellReference = 
         CellReference.CellReference(unsafe IO { new JCellReference(addr) })
 
-    pub def formatAsString(cr: CellReference): String = 
-        let cr1 = ToJava.toJava(cr);
-        unsafe IO { cr1.formatAsString() }
+    pub def formatAsString(x: CellReference): String = 
+        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.formatAsString() })
 
-    pub def getSheetName(cr: CellReference): Option[String] = 
-        let cr1 = ToJava.toJava(cr);
-        let ans = unsafe IO { cr1.getSheetName() };
-        if (not Object.isNull(ans)) Some(ans) else None
+    pub def getSheetName(x: CellReference): Option[String] = 
+        SheetIO.Internal.AdaptorExtrasExtras.extractStringWithOption(x, x1 -> unsafe IO { x1.getSheetName() })
 
-    pub def getCol(cr: CellReference): Int16 = 
-        let cr1 = ToJava.toJava(cr);
-        unsafe IO { cr1.getCol() }
+    pub def getCol(x: CellReference): Int16 = 
+        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getCol() })
 
-    pub def getRow(cr: CellReference): Int32 = 
-        let cr1 = ToJava.toJava(cr);
-        unsafe IO { cr1.getRow() }
+    pub def getRow(x: CellReference): Int32 = 
+        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getRow() })
 
-    pub def isRowAbsolute(cr: CellReference): Bool = 
-        let cr1 = ToJava.toJava(cr);
-        unsafe IO { cr1.isRowAbsolute() }
+    pub def isRowAbsolute(x: CellReference): Bool = 
+        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.isRowAbsolute() })
 
-    pub def isColAbsolute(cr: CellReference): Bool = 
-        let cr1 = ToJava.toJava(cr);
-        unsafe IO { cr1.isColAbsolute() }
+    pub def isColAbsolute(x: CellReference): Bool = 
+        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.isColAbsolute() })
 
     // NOTE - ZERO BASED!
 
     pub def convertNumToColString(i: Int32): String = 
         unsafe IO { JCellReference.convertNumToColString(i) }
 
-    pub def toCellAddress(cr: CellReference): CellAddress = 
-        let cr1 = ToJava.toJava(cr);
-        let ans = unsafe IO { new JCellAddress(cr1) };
-        ToFlix.toFlix(ans)
+    pub def toCellAddress(x: CellReference): CellAddress = 
+        AdaptorExtras.op(x, x1 -> unsafe IO { new JCellAddress(x1) })
 
 
 }

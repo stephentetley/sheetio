@@ -18,7 +18,8 @@
 pub mod SheetIO.Usermodel.WriteCell {
     
     
-    use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
+
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
     use SheetIO.Usermodel.Comment.{Comment}
@@ -39,46 +40,46 @@ pub mod SheetIO.Usermodel.WriteCell {
     }
 
     pub def handle(cell: Cell, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - WriteCell) = x -> 
+                    f: a -> b \ ef): a -> b \ (ef + Fail - WriteCell) = x -> 
         let jcell = ToJava.toJava(cell);
         run {
             f(x)
         } with handler WriteCell {
 
             def removeCellComment(k) = {
-                unsafe IO as {ef + Alt - WriteCell} { jcell.removeCellComment() };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.removeCellComment() };
                 k()
             }
 
             def setCellStyle(style, k) = {
                 let style1 = ToJava.toJava(style);
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellStyle(style1) };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellStyle(style1) };
                 k()
             }
 
             def setComment(comment, k) = {
                 let comment1 = ToJava.toJava(comment);
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellComment(comment1) };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellComment(comment1) };
                 k()
             }
 
             def setBlank(k) = {
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setBlank() };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setBlank() };
                 k()
             }
 
             def setCellValueBool(b, k) = {
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(b) };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellValue(b) };
                 k()
             }
 
             def setCellValueFloat64(d, k) = {
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(d) };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellValue(d) };
                 k()
             }
 
             def setCellValueString(s, k) = {
-                unsafe IO as {ef + Alt - WriteCell} { jcell.setCellValue(s) };
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellValue(s) };
                 k()
             }
 
@@ -88,11 +89,11 @@ pub mod SheetIO.Usermodel.WriteCell {
 
 
     pub def runWriteCell(cell: Cell, 
-                        f: Unit -> a \ ef): a \ (ef + Alt - WriteCell) = 
+                        f: Unit -> a \ ef): a \ (ef + Fail - WriteCell) = 
         handle(cell, f)()
 
     pub def runWriteCellWithResult(cell: Cell, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteCell) = 
-        run { handle(cell, f)() } with EffectExtras.Alt.runWithResult
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - WriteCell) = 
+        run { handle(cell, f)() } with EffectExtras.Fail.runWithResult
 
 }

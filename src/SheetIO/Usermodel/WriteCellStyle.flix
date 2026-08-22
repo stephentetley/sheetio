@@ -18,7 +18,8 @@
 pub mod SheetIO.Usermodel.WriteCellStyle {
     
     
-    use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
+
     use SheetIO.Usermodel.{CellStyle, FillPatternType}
 
     import org.apache.poi.ss.usermodel.{CellStyle => JCellStyle}
@@ -32,25 +33,25 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
     }
 
     pub def handle(cellstyle: CellStyle, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - WriteCellStyle) = x -> 
+                    f: a -> b \ ef): a -> b \ (ef + Fail - WriteCellStyle) = x -> 
         let jcellstyle = ToJava.toJava(cellstyle);
         run {
             f(x)
         } with handler WriteCellStyle {
 
             def setFillBackgroundColor(bg, k) = {
-                unsafe IO as {ef + Alt - WriteCellStyle} { jcellstyle.setFillBackgroundColor(bg) };
+                unsafe IO as {ef + Fail - WriteCellStyle} { jcellstyle.setFillBackgroundColor(bg) };
                 k()
             }
 
             def setFillForegroundColor(bg, k) = {
-                unsafe IO as {ef + Alt - WriteCellStyle} { jcellstyle.setFillForegroundColor(bg) };
+                unsafe IO as {ef + Fail - WriteCellStyle} { jcellstyle.setFillForegroundColor(bg) };
                 k()
             }
 
             def setFillPattern(fpt, k) = {
                 let fpt1 = ToJava.toJava(fpt);
-                unsafe IO as {ef + Alt - WriteCellStyle} { jcellstyle.setFillPattern(fpt1) };
+                unsafe IO as {ef + Fail - WriteCellStyle} { jcellstyle.setFillPattern(fpt1) };
                 k()
             }
 
@@ -59,11 +60,11 @@ pub mod SheetIO.Usermodel.WriteCellStyle {
 
 
     pub def runWriteCellStyle(cellstyle: CellStyle, 
-                        f: Unit -> a \ ef): a \ (ef + Alt - WriteCellStyle) = 
+                        f: Unit -> a \ ef): a \ (ef + Fail - WriteCellStyle) = 
         handle(cellstyle, f)()
 
     pub def runWriteCellStyleWithResult(cellstyle: CellStyle, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteCellStyle) = 
-        run { handle(cellstyle, f)() } with EffectExtras.Alt.runWithResult
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - WriteCellStyle) = 
+        run { handle(cellstyle, f)() } with EffectExtras.Fail.runWithResult
 
 }

@@ -18,7 +18,8 @@
 pub mod SheetIO.Usermodel.WriteFont {
     
     
-    use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
+
     use SheetIO.Usermodel.{Font}
 
     import org.apache.poi.ss.usermodel.{Font => JFont}
@@ -32,24 +33,24 @@ pub mod SheetIO.Usermodel.WriteFont {
     }
 
     pub def handle(font: Font, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - WriteFont) = x -> 
+                    f: a -> b \ ef): a -> b \ (ef + Fail - WriteFont) = x -> 
         let jfont = ToJava.toJava(font);
         run {
             f(x)
         } with handler WriteFont {
 
             def setBold(b, k) = {
-                unsafe IO as {ef + Alt - WriteFont} { jfont.setBold(b) };
+                unsafe IO as {ef + Fail - WriteFont} { jfont.setBold(b) };
                 k()
             }
 
             def setItalic(b, k) = {
-                unsafe IO as {ef + Alt - WriteFont} { jfont.setItalic(b) };
+                unsafe IO as {ef + Fail - WriteFont} { jfont.setItalic(b) };
                 k()
             }
 
             def setStrikeout(b, k) = {
-                unsafe IO as {ef + Alt - WriteFont} { jfont.setStrikeout(b) };
+                unsafe IO as {ef + Fail - WriteFont} { jfont.setStrikeout(b) };
                 k()
             }
             
@@ -57,11 +58,11 @@ pub mod SheetIO.Usermodel.WriteFont {
 
 
     pub def runWriteFont(font: Font, 
-                        f: Unit -> a \ ef): a \ (ef + Alt - WriteFont) = 
+                        f: Unit -> a \ ef): a \ (ef + Fail - WriteFont) = 
         handle(font, f)()
 
     pub def runWriteFontWithResult(font: Font, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteFont) = 
-        run { handle(font, f)() } with EffectExtras.Alt.runWithResult
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - WriteFont) = 
+        run { handle(font, f)() } with EffectExtras.Fail.runWithResult
 
 }

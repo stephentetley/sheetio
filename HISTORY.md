@@ -1,3 +1,6 @@
+### v0.4.0
+   ...
+
 ### v0.3.0
    API changes.
    Changed "run" function signatures to make them more easily nestable.

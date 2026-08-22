@@ -81,10 +81,8 @@ pub mod SheetIO.Usermodel.ReadSheet {
 
             def getRow(i, k) = {
                 let ans = unsafe IO as {ef + Fail - ReadSheet} { jsheet.getRow(i) };
-                if (not Object.isNull(ans)) 
-                    k(ToFlix.toFlix(ans))
-                else 
-                    Fail.report("getRow ${i}")
+                EffectExtras.Fail.assertNotNullWithMessage("getRow ${i}", ans);
+                k(ToFlix.toFlix(ans))
             } 
 
 
@@ -92,11 +90,8 @@ pub mod SheetIO.Usermodel.ReadSheet {
                 let rx = SheetIO.Common.CellAddress.getRow(addr);
                 let cx = SheetIO.Common.CellAddress.getColumn(addr);
                 let ans = unsafe IO as {ef + Fail - ReadSheet} { JSheetUtil.getCell(jsheet, rx, cx) };
-                if (not Object.isNull(ans)) {
-                    k(ToFlix.toFlix(ans))
-                } else {
-                    Fail.report("getCell ${addr}")
-                }
+                EffectExtras.Fail.assertNotNullWithMessage("getCell ${addr}", ans);
+                k(ToFlix.toFlix(ans))
             }
 
             def getFirstRowNum(k) = {

@@ -18,6 +18,7 @@
 pub mod SheetIO.Usermodel.WriteRow {
 
     use EffectExtras.Alt.Alt
+    use EffectExtras.Fail.Fail
 
 
     use SheetIO.Usermodel.{Sheet, Row, Cell, CellStyle}
@@ -35,41 +36,41 @@ pub mod SheetIO.Usermodel.WriteRow {
 
         
     pub def handle(row: Row, 
-                    f: a -> b \ ef): a -> b \ (ef + Alt - WriteRow) + r  = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Fail - WriteRow) + r  = x -> {
         let jrow = ToJava.toJava(row);
         run {
             f(x)
         } with handler WriteRow {
 
             def createCell(i, k) = {
-                let ans = unsafe IO as {ef + Alt - WriteRow} { jrow.createCell(i) };
+                let ans = unsafe IO as {ef + Fail - WriteRow} { jrow.createCell(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("createCell ${i}")
+                    Fail.report("createCell ${i}")
             }
             
             def removeCell(cell, k) = {
                 let cell1 = ToJava.toJava(cell);
-                unsafe IO as {ef + Alt - WriteRow} { jrow.removeCell(cell1) };
+                unsafe IO as {ef + Fail - WriteRow} { jrow.removeCell(cell1) };
                 k()
             }
             
             def setRowStyle(style, k) = {
                 let style1 = ToJava.toJava(style);
-                unsafe IO as {ef + Alt - WriteRow} { jrow.setRowStyle(style1) };
+                unsafe IO as {ef + Fail - WriteRow} { jrow.setRowStyle(style1) };
                 k()
             }
 
         }
     }
 
-    pub def runWriteRow(row: Row, f: Unit -> a \ ef): a \ (ef + Alt - WriteRow) = 
+    pub def runWriteRow(row: Row, f: Unit -> a \ ef): a \ (ef + Fail - WriteRow) = 
         handle(row, f)()
 
     pub def runWriteRowWithResult(row: Row, 
-                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteRow) = 
-        run { handle(row, f)() } with EffectExtras.Alt.runWithResult
+                                    f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - WriteRow) = 
+        run { handle(row, f)() } with EffectExtras.Fail.runWithResult
 
 
 

@@ -42,30 +42,28 @@ pub mod SheetIO.Usermodel.WriteSheet {
 
     
     pub def handle(sheet: Sheet,
-                    f: a -> b \ ef): a -> b \ (ef + Alt - WriteSheet) + r = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Fail - WriteSheet) + r = x -> {
         let jsheet = ToJava.toJava(sheet);
         run {
             f(x)
         } with handler WriteSheet {
             def createRow(i, k) = {
-                let ans = unsafe IO as {ef + Alt - WriteSheet} { jsheet.createRow(i) };
+                let ans = unsafe IO as {ef + Fail - WriteSheet} { jsheet.createRow(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
-                    Alt.failure("getRow ${i}")
+                    Fail.report("getRow ${i}")
             } 
 
         }
     }
 
-    pub def runWriteSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Alt - WriteSheet) =
+    pub def runWriteSheet(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - WriteSheet) =
         handle(sheet, f)()
     
-    pub def runWriteSheetFail(sheet: Sheet, f: Unit -> a \ ef): a \ (ef + Fail - WriteSheet - Alt) =
-        run { handle(sheet, f)() } with EffectExtras.Alt.runWithFail
 
-    pub def runWriteSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Alt - WriteSheet) =
-        run { handle(sheet, f)() } with EffectExtras.Alt.runWithResult
+    pub def runWriteSheetWithResult(sheet: Sheet, f: Unit -> a \ ef): Result[String, a] \ (ef - Fail - WriteSheet) =
+        run { handle(sheet, f)() } with EffectExtras.Fail.runWithResult
     
 
 

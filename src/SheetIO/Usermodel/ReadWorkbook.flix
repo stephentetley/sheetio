@@ -123,29 +123,29 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     }
 
 
-    pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Alt with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
-        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+    pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Fail with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Fail.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
-        }) |> Alt.fromResult
+        }) |> Fail.fromResult
 
-    pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Alt with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
-        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+    pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Fail with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Fail.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueFloat64(CellReference.toCellAddress(ref1))
-        }) |> Alt.fromResult
+        }) |> Fail.fromResult
 
-    pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Alt with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Alt.fromOption;
-        let sname = CellReference.getSheetName(ref1) |> Alt.fromOption;
+    pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Fail with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let sname = CellReference.getSheetName(ref1) |> Fail.fromOption;
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueString(CellReference.toCellAddress(ref1))
-        }) |> Alt.fromResult
+        }) |> Fail.fromResult
 
 
 
