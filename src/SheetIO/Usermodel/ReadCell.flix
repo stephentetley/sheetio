@@ -150,7 +150,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     // ReadWorkbook context
     pub def runReadCellRef(cellRef: cellref, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReadCell - Alt with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
-        let sname = CellReference.getSheetName(ref1) |> Fail.fromOption;
+        let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
         run {
             runReadCellAddr(CellReference.toCellAddress(ref1), f)

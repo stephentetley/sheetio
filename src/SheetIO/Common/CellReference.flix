@@ -17,7 +17,9 @@
 
 pub mod SheetIO.Common.CellReference {
 
+    use EffectExtras.Fail.Fail
     use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorExtras2
 
     use SheetIO.Common.CellAddress
 
@@ -94,8 +96,8 @@ pub mod SheetIO.Common.CellReference {
     pub def formatAsString(x: CellReference): String = 
         AdaptorExtras.extract(x, x1 -> unsafe IO { x1.formatAsString() })
 
-    pub def getSheetName(x: CellReference): Option[String] = 
-        SheetIO.Internal.AdaptorExtrasExtras.extractStringWithOption(x, x1 -> unsafe IO { x1.getSheetName() })
+    pub def getSheetName(x: CellReference): String \ Fail = 
+        AdaptorExtras2.extract(x, x1 -> unsafe IO { x1.getSheetName() })
 
     pub def getCol(x: CellReference): Int16 = 
         AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getCol() })

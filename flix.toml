@@ -7,9 +7,9 @@ license     = "Apache-2.0"
 authors     = ["Stephen Tetley <stephen.tetley@gmail.com>"]
 
 [dependencies]
-"github:stephentetley/effect-extras" = { version = "0.4.0", security = "unrestricted" }
-"github:stephentetley/flix-time" = { version = "0.21.0", security = "unrestricted" }
-"github:stephentetley/adaptor-extras" = { version = "0.1.0", security = "unrestricted" }
+"github:stephentetley/effect-extras" = { version = "0.4.1", security = "unrestricted" }
+"github:stephentetley/flix-time" = { version = "0.21.1", security = "unrestricted" }
+"github:stephentetley/adaptor-extras" = { version = "0.2.0", security = "unrestricted" }
 
 
 [mvn-dependencies]
