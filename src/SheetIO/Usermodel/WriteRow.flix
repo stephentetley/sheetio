@@ -32,6 +32,9 @@ pub mod SheetIO.Usermodel.WriteRow {
         def createCell(i: Int32): Cell
         def removeCell(c: Cell): Unit
         def setRowStyle(style: CellStyle): Unit
+        def setZeroHeight(b: Bool): Unit
+        def setHeight(i: Int16): Unit
+        def setHeightInPoints(d: Float32): Unit
     }
 
         
@@ -59,6 +62,21 @@ pub mod SheetIO.Usermodel.WriteRow {
             def setRowStyle(style, k) = {
                 let style1 = ToJava.toJava(style);
                 unsafe IO as {ef + Fail - WriteRow} { jrow.setRowStyle(style1) };
+                k()
+            }
+
+            def setZeroHeight(b, k) = {
+                unsafe IO as {ef + Fail - WriteRow} { jrow.setZeroHeight(b) };
+                k()
+            }
+
+            def setHeight(i, k) = {
+                unsafe IO as {ef + Fail - WriteRow} { jrow.setHeight(i) };
+                k()
+            }
+
+            def setHeightInPoints(d, k) = {
+                unsafe IO as {ef + Fail - WriteRow} { jrow.setHeightInPoints(d) };
                 k()
             }
 
