@@ -16,7 +16,6 @@
 
 
 pub mod SheetIO.Common.CellType {
-    use SheetIO.Common.CellType
 
 
     import org.apache.poi.ss.usermodel.{CellType => JCellType}

@@ -21,6 +21,7 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
     use EffectExtras.Fail.Fail
 
     use SheetIO.Usermodel.{Workbook, Sheet, CellStyle}
+    use SheetIO.Usermodel.Name 
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -37,6 +38,7 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
         def cloneSheet(num: Int32): Sheet
         def removeSheetAt(i: Int32): Unit
         def createCellStyle(): CellStyle
+        def createName(): Name
     }
 
 
@@ -73,6 +75,13 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
             def createCellStyle(k) = try {
                 let jcs = jworkbook.createCellStyle();
                 k(ToFlix.toFlix(jcs))
+            } catch {
+                case ex: JException => Fail.report(ex.getMessage())
+            }
+
+            def createName(k) = try {
+                let x1 = jworkbook.createName();
+                k(ToFlix.toFlix(x1))
             } catch {
                 case ex: JException => Fail.report(ex.getMessage())
             }

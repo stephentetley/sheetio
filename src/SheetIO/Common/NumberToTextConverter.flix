@@ -14,19 +14,14 @@
  * limitations under the License.
  */
 
+pub mod SheetIO.Common.NumberToTextConverter {
 
-// This is a trial module. The functions here are experiments and
-// might be consided missing from EffectExtras.
+    use JavaInterop.AdaptorExtras
 
-pub mod SheetIO.Internal.EffectExtrasExtras {
+    import org.apache.poi.ss.util.{NumberToTextConverter => JNumberToTextConverter}
 
-    use EffectExtras.Alt
-    use EffectExtras.Alt.Alternative
-    use EffectExtras.Fail
+    pub def toText(d: Float64): String = 
+        AdaptorExtras.of(() -> unsafe IO { JNumberToTextConverter.toText(d) })
 
-    pub def runAlt(f: Unit -> a \ ef): a \ ef - Alternative + Fail = 
-        match EffectExtras.Alt.runWithResult(f) {
-            case Ok(a)    => a
-            case Err(msg) => Fail.report(msg)
-        }
-}
+ }
+ 

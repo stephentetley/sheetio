@@ -19,6 +19,8 @@ pub mod SheetIO.Usermodel.WriteCell {
     
     
     use EffectExtras.Fail.Fail
+    use InteropTime.LocalDate
+    use InteropTime.LocalDateTime
 
     use SheetIO.Common.CellAddress
     use SheetIO.Common.CellType
@@ -37,6 +39,8 @@ pub mod SheetIO.Usermodel.WriteCell {
         def setCellValueBool(x: Bool): Unit
         def setCellValueFloat64(d: Float64): Unit
         def setCellValueString(s: String): Unit
+        def setCellValueLocalDate(d: LocalDate): Unit
+        def setCellValueLocalDateTime(d: LocalDateTime): Unit
     }
 
     pub def handle(cell: Cell, 
@@ -83,7 +87,17 @@ pub mod SheetIO.Usermodel.WriteCell {
                 k()
             }
 
+            def setCellValueLocalDate(d, k) = {
+                let d1 = ToJava.toJava(d);
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellValue(d1) };
+                k()
+            }
 
+            def setCellValueLocalDateTime(dt, k) = {
+                let dt1 = ToJava.toJava(dt);
+                unsafe IO as {ef + Fail - WriteCell} { jcell.setCellValue(dt1) };
+                k()
+            }
             
         }
 

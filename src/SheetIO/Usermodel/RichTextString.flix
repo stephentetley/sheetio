@@ -17,6 +17,8 @@
 
 pub mod SheetIO.Usermodel.RichTextString {
 
+    use JavaInterop.AdaptorExtras
+
     import org.apache.poi.ss.usermodel.{RichTextString => JRichTextString}
 
     // RichTextString seems like something we might want to first-class
@@ -44,12 +46,10 @@ pub mod SheetIO.Usermodel.RichTextString {
         pub def toFlix(x: JRichTextString): RichTextString = RichTextString.RichTextString(x)
     }
 
-    pub def length(x: RichTextString): Int32 =
-        let x1 = ToJava.toJava(x);
-        unsafe IO {x1.length()}
+    pub def length(x: RichTextString): Int32  =
+        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.length()})
 
     pub def numFormattingRuns(x: RichTextString): Int32 =
-        let x1 = ToJava.toJava(x);
-        unsafe IO {x1.numFormattingRuns()}
+        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.numFormattingRuns()})
 
 }

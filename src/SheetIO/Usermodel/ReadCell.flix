@@ -134,7 +134,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     // can be nested within other parts of the "Read" API which use Fail as the 
     // failure effect.
     pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - Alt) = 
-        run { handle(cell, f)() } with SheetIO.Internal.EffectExtrasExtras.runWithFail
+        run { handle(cell, f)() } with SheetIO.Internal.EffectExtrasExtras.runAlt
 
     // ReadRow context
     pub def runReadCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - Alt =

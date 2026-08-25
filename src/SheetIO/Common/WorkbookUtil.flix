@@ -17,28 +17,22 @@
 
 pub mod SheetIO.Common.WorkbookUtil {
 
+    use EffectExtras.Fail.Fail
+    use JavaInterop.AdaptorExtras2
+    use SheetIO.Internal.AdaptorExtrasExtras
+    
 
     import org.apache.poi.ss.util.{WorkbookUtil => JWorkbookUtil}
     import java.lang.{Exception => JException}
     import java.lang.{IllegalArgumentException => JIllegalArgumentException}
 
-
-    pub def validateSheetName(s: String): Bool = 
-        try {
-            let _ = unsafe IO { JWorkbookUtil.validateSheetName(s) };
-            true
-        } catch {
-            case _: JIllegalArgumentException => false
-        }
+    // This is an assertion statement...
+    pub def validateSheetName(s: String): Unit \ Fail = 
+        AdaptorExtrasExtras.guarded(() -> unsafe IO { JWorkbookUtil.validateSheetName(s) })
 
 
-    pub def createSafeSheetName(s: String): Result[String, String] = 
-        try {
-            let ans = unsafe IO { JWorkbookUtil.createSafeSheetName(s) };
-            Ok(ans)
-        } catch {
-            case _: JIllegalArgumentException => Err("")
-        }
+    pub def createSafeSheetName(s: String): String \ Fail = 
+        AdaptorExtras2.of(() -> unsafe IO { JWorkbookUtil.createSafeSheetName(s) })
 
 
 }

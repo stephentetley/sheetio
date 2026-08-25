@@ -17,11 +17,15 @@
 
 pub mod SheetIO.Usermodel.Name {
 
-
+    use JavaInterop.AdaptorExtras
 
 
     import org.apache.poi.ss.usermodel.{Name => JName}
     import java.lang.{Exception => JException}
+
+
+    // TODO - probably this should be moved into `SheetIO.Usermodel`
+    // and we should have two effects `ReadName` and `WriteName`
 
     pub enum Name(JName)
 
@@ -35,15 +39,14 @@ pub mod SheetIO.Usermodel.Name {
 
     instance ToFlix[Name] {
         type In = JName
-        pub def toFlix(x: JName): Name = Name.Name(x)
+        pub def toFlix(x: JName): Name = 
+            Name.Name(x)
     }
 
     pub def isHidden(x: Name): Bool =
-        let x1 = ToJava.toJava(x);
-        unsafe IO {x1.isHidden()}
+        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.isHidden()})
 
     pub def getNameName(x: Name): String =
-        let x1 = ToJava.toJava(x);
-        unsafe IO {x1.getNameName()}
+        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.getNameName()})
 
 }

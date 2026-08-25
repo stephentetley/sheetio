@@ -21,28 +21,16 @@
 
 pub mod SheetIO.Internal.AdaptorExtrasExtras {
 
+    use EffectExtras.Fail.Fail
+
     import java.lang.{Exception => JException}
 
-
-
-    pub def extractStringWithOption(x: a, f: ToJava.Out[a] -> String \ ef + ToJava.Aef[a]): Option[String] \ ef + ToJava.Aef[a] with ToJava[a] =
+    pub def guarded(f: Unit -> a \ ef): a \ ef + Fail = 
         try {
-            let x1 = ToJava.toJava(x);
-            let str = f(x1);
-            if (not Object.isNull(str)) Some(str) else None
-
-        } catch {
-            case _: JException => None
-        }
-
-    pub def extractStringWithResult(x: a, f: ToJava.Out[a] -> String \ ef + ToJava.Aef[a]): Result[String, String] \ ef + ToJava.Aef[a] with ToJava[a] =
-        try {
-            let x1 = ToJava.toJava(x);
-            let str = f(x1);
-            if (not Object.isNull(str)) Ok(str) else Err("extractStringWithResult(null)")
-
-        } catch {
-            case _: JException => Err("extractStringWithResult")
+            let ans = f();
+            Fail.returnNotNull(ans)
+        } catch  {
+            case ex : JException => Fail.report(ex.getMessage())
         }
 
 
