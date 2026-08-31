@@ -18,8 +18,7 @@
 pub mod SheetIO.Common.WorkbookUtil {
 
     use EffectExtras.Fail.Fail
-    use JavaInterop.AdaptorExtras2
-    use SheetIO.Internal.AdaptorExtrasExtras
+    use JavaInterop.AdaptorChecked
     
 
     import org.apache.poi.ss.util.{WorkbookUtil => JWorkbookUtil}
@@ -28,11 +27,11 @@ pub mod SheetIO.Common.WorkbookUtil {
 
     // This is an assertion statement...
     pub def validateSheetName(s: String): Unit \ Fail = 
-        AdaptorExtrasExtras.guarded(() -> unsafe IO { JWorkbookUtil.validateSheetName(s) })
+        AdaptorChecked.guarded(() -> unsafe IO { JWorkbookUtil.validateSheetName(s) })
 
 
     pub def createSafeSheetName(s: String): String \ Fail = 
-        AdaptorExtras2.of(() -> unsafe IO { JWorkbookUtil.createSafeSheetName(s) })
+        AdaptorChecked.of(() -> unsafe IO { JWorkbookUtil.createSafeSheetName(s) })
 
 
 }

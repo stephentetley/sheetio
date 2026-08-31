@@ -17,7 +17,7 @@
 
 pub mod SheetIO.Common.CellAddress {
 
-    use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorUnchecked
 
     import org.apache.poi.ss.util.{CellAddress => JCellAddress}
     import java.lang.{Exception => JException}
@@ -93,12 +93,12 @@ pub mod SheetIO.Common.CellAddress {
         CellAddress.CellAddress(unsafe IO { new JCellAddress(addr) })
 
     pub def getColumn(x: CellAddress): Int32 = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getColumn() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.getColumn() })
 
     pub def getRow(x: CellAddress): Int32 = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getRow() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.getRow() })
 
     pub def formatAsString(x: CellAddress): String = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.formatAsString() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.formatAsString() })
 
 }

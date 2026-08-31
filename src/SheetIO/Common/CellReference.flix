@@ -18,8 +18,8 @@
 pub mod SheetIO.Common.CellReference {
 
     use EffectExtras.Fail.Fail
-    use JavaInterop.AdaptorExtras
-    use JavaInterop.AdaptorExtras2
+    use JavaInterop.AdaptorChecked
+    use JavaInterop.AdaptorUnchecked
 
     use SheetIO.Common.CellAddress
 
@@ -94,22 +94,22 @@ pub mod SheetIO.Common.CellReference {
         CellReference.CellReference(unsafe IO { new JCellReference(addr) })
 
     pub def formatAsString(x: CellReference): String = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.formatAsString() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.formatAsString() })
 
     pub def getSheetName(x: CellReference): String \ Fail = 
-        AdaptorExtras2.extract(x, x1 -> unsafe IO { x1.getSheetName() })
+        AdaptorChecked.extract(x, x1 -> unsafe IO { x1.getSheetName() })
 
     pub def getCol(x: CellReference): Int16 = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getCol() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.getCol() })
 
     pub def getRow(x: CellReference): Int32 = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.getRow() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.getRow() })
 
     pub def isRowAbsolute(x: CellReference): Bool = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.isRowAbsolute() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.isRowAbsolute() })
 
     pub def isColAbsolute(x: CellReference): Bool = 
-        AdaptorExtras.extract(x, x1 -> unsafe IO { x1.isColAbsolute() })
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO { x1.isColAbsolute() })
 
     // NOTE - ZERO BASED!
 
@@ -117,7 +117,7 @@ pub mod SheetIO.Common.CellReference {
         unsafe IO { JCellReference.convertNumToColString(i) }
 
     pub def toCellAddress(x: CellReference): CellAddress = 
-        AdaptorExtras.op(x, x1 -> unsafe IO { new JCellAddress(x1) })
+        AdaptorUnchecked.op(x, x1 -> unsafe IO { new JCellAddress(x1) })
 
 
 }

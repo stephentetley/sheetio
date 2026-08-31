@@ -17,10 +17,8 @@
 pub mod SheetIO.Common.DateUtil {
 
     use EffectExtras.Fail.Fail
-    use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorUnchecked
     use InteropTime.LocalDate
-
-    use SheetIO.Internal.AdaptorExtrasExtras
 
 
     import org.apache.poi.ss.usermodel.{DateUtil => JDateUtil}
@@ -34,7 +32,7 @@ pub mod SheetIO.Common.DateUtil {
 
 
     pub def getExcelDate(d: LocalDate): Float64 = 
-        AdaptorExtras.extract(d, d1 -> unsafe IO { JDateUtil.getExcelDate(d1) })
+        AdaptorUnchecked.extract(d, d1 -> unsafe IO { JDateUtil.getExcelDate(d1) })
 
     // pub def parseYYYYMMDDDate(s: String): LocalDate = 
     //     unsafe IO { JDateUtil.parseYYYYMMDDDate(s) }

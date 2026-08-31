@@ -17,7 +17,7 @@
 
 pub mod SheetIO.Usermodel.Name {
 
-    use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorUnchecked
 
 
     import org.apache.poi.ss.usermodel.{Name => JName}
@@ -44,9 +44,9 @@ pub mod SheetIO.Usermodel.Name {
     }
 
     pub def isHidden(x: Name): Bool =
-        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.isHidden()})
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO {x1.isHidden()})
 
     pub def getNameName(x: Name): String =
-        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.getNameName()})
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO {x1.getNameName()})
 
 }

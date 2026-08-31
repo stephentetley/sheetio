@@ -17,7 +17,7 @@
 
 pub mod SheetIO.Usermodel.RichTextString {
 
-    use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorUnchecked
 
     import org.apache.poi.ss.usermodel.{RichTextString => JRichTextString}
 
@@ -47,9 +47,9 @@ pub mod SheetIO.Usermodel.RichTextString {
     }
 
     pub def length(x: RichTextString): Int32  =
-        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.length()})
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO {x1.length()})
 
     pub def numFormattingRuns(x: RichTextString): Int32 =
-        AdaptorExtras.extract(x, x1 -> unsafe IO {x1.numFormattingRuns()})
+        AdaptorUnchecked.extract(x, x1 -> unsafe IO {x1.numFormattingRuns()})
 
 }

@@ -16,12 +16,12 @@
 
 pub mod SheetIO.Common.NumberToTextConverter {
 
-    use JavaInterop.AdaptorExtras
+    use JavaInterop.AdaptorUnchecked
 
     import org.apache.poi.ss.util.{NumberToTextConverter => JNumberToTextConverter}
 
     pub def toText(d: Float64): String = 
-        AdaptorExtras.of(() -> unsafe IO { JNumberToTextConverter.toText(d) })
+        AdaptorUnchecked.of(() -> unsafe IO { JNumberToTextConverter.toText(d) })
 
  }
  

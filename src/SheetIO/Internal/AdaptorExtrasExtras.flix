@@ -25,13 +25,6 @@ pub mod SheetIO.Internal.AdaptorExtrasExtras {
 
     import java.lang.{Exception => JException}
 
-    pub def guarded(f: Unit -> a \ ef): a \ ef + Fail = 
-        try {
-            let ans = f();
-            Fail.returnNotNull(ans)
-        } catch  {
-            case ex : JException => Fail.report(ex.getMessage())
-        }
 
 
 }
