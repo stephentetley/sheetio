@@ -88,10 +88,6 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
         }
     }
 
-    // pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + WriteWorkbook) - WriteSheet - Alt =
-    //     let s = ReadWorkbook.getSheet(name);
-    //     SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
-
 
    pub def runWriteWorkbook(workbook: Workbook, 
                             f: Unit -> a \ ef): a \ ef + IO + Fail - WriteWorkbook =

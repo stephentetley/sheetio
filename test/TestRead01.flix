@@ -9,7 +9,7 @@ pub mod TestRead01 {
     use SheetIO.Usermodel.ReadCell
 
     @Test
-    pub def getNumberOfSheets01(): Unit \ { Assert, IO, Fail } = 
+    pub def getNumberOfSheets01(): Unit \ {Assert, IO, Fail} = 
         let path = "./data/functional_langs.xlsx";
         SheetIO.Usermodel.ReadWorkbook.withReadXssf(path, None, workbook -> 
             run { 
@@ -21,7 +21,7 @@ pub mod TestRead01 {
     
     
     @Test
-    pub def readRows01(): Unit \ { Assert, IO, Fail} =
+    pub def readRows01(): Unit \ {Assert, IO, Fail} =
         let path = "./data/functional_langs.xlsx";
         SheetIO.Usermodel.ReadWorkbook.withReadXssf(path, None, workbook -> 
             run {

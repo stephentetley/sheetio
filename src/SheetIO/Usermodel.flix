@@ -50,8 +50,9 @@ pub mod SheetIO.Usermodel {
 
     instance ForEach[Workbook] {
         type Elm = Sheet
-        pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = 
-           SheetIO.Usermodel.ReadWorkbook.forEachSheet(f, t)
+        pub def forEach(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = region rc {
+            Iterator.forEach(f, SheetIO.Usermodel.ReadWorkbook.sheetIterator(rc, t))
+        }
     }
 
     ///
@@ -87,8 +88,9 @@ pub mod SheetIO.Usermodel {
     
     instance ForEach[Sheet] {
         type Elm = Row
-        pub def forEach(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = 
-           SheetIO.Usermodel.ReadSheet.forEachRow(f, t)
+        pub def forEach(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = region rc {
+            Iterator.forEach(f, SheetIO.Usermodel.ReadSheet.rowIterator(rc, t))
+        }
     }
 
     pub eff ReifySheet {
@@ -118,8 +120,9 @@ pub mod SheetIO.Usermodel {
 
     instance ForEach[Row] {
         type Elm = Cell
-        pub def forEach(f: Cell -> Unit \ ef, t: Row): Unit \ ef = 
-           SheetIO.Usermodel.ReadRow.forEachCell(f, t)
+        pub def forEach(f: Cell -> Unit \ ef, t: Row): Unit \ ef = region rc {
+            Iterator.forEach(f, SheetIO.Usermodel.ReadRow.cellIterator(rc, t))
+        }
     }
 
     pub eff ReifyRow {

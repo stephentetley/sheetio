@@ -28,6 +28,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     use SheetIO.Common.CellReference.ToCellReference
     use SheetIO.Common.CellType
     use SheetIO.Usermodel.{Cell, Comment}
+    use SheetIO.Usermodel.ReifyCell
     use SheetIO.Usermodel.ReadWorkbook
     use SheetIO.Usermodel.ReadSheet
     use SheetIO.Usermodel.ReadRow
@@ -51,47 +52,51 @@ pub mod SheetIO.Usermodel.ReadCell {
     }
 
     pub def handle(cell: Cell, 
-                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadCell) = x -> 
+                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadCell - ReifyCell) = x -> 
         let jcell = ToJava.toJava(cell);
         run {
             f(x)
+        } with handler ReifyCell {
+            
+            def getCell(k) = k(cell)
+
         } with handler ReadCell {
 
             def getAddress(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getAddress() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getAddress() };
                 EffectExtras.Fail.assertNotNull(ans);
                 k(ToFlix.toFlix(ans))
             }
 
             def getCellType(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getCellType() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getCellType() };
                 EffectExtras.Fail.assertNotNull(ans);
                 k(ToFlix.toFlix(ans))
             }
 
             def getCellValueBool(k) = try {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getBooleanCellValue() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getBooleanCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Fail.report("getBoolCellValue")
             }
 
             def getCellValueFloat64(k) = try {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getNumericCellValue() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getNumericCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Fail.report("getFloat64CellValue")
             }
 
             def getCellValueString(k) = try {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getStringCellValue() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getStringCellValue() };
                 k(ans)
             } catch {
                 case _: JException => Fail.report("getCellValueString")
             }
 
             def getCellValueLocalDateTime(k) = try {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getLocalDateTimeCellValue() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getLocalDateTimeCellValue() };
                 k(ToFlix.toFlix(ans))
             } catch {
                 case _: JException => Fail.report("getCellValueLocalDateTime")
@@ -99,30 +104,30 @@ pub mod SheetIO.Usermodel.ReadCell {
 
 
             def getCellFormula(k) = try {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getCellFormula() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getCellFormula() };
                 k(ans)
             } catch {
                 case _: JException => Fail.report("getCellFormula")
             }
 
             def getCellComment(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getCellComment() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getCellComment() };
                 EffectExtras.Fail.assertNotNull(ans);
                 k(ToFlix.toFlix(ans))
             }
 
             def getColumnIndex(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getColumnIndex() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getColumnIndex() };
                 k(ans)
             } 
 
             def getRowIndex(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.getRowIndex() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.getRowIndex() };
                 k(ans)
             } 
 
             def toString(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadCell} { jcell.toString() };
+                let ans = unsafe IO as {ef + Fail - ReadCell - ReifyCell} { jcell.toString() };
                 k(ans)
             } 
 
@@ -133,7 +138,7 @@ pub mod SheetIO.Usermodel.ReadCell {
     // However when it is run failure is dispatched to the `Fail` effect so it
     // can be nested within other parts of the "Read" API which use Fail as the 
     // failure effect.
-    pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - Alt) = 
+    pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - ReifyCell - Alt) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runAlt
 
 

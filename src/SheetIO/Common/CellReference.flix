@@ -70,22 +70,22 @@ pub mod SheetIO.Common.CellReference {
         ///
         /// Returns a CellReference from the given x.
         ///
-        pub def toCellReference(x: a): Option[CellReference]
+        pub def toCellReference(x: a): CellReference \ Fail
     }
 
     instance ToCellReference[String] {
-        pub def toCellReference(x: String): Option[CellReference] = 
+        pub def toCellReference(x: String): CellReference \ Fail = 
             try {
                 let ans = unsafe IO { new JCellReference(x) };
-                Some(CellReference.CellReference(ans))
+                CellReference.CellReference(ans)
             } catch {
-                case _: JException => None
+                case ex: JException => Fail.report(ex.getMessage())
             }
     }
 
     instance ToCellReference[CellReference] {
-        pub def toCellReference(x: CellReference): Option[CellReference] = 
-            Some(x)
+        pub def toCellReference(x: CellReference): CellReference \ Fail = 
+            checked_ecast(x)
     }
 
 

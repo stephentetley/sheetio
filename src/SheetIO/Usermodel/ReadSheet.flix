@@ -30,6 +30,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
     use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Workbook, Sheet, Row, Cell}
     use SheetIO.Usermodel.ReifySheet
+    use SheetIO.Usermodel.ReifyCell
 
     import org.apache.poi.ss.usermodel.{Sheet => JSheet}
     import org.apache.poi.ss.usermodel.{Row => JRow}
@@ -133,7 +134,7 @@ pub mod SheetIO.Usermodel.ReadSheet {
 
 
     // ReadSheet context
-    pub def readCellAddr(cellAddr: addr, f: Unit -> a \ ef): a \ ef + Fail + ReadSheet - ReadCell - Alt with ToCellAddress[addr] = 
+    pub def readCellAddr(cellAddr: addr, f: Unit -> a \ ef): a \ ef + Fail + ReadSheet - ReadCell - ReifyCell - Alt with ToCellAddress[addr] = 
         let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Fail.fromOption;
         let cell = ReadSheet.getCell(addr1);
         SheetIO.Usermodel.ReadCell.runReadCell(cell, f)
@@ -164,8 +165,9 @@ pub mod SheetIO.Usermodel.ReadSheet {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JRow]), javaIter)
             |> Iterator.map(wrap)
 
-    pub def forEachRow(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = region rc {
-        Iterator.forEach(f, rowIterator(rc, t))
+    pub def forEachRow(f: Row -> Unit \ ef): Unit \ ef + ReifySheet = region rc {
+        let sheet = ReifySheet.getSheet();
+        Iterator.forEach(f, rowIterator(rc, sheet))
     }
 
 

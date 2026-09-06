@@ -24,6 +24,7 @@ pub mod SheetIO.Usermodel.ReadRow {
     use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Sheet, Row, Cell}
     use SheetIO.Usermodel.ReifyRow
+    use SheetIO.Usermodel.ReifyCell
 
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell} // superclass
@@ -94,7 +95,7 @@ pub mod SheetIO.Usermodel.ReadRow {
 
 
     // ReadRow context
-    pub def readCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - Alt =
+    pub def readCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - ReifyCell - Alt =
         let cell = ReadRow.getCell(ix);
         SheetIO.Usermodel.ReadCell.runReadCell(cell, f)
 
@@ -108,8 +109,9 @@ pub mod SheetIO.Usermodel.ReadRow {
             |> Iterator.map(wrap)
     
     
-    pub def forEachCell(f: Cell -> Unit \ ef, t: Row): Unit \ ef = region rc {
-        Iterator.forEach(f, cellIterator(rc, t))
+    pub def forEachCell(f: Cell -> Unit \ ef): Unit \ ef + ReifyRow = region rc {
+        let row = ReifyRow.getRow();
+        Iterator.forEach(f, cellIterator(rc, row))
     }
 
 

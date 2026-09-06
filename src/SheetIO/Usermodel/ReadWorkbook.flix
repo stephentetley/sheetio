@@ -27,6 +27,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     use SheetIO.Usermodel.{Workbook, Sheet, Cell}
     use SheetIO.Usermodel.ReifyWorkbook
     use SheetIO.Usermodel.ReifySheet
+    use SheetIO.Usermodel.ReifyCell
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -147,8 +148,8 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
 
 
     // ReadWorkbook context
-    pub def readCellRef(cellRef: cellref, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReifySheet - ReadCell - Alt with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+    pub def readCellRef(cellRef: cellref, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReifySheet - ReadCell - ReifyCell - Alt with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef);
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
         run {
@@ -157,7 +158,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
 
 
     pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Fail with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef);
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
@@ -165,7 +166,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         })
 
     pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Fail with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef);
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
@@ -173,7 +174,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         })
 
     pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Fail with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef);
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
         SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
@@ -201,8 +202,9 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         Adaptor.fromIterator(rc, (Proxy.Proxy: Proxy[JSheet]), javaIter)
             |> Iterator.map(wrap)
     
-    pub def forEachSheet(f: Sheet -> Unit \ ef, t: Workbook): Unit \ ef = region rc {
-        Iterator.forEach(f, sheetIterator(rc, t))
+    pub def forEachSheet(f: Sheet -> Unit \ ef): Unit \ ef + ReifyWorkbook = region rc {
+        let workbook = ReifyWorkbook.getWorkbook();
+        Iterator.forEach(f, sheetIterator(rc, workbook))
     }
     
 
@@ -240,7 +242,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         let sheetname = CellReference.getSheetName(cr);
         let sheet = ReadWorkbook.getSheet(sheetname);
         let celladdr = CellReference.toCellAddress(cr);
-        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, () -> {
             ReadSheet.getCell(celladdr)
         })
 
