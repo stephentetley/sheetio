@@ -20,20 +20,34 @@ pub mod TestRead01 {
     
     
     @Test
-    pub def readRows01(): Unit \ { Assert, IO } = region rc { 
+    pub def readRows01(): Unit \ { Assert, IO, Fail} =
         let path = "./data/functional_langs.xlsx";
-        discard run { 
-            SheetIO.Usermodel.ReadSheet.rowIterator1(rc) |> Iterator.forEach(row -> 
-                run {
-                    let i = ReadRow.getRowNum();
-                    let name = SheetIO.Usermodel.ReadCell.runReadCellAt(0, ReadCell.getCellValueString);
-                    let typesys = SheetIO.Usermodel.ReadCell.runReadCellAt(1, ReadCell.getCellValueString);
-                    println("${i}: ${name} ${typesys}")
-                } with SheetIO.Usermodel.ReadRow.runReadRow(row)
-            )
-        } with SheetIO.Usermodel.ReadSheet.runReadSheetNamed("Sheet1")
-          with SheetIO.Usermodel.ReadWorkbook.runReadWorkbookXssf(path, None);
+        SheetIO.Usermodel.ReadWorkbook.withWorkbookXssf(path, None, workbook -> 
+            foreach(sheet <- workbook) {
+                foreach(row <- sheet) {
+                    run {
+                        let i = ReadRow.getRowNum();
+                        let name = SheetIO.Usermodel.ReadCell.runReadCellAt(0, ReadCell.getCellValueString);
+                        let typesys = SheetIO.Usermodel.ReadCell.runReadCellAt(1, ReadCell.getCellValueString);
+                        println("${i}: ${name} ${typesys}")
+                    } with SheetIO.Usermodel.ReadRow.runReadRow(row)
+                }
+            }
+        );
         assertTrue(true)
-    }
+
+        // discard run { 
+        //     SheetIO.Usermodel.ReadSheet.rowIterator1(rc) |> Iterator.forEach(row -> 
+        //         run {
+        //             let i = ReadRow.getRowNum();
+        //             let name = SheetIO.Usermodel.ReadCell.runReadCellAt(0, ReadCell.getCellValueString);
+        //             let typesys = SheetIO.Usermodel.ReadCell.runReadCellAt(1, ReadCell.getCellValueString);
+        //             println("${i}: ${name} ${typesys}")
+        //         } with SheetIO.Usermodel.ReadRow.runReadRow(row)
+        //     )
+        // } with SheetIO.Usermodel.ReadSheet.runReadSheetNamed("Sheet1")
+        //   with SheetIO.Usermodel.ReadWorkbook.runReadWorkbookXssf(path, None);
+        
+    
 
 }

@@ -24,6 +24,7 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     use SheetIO.Common.CellReference.ToCellReference
     use SheetIO.Usermodel.ReadSheet.ReadSheet
     use SheetIO.Usermodel.{Workbook, Sheet, Cell}
+    use SheetIO.Usermodel.ReifyWorkbook
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -47,10 +48,14 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
 
 
     pub def handle(wb: Workbook,
-                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - ReadWorkbook - Fail = x -> {
+                    f: a -> b \ ef): a -> Result[String, b] \ ef + IO - ReifyWorkbook - ReadWorkbook - Fail = x -> {
         let jworkbook = ToJava.toJava(wb);
         run {
             Ok(f(x))
+        } with handler ReifyWorkbook {
+            
+            def getWorkbook(k) = k(wb)
+
         } with handler ReadWorkbook {
             
             def getNumberOfSheets(k) = try {
@@ -103,9 +108,13 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         }
     }
 
+
+    // Change to:
+    // ``f: Workbook -> a \ ef``
+    // Doesn't have to use Readworkbook effect...
     pub def runReadWorkbookXssf(path: String, 
                                 min_inflate_ratio: Option[Float64],  
-                                f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - ReadWorkbook - Fail = try {
+                                f: Unit -> a \ ef): Result[String, a] \ ef + IO - ReifyWorkbook - ReadWorkbook - Fail = try {
         let jfile = new JFile(path);
         let jfis = new JFileInputStream(jfile);
         match min_inflate_ratio {
@@ -123,29 +132,51 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     }
 
 
+    pub def withWorkbookXssf(path: String, 
+                                min_inflate_ratio: Option[Float64],
+                                f: Workbook -> a \ ef
+                                ): a \ ef + IO + Fail= 
+        try {
+            let jfile = new JFile(path);
+            let jfis = new JFileInputStream(jfile);
+            match min_inflate_ratio {
+                case Some(d) =>  JZipSecureFile.setMinInflateRatio(d) 
+                case None    => ()
+            };
+            let jworkbook = new JXSSFWorkbook(jfis);
+            let jworkbook1: JWorkbook = checked_cast(jworkbook);
+            let ans = f(ToFlix.toFlix(jworkbook1));
+            jworkbook.close();
+            jfis.close();
+            ans
+        } catch {
+            case ex: JException => Fail.report(ex.getMessage())
+        }
+
+
     pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Fail with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueBool(CellReference.toCellAddress(ref1))
-        }) |> Fail.fromResult
+        })
 
     pub def getCellValueFloat64(cellRef: cellref): Float64 \ ReadWorkbook + Fail with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueFloat64(CellReference.toCellAddress(ref1))
-        }) |> Fail.fromResult
+        })
 
     pub def getCellValueString(cellRef: cellref): String \ ReadWorkbook + Fail with ToCellReference[cellref] = 
         let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
         let sname = CellReference.getSheetName(ref1);
         let sheet = ReadWorkbook.getSheet(sname);
-        SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(sheet, _ -> {
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, _ -> {
             SheetIO.Usermodel.ReadSheet.getCellValueString(CellReference.toCellAddress(ref1))
-        }) |> Fail.fromResult
+        })
 
 
 
@@ -173,7 +204,8 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     }
     
 
-    pub def foldSheets(f: Sheet -> st -> st \ ef, state: st, workbook: Workbook): st \ ef + Fail = region rc {
+    pub def foldSheets(f: Sheet -> st -> st \ ef, state: st): st \ ef + ReifyWorkbook + Fail = region rc {
+        let workbook = ReifyWorkbook.getWorkbook();
         let iter = sheetIterator(rc, workbook);
         @Tailrec
         def loop(st) = match Iterator.next(iter) {
@@ -186,7 +218,8 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         loop(state)
     }
 
-    pub def filterMapSheets(f: Sheet -> Option[a] \ ef, workbook: Workbook): List[a] \ ef + Fail = region rc {
+    pub def filterMapSheets(f: Sheet -> Option[a] \ ef): List[a] \ ef + ReifyWorkbook + Fail = region rc {
+        let workbook = ReifyWorkbook.getWorkbook();
         let iter = sheetIterator(rc, workbook);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {

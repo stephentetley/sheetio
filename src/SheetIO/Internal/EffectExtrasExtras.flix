@@ -24,9 +24,9 @@ pub mod SheetIO.Internal.EffectExtrasExtras {
     use EffectExtras.Alt.Alternative
     use EffectExtras.Fail
 
-    pub def runAlt(f: Unit -> a \ ef): a \ ef - Alternative + Fail = 
-        match EffectExtras.Alt.runWithResult(f) {
-            case Ok(a)    => a
-            case Err(msg) => Fail.report(msg)
-        }
+    // pub def runAlt(f: Unit -> a \ ef): a \ ef - Alternative + Fail = 
+    //     match EffectExtras.Alt.runWithResult(f) {
+    //         case Ok(a)    => a
+    //         case Err(msg) => Fail.report(msg)
+    //     }
 }

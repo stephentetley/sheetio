@@ -54,6 +54,16 @@ pub mod SheetIO.Usermodel {
            SheetIO.Usermodel.ReadWorkbook.forEachSheet(f, t)
     }
 
+    ///
+    /// A effect for getting the current workbook inside a run context.
+    ///
+    /// Users of flix-time shouldn't need to worry about this but we need 
+    /// it to implement `foldSheets` etc.
+    ///
+    pub eff ReifyWorkbook {
+        def getWorkbook(): Workbook
+    }
+
 
     pub enum Sheet(JSheet)
 
@@ -74,7 +84,16 @@ pub mod SheetIO.Usermodel {
         pub def iterator(rc: Region[r], t: Sheet): Iterator[Row, r, r] \ r = 
            SheetIO.Usermodel.ReadSheet.rowIterator(rc, t)
     }
+    
+    instance ForEach[Sheet] {
+        type Elm = Row
+        pub def forEach(f: Row -> Unit \ ef, t: Sheet): Unit \ ef = 
+           SheetIO.Usermodel.ReadSheet.forEachRow(f, t)
+    }
 
+    pub eff ReifySheet {
+        def getSheet(): Sheet
+    }
 
     pub enum Row(JRow)
     
