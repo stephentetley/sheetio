@@ -44,10 +44,10 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
 
 
     pub def handle(wb: Workbook,
-                    f: a -> b \ ef): a -> Result[String, b] \ {IO + ef} - WriteWorkbook - Fail = x -> {
+                    f: a -> b \ ef): a -> b \ ef + IO + Fail - WriteWorkbook = x -> {
         let jworkbook = ToJava.toJava(wb);
         run {
-            Ok(f(x))
+            f(x)
         } with handler WriteWorkbook {
 
             def createSheet(k) = {
@@ -85,42 +85,31 @@ pub mod SheetIO.Usermodel.WriteWorkbook {
             } catch {
                 case ex: JException => Fail.report(ex.getMessage())
             }
-
-        } with handler Fail {
-            def report(s, _) = Err(s)
         }
     }
-
 
     // pub def withSheet(name: String, f: Unit -> a \ ef): Result[String, a] \ (ef + WriteWorkbook) - WriteSheet - Alt =
     //     let s = ReadWorkbook.getSheet(name);
     //     SheetIO.Usermodel.ReadSheet.runReadSheetWithResult(s, f)
 
 
-    // with EffectExtras.Fail.runWithResultOfIoError
+   pub def runWriteWorkbook(workbook: Workbook, 
+                            f: Unit -> a \ ef): a \ ef + IO + Fail - WriteWorkbook =
+        handle(workbook, f)()
 
-    // pub def runReadWriteXssf(path: String, f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
-    //     let jworkbook = new JXSSFWorkbook(path);
-    //     let jworkbook1: JWorkbook = checked_cast(jworkbook);
-    //     let ans = handle(ToFlix.toFlix(jworkbook1), f)();
-    //     jworkbook.close();
-    //     ans
-    // } catch {
-    //     case ex: JException => Err(ex.getMessage())
-    // }
-
-    pub def runWriteXssf(path: String, 
-                        f: Unit -> a \ ef): Result[String, a] \ {IO + ef} - WriteWorkbook - Fail = try {
-        let outs = new JFileOutputStream(path);
-        let jworkbook = new JXSSFWorkbook();
-        let jworkbook1: JWorkbook = checked_cast(jworkbook);
-        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
-        jworkbook.write(outs);
-        jworkbook.close();
-        ans
-    } catch {
-        case ex: JException => Err(ex.getMessage())
-    }
+    pub def withWriteXssf(path: String, 
+                            f: Workbook -> a \ ef): a \ ef + IO + Fail = 
+        try {
+            let outs = new JFileOutputStream(path);
+            let jworkbook = new JXSSFWorkbook();
+            let jworkbook1: JWorkbook = checked_cast(jworkbook);
+            let ans = f(ToFlix.toFlix(jworkbook1));
+            jworkbook.write(outs);
+            jworkbook.close();
+            ans
+        } catch {
+            case ex: JException => Fail.report(ex.getMessage())
+        }
 
 
 }

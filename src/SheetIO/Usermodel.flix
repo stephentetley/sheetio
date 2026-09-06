@@ -122,6 +122,9 @@ pub mod SheetIO.Usermodel {
            SheetIO.Usermodel.ReadRow.forEachCell(f, t)
     }
 
+    pub eff ReifyRow {
+        def getRow(): Row
+    }
 
     pub enum Cell(JCell)
 
@@ -138,6 +141,9 @@ pub mod SheetIO.Usermodel {
     }
 
 
+    pub eff ReifyCell {
+        def getCell(): Cell
+    }
     
     pub enum Table(JTable)
 

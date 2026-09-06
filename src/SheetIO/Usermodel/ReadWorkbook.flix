@@ -23,8 +23,10 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     use SheetIO.Common.CellReference
     use SheetIO.Common.CellReference.ToCellReference
     use SheetIO.Usermodel.ReadSheet.ReadSheet
+    use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Workbook, Sheet, Cell}
     use SheetIO.Usermodel.ReifyWorkbook
+    use SheetIO.Usermodel.ReifySheet
 
     import org.apache.poi.ss.usermodel.{Workbook => JWorkbook}
     import org.apache.poi.xssf.usermodel.{XSSFWorkbook => JXSSFWorkbook}
@@ -108,12 +110,12 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
     // Change to:
     // ``f: Workbook -> a \ ef``
     // Doesn't have to use Readworkbook effect...
-    pub def runReadWorkbookXssf(workbook: Workbook, 
-                                f: Unit -> a \ ef): a \ ef + IO + Fail - ReifyWorkbook - ReadWorkbook =
+    pub def runReadWorkbook(workbook: Workbook, 
+                            f: Unit -> a \ ef): a \ ef + IO + Fail - ReifyWorkbook - ReadWorkbook =
         handle(workbook,f)()
 
 
-    pub def withWorkbookXssf(path: String, 
+    pub def withReadXssf(path: String, 
                                 min_inflate_ratio: Option[Float64],
                                 f: Workbook -> a \ ef
                                 ): a \ ef + IO + Fail= 
@@ -133,6 +135,25 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
         } catch {
             case ex: JException => Fail.report(ex.getMessage())
         }
+
+    pub def readSheetAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReifySheet =
+        let sheet = ReadWorkbook.getSheetAt(ix);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, f)
+
+   
+    pub def readSheetNamed(name: String, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReifySheet =
+        let sheet = ReadWorkbook.getSheet(name);
+        SheetIO.Usermodel.ReadSheet.runReadSheet(sheet, f)
+
+
+    // ReadWorkbook context
+    pub def readCellRef(cellRef: cellref, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReifySheet - ReadCell - Alt with ToCellReference[cellref] = 
+        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
+        let sname = CellReference.getSheetName(ref1);
+        let sheet = ReadWorkbook.getSheet(sname);
+        run {
+            SheetIO.Usermodel.ReadSheet.readCellAddr(CellReference.toCellAddress(ref1), f)
+        } with SheetIO.Usermodel.ReadSheet.runReadSheet(sheet)
 
 
     pub def getCellValueBool(cellRef: cellref): Bool \ ReadWorkbook + Fail with ToCellReference[cellref] = 

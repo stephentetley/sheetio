@@ -23,6 +23,7 @@ pub mod SheetIO.Usermodel.ReadRow {
 
     use SheetIO.Usermodel.ReadCell.ReadCell
     use SheetIO.Usermodel.{Sheet, Row, Cell}
+    use SheetIO.Usermodel.ReifyRow
 
     import org.apache.poi.ss.usermodel.{Row => JRow}
     import org.apache.poi.ss.usermodel.{Cell => JCell} // superclass
@@ -39,14 +40,18 @@ pub mod SheetIO.Usermodel.ReadRow {
 
         
     pub def handle(row: Row, 
-                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadRow) + r  = x -> {
+                    f: a -> b \ ef): a -> b \ (ef + Fail - ReadRow - ReifyRow) + r  = x -> {
         let jrow = ToJava.toJava(row);
         run {
             f(x)
+        } with handler ReifyRow {
+            
+            def getRow(k) = k(row)
+
         } with handler ReadRow {
             
             def getCell(i, k) = {
-                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getCell(i) };
+                let ans = unsafe IO as {ef + Fail - ReadRow - ReifyRow} { jrow.getCell(i) };
                 if (not Object.isNull(ans)) 
                     k(ToFlix.toFlix(ans))
                 else 
@@ -54,7 +59,7 @@ pub mod SheetIO.Usermodel.ReadRow {
             }
 
             def getFirstCellNum(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getFirstCellNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow - ReifyRow} { jrow.getFirstCellNum() };
                 if (ans >= 0i16) 
                     k(Int16.toInt32(ans))
                 else
@@ -62,7 +67,7 @@ pub mod SheetIO.Usermodel.ReadRow {
             }
 
             def getLastCellNum(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getLastCellNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow - ReifyRow} { jrow.getLastCellNum() };
                 if (ans >= 0i16) 
                     k(Int16.toInt32(ans))
                 else
@@ -70,12 +75,12 @@ pub mod SheetIO.Usermodel.ReadRow {
             }
 
             def getRowNum(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getRowNum() };
+                let ans = unsafe IO as {ef + Fail - ReadRow - ReifyRow} { jrow.getRowNum() };
                 k(ans)
             } 
 
             def getSheet(k) = {
-                let ans = unsafe IO as {ef + Fail - ReadRow} { jrow.getSheet() };
+                let ans = unsafe IO as {ef + Fail - ReadRow - ReifyRow} { jrow.getSheet() };
                 k(ToFlix.toFlix(ans))
             } 
 
@@ -85,12 +90,13 @@ pub mod SheetIO.Usermodel.ReadRow {
     pub def runReadRow(row: Row, f: Unit -> a \ ef): a \ (ef + Fail - ReadRow) = 
         handle(row, f)()
     
-    // ReadSheet context
-    pub def runReadRowAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadSheet - ReadRow =
-        let row = ReadSheet.getRow(ix);
-        let ans = handle(row, f)();
-        ans
 
+
+
+    // ReadRow context
+    pub def readCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - Alt =
+        let cell = ReadRow.getCell(ix);
+        SheetIO.Usermodel.ReadCell.runReadCell(cell, f)
 
     pub def cellIterator(rc: Region[r], row: Row): Iterator[Cell, r, r] \ r = 
         let jrow = ToJava.toJava(row);
@@ -107,7 +113,8 @@ pub mod SheetIO.Usermodel.ReadRow {
     }
 
 
-    pub def foldCells(f: Cell -> st -> st \ ef, state: st, row: Row): st \ ef + Fail = region rc {
+    pub def foldCells(f: Cell -> st -> st \ ef, state: st): st \ ef + Fail + ReifyRow = region rc {
+        let row = ReifyRow.getRow();
         let iter = cellIterator(rc, row);
         // @Tailrec
         def loop(st) = match Iterator.next(iter) {
@@ -120,7 +127,8 @@ pub mod SheetIO.Usermodel.ReadRow {
         loop(state)
     }
 
-    pub def filterMapCells(f: Cell -> Option[a] \ ef, row: Row): List[a] \ ef + Fail = region rc {
+    pub def filterMapCells(f: Cell -> Option[a] \ ef): List[a] \ ef + Fail + ReifyRow = region rc {
+        let row = ReifyRow.getRow();
         let iter = cellIterator(rc, row);
         @Tailrec
         def loop(k) = match Iterator.next(iter) {

@@ -136,24 +136,8 @@ pub mod SheetIO.Usermodel.ReadCell {
     pub def runReadCell(cell: Cell, f: Unit -> a \ ef): a \ (ef + Fail - ReadCell - Alt) = 
         run { handle(cell, f)() } with EffectExtras.Alt.runAlt
 
-    // ReadRow context
-    pub def runReadCellAt(ix: Int32, f: Unit -> a \ ef): a \ ef + Fail + ReadRow - ReadCell - Alt =
-        let cell = ReadRow.getCell(ix);
-        runReadCell(cell, f)
 
-    // ReadSheet context
-    pub def runReadCellAddr(cellAddr: addr, f: Unit -> a \ ef): a \ ef + Fail + ReadSheet - ReadCell - Alt with ToCellAddress[addr] = 
-        let addr1 = ToCellAddress.toCellAddress(cellAddr) |> Fail.fromOption;
-        let cell = ReadSheet.getCell(addr1);
-        runReadCell(cell, f)
 
-    // ReadWorkbook context
-    pub def runReadCellRef(cellRef: cellref, f: Unit -> a \ ef): a \ ef + Fail + ReadWorkbook - ReadSheet - ReadCell - Alt with ToCellReference[cellref] = 
-        let ref1: CellReference = ToCellReference.toCellReference(cellRef) |> Fail.fromOption;
-        let sname = CellReference.getSheetName(ref1);
-        let sheet = ReadWorkbook.getSheet(sname);
-        run {
-            runReadCellAddr(CellReference.toCellAddress(ref1), f)
-        } with SheetIO.Usermodel.ReadSheet.runReadSheet(sheet)
+
 
 }

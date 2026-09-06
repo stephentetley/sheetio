@@ -43,7 +43,8 @@ pub mod SheetIO.Usermodel.RichTextString {
 
     instance ToFlix[RichTextString] {
         type In = JRichTextString
-        pub def toFlix(x: JRichTextString): RichTextString = RichTextString.RichTextString(x)
+        pub def toFlix(x: JRichTextString): RichTextString = 
+            RichTextString.RichTextString(x)
     }
 
     pub def length(x: RichTextString): Int32  =
