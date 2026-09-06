@@ -48,10 +48,10 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
 
 
     pub def handle(wb: Workbook,
-                    f: a -> b \ ef): a -> Result[String, b] \ ef + IO - ReifyWorkbook - ReadWorkbook - Fail = x -> {
+                    f: a -> b \ ef): a -> b \ ef + IO + Fail - ReifyWorkbook - ReadWorkbook = x -> {
         let jworkbook = ToJava.toJava(wb);
         run {
-            Ok(f(x))
+            f(x)
         } with handler ReifyWorkbook {
             
             def getWorkbook(k) = k(wb)
@@ -102,34 +102,15 @@ pub mod SheetIO.Usermodel.ReadWorkbook {
                 let ans = jworkbook.getSheetName(i);
                 k(ans)
             }
-
-        } with handler Fail {
-            def report(s, _) = Err(s)
         }
     }
-
 
     // Change to:
     // ``f: Workbook -> a \ ef``
     // Doesn't have to use Readworkbook effect...
-    pub def runReadWorkbookXssf(path: String, 
-                                min_inflate_ratio: Option[Float64],  
-                                f: Unit -> a \ ef): Result[String, a] \ ef + IO - ReifyWorkbook - ReadWorkbook - Fail = try {
-        let jfile = new JFile(path);
-        let jfis = new JFileInputStream(jfile);
-        match min_inflate_ratio {
-            case Some(d) =>  JZipSecureFile.setMinInflateRatio(d) 
-            case None    => ()
-        };
-        let jworkbook = new JXSSFWorkbook(jfis);
-        let jworkbook1: JWorkbook = checked_cast(jworkbook);
-        let ans = handle(ToFlix.toFlix(jworkbook1), f)();
-        jworkbook.close();
-        jfis.close();
-        ans
-    } catch {
-        case ex: JException => Err(ex.getMessage())
-    }
+    pub def runReadWorkbookXssf(workbook: Workbook, 
+                                f: Unit -> a \ ef): a \ ef + IO + Fail - ReifyWorkbook - ReadWorkbook =
+        handle(workbook,f)()
 
 
     pub def withWorkbookXssf(path: String, 
