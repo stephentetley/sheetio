@@ -1,5 +1,5 @@
 ### v0.5.0
-   API changes - made `Workbook` more concrete
+   API changes - made `Workbook` more concrete.
 
 ### v0.4.0
    API changes.

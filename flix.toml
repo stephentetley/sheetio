@@ -8,7 +8,7 @@ authors     = ["Stephen Tetley <stephen.tetley@gmail.com>"]
 
 [dependencies]
 "github:stephentetley/effect-extras" = { version = "0.4.2", security = "unrestricted" }
-"github:stephentetley/flix-time" = { version = "0.22.0", security = "unrestricted" }
+"github:stephentetley/flix-time" = { version = "0.23.0", security = "unrestricted" }
 "github:stephentetley/adaptor-extras" = { version = "0.3.0", security = "unrestricted" }
 
 
